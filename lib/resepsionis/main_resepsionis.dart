@@ -464,7 +464,9 @@ class MainResepsionisController extends GetxController with WidgetsBindingObserv
 
 class MainResepsionis extends StatelessWidget {
   MainResepsionis({super.key}) {
-    Get.put(MainResepsionisController());
+    if (!Get.isRegistered<MainResepsionisController>()) {
+      Get.put(MainResepsionisController(), permanent: true);
+    }
   }
 
   @override
