@@ -42,10 +42,7 @@ Future<void> onNotificationTap(ReceivedAction receivedAction) async {
 void onStartBackgroundTask(ServiceInstance service) {
   print("Background service started!");
   // Keep WebSocket or other logic running
-  service.invoke('setForegroundNotification', {
-    'title': 'WebSocket Running',
-    'content': 'Keeping WebSocket Active',
-  });
+  service.invoke('setForegroundNotification', {'title': 'WebSocket Running', 'content': 'Keeping WebSocket Active'});
 
   service.on("keepAlive").listen((event) {
     print("Received keep-alive event");
@@ -53,21 +50,11 @@ void onStartBackgroundTask(ServiceInstance service) {
 }
 
 void startbackgroundservice() {
-  final androidConfiguration = AndroidConfiguration(
-    onStart: onStartBackgroundTask,
-    isForegroundMode: true,
-    autoStart: true,
-  );
+  final androidConfiguration = AndroidConfiguration(onStart: onStartBackgroundTask, isForegroundMode: true, autoStart: true);
 
-  final iosConfiguration = IosConfiguration(
-    onForeground: onStartBackgroundTask,
-    onBackground: (service) => false,
-  );
+  final iosConfiguration = IosConfiguration(onForeground: onStartBackgroundTask, onBackground: (service) => false);
 
-  FlutterBackgroundService().configure(
-    androidConfiguration: androidConfiguration,
-    iosConfiguration: iosConfiguration,
-  );
+  FlutterBackgroundService().configure(androidConfiguration: androidConfiguration, iosConfiguration: iosConfiguration);
   FlutterBackgroundService().startService();
 }
 
@@ -94,9 +81,7 @@ void main() async {
         channelDescription: 'Notification channel for basic tests',
         defaultColor: Color(0xFF9D50DD),
         ledColor: Colors.white,
-        importance:
-            NotificationImportance
-                .Max, // Ensure high importance untuk event Tap
+        importance: NotificationImportance.Max, // Ensure high importance untuk event Tap
       ),
     ],
     debug: true, //
@@ -173,9 +158,11 @@ class Myapp extends StatelessWidget {
           name: '/mainresepsionis',
           page: () => MainResepsionis(),
           binding: BindingsBuilder(() {
-            Get.create<MainResepsionisController>(
-              () => MainResepsionisController(),
-            );
+            // Get.create<MainResepsionisController>(
+            //   () => MainResepsionisController(),
+            // );
+            // Change from Get.create to Get.lazyPut to ensure singleton behavior:
+            Get.lazyPut<MainResepsionisController>(() => MainResepsionisController());
           }),
         ),
         GetPage(name: '/rating', page: () => Rating()),
@@ -214,13 +201,7 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> fnLogin() async {
     log("Login WOi");
     try {
-      var response = await dio.post(
-        '${myIpAddr()}/login',
-        data: {
-          'id_karyawan': _userController.text,
-          'passwd': _passwordController.text,
-        },
-      );
+      var response = await dio.post('${myIpAddr()}/login', data: {'id_karyawan': _userController.text, 'passwd': _passwordController.text});
 
       // Convert Response data
       final Map<String, dynamic> responseData = response.data;
@@ -279,9 +260,7 @@ class _LoginPageState extends State<LoginPage> {
     } catch (e) {
       if (e is DioException) {
         if (e.response!.statusCode == 401) {
-          CherryToast.warning(
-            title: Text('Username Atau Password Tidak sesuai'),
-          ).show(context);
+          CherryToast.warning(title: Text('Username Atau Password Tidak sesuai')).show(context);
         }
       }
 
@@ -316,13 +295,7 @@ class _LoginPageState extends State<LoginPage> {
         child: Stack(
           children: [
             Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.black, Colors.yellow],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
+              decoration: BoxDecoration(gradient: LinearGradient(colors: [Colors.black, Colors.yellow], begin: Alignment.topLeft, end: Alignment.bottomRight)),
             ),
             SingleChildScrollView(
               child: Positioned.fill(
@@ -334,10 +307,7 @@ class _LoginPageState extends State<LoginPage> {
                         margin: EdgeInsets.only(top: 150),
                         width: 200,
                         height: 200,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(100),
-                          border: Border.all(width: 0, color: Colors.black),
-                        ),
+                        decoration: BoxDecoration(borderRadius: BorderRadius.circular(100), border: Border.all(width: 0, color: Colors.black)),
                         child: ClipOval(
                           child: Image.asset(
                             'assets/spa.jpg',
@@ -354,23 +324,15 @@ class _LoginPageState extends State<LoginPage> {
                         padding: EdgeInsets.only(left: 10),
                         margin: EdgeInsets.only(top: 40),
                         width: 300,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
+                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
                         child: TextField(
                           focusNode: _firstFieldFocus,
                           textInputAction: TextInputAction.next,
                           onEditingComplete: () {
-                            FocusScope.of(
-                              context,
-                            ).requestFocus(_secondFieldFocus);
+                            FocusScope.of(context).requestFocus(_secondFieldFocus);
                           },
                           controller: _userController,
-                          decoration: InputDecoration(
-                            hintText: 'Isi User ID',
-                            border: InputBorder.none,
-                          ),
+                          decoration: InputDecoration(hintText: 'Isi User ID', border: InputBorder.none),
                         ),
                       ),
                     ),
@@ -379,18 +341,12 @@ class _LoginPageState extends State<LoginPage> {
                         padding: EdgeInsets.only(left: 10),
                         margin: EdgeInsets.only(top: 20),
                         width: 300,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
+                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
                         child: TextField(
                           focusNode: _secondFieldFocus,
                           textInputAction: TextInputAction.done,
                           controller: _passwordController,
-                          decoration: InputDecoration(
-                            hintText: 'Isi Password',
-                            border: InputBorder.none,
-                          ),
+                          decoration: InputDecoration(hintText: 'Isi Password', border: InputBorder.none),
                           obscureText: true,
                         ),
                       ),
@@ -403,28 +359,14 @@ class _LoginPageState extends State<LoginPage> {
                           height: 50,
                           child: ElevatedButton(
                             onPressed: () async {
-                              if (_userController.text != "" &&
-                                  _passwordController.text != "") {
+                              if (_userController.text != "" && _passwordController.text != "") {
                                 await fnLogin();
                               } else {
-                                CherryToast.warning(
-                                  title: Text(
-                                    'Inputan Username / Password Kosong',
-                                  ),
-                                ).show(context);
+                                CherryToast.warning(title: Text('Inputan Username / Password Kosong')).show(context);
                               }
                             },
-                            child: Text(
-                              'LOGIN',
-                              style: TextStyle(
-                                fontSize: 25,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.black.withOpacity(0.5),
-                            ),
+                            child: Text('LOGIN', style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: Colors.white)),
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.black.withOpacity(0.5)),
                           ),
                         ),
                       ),
