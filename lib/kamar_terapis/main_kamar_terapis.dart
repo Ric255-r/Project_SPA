@@ -238,7 +238,7 @@ class _MainKamarTerapisState extends State<MainKamarTerapis> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    Get.delete<MainResepsionisController>();
+    Get.delete<MainResepsionisController>(force: true);
     _profileRuangan();
   }
 

@@ -11,7 +11,7 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
-/lib/function/ip_address.dart
+lib/function/ip_address.dart
 
 # IntelliJ related
 *.iml
