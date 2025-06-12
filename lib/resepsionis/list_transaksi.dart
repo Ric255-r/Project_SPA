@@ -1641,8 +1641,10 @@ class ListTransaksi extends StatelessWidget {
                                                     var totalAddOnAll = 0;
                                                     if (item['total_addon'] != 0) {
                                                       double desimalPjk = item['pajak'];
-                                                      int nominalPjk = (totalAddOnOri * desimalPjk).ceil();
-                                                      totalAddOnAll = totalAddOnOri + nominalPjk;
+                                                      double nominalPjk = totalAddOnOri * desimalPjk;
+                                                      // Pembulatan 1000
+                                                      double addOnSblmBulat = totalAddOnOri + nominalPjk;
+                                                      totalAddOnAll = (addOnSblmBulat / 1000).round() * 1000;
                                                     }
 
                                                     int totalDanAddon = item['gtotal_stlh_pajak'] + totalAddOnAll;
@@ -1678,8 +1680,10 @@ class ListTransaksi extends StatelessWidget {
                                                   var totalAddOnAll = 0;
                                                   if (item['total_addon'] != 0) {
                                                     double desimalPjk = item['pajak'];
-                                                    int nominalPjk = (totalAddOnOri * desimalPjk).ceil();
-                                                    totalAddOnAll = totalAddOnOri + nominalPjk;
+                                                    double nominalPjk = totalAddOnOri * desimalPjk;
+                                                    // Pembulatan 1000
+                                                    double addOnSblmBulat = totalAddOnOri + nominalPjk;
+                                                    totalAddOnAll = (addOnSblmBulat / 1000).round() * 1000;
                                                   }
 
                                                   return Text(
@@ -1836,8 +1840,10 @@ class ListTransaksi extends StatelessWidget {
                                                     var totalAddOnAll = 0;
                                                     if (item['total_addon'] != 0) {
                                                       double desimalPjk = item['pajak'];
-                                                      int nominalPjk = (totalAddOnOri * desimalPjk).ceil();
-                                                      totalAddOnAll = totalAddOnOri + nominalPjk;
+                                                      double nominalPjk = totalAddOnOri * desimalPjk;
+                                                      // Pembulatan 1000
+                                                      double addOnSblmBulat = totalAddOnOri + nominalPjk;
+                                                      totalAddOnAll = (addOnSblmBulat / 1000).round() * 1000;
                                                     }
 
                                                     c.dialogPelunasan(
