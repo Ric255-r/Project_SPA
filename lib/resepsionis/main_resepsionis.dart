@@ -37,6 +37,7 @@ class MainResepsionisController extends GetxController
   Timer? _timerWebSocket;
   Timer? _notifTimer; // macam settimeout, bikin retrigger
   bool _isWebSocketConnected = false;
+  late StreamSubscription _socketSubscription;
 
   @override
   void onInit() {
@@ -47,17 +48,41 @@ class MainResepsionisController extends GetxController
     _profileUser();
     getDataTerapis();
     _loadSound();
+
+    // Init AwesomeNotif
+    AwesomeNotifications().initialize(
+      null, // null for default icon
+      [
+        NotificationChannel(
+          channelKey: 'basic_channel_kamar',
+          channelName: 'Notifikasi Kamar',
+          // channelGroupKey: "kamar_terapis",
+          groupKey: "kamar_terapis",
+          channelShowBadge: true,
+          channelDescription: 'Notification channel for basic tests',
+          defaultColor: Color(0xFF9D50DD),
+          ledColor: Colors.white,
+          groupAlertBehavior:
+              GroupAlertBehavior.Children, // Important for stacking
+          importance:
+              NotificationImportance
+                  .High, // Ensure high importance untuk event Tap
+        ),
+      ],
+      debug: true, //
+    );
   }
 
   @override
   void onClose() {
     // TODO: implement onClose
+    _disconnectWebSocket();
+
+    // Cancel Timer WS
     _notifTimer?.cancel();
     _timerWebSocket?.cancel();
-    _channel?.sink.close(); // Close the WebSocket channel when disposing
-    _channel = null;
+    // End Cancel
     WidgetsBinding.instance.removeObserver(this);
-    _isWebSocketConnected = false;
     KodeTerapisController?.dispose();
     dropdownNamaTerapis.value = null;
     _audioPlayer.dispose();
@@ -120,10 +145,11 @@ class MainResepsionisController extends GetxController
     _timerWebSocket?.cancel();
 
     // close existing connection jika ada
-    if (_channel != null) {
-      await _channel!.sink.close();
-      _channel = null;
-    }
+    await _disconnectWebSocket();
+    // if (_channel != null) {
+    //   await _channel!.sink.close();
+    //   _channel = null;
+    // }
 
     // skip jika ud konek
     if (_isWebSocketConnected) return;
@@ -140,37 +166,12 @@ class MainResepsionisController extends GetxController
       _channel = IOWebSocketChannel.connect(wsUri);
       _isWebSocketConnected = true; // Set connected flag to true
       log("WebSocket MainResepsionis connected successfully.");
-
-      // Init AwesomeNotif
-      AwesomeNotifications().initialize(
-        null, // null for default icon
-        [
-          NotificationChannel(
-            channelKey: 'basic_channel_kamar',
-            channelName: 'Notifikasi Kamar',
-            // channelGroupKey: "kamar_terapis",
-            groupKey: "kamar_terapis",
-            channelShowBadge: true,
-            channelDescription: 'Notification channel for basic tests',
-            defaultColor: Color(0xFF9D50DD),
-            ledColor: Colors.white,
-            groupAlertBehavior:
-                GroupAlertBehavior.Children, // Important for stacking
-            importance:
-                NotificationImportance
-                    .High, // Ensure high importance untuk event Tap
-          ),
-        ],
-        debug: true, //
-      );
     } catch (e) {
       log("Failed to connect to WebSocketResepsionis: $e");
-      _isWebSocketConnected = false;
-      // Optionally, set a timer to retry connection after a delay
-      _timerWebSocket = Timer(
-        Duration(seconds: 5),
-        () => _connectToWebSocket(),
-      );
+      // _isWebSocketConnected = false;
+      // // Optionally, set a timer to retry connection after a delay
+      // _timerWebSocket = Timer(Duration(seconds: 5), () => _connectToWebSocket());
+      reconnectToWebSocket();
       return; // Exit if connection fails
     }
 
@@ -234,7 +235,7 @@ class MainResepsionisController extends GetxController
     }
 
     // ambil pesan dr Server
-    _channel?.stream.listen(
+    _socketSubscription = _channel!.stream.listen(
       (message) async {
         _notifTimer?.cancel();
         _notifTimer = Timer(Duration(seconds: 1), () {
@@ -245,23 +246,29 @@ class MainResepsionisController extends GetxController
       },
       onError: (err) {
         log("Websocket Resepsionis error: $err");
-        _isWebSocketConnected = false; // Update flag on error
-        _timerWebSocket?.cancel(); // Cancel any existing reconnection timer
-        _timerWebSocket = Timer(
-          Duration(seconds: 5),
-          () => _connectToWebSocket(),
-        ); // Attempt to reconnect
+        reconnectToWebSocket();
       },
       onDone: () {
         log("Websocket Resepsionis Closed");
-        _isWebSocketConnected = false; // Update flag on close
-        _timerWebSocket?.cancel(); // Cancel any existing reconnection timer
-        _timerWebSocket = Timer(
-          Duration(seconds: 5),
-          () => _connectToWebSocket(),
-        ); // Attempt to reconnect
+        reconnectToWebSocket();
       },
     );
+  }
+
+  void reconnectToWebSocket() {
+    _isWebSocketConnected = false; // Update flag on error
+    _timerWebSocket?.cancel(); // Cancel any existing reconnection timer
+    _timerWebSocket = Timer(
+      Duration(seconds: 5),
+      () => _connectToWebSocket(),
+    ); // Attempt to reconnect
+  }
+
+  Future<void> _disconnectWebSocket() async {
+    await _channel?.sink.close();
+    _channel = null;
+    _isWebSocketConnected = false;
+    _socketSubscription.cancel();
   }
 
   var storage = GetStorage();
