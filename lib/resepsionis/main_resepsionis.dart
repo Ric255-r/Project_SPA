@@ -36,6 +36,7 @@ class MainResepsionisController extends GetxController with WidgetsBindingObserv
   Timer? _timerWebSocket;
   Timer? _notifTimer; // macam settimeout, bikin retrigger
   bool _isWebSocketConnected = false;
+  late StreamSubscription _socketSubscription;
 
   @override
   void onInit() {
@@ -51,12 +52,13 @@ class MainResepsionisController extends GetxController with WidgetsBindingObserv
   @override
   void onClose() {
     // TODO: implement onClose
+    _disconnectWebSocket();
+
+    // Cancel Timer WS
     _notifTimer?.cancel();
     _timerWebSocket?.cancel();
-    _channel?.sink.close(); // Close the WebSocket channel when disposing
-    _channel = null;
+    // End Cancel
     WidgetsBinding.instance.removeObserver(this);
-    _isWebSocketConnected = false;
     KodeTerapisController?.dispose();
     dropdownNamaTerapis.value = null;
     _audioPlayer.dispose();
@@ -117,10 +119,11 @@ class MainResepsionisController extends GetxController with WidgetsBindingObserv
     _timerWebSocket?.cancel();
 
     // close existing connection jika ada
-    if (_channel != null) {
-      await _channel!.sink.close();
-      _channel = null;
-    }
+    await _disconnectWebSocket();
+    // if (_channel != null) {
+    //   await _channel!.sink.close();
+    //   _channel = null;
+    // }
 
     // skip jika ud konek
     if (_isWebSocketConnected) return;
@@ -159,9 +162,10 @@ class MainResepsionisController extends GetxController with WidgetsBindingObserv
       );
     } catch (e) {
       log("Failed to connect to WebSocketResepsionis: $e");
-      _isWebSocketConnected = false;
-      // Optionally, set a timer to retry connection after a delay
-      _timerWebSocket = Timer(Duration(seconds: 5), () => _connectToWebSocket());
+      // _isWebSocketConnected = false;
+      // // Optionally, set a timer to retry connection after a delay
+      // _timerWebSocket = Timer(Duration(seconds: 5), () => _connectToWebSocket());
+      reconnectToWebSocket();
       return; // Exit if connection fails
     }
 
@@ -219,7 +223,7 @@ class MainResepsionisController extends GetxController with WidgetsBindingObserv
     }
 
     // ambil pesan dr Server
-    _channel?.stream.listen(
+    _socketSubscription = _channel!.stream.listen(
       (message) async {
         _notifTimer?.cancel();
         _notifTimer = Timer(Duration(seconds: 1), () {
@@ -230,17 +234,26 @@ class MainResepsionisController extends GetxController with WidgetsBindingObserv
       },
       onError: (err) {
         log("Websocket Resepsionis error: $err");
-        _isWebSocketConnected = false; // Update flag on error
-        _timerWebSocket?.cancel(); // Cancel any existing reconnection timer
-        _timerWebSocket = Timer(Duration(seconds: 5), () => _connectToWebSocket()); // Attempt to reconnect
+        reconnectToWebSocket();
       },
       onDone: () {
         log("Websocket Resepsionis Closed");
-        _isWebSocketConnected = false; // Update flag on close
-        _timerWebSocket?.cancel(); // Cancel any existing reconnection timer
-        _timerWebSocket = Timer(Duration(seconds: 5), () => _connectToWebSocket()); // Attempt to reconnect
+        reconnectToWebSocket();
       },
     );
+  }
+
+  void reconnectToWebSocket() {
+    _isWebSocketConnected = false; // Update flag on error
+    _timerWebSocket?.cancel(); // Cancel any existing reconnection timer
+    _timerWebSocket = Timer(Duration(seconds: 5), () => _connectToWebSocket()); // Attempt to reconnect
+  }
+
+  Future<void> _disconnectWebSocket() async {
+    await _channel?.sink.close();
+    _channel = null;
+    _isWebSocketConnected = false;
+    _socketSubscription.cancel();
   }
 
   var storage = GetStorage();
