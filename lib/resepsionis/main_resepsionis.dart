@@ -47,6 +47,26 @@ class MainResepsionisController extends GetxController with WidgetsBindingObserv
     _profileUser();
     getDataTerapis();
     _loadSound();
+
+    // Init AwesomeNotif
+    AwesomeNotifications().initialize(
+      null, // null for default icon
+      [
+        NotificationChannel(
+          channelKey: 'basic_channel_kamar',
+          channelName: 'Notifikasi Kamar',
+          // channelGroupKey: "kamar_terapis",
+          groupKey: "kamar_terapis",
+          channelShowBadge: true,
+          channelDescription: 'Notification channel for basic tests',
+          defaultColor: Color(0xFF9D50DD),
+          ledColor: Colors.white,
+          groupAlertBehavior: GroupAlertBehavior.Children, // Important for stacking
+          importance: NotificationImportance.High, // Ensure high importance untuk event Tap
+        ),
+      ],
+      debug: true, //
+    );
   }
 
   @override
@@ -140,26 +160,6 @@ class MainResepsionisController extends GetxController with WidgetsBindingObserv
       _channel = IOWebSocketChannel.connect(wsUri);
       _isWebSocketConnected = true; // Set connected flag to true
       log("WebSocket MainResepsionis connected successfully.");
-
-      // Init AwesomeNotif
-      AwesomeNotifications().initialize(
-        null, // null for default icon
-        [
-          NotificationChannel(
-            channelKey: 'basic_channel_kamar',
-            channelName: 'Notifikasi Kamar',
-            // channelGroupKey: "kamar_terapis",
-            groupKey: "kamar_terapis",
-            channelShowBadge: true,
-            channelDescription: 'Notification channel for basic tests',
-            defaultColor: Color(0xFF9D50DD),
-            ledColor: Colors.white,
-            groupAlertBehavior: GroupAlertBehavior.Children, // Important for stacking
-            importance: NotificationImportance.High, // Ensure high importance untuk event Tap
-          ),
-        ],
-        debug: true, //
-      );
     } catch (e) {
       log("Failed to connect to WebSocketResepsionis: $e");
       // _isWebSocketConnected = false;
