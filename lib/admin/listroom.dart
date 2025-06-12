@@ -82,7 +82,7 @@ class _ListRoomState extends State<ListRoom> {
   List<String> listJenisRuang = <String>['Fasilitas', 'Reguler', 'VIP'];
   final List<String> _listStatus = <String>[
     'aktif',
-    'non aktif',
+    // 'non aktif',
     'occupied',
     'maintenance',
   ];
