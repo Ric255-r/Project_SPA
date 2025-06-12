@@ -684,6 +684,14 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                 TextButton(
                   onPressed: () {
                     // if(_kembalianController.text)
+                    if (isCash) {
+                      if (_totalBayarController.text == "" ||
+                          _totalBayarController.text == "0" ||
+                          _totalBayarController.text.isEmpty) {
+                        return;
+                      }
+                    }
+
                     if (kembalian < 0) {
                       CherryToast.error(
                         title: Text(

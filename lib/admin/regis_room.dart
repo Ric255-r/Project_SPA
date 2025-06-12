@@ -24,9 +24,10 @@ import 'package:dio/dio.dart';
 const List<String> list = <String>['Fasilitas', 'VIP', 'Reguler'];
 String? _dropdownValue;
 const List<String> _listStatus = <String>[
-  'Aktif',
-  "Non Aktif",
-  "Dalam Perbaikan",
+  'aktif',
+  'maintenance',
+  // "non aktif",
+  // "dalam perbaikan",
 ];
 String? _dropdownStatus;
 

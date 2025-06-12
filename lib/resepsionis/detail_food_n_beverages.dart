@@ -483,7 +483,8 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
             onPressed: () {
               if (isCash.value) {
                 if (_totalBayarController.text == "" ||
-                    _totalBayarController.text.isEmpty) {
+                    _totalBayarController.text.isEmpty ||
+                    _totalBayarController.text == "0") {
                   return;
                 }
               }

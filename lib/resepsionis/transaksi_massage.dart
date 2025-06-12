@@ -510,102 +510,106 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
             content: Container(
               width: Get.width,
               height: Get.height - 200,
-              child: GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 4,
-                  crossAxisSpacing: 30,
-                  mainAxisSpacing: 25,
-                  childAspectRatio: 2 / 1.5,
-                ),
-                itemCount: _listTerapis.length,
-                itemBuilder: (context, index) {
-                  var data = _listTerapis[index];
+              child: SingleChildScrollView(
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 4,
+                    crossAxisSpacing: 30,
+                    mainAxisSpacing: 25,
+                    childAspectRatio: 2 / 1.5,
+                  ),
+                  itemCount: _listTerapis.length,
+                  itemBuilder: (context, index) {
+                    var data = _listTerapis[index];
 
-                  bool isOccupied = data['is_occupied'] == 1;
-                  return InkWell(
-                    highlightColor: Colors.transparent,
-                    splashColor: Colors.transparent,
-                    onTap: () {
-                      if (isOccupied) {
-                        CherryToast.error(
-                          title: Text(
-                            "${data['nama_karyawan']} Is Occupied!",
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'Poppins',
-                            ),
-                          ),
-                          animationDuration: const Duration(milliseconds: 1500),
-                          autoDismiss: true,
-                        ).show(Get.context!); // Use Get.context!
-                      } else {
-                        setState(() {
-                          try {
-                            // Attempt to access txtTerapis directly (if in the same widget)
-                            txtTerapis.text =
-                                "${data['id_karyawan']} - ${data['nama_karyawan']}";
-                            _idTerapis = data['id_karyawan'];
-                            controllerPekerja.getidterapis.value =
-                                data['id_karyawan'];
-                            controllerPekerja.getnamaterapis.value =
-                                data['nama_karyawan'];
-                          } catch (e) {
-                            print(
-                              "Error: txtTerapis is not directly accessible here. Ensure it's properly managed by GetX.",
-                            );
-                          }
-                        });
-                        Get.back();
-                      }
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.only(top: 20),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        color:
-                            isOccupied
-                                ? const Color.fromARGB(255, 238, 5, 40)
-                                : const Color.fromARGB(255, 35, 195, 144),
-                      ),
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Container(
-                              margin: const EdgeInsets.only(
-                                top: 20,
-                                left: 12,
-                                right: 12,
-                              ),
-                              child: Text(
-                                data['id_karyawan'],
-                                style: TextStyle(fontSize: 30),
+                    bool isOccupied = data['is_occupied'] == 1;
+                    return InkWell(
+                      highlightColor: Colors.transparent,
+                      splashColor: Colors.transparent,
+                      onTap: () {
+                        if (isOccupied) {
+                          CherryToast.error(
+                            title: Text(
+                              "${data['nama_karyawan']} Is Occupied!",
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Poppins',
                               ),
                             ),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  SizedBox(height: 10),
-                                  Text(
-                                    data['nama_karyawan'],
-                                    style: TextStyle(
-                                      fontSize: 30,
-                                      fontFamily: 'Poppins',
+                            animationDuration: const Duration(
+                              milliseconds: 1500,
+                            ),
+                            autoDismiss: true,
+                          ).show(Get.context!); // Use Get.context!
+                        } else {
+                          setState(() {
+                            try {
+                              // Attempt to access txtTerapis directly (if in the same widget)
+                              txtTerapis.text =
+                                  "${data['id_karyawan']} - ${data['nama_karyawan']}";
+                              _idTerapis = data['id_karyawan'];
+                              controllerPekerja.getidterapis.value =
+                                  data['id_karyawan'];
+                              controllerPekerja.getnamaterapis.value =
+                                  data['nama_karyawan'];
+                            } catch (e) {
+                              print(
+                                "Error: txtTerapis is not directly accessible here. Ensure it's properly managed by GetX.",
+                              );
+                            }
+                          });
+                          Get.back();
+                        }
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.only(top: 20),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          color:
+                              isOccupied
+                                  ? const Color.fromARGB(255, 238, 5, 40)
+                                  : const Color.fromARGB(255, 35, 195, 144),
+                        ),
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Container(
+                                margin: const EdgeInsets.only(
+                                  top: 20,
+                                  left: 12,
+                                  right: 12,
+                                ),
+                                child: Text(
+                                  data['id_karyawan'],
+                                  style: TextStyle(fontSize: 30),
+                                ),
+                              ),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SizedBox(height: 10),
+                                    Text(
+                                      data['nama_karyawan'],
+                                      style: TextStyle(
+                                        fontSize: 30,
+                                        fontFamily: 'Poppins',
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
             ),
           );

@@ -126,7 +126,6 @@ class _ListpaketState extends State<Listpaket> {
   @override
   void dispose() {
     // TODO: implement dispose
-    super.dispose();
     textinputan.dispose();
     textSearchMassage.dispose();
     textSearchFnb.dispose();
@@ -146,6 +145,7 @@ class _ListpaketState extends State<Listpaket> {
     controller_edit_nama_fasilitas.dispose();
     controller_edit_harga_fasilitas.dispose();
     debounce?.cancel();
+    super.dispose();
   }
 
   @override
@@ -4045,7 +4045,7 @@ class _ListpaketState extends State<Listpaket> {
           ),
         ),
       ),
-      drawer: AdminDrawer()
+      drawer: AdminDrawer(),
     );
   }
 }
