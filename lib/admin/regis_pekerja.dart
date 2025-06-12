@@ -25,13 +25,13 @@ import 'package:Project_SPA/resepsionis/jenis_transaksi.dart';
 import 'package:Project_SPA/main.dart';
 
 const List<String> list = <String>[
-  'Admin',
-  'Resepsionis',
-  'Supervisor',
-  'Terapis',
-  'GRO',
-  'Office Boy',
-  'Kitchen',
+  'admin',
+  'resepsionis',
+  'supervisor',
+  'terapis',
+  'gro',
+  'office boy',
+  'kitchen',
 ];
 String? dropdownValue;
 
@@ -79,6 +79,7 @@ class _RegisPekerjaState extends State<RegisPekerja> {
     selectedJK = null;
     selectedStatus = null;
     selectedJabatan = null;
+    selectedFiles.clear();
   }
 
   String? selectedJK;
@@ -100,16 +101,18 @@ class _RegisPekerjaState extends State<RegisPekerja> {
         MapEntry('status', selectedStatus ?? ''),
       ]);
 
-      for (var file in selectedFiles) {
-        if (file.bytes != null) {
-          formData.files.add(
-            MapEntry(
-              'kontrak_img',
-              await MultipartFile.fromBytes(file.bytes!, filename: file.name),
-            ),
-          );
-        } else {
-          log('⚠️ Skipping file: ${file.name} has null bytes');
+      if (selectedFiles.isNotEmpty) {
+        for (var file in selectedFiles) {
+          if (file.bytes != null) {
+            formData.files.add(
+              MapEntry(
+                'kontrak_img',
+                await MultipartFile.fromBytes(file.bytes!, filename: file.name),
+              ),
+            );
+          } else {
+            log('⚠️ Skipping file: ${file.name} has null bytes');
+          }
         }
       }
 
@@ -125,7 +128,12 @@ class _RegisPekerjaState extends State<RegisPekerja> {
         ).show(context);
         selectedFiles.clear();
         setState(() {});
-        _clearForm(); // Clear the form after successful submission
+        _clearForm();
+        setState(() {
+          dropdownJK = null;
+          dropdownValue = null;
+          dropdownStatus = null;
+        }); // Clear the form after successful submission
       } else {
         log("Failed to save data: \${response.statusCode}");
       }
@@ -157,33 +165,60 @@ class _RegisPekerjaState extends State<RegisPekerja> {
 
   Future<void> _storeOB() async {
     try {
+      var formData = FormData();
+
+      // Add regular text fields
+      formData.fields.addAll([
+        MapEntry('id_karyawan', _textController.text),
+        MapEntry('nik', txtNik.text),
+        MapEntry('nama_karyawan', txtNamaKaryawan.text),
+        MapEntry('alamat', txtAlamat.text),
+        MapEntry('jk', dropdownJK ?? ''),
+        MapEntry('no_hp', txtNoHP.text),
+        MapEntry('jabatan', dropdownValue ?? ''),
+        MapEntry('status', dropdownStatus ?? ''),
+        MapEntry('senin', isSeninChecked ? '1' : '0'),
+        MapEntry('selasa', isSelasaChecked ? '1' : '0'),
+        MapEntry('rabu', isRabuChecked ? '1' : '0'),
+        MapEntry('kamis', isKamisChecked ? '1' : '0'),
+        MapEntry('jumat', isJumatChecked ? '1' : '0'),
+        MapEntry('sabtu', isSabtuChecked ? '1' : '0'),
+        MapEntry('minggu', isMingguChecked ? '1' : '0'),
+      ]);
+
+      // Add kontrak_img file only if selectedFiles has valid content
+      if (selectedFiles.isNotEmpty) {
+        for (var file in selectedFiles) {
+          if (file.bytes != null) {
+            formData.files.add(
+              MapEntry(
+                'kontrak_img',
+                await MultipartFile.fromBytes(file.bytes!, filename: file.name),
+              ),
+            );
+          } else {
+            log('⚠️ Skipping file: ${file.name} has null bytes');
+          }
+        }
+      }
+
+      // Send request
       var response = await dio.post(
         '${myIpAddr()}/pekerja/post_ob',
-        data: {
-          "id_karyawan": _textController.text,
-          "nik": txtNik.text,
-          "nama_karyawan": txtNamaKaryawan.text,
-          "alamat": txtAlamat.text,
-          "jk": dropdownJK!,
-          "no_hp": txtNoHP.text,
-          "jabatan": dropdownValue!,
-          "status": dropdownStatus!,
-          "kontrak_img": "img/kontrak.png",
-          "senin": isSeninChecked ? 1 : 0,
-          "selasa": isSelasaChecked ? 1 : 0,
-          "rabu": isRabuChecked ? 1 : 0,
-          "kamis": isKamisChecked ? 1 : 0,
-          "jumat": isJumatChecked ? 1 : 0,
-          "sabtu": isSabtuChecked ? 1 : 0,
-          "minggu": isSeninChecked ? 1 : 0,
-        },
+        data: formData,
       );
+
       if (response.statusCode == 200) {
         log('Data saved successfully!');
         CherryToast.success(
           title: Text('Data berhasil disimpan'),
         ).show(context);
-        _clearForm(); // Clear the form after successful submission
+        _clearForm();
+        setState(() {
+          dropdownJK = null;
+          dropdownValue = null;
+          dropdownStatus = null;
+        }); // Clear the form after successful submission
       } else {
         log("Failed to save data: ${response.statusCode}");
       }
@@ -196,57 +231,61 @@ class _RegisPekerjaState extends State<RegisPekerja> {
   }
 
   Future<void> _storeTerapis() async {
-    // var data = {
-    //   "id_karyawan": _textController.text,
-    //   "nik": txtNik.text,
-    //   "nama_karyawan": txtNamaKaryawan.text,
-    //   "alamat": txtAlamat.text,
-    //   "jk": dropdownJK!,
-    //   "no_hp": txtNoHP.text,
-    //   "jabatan": dropdownValue!,
-    //   // "umur": int.parse(txtumur.text),
-    //   // "status": dropdownStatus,
-    //   "kontrak_img": "img/kontrak.png",
-    //   "senin": isSeninChecked ? 1 : 0,
-    //   "selasa": isSelasaChecked ? 1 : 0,
-    //   "rabu": isRabuChecked ? 1 : 0,
-    //   "kamis": isKamisChecked ? 1 : 0,
-    //   "jumat": isJumatChecked ? 1 : 0,
-    //   "sabtu": isSabtuChecked ? 1 : 0,
-    //   "minggu": isSeninChecked ? 1 : 0,
-    // };
-
-    // log("isi Data $data");
-    // return;
-
     try {
+      var formData = FormData();
+
+      // Add text fields
+      formData.fields.addAll([
+        MapEntry('id_karyawan', _textController.text),
+        MapEntry('nik', txtNik.text),
+        MapEntry('nama_karyawan', txtNamaKaryawan.text),
+        MapEntry('alamat', txtAlamat.text),
+        MapEntry('jk', dropdownJK ?? ''),
+        MapEntry('no_hp', txtNoHP.text),
+        MapEntry('jabatan', dropdownValue ?? ''),
+        MapEntry('status', dropdownStatus ?? ''),
+        MapEntry('senin', isSeninChecked ? '1' : '0'),
+        MapEntry('selasa', isSelasaChecked ? '1' : '0'),
+        MapEntry('rabu', isRabuChecked ? '1' : '0'),
+        MapEntry('kamis', isKamisChecked ? '1' : '0'),
+        MapEntry('jumat', isJumatChecked ? '1' : '0'),
+        MapEntry('sabtu', isSabtuChecked ? '1' : '0'),
+        MapEntry('minggu', isMingguChecked ? '1' : '0'),
+      ]);
+
+      // Add kontrak_img if a file is selected
+      if (selectedFiles.isNotEmpty) {
+        for (var file in selectedFiles) {
+          if (file.bytes != null) {
+            formData.files.add(
+              MapEntry(
+                'kontrak_img',
+                await MultipartFile.fromBytes(file.bytes!, filename: file.name),
+              ),
+            );
+          } else {
+            log('⚠️ Skipping file: ${file.name} has null bytes');
+          }
+        }
+      }
+
+      // Send the POST request
       var response = await dio.post(
         '${myIpAddr()}/pekerja/post_terapis',
-        data: {
-          "id_karyawan": _textController.text,
-          "nik": txtNik.text,
-          "nama_karyawan": txtNamaKaryawan.text,
-          "alamat": txtAlamat.text,
-          "jk": dropdownJK!,
-          "no_hp": txtNoHP.text,
-          "jabatan": dropdownValue!,
-          "status": dropdownStatus!,
-          "kontrak_img": "img/kontrak.png",
-          "senin": isSeninChecked ? 1 : 0,
-          "selasa": isSelasaChecked ? 1 : 0,
-          "rabu": isRabuChecked ? 1 : 0,
-          "kamis": isKamisChecked ? 1 : 0,
-          "jumat": isJumatChecked ? 1 : 0,
-          "sabtu": isSabtuChecked ? 1 : 0,
-          "minggu": isSeninChecked ? 1 : 0,
-        },
+        data: formData,
       );
+
       if (response.statusCode == 200) {
         log('Data saved successfully!');
         CherryToast.success(
           title: Text('Data berhasil disimpan'),
         ).show(context);
-        _clearForm(); // Clear the form after successful submission
+        _clearForm();
+        setState(() {
+          dropdownJK = null;
+          dropdownValue = null;
+          dropdownStatus = null;
+        });
       } else {
         log("Failed to save data: ${response.statusCode}");
       }
@@ -256,7 +295,7 @@ class _RegisPekerjaState extends State<RegisPekerja> {
       log("Stacktrace: $stackTrace");
       CherryToast.error(
         title: Text('Terjadi kesalahan saat menyimpan data'),
-        description: Text(e.toString()), // Show actual error in the toast
+        description: Text(e.toString()),
       ).show(context);
     }
   }
@@ -267,7 +306,6 @@ class _RegisPekerjaState extends State<RegisPekerja> {
       CherryToast.warning(title: Text('NIK tidak boleh kosong!')).show(context);
     } else {
       _storePekerja();
-      _clearForm();
     }
   }
 
@@ -284,6 +322,7 @@ class _RegisPekerjaState extends State<RegisPekerja> {
     isJumatChecked = false;
     isSabtuChecked = false;
     isMingguChecked = false;
+    selectedFiles.clear();
   }
 
   Future<void> _fetchIdKaryawan(String jabatan) async {
@@ -710,25 +749,25 @@ class _RegisPekerjaState extends State<RegisPekerja> {
                                       _fetchIdKaryawan(value);
                                     }
                                     switch (value) {
-                                      case "Admin":
+                                      case "admin":
                                         hilangHariKeja();
                                         break;
-                                      case "Resepsionis":
+                                      case "resepsionis":
                                         hilangHariKeja();
                                         break;
-                                      case "Terapis":
+                                      case "terapis":
                                         munculHariKerja();
                                         break;
-                                      case "Supervisor":
+                                      case "supervisor":
                                         hilangHariKeja();
                                         break;
-                                      case "GRO":
+                                      case "gro":
                                         hilangHariKeja();
                                         break;
-                                      case "Office Boy":
+                                      case "office boy":
                                         munculHariKerja();
                                         break;
-                                      case "Kitchen":
+                                      case "kitchen":
                                         hilangHariKeja();
                                         break;
                                     }
@@ -815,9 +854,15 @@ class _RegisPekerjaState extends State<RegisPekerja> {
                     Padding(
                       padding: const EdgeInsets.only(top: 20),
                       child: Container(
-                        height: 315,
+                        height: 355,
                         width: 170,
-                        decoration: BoxDecoration(color: Colors.white),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.only(
+                            topRight: Radius.circular(15),
+                            bottomRight: Radius.circular(15),
+                          ),
+                        ),
                         child: Padding(
                           padding: EdgeInsets.only(right: 10),
                           child: Column(
@@ -1064,7 +1109,7 @@ class _RegisPekerjaState extends State<RegisPekerja> {
                     width: 280,
                     child: Column(
                       children: [
-                        if (dropdownValue == "Terapis")
+                        if (dropdownValue == "terapis")
                           Expanded(
                             child: SizedBox(
                               width: double.infinity,
@@ -1072,13 +1117,14 @@ class _RegisPekerjaState extends State<RegisPekerja> {
 
                               child: TextButton(
                                 onPressed: () {
+                                  if (txtNik.text.trim().isEmpty) {
+                                    CherryToast.warning(
+                                      title: Text('NIK tidak boleh kosong!'),
+                                    ).show(context);
+                                    return; // Stop if validation fails
+                                  }
+
                                   _storeTerapis();
-                                  _clearForm();
-                                  setState(() {
-                                    dropdownJK = null;
-                                    dropdownValue = null;
-                                    dropdownStatus = null;
-                                  });
                                 },
                                 style: TextButton.styleFrom(
                                   foregroundColor: Colors.black,
@@ -1093,7 +1139,7 @@ class _RegisPekerjaState extends State<RegisPekerja> {
                               ),
                             ),
                           )
-                        else if (dropdownValue == "Office Boy")
+                        else if (dropdownValue == "office boy")
                           Expanded(
                             child: SizedBox(
                               width: double.infinity,
@@ -1101,13 +1147,14 @@ class _RegisPekerjaState extends State<RegisPekerja> {
 
                               child: TextButton(
                                 onPressed: () {
+                                  if (txtNik.text.trim().isEmpty) {
+                                    CherryToast.warning(
+                                      title: Text('NIK tidak boleh kosong!'),
+                                    ).show(context);
+                                    return; // Stop if validation fails
+                                  }
+
                                   _storeOB();
-                                  _clearForm();
-                                  setState(() {
-                                    dropdownJK = null;
-                                    dropdownValue = null;
-                                    dropdownStatus = null;
-                                  });
                                 },
                                 style: TextButton.styleFrom(
                                   foregroundColor: Colors.black,
@@ -1131,12 +1178,6 @@ class _RegisPekerjaState extends State<RegisPekerja> {
                               child: TextButton(
                                 onPressed: () {
                                   _submit();
-
-                                  setState(() {
-                                    dropdownJK = null;
-                                    dropdownValue = null;
-                                    dropdownStatus = null;
-                                  });
                                 },
                                 style: TextButton.styleFrom(
                                   foregroundColor: Colors.black,

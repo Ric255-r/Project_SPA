@@ -769,9 +769,18 @@ class _ListpekerjaState extends State<Listpekerja> {
                                         width: 100,
                                         child: ElevatedButton(
                                           onPressed: () {
-                                            openKontrakFile(
-                                              item['kontrak_img'],
-                                            );
+                                            final kontrak = item['kontrak_img'];
+
+                                            if (kontrak == null ||
+                                                kontrak.isEmpty) {
+                                              CherryToast.warning(
+                                                title: Text(
+                                                  'Kontrak tidak ada',
+                                                ),
+                                              ).show(context);
+                                            } else {
+                                              openKontrakFile(kontrak);
+                                            }
                                           },
                                           child: Text('View'),
                                         ),

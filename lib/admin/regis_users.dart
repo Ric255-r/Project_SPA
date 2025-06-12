@@ -165,7 +165,10 @@ class _RegisUserState extends State<RegisUser> {
         CherryToast.success(
           title: Text('Data berhasil disimpan'),
         ).show(context);
-        _clearForm(); // Clear the form after successful submission
+        _clearForm();
+        setState(() {
+          selectedKode = null;
+        });
       } else {
         log("Failed to save data: ${response.statusCode}");
       }
@@ -528,10 +531,6 @@ class _RegisUserState extends State<RegisUser> {
                           ).show(context);
                         } else {
                           _storeUsers();
-                          _clearForm();
-                          setState(() {
-                            selectedKode = null;
-                          });
                         }
                       },
                       style: TextButton.styleFrom(

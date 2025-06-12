@@ -3102,38 +3102,51 @@ class _RegisPaketState extends State<RegisPaket> {
                                           ),
                                         ),
                                         SizedBox(height: 12),
-                                        Container(
-                                          alignment: Alignment.centerLeft,
-                                          width: 480,
-                                          height: 30,
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(
-                                              10,
+                                        Row(
+                                          children: [
+                                            Text(
+                                              "Rp",
+                                              style: TextStyle(
+                                                fontFamily: 'Poppins',
+                                                fontSize: 16,
+                                              ),
                                             ),
-                                            color: Colors.grey[300],
-                                          ),
-                                          child: TextField(
-                                            controller:
-                                                controller_komisi_paket_extend,
-                                            keyboardType: TextInputType.number,
-                                            inputFormatters:
-                                                <TextInputFormatter>[
+                                            SizedBox(width: 5),
+                                            Container(
+                                              alignment: Alignment.centerLeft,
+                                              width: 455,
+                                              height: 30,
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                color: Colors.grey[300],
+                                              ),
+                                              child: TextField(
+                                                controller:
+                                                    controller_komisi_paket_extend,
+                                                keyboardType:
+                                                    TextInputType.number,
+                                                inputFormatters: <
+                                                  TextInputFormatter
+                                                >[
                                                   FilteringTextInputFormatter
                                                       .digitsOnly,
                                                 ],
-                                            decoration: InputDecoration(
-                                              border: InputBorder.none,
-                                              contentPadding:
-                                                  EdgeInsets.symmetric(
-                                                    vertical: 13.5,
-                                                    horizontal: 10,
-                                                  ),
+                                                decoration: InputDecoration(
+                                                  border: InputBorder.none,
+                                                  contentPadding:
+                                                      EdgeInsets.symmetric(
+                                                        vertical: 13.5,
+                                                        horizontal: 10,
+                                                      ),
+                                                ),
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  fontFamily: 'Poppins',
+                                                ),
+                                              ),
                                             ),
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              fontFamily: 'Poppins',
-                                            ),
-                                          ),
+                                          ],
                                         ),
                                       ],
                                     ),

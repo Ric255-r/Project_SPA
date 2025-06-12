@@ -232,6 +232,22 @@ class _RegisPromoState extends State<RegisPromo> {
           CherryToast.success(
             title: Text('paket ${kodePromo} Saved successfully!'),
           ).show(context);
+          controller_nama_promo.clear();
+          controller_kode_promo.clear();
+          controller_diskon_promo.clear();
+          controller_menit_mulai.clear();
+          controller_menit_selesai.clear();
+          controller_jam_mulai.clear();
+          controller_jam_selesai.clear();
+          isSelasaChecked = false;
+          isSeninChecked = false;
+          isRabuChecked = false;
+          isKamisChecked = false;
+          isJumatChecked = false;
+          isSabtuChecked = false;
+          isMingguChecked = false;
+          isVIPChecked = false;
+          isMemberChecked = false;
         } else {
           log("data gagal tersimpan");
           CherryToast.error(
@@ -356,6 +372,10 @@ class _RegisPromoState extends State<RegisPromo> {
           CherryToast.success(
             title: Text('paket ${kodePromoTahunan} Saved successfully!'),
           ).show(context);
+          controller_nama_promo_tahunan.clear();
+          controller_kode_promo_tahunan.clear();
+          controller_jangka_tahunan.clear();
+          controller_harga_promo_tahunan.clear();
         } else {
           log("data gagal tersimpan");
           CherryToast.error(
@@ -1075,22 +1095,6 @@ class _RegisPromoState extends State<RegisPromo> {
                               child: TextButton(
                                 onPressed: () {
                                   inputdatapromohappyhour();
-                                  controller_nama_promo.clear();
-                                  controller_kode_promo.clear();
-                                  controller_diskon_promo.clear();
-                                  controller_menit_mulai.clear();
-                                  controller_menit_selesai.clear();
-                                  controller_jam_mulai.clear();
-                                  controller_jam_selesai.clear();
-                                  isSelasaChecked = false;
-                                  isSeninChecked = false;
-                                  isRabuChecked = false;
-                                  isKamisChecked = false;
-                                  isJumatChecked = false;
-                                  isSabtuChecked = false;
-                                  isMingguChecked = false;
-                                  isVIPChecked = false;
-                                  isMemberChecked = false;
                                 },
                                 style: TextButton.styleFrom(
                                   foregroundColor: Colors.black,
@@ -1803,10 +1807,6 @@ class _RegisPromoState extends State<RegisPromo> {
                               child: TextButton(
                                 onPressed: () {
                                   inputdatapromotahunan();
-                                  controller_nama_promo_tahunan.clear();
-                                  controller_kode_promo_tahunan.clear();
-                                  controller_jangka_tahunan.clear();
-                                  controller_harga_promo_tahunan.clear();
                                 },
                                 style: TextButton.styleFrom(
                                   foregroundColor: Colors.black,

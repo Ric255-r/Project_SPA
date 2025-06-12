@@ -53,6 +53,7 @@ class _MainAdminState extends State<MainAdmin> {
 
       namaKaryawan.value = responseData['nama_karyawan'];
       jabatan.value = responseData['jabatan'];
+      log(jabatan.value);
     } catch (e) {
       log("Error di _profileUser main_admin $e");
     }

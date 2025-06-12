@@ -137,6 +137,12 @@ class _RegisRoomState extends State<RegisRoom> {
       CherryToast.success(
         title: Text("Ruang '${txtNamaRuangan.text}' berhasil disimpan!"),
       ).show(context);
+      txtNamaRuangan.clear();
+      txtLantaiRuangan.clear();
+      txtKodeRuangan.clear();
+      txtPassRuangan.clear();
+      _dropdownValue = null; // Reset dropdown if needed
+      _dropdownStatus = null;
       _getIdRoom();
 
       log('Successfully stored room');
@@ -512,14 +518,6 @@ class _RegisRoomState extends State<RegisRoom> {
                       return;
                     } else {
                       await _storeRoom();
-
-                      // Clear input fields after saving
-                      txtNamaRuangan.clear();
-                      txtLantaiRuangan.clear();
-                      txtKodeRuangan.clear();
-                      txtPassRuangan.clear();
-                      _dropdownValue = null; // Reset dropdown if needed
-                      _dropdownStatus = null;
 
                       setState(() {
                         _getIdRoom();
