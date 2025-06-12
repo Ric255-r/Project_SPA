@@ -37,7 +37,7 @@ class MainResepsionisController extends GetxController
   Timer? _timerWebSocket;
   Timer? _notifTimer; // macam settimeout, bikin retrigger
   bool _isWebSocketConnected = false;
-  late StreamSubscription _socketSubscription;
+  // late StreamSubscription _socketSubscription;
 
   @override
   void onInit() {
@@ -235,7 +235,7 @@ class MainResepsionisController extends GetxController
     }
 
     // ambil pesan dr Server
-    _socketSubscription = _channel!.stream.listen(
+    _channel?.stream.listen(
       (message) async {
         _notifTimer?.cancel();
         _notifTimer = Timer(Duration(seconds: 1), () {
@@ -268,7 +268,6 @@ class MainResepsionisController extends GetxController
     await _channel?.sink.close();
     _channel = null;
     _isWebSocketConnected = false;
-    _socketSubscription.cancel();
   }
 
   var storage = GetStorage();
