@@ -91,7 +91,7 @@ class _ListpromoState extends State<Listpromo> {
   Color _FourthbuttonColor = Colors.white;
 
   Timer? debounce;
-
+  bool isUmumChecked = false;
   bool isMemberChecked = false;
   bool isVIPChecked = false;
   bool isSeninChecked = false;
@@ -109,6 +109,7 @@ class _ListpromoState extends State<Listpromo> {
   int valuejumat = 0;
   int valuesabtu = 0;
   int valueminggu = 0;
+  int valueumum = 0;
   int valuevip = 0;
   int valuemember = 0;
 
@@ -1235,6 +1236,31 @@ class _ListpromoState extends State<Listpromo> {
                                     children: [
                                       Center(
                                         child: Checkbox(
+                                          value: isUmumChecked,
+                                          onChanged: (bool? value) {
+                                            setState(() {
+                                              isUmumChecked = value ?? false;
+                                            });
+                                            if (isUmumChecked == true) {
+                                              valueumum = 1;
+                                            } else {
+                                              valueumum = 0;
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                      Text(
+                                        'Umum',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontFamily: 'Poppins',
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          left: 30,
+                                        ),
+                                        child: Checkbox(
                                           value: isMemberChecked,
                                           onChanged: (bool? value) {
                                             setState(() {
@@ -1357,6 +1383,7 @@ class _ListpromoState extends State<Listpromo> {
               "valuejumat": item['jumat'],
               "valuesabtu": item['sabtu'],
               "valueminggu": item['minggu'],
+              "valueumum": item['umum'],
               "valuevip": item['vip'],
               "valuemember": item['member'],
               "jam_mulai": item['jam_mulai'],
@@ -1387,6 +1414,7 @@ class _ListpromoState extends State<Listpromo> {
           "jumat": valuejumat,
           "sabtu": valuesabtu,
           "minggu": valueminggu,
+          "umum": valueumum,
           "vip": valuevip,
           "member": valuemember,
           "jam_mulai":
@@ -1824,7 +1852,7 @@ class _ListpromoState extends State<Listpromo> {
                                       ),
                                       child: Container(
                                         width: 400,
-                                        height: 155,
+                                        height: 175,
                                         padding: EdgeInsets.only(left: 10),
                                         child: Column(
                                           children: [
@@ -2046,7 +2074,10 @@ class _ListpromoState extends State<Listpromo> {
                                                     ),
                                                   ),
                                                 ),
-                                                SizedBox(width: 20),
+                                              ],
+                                            ),
+                                            Row(
+                                              children: [
                                                 Container(
                                                   child: Text(
                                                     'Berlaku Untuk : ',
@@ -2057,6 +2088,24 @@ class _ListpromoState extends State<Listpromo> {
                                                   ),
                                                 ),
                                                 Center(
+                                                  child: Checkbox(
+                                                    value:
+                                                        item['valueumum'] == 1,
+                                                    onChanged: (bool? value) {},
+                                                  ),
+                                                ),
+                                                Text(
+                                                  'Umum',
+                                                  style: TextStyle(
+                                                    fontSize: 18,
+                                                    fontFamily: 'Poppins',
+                                                  ),
+                                                ),
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                        left: 30,
+                                                      ),
                                                   child: Checkbox(
                                                     value:
                                                         item['valuemember'] ==
@@ -2113,12 +2162,8 @@ class _ListpromoState extends State<Listpromo> {
                                                     isMingguChecked =
                                                         item['valueminggu'] ==
                                                         1;
-                                                    isVIPChecked =
-                                                        item['valueminggu'] ==
-                                                        1;
-                                                    isMingguChecked =
-                                                        item['valueminggu'] ==
-                                                        1;
+                                                    isUmumChecked =
+                                                        item['valueumum'] == 1;
                                                     isVIPChecked =
                                                         item['valuevip'] == 1;
                                                     isMemberChecked =
@@ -2138,6 +2183,8 @@ class _ListpromoState extends State<Listpromo> {
                                                         isSabtuChecked ? 1 : 0;
                                                     valueminggu =
                                                         isMingguChecked ? 1 : 0;
+                                                    valueumum =
+                                                        isUmumChecked ? 1 : 0;
                                                     valuevip =
                                                         isVIPChecked ? 1 : 0;
                                                     valuemember =
@@ -2291,7 +2338,6 @@ class _ListpromoState extends State<Listpromo> {
                                                     ),
                                                   ),
                                                 ),
-                                                SizedBox(width: 10),
                                               ],
                                             ),
                                           ],

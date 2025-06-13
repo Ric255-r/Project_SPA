@@ -79,6 +79,7 @@ class _RegisPromoState extends State<RegisPromo> {
   Color _SecondbuttonColor = Colors.white;
   Color _ThirdbuttonColor = Colors.white;
 
+  bool isUmumChecked = false;
   bool isMemberChecked = false;
   bool isVIPChecked = false;
   bool isSeninChecked = false;
@@ -100,6 +101,7 @@ class _RegisPromoState extends State<RegisPromo> {
   int valuejumat = 0;
   int valuesabtu = 0;
   int valueminggu = 0;
+  int valueumum = 0;
   int valuevip = 0;
   int valuemember = 0;
 
@@ -224,6 +226,7 @@ class _RegisPromoState extends State<RegisPromo> {
               "minggu": valueminggu,
               "jam_mulai": "$jamMulai:$menitMulai",
               "jam_selesai": "$jamSelesai:$menitSelesai",
+              "umum": valueumum,
               "member": valuemember,
               "vip": valuevip,
             },
@@ -246,6 +249,7 @@ class _RegisPromoState extends State<RegisPromo> {
           isJumatChecked = false;
           isSabtuChecked = false;
           isMingguChecked = false;
+          isUmumChecked = false;
           isVIPChecked = false;
           isMemberChecked = false;
         } else {
@@ -888,6 +892,13 @@ class _RegisPromoState extends State<RegisPromo> {
                                             ),
                                             child: TextField(
                                               controller: controller_jam_mulai,
+                                              keyboardType:
+                                                  TextInputType.number,
+                                              inputFormatters:
+                                                  <TextInputFormatter>[
+                                                    FilteringTextInputFormatter
+                                                        .digitsOnly,
+                                                  ],
                                               decoration: InputDecoration(
                                                 border: InputBorder.none,
                                                 contentPadding:
@@ -927,6 +938,13 @@ class _RegisPromoState extends State<RegisPromo> {
                                             child: TextField(
                                               controller:
                                                   controller_menit_mulai,
+                                              keyboardType:
+                                                  TextInputType.number,
+                                              inputFormatters:
+                                                  <TextInputFormatter>[
+                                                    FilteringTextInputFormatter
+                                                        .digitsOnly,
+                                                  ],
                                               decoration: InputDecoration(
                                                 border: InputBorder.none,
                                                 contentPadding:
@@ -966,6 +984,13 @@ class _RegisPromoState extends State<RegisPromo> {
                                             child: TextField(
                                               controller:
                                                   controller_jam_selesai,
+                                              keyboardType:
+                                                  TextInputType.number,
+                                              inputFormatters:
+                                                  <TextInputFormatter>[
+                                                    FilteringTextInputFormatter
+                                                        .digitsOnly,
+                                                  ],
                                               decoration: InputDecoration(
                                                 border: InputBorder.none,
                                                 contentPadding:
@@ -1005,6 +1030,13 @@ class _RegisPromoState extends State<RegisPromo> {
                                             child: TextField(
                                               controller:
                                                   controller_menit_selesai,
+                                              keyboardType:
+                                                  TextInputType.number,
+                                              inputFormatters:
+                                                  <TextInputFormatter>[
+                                                    FilteringTextInputFormatter
+                                                        .digitsOnly,
+                                                  ],
                                               decoration: InputDecoration(
                                                 border: InputBorder.none,
                                                 contentPadding:
@@ -1022,9 +1054,36 @@ class _RegisPromoState extends State<RegisPromo> {
                                         ],
                                       ),
                                       SizedBox(height: 3),
+
                                       Row(
                                         children: [
                                           Center(
+                                            child: Checkbox(
+                                              value: isUmumChecked,
+                                              onChanged: (bool? value) {
+                                                setState(() {
+                                                  isUmumChecked =
+                                                      value ?? false;
+                                                });
+                                                if (isUmumChecked == true) {
+                                                  valueumum = 1;
+                                                } else {
+                                                  valueumum = 0;
+                                                }
+                                              },
+                                            ),
+                                          ),
+                                          Text(
+                                            'Umum',
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              fontFamily: 'Poppins',
+                                            ),
+                                          ),
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              left: 30,
+                                            ),
                                             child: Checkbox(
                                               value: isMemberChecked,
                                               onChanged: (bool? value) {

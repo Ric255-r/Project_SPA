@@ -670,6 +670,10 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                             txtTerapis.text =
                                 "${data['id_karyawan']} - ${data['nama_karyawan']}";
                             _idTerapis = data['id_karyawan'];
+                            controllerPekerja.getidterapis.value =
+                                data['id_karyawan'];
+                            controllerPekerja.getnamaterapis.value =
+                                data['nama_karyawan'];
                           } catch (e) {
                             print(
                               "Error: txtTerapis is not directly accessible here. Ensure it's properly managed by GetX.",
@@ -1721,6 +1725,7 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                     activePromos: _activePromos,
                                     idMember: idMember,
                                     namaRoom: txtRoom.text,
+                                    statusTamu: dropdownValue
                                   ),
                                 );
                               });
