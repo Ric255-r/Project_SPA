@@ -2,7 +2,9 @@
 
 import 'dart:async';
 import 'package:Project_SPA/kamar_terapis/terapis_confirm.dart';
+import 'package:Project_SPA/resepsionis/detail_fnb_addon.dart';
 import 'package:Project_SPA/resepsionis/store_locker.dart';
+import 'package:Project_SPA/resepsionis/transaksi_massage.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +32,7 @@ class _BillingLockerState extends State<BillingLocker> {
   RxList<Map<String, dynamic>> databillinglocker = <Map<String, dynamic>>[].obs;
 
   final LockerManager _lockerManager = LockerManager();
-
+  
   Future<void> getdatabillinglocker() async {
     try {
       var response = await dio.get('${myIpAddr()}/billinglocker/getdatalocker');
@@ -165,70 +167,118 @@ class _BillingLockerState extends State<BillingLocker> {
                                         itemCount: databillinglocker.length,
                                         itemBuilder: (context, index) {
                                           var item = databillinglocker[index];
-                                          return Container(
-                                            decoration: BoxDecoration(
-                                              color:
-                                                  item['status'] == 0
-                                                      ? Color(0xFFEEEEEE)
-                                                      : Color(0xFFA6FF8F),
-                                              borderRadius:
-                                                  BorderRadius.circular(20),
-                                            ),
-                                            child: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Text(
-                                                  'Locker ${item['nomor_locker'].toString()}',
-                                                  style: const TextStyle(
-                                                    color: Colors.black,
-                                                    fontSize: 30,
-                                                  ),
+                                          return Material(
+                                            color: Colors.transparent,
+                                            child: InkWell(
+                                              onLongPress: () async {
+                                                final nomorLocker =
+                                                    item['nomor_locker'];
+
+                                                try {
+                                                  final response = await dio.get(
+                                                    "${myIpAddr()}/fnb/latestidTrans/$nomorLocker",
+                                                  );
+
+                                                  final idTransaksi =
+                                                      response
+                                                          .data['id_transaksi'];
+
+                                                  if (idTransaksi != null) {
+                                                    // Optional: Store locker if still needed
+                                                    _lockerManager.addLocker(
+                                                      int.parse(nomorLocker),
+                                                    );
+
+                                                    Get.to(
+                                                      () => DetailFnbAddon(
+                                                        idTrans: idTransaksi,
+                                                      ),
+                                                    );
+                                                    log(idTransaksi);
+                                                  } else {
+                                                    Get.snackbar(
+                                                      "Tidak ditemukan",
+                                                      "Belum ada transaksi untuk locker ini.",
+                                                    );
+                                                  }
+                                                } catch (e) {
+                                                  print(
+                                                    "Error fetching transaksi: $e",
+                                                  );
+                                                  Get.snackbar(
+                                                    "Error",
+                                                    "Gagal mengambil transaksi.",
+                                                  );
+                                                }
+                                              },
+
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  color:
+                                                      item['status'] == 0
+                                                          ? Color(0xFFEEEEEE)
+                                                          : Color(0xFFA6FF8F),
+                                                  borderRadius:
+                                                      BorderRadius.circular(20),
                                                 ),
-                                                Padding(
-                                                  padding: EdgeInsets.only(
-                                                    top: 0,
-                                                  ),
-                                                  child: Text(
-                                                    item['status'] == 0
-                                                        ? 'Not Occupied'
-                                                        : 'Occupied',
-                                                    style: const TextStyle(
-                                                      color: Colors.black,
-                                                      fontSize: 16,
+                                                child: Column(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: [
+                                                    Text(
+                                                      'Locker ${item['nomor_locker'].toString()}',
+                                                      style: const TextStyle(
+                                                        color: Colors.black,
+                                                        fontSize: 30,
+                                                        fontFamily: 'Poppins',
+                                                      ),
                                                     ),
-                                                  ),
-                                                ),
-                                                ElevatedButton(
-                                                  onPressed: () {
-                                                    // statusloker = item['status'];
-                                                    // statusloker = 0;
-                                                    // updatedataloker(
-                                                    //   statusloker,
-                                                    //   item['nomor_locker'],
-                                                    // );
-
-                                                    if (item['status'] == 0) {
-                                                      _lockerManager.addLocker(
-                                                        int.parse(
-                                                          item['nomor_locker'],
+                                                    Padding(
+                                                      padding: EdgeInsets.only(
+                                                        top: 0,
+                                                      ),
+                                                      child: Text(
+                                                        item['status'] == 0
+                                                            ? 'Not Occupied'
+                                                            : 'Occupied',
+                                                        style: const TextStyle(
+                                                          color: Colors.black,
+                                                          fontSize: 16,
+                                                          fontFamily: 'Poppins',
                                                         ),
-                                                      );
+                                                      ),
+                                                    ),
+                                                    ElevatedButton(
+                                                      onPressed: () {
+                                                        // statusloker = item['status'];
+                                                        // statusloker = 0;
+                                                        // updatedataloker(
+                                                        //   statusloker,
+                                                        //   item['nomor_locker'],
+                                                        // );
 
-                                                      Get.to(
-                                                        () => JenisTransaksi(),
-                                                      );
-                                                    } else {
-                                                      // Balikin Lg Ke Non-Occupied
-                                                      updatedataloker(
-                                                        0,
-                                                        item['nomor_locker'],
-                                                      );
-                                                    }
-                                                    refreshdatabillinglocker();
-                                                  },
-                                                  style:
-                                                      ElevatedButton.styleFrom(
+                                                        if (item['status'] ==
+                                                            0) {
+                                                          _lockerManager.addLocker(
+                                                            int.parse(
+                                                              item['nomor_locker'],
+                                                            ),
+                                                          );
+
+                                                          Get.to(
+                                                            () =>
+                                                                JenisTransaksi(),
+                                                          );
+                                                        } else {
+                                                          // Balikin Lg Ke Non-Occupied
+                                                          updatedataloker(
+                                                            0,
+                                                            item['nomor_locker'],
+                                                          );
+                                                        }
+                                                        refreshdatabillinglocker();
+                                                      },
+                                                      style: ElevatedButton.styleFrom(
                                                         backgroundColor:
                                                             item['status'] == 0
                                                                 ? Color(
@@ -238,13 +288,15 @@ class _BillingLockerState extends State<BillingLocker> {
                                                                   0xFFFF8282,
                                                                 ),
                                                       ),
-                                                  child: Text(
-                                                    item['status'] == 0
-                                                        ? 'Open'
-                                                        : 'Close',
-                                                  ),
+                                                      child: Text(
+                                                        item['status'] == 0
+                                                            ? 'Open'
+                                                            : 'Close',
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
-                                              ],
+                                              ),
                                             ),
                                           );
                                         },

@@ -6,6 +6,7 @@ import 'package:Project_SPA/resepsionis/transaksi_fasilitas.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'dart:async';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:Project_SPA/resepsionis/transaksi_food.dart';
 import 'package:Project_SPA/resepsionis/transaksi_massage.dart';
@@ -19,6 +20,7 @@ class TampilanTerapis extends StatefulWidget {
 
 class _TampilanTerapisState extends State<TampilanTerapis> {
   var dio = Dio();
+  Timer? _refreshTimer;
   RxList<Map<String, dynamic>> dataTerapis = <Map<String, dynamic>>[].obs;
   Future<void> getdataTerapis() async {
     try {
@@ -47,6 +49,16 @@ class _TampilanTerapisState extends State<TampilanTerapis> {
     // TODO: implement initState
     super.initState();
     getdataTerapis();
+    _refreshTimer = Timer.periodic(Duration(seconds: 40), (timer) {
+      getdataTerapis();
+    });
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    _refreshTimer?.cancel();
   }
 
   @override
