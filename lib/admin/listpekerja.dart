@@ -82,9 +82,12 @@ class _ListpekerjaState extends State<Listpekerja> {
   late Future<List<Map<String, dynamic>>> futureData;
 
   void openKontrakFile(String kontrakPath) async {
-    final baseUrl = 'http://192.168.1.16:5500/listpekerja';
-    String fileName =
-        kontrakPath.contains(',') ? kontrakPath.split(',')[0] : kontrakPath;
+    var urlLama = myIpAddr();
+    var splitUrl = urlLama.split("/");
+    var urlBaru = "http://" + splitUrl[2] + "/listpekerja";
+
+    final baseUrl = urlBaru;
+    String fileName = kontrakPath.contains(',') ? kontrakPath.split(',')[0] : kontrakPath;
 
     final fullUrl = '$baseUrl/kontrak/$fileName';
     final encodedUrl = Uri.encodeFull(fullUrl);
@@ -108,18 +111,10 @@ class _ListpekerjaState extends State<Listpekerja> {
   }
 
   void isibuttoneditpekerja(BuildContext context, Map<String, dynamic> item) {
-    TextEditingController namaController = TextEditingController(
-      text: item['nama_karyawan'],
-    );
-    TextEditingController nikController = TextEditingController(
-      text: item['nik'],
-    );
-    TextEditingController noHpController = TextEditingController(
-      text: item['no_hp'],
-    );
-    TextEditingController alamatController = TextEditingController(
-      text: item['alamat'],
-    );
+    TextEditingController namaController = TextEditingController(text: item['nama_karyawan']);
+    TextEditingController nikController = TextEditingController(text: item['nik']);
+    TextEditingController noHpController = TextEditingController(text: item['no_hp']);
+    TextEditingController alamatController = TextEditingController(text: item['alamat']);
     String? dropdownStatus = item['status'];
     String? dropdownJK = item['jk'];
     Get.dialog(
@@ -148,53 +143,17 @@ class _ListpekerjaState extends State<Listpekerja> {
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   SizedBox(height: 15),
-                                  Text(
-                                    'Nama :',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 16,
-                                    ),
-                                  ),
+                                  Text('Nama :', style: TextStyle(fontFamily: 'Poppins', fontSize: 16)),
                                   SizedBox(height: 15),
-                                  Text(
-                                    'NIK :',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 16,
-                                    ),
-                                  ),
+                                  Text('NIK :', style: TextStyle(fontFamily: 'Poppins', fontSize: 16)),
                                   SizedBox(height: 15),
-                                  Text(
-                                    'No HP :',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 16,
-                                    ),
-                                  ),
+                                  Text('No HP :', style: TextStyle(fontFamily: 'Poppins', fontSize: 16)),
                                   SizedBox(height: 15),
-                                  Text(
-                                    'Jenis Kelamin :',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 16,
-                                    ),
-                                  ),
+                                  Text('Jenis Kelamin :', style: TextStyle(fontFamily: 'Poppins', fontSize: 16)),
                                   SizedBox(height: 15),
-                                  Text(
-                                    'Alamat :',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 16,
-                                    ),
-                                  ),
+                                  Text('Alamat :', style: TextStyle(fontFamily: 'Poppins', fontSize: 16)),
                                   SizedBox(height: 15),
-                                  Text(
-                                    'Status :',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 16,
-                                    ),
-                                  ),
+                                  Text('Status :', style: TextStyle(fontFamily: 'Poppins', fontSize: 16)),
                                   SizedBox(height: 15),
                                 ],
                               ),
@@ -216,29 +175,16 @@ class _ListpekerjaState extends State<Listpekerja> {
                                     alignment: Alignment.centerLeft,
                                     width: 480,
                                     height: 30,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: Colors.grey[300],
-                                    ),
+                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.grey[300]),
                                     child: TextField(
                                       keyboardType: TextInputType.text,
-                                      inputFormatters: [
-                                        FilteringTextInputFormatter.allow(
-                                          RegExp(r'^[a-zA-Z]+$'),
-                                        ),
-                                      ],
+                                      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^[a-zA-Z]+$'))],
                                       controller: namaController,
                                       decoration: InputDecoration(
                                         border: InputBorder.none,
-                                        contentPadding: EdgeInsets.symmetric(
-                                          vertical: 13.5,
-                                          horizontal: 10,
-                                        ),
+                                        contentPadding: EdgeInsets.symmetric(vertical: 13.5, horizontal: 10),
                                       ),
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontFamily: 'Poppins',
-                                      ),
+                                      style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                     ),
                                   ),
                                   SizedBox(height: 8),
@@ -246,27 +192,16 @@ class _ListpekerjaState extends State<Listpekerja> {
                                     alignment: Alignment.centerLeft,
                                     width: 480,
                                     height: 30,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: Colors.grey[300],
-                                    ),
+                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.grey[300]),
                                     child: TextField(
                                       keyboardType: TextInputType.number,
-                                      inputFormatters: <TextInputFormatter>[
-                                        FilteringTextInputFormatter.digitsOnly,
-                                      ],
+                                      inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
                                       controller: nikController,
                                       decoration: InputDecoration(
                                         border: InputBorder.none,
-                                        contentPadding: EdgeInsets.symmetric(
-                                          vertical: 13.5,
-                                          horizontal: 10,
-                                        ),
+                                        contentPadding: EdgeInsets.symmetric(vertical: 13.5, horizontal: 10),
                                       ),
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontFamily: 'Poppins',
-                                      ),
+                                      style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                     ),
                                   ),
                                   SizedBox(height: 8),
@@ -274,27 +209,16 @@ class _ListpekerjaState extends State<Listpekerja> {
                                     alignment: Alignment.centerLeft,
                                     width: 480,
                                     height: 30,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: Colors.grey[300],
-                                    ),
+                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.grey[300]),
                                     child: TextField(
                                       keyboardType: TextInputType.number,
-                                      inputFormatters: <TextInputFormatter>[
-                                        FilteringTextInputFormatter.digitsOnly,
-                                      ],
+                                      inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
                                       controller: noHpController,
                                       decoration: InputDecoration(
                                         border: InputBorder.none,
-                                        contentPadding: EdgeInsets.symmetric(
-                                          vertical: 13.5,
-                                          horizontal: 10,
-                                        ),
+                                        contentPadding: EdgeInsets.symmetric(vertical: 13.5, horizontal: 10),
                                       ),
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontFamily: 'Poppins',
-                                      ),
+                                      style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                     ),
                                   ),
                                   SizedBox(height: 8),
@@ -302,42 +226,27 @@ class _ListpekerjaState extends State<Listpekerja> {
                                     alignment: Alignment.centerLeft,
                                     width: 480,
                                     height: 30,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: Colors.grey[300],
-                                    ),
+                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.grey[300]),
                                     child: DropdownButton<String>(
                                       value: dropdownJK,
                                       isExpanded: true,
                                       icon: const Icon(Icons.arrow_drop_down),
                                       elevation: 14,
-                                      style: const TextStyle(
-                                        color: Colors.deepPurple,
-                                      ),
+                                      style: const TextStyle(color: Colors.deepPurple),
                                       underline: SizedBox(),
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                      ),
+                                      padding: EdgeInsets.symmetric(horizontal: 10),
                                       onChanged: (String? value) {
                                         setState(() {
                                           dropdownJK = value;
                                         });
                                       },
                                       items:
-                                          listJK.map<DropdownMenuItem<String>>((
-                                            String value,
-                                          ) {
+                                          listJK.map<DropdownMenuItem<String>>((String value) {
                                             return DropdownMenuItem<String>(
                                               value: value,
                                               child: Align(
                                                 alignment: Alignment.centerLeft,
-                                                child: Text(
-                                                  value,
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    fontFamily: 'Poppins',
-                                                  ),
-                                                ),
+                                                child: Text(value, style: TextStyle(fontSize: 14, fontFamily: 'Poppins')),
                                               ),
                                             );
                                           }).toList(),
@@ -348,23 +257,14 @@ class _ListpekerjaState extends State<Listpekerja> {
                                     alignment: Alignment.centerLeft,
                                     width: 480,
                                     height: 30,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: Colors.grey[300],
-                                    ),
+                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.grey[300]),
                                     child: TextField(
                                       controller: alamatController,
                                       decoration: InputDecoration(
                                         border: InputBorder.none,
-                                        contentPadding: EdgeInsets.symmetric(
-                                          vertical: 13.5,
-                                          horizontal: 10,
-                                        ),
+                                        contentPadding: EdgeInsets.symmetric(vertical: 13.5, horizontal: 10),
                                       ),
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontFamily: 'Poppins',
-                                      ),
+                                      style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                     ),
                                   ),
                                   SizedBox(height: 8),
@@ -372,42 +272,27 @@ class _ListpekerjaState extends State<Listpekerja> {
                                     alignment: Alignment.centerLeft,
                                     width: 480,
                                     height: 30,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: Colors.grey[300],
-                                    ),
+                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.grey[300]),
                                     child: DropdownButton<String>(
                                       value: dropdownStatus,
                                       isExpanded: true,
                                       icon: const Icon(Icons.arrow_drop_down),
                                       elevation: 14,
-                                      style: const TextStyle(
-                                        color: Colors.deepPurple,
-                                      ),
+                                      style: const TextStyle(color: Colors.deepPurple),
                                       underline: SizedBox(),
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                      ),
+                                      padding: EdgeInsets.symmetric(horizontal: 10),
                                       onChanged: (String? value) {
                                         setState(() {
                                           dropdownStatus = value;
                                         });
                                       },
                                       items:
-                                          listStatus.map<
-                                            DropdownMenuItem<String>
-                                          >((String value) {
+                                          listStatus.map<DropdownMenuItem<String>>((String value) {
                                             return DropdownMenuItem<String>(
                                               value: value,
                                               child: Align(
                                                 alignment: Alignment.centerLeft,
-                                                child: Text(
-                                                  value,
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    fontFamily: 'Poppins',
-                                                  ),
-                                                ),
+                                                child: Text(value, style: TextStyle(fontSize: 14, fontFamily: 'Poppins')),
                                               ),
                                             );
                                           }).toList(),
@@ -415,24 +300,18 @@ class _ListpekerjaState extends State<Listpekerja> {
                                   ),
                                   SizedBox(height: 20),
                                   Padding(
-                                    padding: const EdgeInsets.only(
-                                      right: 60,
-                                      top: 30,
-                                    ),
+                                    padding: const EdgeInsets.only(right: 60, top: 30),
                                     child: Center(
                                       child: SizedBox(
                                         height: 50,
                                         width: 120,
                                         child: TextButton(
-                                          style: TextButton.styleFrom(
-                                            backgroundColor: Colors.green,
-                                          ),
+                                          style: TextButton.styleFrom(backgroundColor: Colors.green),
                                           onPressed: () async {
                                             final response = await dio.put(
                                               '${myIpAddr()}/listpekerja/update_pekerja/${item['id_karyawan']}',
                                               data: {
-                                                "nama_karyawan":
-                                                    namaController.text,
+                                                "nama_karyawan": namaController.text,
                                                 "nik": nikController.text,
                                                 "no_hp": noHpController.text,
                                                 "alamat": alamatController.text,
@@ -450,21 +329,10 @@ class _ListpekerjaState extends State<Listpekerja> {
                                               alamatController.clear();
                                               dropdownStatus = null;
                                               dropdownJK = null;
-                                              CherryToast.success(
-                                                title: Text(
-                                                  'Data berhasil diupdate',
-                                                ),
-                                              ).show(context);
+                                              CherryToast.success(title: Text('Data berhasil diupdate')).show(context);
                                             }
                                           },
-                                          child: Text(
-                                            'Simpan',
-                                            style: TextStyle(
-                                              fontFamily: 'Poppins',
-                                              fontSize: 18,
-                                              color: Colors.white,
-                                            ),
-                                          ),
+                                          child: Text('Simpan', style: TextStyle(fontFamily: 'Poppins', fontSize: 18, color: Colors.white)),
                                         ),
                                       ),
                                     ),
@@ -489,12 +357,7 @@ class _ListpekerjaState extends State<Listpekerja> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(''),
-        toolbarHeight: 30,
-        centerTitle: true,
-        backgroundColor: Color(0XFFFFE0B2),
-      ),
+      appBar: AppBar(title: Text(''), toolbarHeight: 30, centerTitle: true, backgroundColor: Color(0XFFFFE0B2)),
       body: Container(
         decoration: BoxDecoration(color: Color(0XFFFFE0B2)),
         width: Get.width,
@@ -505,14 +368,7 @@ class _ListpekerjaState extends State<Listpekerja> {
             children: [
               Padding(
                 padding: EdgeInsets.only(top: 20),
-                child: Text(
-                  'List Pekerja',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: Text('List Pekerja', style: TextStyle(fontFamily: 'Poppins', fontSize: 30, fontWeight: FontWeight.bold)),
               ),
               Container(
                 margin: EdgeInsets.only(left: 730),
@@ -532,18 +388,12 @@ class _ListpekerjaState extends State<Listpekerja> {
                             setState(() {
                               filteredList =
                                   dataList.where((item) {
-                                    return item['nama_karyawan']
-                                        .toString()
-                                        .toLowerCase()
-                                        .contains(query.toLowerCase());
+                                    return item['nama_karyawan'].toString().toLowerCase().contains(query.toLowerCase());
                                   }).toList();
                             });
                           });
                         },
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(),
-                          labelText: 'Input Nama',
-                        ),
+                        decoration: InputDecoration(border: OutlineInputBorder(), labelText: 'Input Nama'),
                       ),
                     ),
                   ],
@@ -553,25 +403,16 @@ class _ListpekerjaState extends State<Listpekerja> {
               Container(
                 width: 900,
                 height: 470,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.all(Radius.circular(20)),
-                  color: Colors.white,
-                ),
+                decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(20)), color: Colors.white),
                 child: FutureBuilder<List<Map<String, dynamic>>>(
                   future: futureData,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(
-                        child: CircularProgressIndicator(),
-                      ); // Loading state
+                      return Center(child: CircularProgressIndicator()); // Loading state
                     } else if (snapshot.hasError) {
-                      return Center(
-                        child: Text("Error: ${snapshot.error}"),
-                      ); // Error state
+                      return Center(child: Text("Error: ${snapshot.error}")); // Error state
                     } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return Center(
-                        child: Text("No data available"),
-                      ); // No data state
+                      return Center(child: Text("No data available")); // No data state
                     }
 
                     return ListView.builder(
@@ -581,10 +422,7 @@ class _ListpekerjaState extends State<Listpekerja> {
                         final item = filteredList[index];
                         return Container(
                           margin: EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            border: Border.all(width: 1),
-                            borderRadius: BorderRadius.all(Radius.circular(10)),
-                          ),
+                          decoration: BoxDecoration(border: Border.all(width: 1), borderRadius: BorderRadius.all(Radius.circular(10))),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -594,176 +432,87 @@ class _ListpekerjaState extends State<Listpekerja> {
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
                                   Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     mainAxisAlignment: MainAxisAlignment.start,
                                     children: [
                                       Container(
                                         width: 100,
-                                        margin: EdgeInsets.only(
-                                          left: 20,
-                                          top: 5,
-                                          bottom: 0,
-                                          right: 5,
-                                        ),
-                                        child: Text(
-                                          'Kode ',
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                            fontFamily: 'Poppins',
-                                          ),
-                                        ),
+                                        margin: EdgeInsets.only(left: 20, top: 5, bottom: 0, right: 5),
+                                        child: Text('Kode ', style: TextStyle(fontSize: 20, fontFamily: 'Poppins')),
                                       ),
                                       Padding(
                                         padding: const EdgeInsets.only(top: 5),
                                         child: Container(
                                           width: 160,
-                                          child: Text(
-                                            item['id_karyawan'] ?? "Unknown",
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontFamily: 'Poppins',
-                                            ),
-                                          ),
+                                          child: Text(item['id_karyawan'] ?? "Unknown", style: TextStyle(fontSize: 20, fontFamily: 'Poppins')),
                                         ),
                                       ),
                                     ],
                                   ),
                                   Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     mainAxisAlignment: MainAxisAlignment.start,
                                     children: [
                                       Container(
                                         width: 100,
-                                        margin: EdgeInsets.only(
-                                          left: 20,
-                                          top: 3,
-                                          bottom: 0,
-                                          right: 5,
-                                        ),
-                                        child: Text(
-                                          'Nama ',
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                            fontFamily: 'Poppins',
-                                          ),
-                                        ),
+                                        margin: EdgeInsets.only(left: 20, top: 3, bottom: 0, right: 5),
+                                        child: Text('Nama ', style: TextStyle(fontSize: 20, fontFamily: 'Poppins')),
                                       ),
                                       Padding(
                                         padding: const EdgeInsets.only(top: 3),
                                         child: Container(
                                           width: 370,
-                                          child: Text(
-                                            item['nama_karyawan'] ?? "Unknown",
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontFamily: 'Poppins',
-                                            ),
-                                          ),
+                                          child: Text(item['nama_karyawan'] ?? "Unknown", style: TextStyle(fontSize: 20, fontFamily: 'Poppins')),
                                         ),
                                       ),
                                     ],
                                   ),
                                   Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     mainAxisAlignment: MainAxisAlignment.start,
                                     children: [
                                       Container(
                                         width: 100,
-                                        margin: EdgeInsets.only(
-                                          left: 20,
-                                          top: 5,
-                                          bottom: 0,
-                                          right: 5,
-                                        ),
-                                        child: Text(
-                                          'NoHp ',
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                            fontFamily: 'Poppins',
-                                          ),
-                                        ),
+                                        margin: EdgeInsets.only(left: 20, top: 5, bottom: 0, right: 5),
+                                        child: Text('NoHp ', style: TextStyle(fontSize: 20, fontFamily: 'Poppins')),
                                       ),
                                       Padding(
                                         padding: const EdgeInsets.only(top: 3),
                                         child: Container(
                                           width: 370,
-                                          child: Text(
-                                            item['no_hp'] ?? "Unknown",
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontFamily: 'Poppins',
-                                            ),
-                                          ),
+                                          child: Text(item['no_hp'] ?? "Unknown", style: TextStyle(fontSize: 20, fontFamily: 'Poppins')),
                                         ),
                                       ),
                                     ],
                                   ),
                                   Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     mainAxisAlignment: MainAxisAlignment.start,
                                     children: [
                                       Container(
                                         width: 100,
-                                        margin: EdgeInsets.only(
-                                          left: 20,
-                                          top: 5,
-                                          bottom: 0,
-                                          right: 5,
-                                        ),
-                                        child: Text(
-                                          'Alamat ',
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                            fontFamily: 'Poppins',
-                                          ),
-                                        ),
+                                        margin: EdgeInsets.only(left: 20, top: 5, bottom: 0, right: 5),
+                                        child: Text('Alamat ', style: TextStyle(fontSize: 20, fontFamily: 'Poppins')),
                                       ),
                                       Padding(
                                         padding: const EdgeInsets.only(top: 3),
                                         child: Container(
-                                          decoration: BoxDecoration(
-                                            border: Border.all(width: 1),
-                                            borderRadius: BorderRadius.all(
-                                              Radius.circular(10),
-                                            ),
-                                          ),
+                                          decoration: BoxDecoration(border: Border.all(width: 1), borderRadius: BorderRadius.all(Radius.circular(10))),
                                           width: 400,
-                                          child: AutoSizeText(
-                                            item['alamat'] ?? "Unknown",
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontFamily: 'Poppins',
-                                            ),
-                                          ),
+                                          child: AutoSizeText(item['alamat'] ?? "Unknown", style: TextStyle(fontSize: 20, fontFamily: 'Poppins')),
                                         ),
                                       ),
                                     ],
                                   ),
 
                                   Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     mainAxisAlignment: MainAxisAlignment.start,
                                     children: [
                                       Container(
                                         width: 100,
-                                        margin: EdgeInsets.only(
-                                          left: 20,
-                                          top: 10,
-                                          bottom: 0,
-                                          right: 5,
-                                        ),
-                                        child: Text(
-                                          'Kontrak ',
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                            fontFamily: 'Poppins',
-                                          ),
-                                        ),
+                                        margin: EdgeInsets.only(left: 20, top: 10, bottom: 0, right: 5),
+                                        child: Text('Kontrak ', style: TextStyle(fontSize: 20, fontFamily: 'Poppins')),
                                       ),
                                       Container(
                                         width: 100,
@@ -771,13 +520,8 @@ class _ListpekerjaState extends State<Listpekerja> {
                                           onPressed: () {
                                             final kontrak = item['kontrak_img'];
 
-                                            if (kontrak == null ||
-                                                kontrak.isEmpty) {
-                                              CherryToast.warning(
-                                                title: Text(
-                                                  'Kontrak tidak ada',
-                                                ),
-                                              ).show(context);
+                                            if (kontrak == null || kontrak.isEmpty) {
+                                              CherryToast.warning(title: Text('Kontrak tidak ada')).show(context);
                                             } else {
                                               openKontrakFile(kontrak);
                                             }
@@ -795,146 +539,74 @@ class _ListpekerjaState extends State<Listpekerja> {
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
                                   Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     mainAxisAlignment: MainAxisAlignment.start,
                                     children: [
                                       Container(
                                         width: 100,
 
-                                        margin: EdgeInsets.only(
-                                          left: 20,
-                                          top: 5,
-                                          bottom: 0,
-                                          right: 5,
-                                        ),
-                                        child: Text(
-                                          'NIK ',
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                            fontFamily: 'Poppins',
-                                          ),
-                                        ),
+                                        margin: EdgeInsets.only(left: 20, top: 5, bottom: 0, right: 5),
+                                        child: Text('NIK ', style: TextStyle(fontSize: 20, fontFamily: 'Poppins')),
                                       ),
                                       Padding(
                                         padding: const EdgeInsets.only(top: 5),
                                         child: Container(
                                           width: 200,
-                                          child: Text(
-                                            item['nik'] ?? "Unknown",
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontFamily: 'Poppins',
-                                            ),
-                                          ),
+                                          child: Text(item['nik'] ?? "Unknown", style: TextStyle(fontSize: 20, fontFamily: 'Poppins')),
                                         ),
                                       ),
                                     ],
                                   ),
                                   Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     mainAxisAlignment: MainAxisAlignment.start,
                                     children: [
                                       Container(
                                         width: 100,
-                                        margin: EdgeInsets.only(
-                                          left: 20,
-                                          top: 3,
-                                          bottom: 0,
-                                          right: 5,
-                                        ),
-                                        child: Text(
-                                          'JK ',
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                            fontFamily: 'Poppins',
-                                          ),
-                                        ),
+                                        margin: EdgeInsets.only(left: 20, top: 3, bottom: 0, right: 5),
+                                        child: Text('JK ', style: TextStyle(fontSize: 20, fontFamily: 'Poppins')),
                                       ),
                                       Padding(
                                         padding: const EdgeInsets.only(top: 3),
                                         child: Container(
                                           width: 200,
-                                          child: Text(
-                                            item['jk'] ?? "Unknown",
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontFamily: 'Poppins',
-                                            ),
-                                          ),
+                                          child: Text(item['jk'] ?? "Unknown", style: TextStyle(fontSize: 20, fontFamily: 'Poppins')),
                                         ),
                                       ),
                                     ],
                                   ),
                                   Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     mainAxisAlignment: MainAxisAlignment.start,
                                     children: [
                                       Container(
                                         width: 100,
-                                        margin: EdgeInsets.only(
-                                          left: 20,
-                                          top: 5,
-                                          bottom: 0,
-                                          right: 5,
-                                        ),
-                                        child: Text(
-                                          'Jabatan ',
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                            fontFamily: 'Poppins',
-                                          ),
-                                        ),
+                                        margin: EdgeInsets.only(left: 20, top: 5, bottom: 0, right: 5),
+                                        child: Text('Jabatan ', style: TextStyle(fontSize: 20, fontFamily: 'Poppins')),
                                       ),
                                       Padding(
                                         padding: const EdgeInsets.only(top: 3),
                                         child: Container(
                                           width: 160,
-                                          child: Text(
-                                            item['jabatan'] ?? "Unknown",
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontFamily: 'Poppins',
-                                            ),
-                                          ),
+                                          child: Text(item['jabatan'] ?? "Unknown", style: TextStyle(fontSize: 20, fontFamily: 'Poppins')),
                                         ),
                                       ),
                                     ],
                                   ),
                                   Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     mainAxisAlignment: MainAxisAlignment.start,
                                     children: [
                                       Container(
                                         width: 100,
-                                        margin: EdgeInsets.only(
-                                          left: 20,
-                                          top: 3,
-                                          bottom: 0,
-                                          right: 5,
-                                        ),
-                                        child: Text(
-                                          'Status ',
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                            fontFamily: 'Poppins',
-                                          ),
-                                        ),
+                                        margin: EdgeInsets.only(left: 20, top: 3, bottom: 0, right: 5),
+                                        child: Text('Status ', style: TextStyle(fontSize: 20, fontFamily: 'Poppins')),
                                       ),
                                       Padding(
                                         padding: const EdgeInsets.only(top: 3),
                                         child: Container(
                                           width: 160,
-                                          child: Text(
-                                            item['status'] ?? "Unknown",
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontFamily: 'Poppins',
-                                            ),
-                                          ),
+                                          child: Text(item['status'] ?? "Unknown", style: TextStyle(fontSize: 20, fontFamily: 'Poppins')),
                                         ),
                                       ),
                                     ],
@@ -961,9 +633,7 @@ class _ListpekerjaState extends State<Listpekerja> {
                                             Get.dialog(
                                               AlertDialog(
                                                 title: Text('Confirm'),
-                                                content: Text(
-                                                  'Yakin menghapus data?',
-                                                ),
+                                                content: Text('Yakin menghapus data?'),
                                                 actions: [
                                                   TextButton(
                                                     onPressed: () {
@@ -973,21 +643,15 @@ class _ListpekerjaState extends State<Listpekerja> {
                                                   ),
                                                   TextButton(
                                                     onPressed: () async {
-                                                      final response = await dio
-                                                          .delete(
-                                                            '${myIpAddr()}/listpekerja/delete_pekerja/${item['id_karyawan']}',
-                                                            data: {},
-                                                          );
-                                                      if (response.statusCode ==
-                                                          200) {
+                                                      final response = await dio.delete(
+                                                        '${myIpAddr()}/listpekerja/delete_pekerja/${item['id_karyawan']}',
+                                                        data: {},
+                                                      );
+                                                      if (response.statusCode == 200) {
                                                         await refreshData();
                                                         dropdownJK = null;
                                                         textcari.clear();
-                                                        CherryToast.success(
-                                                          title: Text(
-                                                            'Data berhasil dihapus',
-                                                          ),
-                                                        ).show(context);
+                                                        CherryToast.success(title: Text('Data berhasil dihapus')).show(context);
                                                         Get.back();
                                                       }
                                                     },
