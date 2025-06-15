@@ -82,13 +82,20 @@ class ListTransaksiController extends GetxController {
   }
 
   var dio = Dio();
+  RxInt omsetCash = 0.obs;
+  RxInt omsetDebit = 0.obs;
+  RxInt omsetQris = 0.obs;
 
   Future<List<Map<String, dynamic>>> fetchData() async {
     try {
       final response = await dio.get('${myIpAddr()}/listtrans/datatrans?hak_akses=${_hakAkses.value}');
 
       if (response.statusCode == 200) {
-        return List<Map<String, dynamic>>.from(response.data);
+        omsetCash.value = (response.data['total_cash'] as int);
+        omsetDebit.value = (response.data['total_debit'] as int);
+        omsetQris.value = (response.data['total_qris'] as int);
+
+        return List<Map<String, dynamic>>.from(response.data['main_data']);
       } else {
         throw Exception("Failed to load data: ${response.statusCode}");
       }
@@ -759,7 +766,7 @@ class ListTransaksiController extends GetxController {
       mainTrans['no_loker'],
       mainTrans['nama_tamu'],
       mainTrans['metode_pembayaran'],
-      mainTrans['nama_bank'] == null ? "-" : mainTrans['nama_bank'],
+      mainTrans['nama_bank'] ?? "-",
       mainTrans['pajak'],
       mainTrans['gtotal_stlh_pajak'],
       dataProduk,
@@ -1621,7 +1628,7 @@ class ListTransaksi extends StatelessWidget {
                                                 teks += " - Loker: ${item['no_loker']}";
                                               }
 
-                                              teks += " (${item['metode_pembayaran']})";
+                                              // teks += " (${item['metode_pembayaran']})";
 
                                               return Text(teks, style: TextStyle(fontFamily: 'Poppins', fontSize: 18, fontWeight: FontWeight.bold));
                                             },
@@ -1925,6 +1932,54 @@ class ListTransaksi extends StatelessWidget {
                       );
                     }),
                   ),
+                ),
+              ),
+
+              SizedBox(height: 10),
+
+              Container(
+                width: Get.width - 180,
+                child: Row(
+                  children: [
+                    // Label
+                    const Expanded(
+                      flex: 2, // Give more space to the label
+                      child: Text("Omset Harian:", style: TextStyle(fontWeight: FontWeight.w900)),
+                    ),
+
+                    // Cash
+                    Expanded(
+                      child: Obx(
+                        () => Text(
+                          "Cash: ${c.currencyFormatter.format(c.omsetCash.value)}",
+                          textAlign: TextAlign.end,
+                          style: TextStyle(color: Colors.green[700], fontWeight: FontWeight.w900),
+                        ),
+                      ),
+                    ),
+
+                    // Debit
+                    Expanded(
+                      child: Obx(
+                        () => Text(
+                          "Debit: ${c.currencyFormatter.format(c.omsetDebit.value)}",
+                          textAlign: TextAlign.end,
+                          style: TextStyle(color: Colors.blue[700], fontWeight: FontWeight.w900),
+                        ),
+                      ),
+                    ),
+
+                    // QRIS
+                    Expanded(
+                      child: Obx(
+                        () => Text(
+                          "QRIS: ${c.currencyFormatter.format(c.omsetQris.value)}",
+                          textAlign: TextAlign.end,
+                          style: TextStyle(color: Colors.purple[700], fontWeight: FontWeight.w900),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
