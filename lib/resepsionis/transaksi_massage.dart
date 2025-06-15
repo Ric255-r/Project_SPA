@@ -1197,10 +1197,10 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                                       'Showing Room',
                                                       'Semua Terapis',
                                                     );
-                                                    Get.find<
-                                                          ControllerPanggilanKerja
-                                                        >()
-                                                        .refreshDataPanggilanKerja();
+                                                    var c = Get.put(
+                                                      ControllerPanggilanKerja(),
+                                                    );
+                                                        c.refreshDataPanggilanKerja();
                                                     CherryToast.success(
                                                       title: Text(
                                                         'Notif berhasil dikirim',
@@ -1726,7 +1726,7 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                     activePromos: _activePromos,
                                     idMember: idMember,
                                     namaRoom: txtRoom.text,
-                                    statusTamu: dropdownValue
+                                    statusTamu: dropdownValue,
                                   ),
                                 );
                               });
