@@ -242,16 +242,18 @@ class _RegisPromoState extends State<RegisPromo> {
           controller_menit_selesai.clear();
           controller_jam_mulai.clear();
           controller_jam_selesai.clear();
-          isSelasaChecked = false;
-          isSeninChecked = false;
-          isRabuChecked = false;
-          isKamisChecked = false;
-          isJumatChecked = false;
-          isSabtuChecked = false;
-          isMingguChecked = false;
-          isUmumChecked = false;
-          isVIPChecked = false;
-          isMemberChecked = false;
+          setState(() {
+            isSelasaChecked = false;
+            isSeninChecked = false;
+            isRabuChecked = false;
+            isKamisChecked = false;
+            isJumatChecked = false;
+            isSabtuChecked = false;
+            isMingguChecked = false;
+            isUmumChecked = false;
+            isVIPChecked = false;
+            isMemberChecked = false;  
+          });
         } else {
           log("data gagal tersimpan");
           CherryToast.error(

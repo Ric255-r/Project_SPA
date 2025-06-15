@@ -19,6 +19,7 @@ import 'package:Project_SPA/kamar_terapis/terapis_bekerja.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:cherry_toast/cherry_toast.dart';
 import 'package:dio/dio.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -79,6 +80,9 @@ class _ListpekerjaState extends State<Listpekerja> {
     }
   }
 
+  File? kontrakFile;
+  String? kontrakFileName;
+
   late Future<List<Map<String, dynamic>>> futureData;
 
   void openKontrakFile(String kontrakPath) async {
@@ -107,7 +111,6 @@ class _ListpekerjaState extends State<Listpekerja> {
   void dispose() {
     // TODO: implement dispose
     super.dispose();
-
     textcari.dispose();
   }
 
@@ -126,9 +129,22 @@ class _ListpekerjaState extends State<Listpekerja> {
     );
     String? dropdownStatus = item['status'];
     String? dropdownJK = item['jk'];
+    List<PlatformFile> selectedFiles = [];
     Get.dialog(
       StatefulBuilder(
         builder: (context, setState) {
+          Future<void> pickFiles() async {
+            FilePickerResult? result = await FilePicker.platform.pickFiles(
+              allowMultiple: true,
+              withData: true,
+            );
+            if (result != null) {
+              setState(() {
+                selectedFiles = result.files;
+              });
+            }
+          }
+
           return AlertDialog(
             content: SingleChildScrollView(
               child: Container(
@@ -200,6 +216,13 @@ class _ListpekerjaState extends State<Listpekerja> {
                                     ),
                                   ),
                                   SizedBox(height: 15),
+                                  Text(
+                                    'Kontrak :',
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 16,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -417,60 +440,92 @@ class _ListpekerjaState extends State<Listpekerja> {
                                           }).toList(),
                                     ),
                                   ),
-                                  SizedBox(height: 20),
+                                  Wrap(
+                                    spacing: 8,
+                                    children:
+                                        selectedFiles
+                                            .map(
+                                              (f) => Chip(label: Text(f.name)),
+                                            )
+                                            .toList(),
+                                  ),
+                                  SizedBox(height: 10),
                                   Padding(
                                     padding: const EdgeInsets.only(
-                                      right: 60,
-                                      top: 30,
+                                      left: 70,
+                                      top: 20,
                                     ),
-                                    child: Center(
-                                      child: SizedBox(
-                                        height: 50,
-                                        width: 120,
-                                        child: TextButton(
-                                          style: TextButton.styleFrom(
-                                            backgroundColor: Colors.green,
-                                          ),
-                                          onPressed: () async {
-                                            final response = await dio.put(
-                                              '${myIpAddr()}/listpekerja/update_pekerja/${item['id_karyawan']}',
-                                              data: {
-                                                "nama_karyawan":
-                                                    namaController.text,
-                                                "nik": nikController.text,
-                                                "no_hp": noHpController.text,
-                                                "alamat": alamatController.text,
-                                                "jk": dropdownJK,
-                                                "status": dropdownStatus,
-                                              },
-                                            );
-                                            if (response.statusCode == 200) {
-                                              Get.back(result: "updated");
-                                              await refreshData();
-                                              textcari.clear();
-                                              namaController.clear();
-                                              nikController.clear();
-                                              noHpController.clear();
-                                              alamatController.clear();
-                                              dropdownStatus = null;
-                                              dropdownJK = null;
-                                              CherryToast.success(
-                                                title: Text(
-                                                  'Data berhasil diupdate',
-                                                ),
-                                              ).show(context);
-                                            }
-                                          },
-                                          child: Text(
-                                            'Simpan',
-                                            style: TextStyle(
-                                              fontFamily: 'Poppins',
-                                              fontSize: 18,
-                                              color: Colors.white,
+                                    child: Row(
+                                      children: [
+                                        SizedBox(
+                                          height: 50,
+                                          width: 120,
+                                          child: TextButton(
+                                            style: TextButton.styleFrom(
+                                              backgroundColor:
+                                                  Colors.lightBlueAccent,
+                                            ),
+                                            onPressed: pickFiles,
+                                            child: Text(
+                                              'Upload File',
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontFamily: 'Poppins',
+                                                color: Colors.white,
+                                              ),
                                             ),
                                           ),
                                         ),
-                                      ),
+                                        SizedBox(width: 20),
+                                        SizedBox(
+                                          height: 50,
+                                          width: 120,
+                                          child: TextButton(
+                                            style: TextButton.styleFrom(
+                                              backgroundColor: Colors.green,
+                                            ),
+                                            onPressed: () async {
+                                              final response = await dio.put(
+                                                '${myIpAddr()}/listpekerja/update_pekerja/${item['id_karyawan']}',
+                                                data: {
+                                                  "nama_karyawan":
+                                                      namaController.text,
+                                                  "nik": nikController.text,
+                                                  "no_hp": noHpController.text,
+                                                  "alamat":
+                                                      alamatController.text,
+                                                  "jk": dropdownJK,
+                                                  "status": dropdownStatus,
+                                                },
+                                              );
+                                              if (response.statusCode == 200) {
+                                                Get.back(result: "updated");
+                                                await refreshData();
+                                                textcari.clear();
+                                                namaController.clear();
+                                                nikController.clear();
+                                                noHpController.clear();
+                                                alamatController.clear();
+                                                dropdownStatus = null;
+                                                dropdownJK = null;
+                                                CherryToast.success(
+                                                  title: Text(
+                                                    'Data berhasil diupdate',
+                                                  ),
+                                                ).show(context);
+                                              }
+                                            },
+                                            child: Text(
+                                              'Simpan',
+                                              style: TextStyle(
+                                                fontFamily: 'Poppins',
+                                                fontSize: 18,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],

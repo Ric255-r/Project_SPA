@@ -811,7 +811,7 @@ class MainResepsionis extends StatelessWidget {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(15),
                       border: Border.all(),
-                      color: Colors.lightGreenAccent,
+                      color: Color(0xFFEBFFD8),
                     ),
                     child: TextButton(
                       onPressed: () {
@@ -821,7 +821,7 @@ class MainResepsionis extends StatelessWidget {
                       },
 
                       child: Text(
-                        'Absensi\n Showing',
+                        'Absensi\nShowing',
                         style: TextStyle(
                           fontSize: 30,
                           fontFamily: 'Poppins',
