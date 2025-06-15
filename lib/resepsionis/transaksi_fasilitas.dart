@@ -29,6 +29,10 @@ class TransaksiFasilitas extends StatefulWidget {
 }
 
 class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
+  List<Map<String, dynamic>> _listHappyHour = [];
+  String? dropdownHappyHour;
+  var discSetelahPromo = 0;
+  String selectedDisc = "";
   bool memberOrVip = false;
 
   var dio = Dio();
@@ -210,6 +214,30 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
     return false;
   }
 
+  Future<void> getDataHappyHour() async {
+    try {
+      var response = await dio.get(
+        '${myIpAddr()}/listpromo/getdatapromohappyhourdisc',
+        queryParameters: {
+          'statusTamu': dropdownjenistamu, // "Umum", "Member", or "VIP"
+        },
+      );
+
+      setState(() {
+        _listHappyHour =
+            (response.data as List).map((item) {
+              return {
+                "kode_promo": item["kode_promo"],
+                "nama_promo": item["nama_promo"],
+                "disc": item["disc"],
+              };
+            }).toList();
+      });
+    } catch (e) {
+      log("Error di fn Get Data Terapis $e");
+    }
+  }
+
   final currencyFormatter = NumberFormat.currency(
     locale: 'id_ID',
     symbol: 'Rp ',
@@ -240,7 +268,7 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
         var token = await getTokenSharedPref();
         var data = {
           "id_transaksi": _txtIdTrans.text,
-          "id_fasilitas": idFasilitas,
+          "id_faflitas": idFasilitas,
           "harga": int.parse(totalhargavalue),
           if (idMember != null) "id_member": idMember,
           "nama_tamu": _txtNamaTamu.text,
@@ -330,22 +358,39 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                       Row(
                         children: [
                           Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 20),
+                            child: Text(
+                              "Disc: ",
+                              style: TextStyle(fontFamily: 'Poppins'),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 3,
+                            child: Text(
+                              "$selectedDisc %",
+                              style: TextStyle(fontFamily: 'Poppins'),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: Row(
+                          children: [
+                            Expanded(
                               child: Text(
                                 "Total Harga: ",
                                 style: TextStyle(fontFamily: 'Poppins'),
                               ),
                             ),
-                          ),
-                          Expanded(
-                            flex: 3,
-                            child: TextField(
-                              controller: _txtHargaFasilitas,
-                              readOnly: true,
+                            Expanded(
+                              flex: 3,
+                              child: TextField(
+                                controller: _txtHargaFasilitas,
+                                readOnly: true,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                       Row(
                         children: [
@@ -727,6 +772,7 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
     super.dispose();
     dropdownNamaFasilitas = null;
     dropdownjenistamu = null;
+    dropdownHappyHour = null;
     _txtHargaFasilitas.dispose();
     _txtIdTrans.dispose();
     _txtNoLocker.dispose();
@@ -740,6 +786,7 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
 
     _createDraftLastTrans();
     getDataFasilitas();
+    getDataHappyHour();
     super.initState();
   }
 
@@ -768,7 +815,7 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
           ),
           centerTitle: true,
           leadingWidth: 100,
-          toolbarHeight: 130,
+          toolbarHeight: 100,
           backgroundColor: Color(0XFFFFE0B2),
           automaticallyImplyLeading: false,
         ),
@@ -776,7 +823,7 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
           child: Container(
             decoration: BoxDecoration(color: Color(0XFFFFE0B2)),
             width: Get.width,
-            height: Get.height - 155,
+            height: Get.height - 125,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -789,7 +836,7 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                       Row(
                         children: [
                           Container(
-                            height: 380,
+                            height: 435,
                             width: 200,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -866,11 +913,21 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                                     ),
                                   ),
                                 ),
+                                Padding(
+                                  padding: EdgeInsets.only(top: 25),
+                                  child: Text(
+                                    'Promo : ',
+                                    style: TextStyle(
+                                      fontSize: 22,
+                                      fontFamily: 'Poppins',
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
                           ),
                           Container(
-                            height: 400,
+                            height: 456,
                             width: 370,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -898,7 +955,6 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                                     ),
                                   ),
                                 ),
-
                                 Padding(
                                   padding: EdgeInsets.only(left: 10, top: 7),
                                   child: Container(
@@ -1133,6 +1189,70 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                                         ),
                                       ),
                                       style: TextStyle(fontSize: 22),
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.only(left: 10, top: 7),
+                                  child: Container(
+                                    width: 350,
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      color: Colors.white,
+                                    ),
+                                    child: DropdownButton<String>(
+                                      value: dropdownHappyHour,
+                                      icon: const Icon(Icons.arrow_drop_down),
+                                      isExpanded: true,
+                                      elevation: 16,
+                                      style: const TextStyle(
+                                        color: Colors.deepPurple,
+                                      ),
+                                      underline: SizedBox(),
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                      ),
+                                      onChanged: (String? value) async {
+                                        var selectedPromo = _listHappyHour
+                                            .firstWhere(
+                                              (item) =>
+                                                  item['nama_promo'] == value,
+                                              orElse:
+                                                  () => {
+                                                    "kode_promo": "",
+                                                    "nama_promo": "",
+                                                    "disc": 0,
+                                                  },
+                                            );
+                                        setState(() {
+                                          dropdownHappyHour = value;
+                                          discSetelahPromo =
+                                              selectedPromo['disc'];
+                                          selectedDisc =
+                                              discSetelahPromo.toString();
+                                        });
+                                      },
+                                      items:
+                                          _listHappyHour.map<
+                                            DropdownMenuItem<String>
+                                          >((item) {
+                                            return DropdownMenuItem<String>(
+                                              value:
+                                                  item['nama_promo'], // Use ID as value
+                                              child: Align(
+                                                alignment: Alignment.centerLeft,
+                                                child: Text(
+                                                  item['nama_promo']
+                                                      .toString(), // Display category name
+                                                  style: const TextStyle(
+                                                    fontSize: 16,
+                                                    fontFamily: 'Poppins',
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          }).toList(),
                                     ),
                                   ),
                                 ),

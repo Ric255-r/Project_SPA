@@ -357,7 +357,7 @@ class _RegisPekerjaState extends State<RegisPekerja> {
     txtNamaKaryawan.dispose();
     txtAlamat.dispose();
     txtNoHP.dispose();
-
+    selectedFiles.clear();
     super.dispose();
   }
 
