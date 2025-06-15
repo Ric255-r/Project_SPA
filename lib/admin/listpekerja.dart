@@ -82,7 +82,11 @@ class _ListpekerjaState extends State<Listpekerja> {
   late Future<List<Map<String, dynamic>>> futureData;
 
   void openKontrakFile(String kontrakPath) async {
-    final baseUrl = 'http://192.168.1.67:5500/listpekerja';
+    var urlLama = myIpAddr();
+    var splitUrl = urlLama.split("/");
+    var urlBaru = "http://" + splitUrl[2] + "/listpekerja";
+
+    final baseUrl = urlBaru;
     String fileName =
         kontrakPath.contains(',') ? kontrakPath.split(',')[0] : kontrakPath;
 
