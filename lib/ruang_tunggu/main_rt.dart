@@ -12,13 +12,6 @@ import 'package:get_storage/get_storage.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:just_audio/just_audio.dart';
 
-class MainRt extends StatefulWidget {
-  const MainRt({super.key});
-
-  @override
-  State<MainRt> createState() => _MainRtState();
-}
-
 var dio = Dio();
 
 class ControllerPanggilanKerja extends GetxController {
@@ -91,7 +84,6 @@ class ControllerPanggilanKerja extends GetxController {
         }
       }
     }
-    getdatapanggilankerja();
     datapanggilankerja.refresh();
   }
 
@@ -163,6 +155,17 @@ class ControllerPanggilanKerja extends GetxController {
   }
 }
 
+class MainRt extends StatefulWidget {
+  MainRt({super.key}) {
+    if (!Get.isRegistered<ControllerPanggilanKerja>()) {
+      Get.put(ControllerPanggilanKerja());
+    }
+  }
+
+  @override
+  State<MainRt> createState() => _MainRtState();
+}
+
 class _MainRtState extends State<MainRt> {
   ScrollController _scrollControllerLV = ScrollController();
 
@@ -171,27 +174,6 @@ class _MainRtState extends State<MainRt> {
 
   RxList<Map<String, dynamic>> datapanggilankerja =
       <Map<String, dynamic>>[].obs;
-
-  Future<void> getdatapanggilankerja() async {
-    try {
-      var response = await dio.get('${myIpAddr()}/spv/getdatapanggilankerja');
-      List<Map<String, dynamic>> fetcheddata =
-          (response.data as List).map((item) {
-            return {
-              "ruangan": item['ruangan'],
-              "nama_terapis": item['nama_terapis'],
-              "id_panggilan": item['id_panggilan'],
-            };
-          }).toList();
-      setState(() {
-        datapanggilankerja.clear();
-        datapanggilankerja.assignAll(fetcheddata);
-        datapanggilankerja.refresh();
-      });
-    } catch (e) {
-      log("Error di fn Getdatapanggilankerja : $e");
-    }
-  }
 
   Future<void> deletepanggilankerja(id_panggilan) async {
     try {
@@ -202,11 +184,6 @@ class _MainRtState extends State<MainRt> {
     } catch (e) {
       log("Error di fn deletepanggilankerja : $e");
     }
-  }
-
-  Future<void> refreshDataPanggilanKerja() async {
-    await Future.delayed(Duration(milliseconds: 500));
-    await getdatapanggilankerja();
   }
 
   @override

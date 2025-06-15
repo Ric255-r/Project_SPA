@@ -33,14 +33,18 @@ class DetailPaketMassage extends StatefulWidget {
   final String namaRoom;
   final String? statusTamu;
 
-  const DetailPaketMassage({
+  DetailPaketMassage({
     Key? key,
     required this.idTrans,
     this.activePromos = const [],
     this.idMember,
     required this.namaRoom,
     required this.statusTamu,
-  }) : super(key: key);
+  }) : super(key: key) {
+    if (!Get.isRegistered<ControllerPekerja>()) {
+      Get.put(ControllerPekerja());
+    }
+  }
 
   @override
   State<DetailPaketMassage> createState() => _DetailPaketMassageState();
@@ -729,8 +733,9 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                         if (controllerPekerja.statusshowing.value !=
                             'pressed') {
                           daftapanggilankerja(namaruangan, namaterapis);
-                          Get.find<ControllerPanggilanKerja>()
-                              .refreshDataPanggilanKerja();
+
+                          var c = Get.put(ControllerPanggilanKerja());
+                          c.refreshDataPanggilanKerja();
                         }
                         daftarruangtunggu(
                           idtransaksi,

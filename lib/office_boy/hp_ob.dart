@@ -26,7 +26,8 @@ class _Hp_ObState extends State<Hp_Ob> with WidgetsBindingObserver {
   Timer? _timerWebSocket;
   Timer? notiftimer;
   bool _isconnected = false;
-  RxList<Map<String, dynamic>> dataruanganbersihkan = <Map<String, dynamic>>[].obs;
+  RxList<Map<String, dynamic>> dataruanganbersihkan =
+      <Map<String, dynamic>>[].obs;
   var dio = Dio();
 
   @override
@@ -63,7 +64,9 @@ class _Hp_ObState extends State<Hp_Ob> with WidgetsBindingObserver {
     //   debug: true,
     // );
 
-    AwesomeNotifications().setListeners(onActionReceivedMethod: onNotificationTap);
+    AwesomeNotifications().setListeners(
+      onActionReceivedMethod: onNotificationTap,
+    );
     // // Event ketika dipencet. initialize setelah websocket jalan
     // AwesomeNotifications().setListeners(
     //   onActionReceivedMethod: (ReceivedAction receivedAct) async {
@@ -99,24 +102,38 @@ class _Hp_ObState extends State<Hp_Ob> with WidgetsBindingObserver {
       // kombinasi dari AwesomeNotifications dan cherry_toast
       // return data status ini isinya Sukses, Ditolak, dan Pending.
       // Hasil Translate dari triggerNotif Websocket Screen2.dart
-      void triggerNotif(String namaroom) {
+      void triggerNotif(String namaroom, String keterangan) {
         int idnotification = DateTime.now().millisecondsSinceEpoch ~/ 1000;
         AwesomeNotifications().createNotification(
           content: NotificationContent(
             id: idnotification,
             channelKey: 'basic_channel',
             title: 'Room $namaroom',
-            body: 'Ruangan $namaroom perlu dibersihkan, harap segera dibersihkan',
+            body: 'Ruangan $namaroom $keterangan',
             groupKey: "Cleaning Request",
           ),
-          actionButtons: [NotificationActionButton(key: 'DiSMISS', label: 'Dismiss', autoDismissible: true)],
+          actionButtons: [
+            NotificationActionButton(
+              key: 'DiSMISS',
+              label: 'Dismiss',
+              autoDismissible: true,
+            ),
+          ],
         );
 
         // Ini dari cherry_toast. bukan punya awesome_notification
-        if (mounted && WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
+        if (mounted &&
+            WidgetsBinding.instance.lifecycleState ==
+                AppLifecycleState.resumed) {
           CherryToast.info(
-            title: Text('Room $namaroom', style: TextStyle(color: Colors.black)),
-            action: Text('Ruangan $namaroom perlu dibersihkan, harap segera dibersihkan', style: TextStyle(color: Colors.black)),
+            title: Text(
+              'Room $namaroom',
+              style: TextStyle(color: Colors.black),
+            ),
+            action: Text(
+              'Ruangan $namaroom $keterangan',
+              style: TextStyle(color: Colors.black),
+            ),
           ).show(context);
         }
       }
@@ -127,13 +144,19 @@ class _Hp_ObState extends State<Hp_Ob> with WidgetsBindingObserver {
           notiftimer?.cancel();
           notiftimer = Timer(Duration(seconds: 1), () {
             final data = jsonDecode(message);
+            final List<dynamic> rawList = data['dataruangan'];
 
-            triggerNotif(data['nama_ruangan'].last.toString());
+            final lastitem = rawList.last;
+            triggerNotif(lastitem['nama_ruangan'], lastitem['keterangan']);
+
             setState(() {
-              log('nama ruangan : ${data['nama_ruangan']}');
+              log('nama ruangan : $rawList');
               List<Map<String, dynamic>> fetcheddata =
-                  (data['nama_ruangan'] as List).map((item) {
-                    return {"nama_ruangan": item.toString()};
+                  rawList.map((item) {
+                    return {
+                      "nama_ruangan": item['nama_ruangan'],
+                      "keterangan": item['keterangan'],
+                    };
                   }).toList();
               dataruanganbersihkan.clear();
               dataruanganbersihkan.assignAll(fetcheddata);
@@ -196,7 +219,11 @@ class _Hp_ObState extends State<Hp_Ob> with WidgetsBindingObserver {
       var response = await dio.get('${myIpAddr()}/ob/ruanganbersihkan');
       List<Map<String, dynamic>> fetcheddata =
           (response.data as List).map((item) {
-            return {"nama_ruangan": item['nama_ruangan']};
+            return {
+              "id": item['id'],
+              "nama_ruangan": item['nama_ruangan'],
+              "keterangan": item['keterangan'],
+            };
           }).toList();
       setState(() {
         dataruanganbersihkan.clear();
@@ -208,9 +235,12 @@ class _Hp_ObState extends State<Hp_Ob> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> confirmob(nama_ruangan) async {
+  Future<void> confirmob(id_panggilan) async {
     try {
-      var response = await dio.delete('${myIpAddr()}/ob/confirmkerjaanob', data: {"nama_ruangan": nama_ruangan});
+      var response = await dio.delete(
+        '${myIpAddr()}/ob/confirmkerjaanob',
+        data: {"id": id_panggilan},
+      );
     } catch (e) {
       log("Error di fn confirmkerjaanob : $e");
     }
@@ -226,7 +256,14 @@ class _Hp_ObState extends State<Hp_Ob> with WidgetsBindingObserver {
     return Scaffold(
       drawer: OurDrawer(),
       appBar: AppBar(
-        title: Text('PLATINUM', style: TextStyle(fontFamily: 'Poppins', fontSize: 30, fontWeight: FontWeight.bold)),
+        title: Text(
+          'PLATINUM',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 30,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         toolbarHeight: 100,
         centerTitle: true,
         backgroundColor: Color(0XFFFFE0B2),
@@ -242,7 +279,10 @@ class _Hp_ObState extends State<Hp_Ob> with WidgetsBindingObserver {
               height: Get.height - 250,
               width: Get.width - 50,
               margin: const EdgeInsets.only(left: 40, right: 40),
-              decoration: BoxDecoration(borderRadius: BorderRadius.circular(20), color: Colors.white),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                color: Colors.white,
+              ),
               child: Scrollbar(
                 thickness: 15,
                 radius: Radius.circular(20),
@@ -258,21 +298,50 @@ class _Hp_ObState extends State<Hp_Ob> with WidgetsBindingObserver {
                       return Column(
                         children: [
                           SizedBox(height: 70),
-                          Text("Cleaning", style: TextStyle(fontSize: 40, height: 1, fontFamily: 'Poppins')),
-                          Text(item['nama_ruangan'].toString(), style: TextStyle(fontSize: 40, height: 1, fontFamily: 'Poppins')),
+                          Text(
+                            item['keterangan'],
+                            style: TextStyle(
+                              fontSize: 40,
+                              height: 1,
+                              fontFamily: 'Poppins',
+                            ),
+                          ),
+                          Text(
+                            item['nama_ruangan'].toString(),
+                            style: TextStyle(
+                              fontSize: 40,
+                              height: 1,
+                              fontFamily: 'Poppins',
+                            ),
+                          ),
                           SizedBox(height: 40),
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color.fromARGB(255, 168, 232, 170),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              backgroundColor: const Color.fromARGB(
+                                255,
+                                168,
+                                232,
+                                170,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                               minimumSize: Size(100, 100),
                             ),
                             onPressed: () {
-                              confirmob(item['nama_ruangan']);
+                              print('id adalah ${item['id']}');
+                              confirmob(item['id']);
                               refreshruanganbersihkan();
                             },
                             child: Column(
-                              children: [Icon(Icons.check, size: 50), SizedBox(height: 10), Text("Confirm", style: TextStyle(fontFamily: 'Poppins'))],
+                              children: [
+                                Icon(Icons.check, size: 50),
+                                SizedBox(height: 10),
+                                Text(
+                                  "Confirm",
+                                  style: TextStyle(fontFamily: 'Poppins'),
+                                ),
+                              ],
                             ),
                           ),
                         ],
