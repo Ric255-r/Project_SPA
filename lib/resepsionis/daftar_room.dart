@@ -249,9 +249,11 @@ class _daftarRoomState extends State<daftarRoom> {
                                                           ? Color(0xFFA6FF8F)
                                                           : jam == 0 &&
                                                               menit == 0 &&
-                                                              detik == 0
+                                                              detik == 0 &&
+                                                              item['status'] ==
+                                                                  'maintenance'
                                                           ? Colors.cyan
-                                                          : Color(0xFFFF8282),
+                                                          : Colors.orange,
                                                   borderRadius:
                                                       BorderRadius.circular(20),
                                                 ),
@@ -275,10 +277,10 @@ class _daftarRoomState extends State<daftarRoom> {
                                                         jam == 0 &&
                                                                 menit == 0 &&
                                                                 detik == 0 &&
-                                                                item['status'] !=
-                                                                    'aktif'
+                                                                item['status'] ==
+                                                                    'occupied'
                                                             ? capitalize(
-                                                              'maintenance',
+                                                              'occupied',
                                                             )
                                                             : capitalize(
                                                               item['status'],

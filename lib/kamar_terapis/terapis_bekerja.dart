@@ -156,12 +156,12 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
         // end simpan waktu
         _updateTimeComponents();
       } else {
-        _timer?.cancel();
-        _istimerunning.value = false;
-        _apiSyncTimer?.cancel();
+        // _timer?.cancel();
+        // _istimerunning.value = false;
+        // _apiSyncTimer?.cancel();
 
-        // panggil api utk delete waktu sementara disini.
-        _deleteWaktuTemp();
+        // // panggil api utk delete waktu sementara disini.
+        // _deleteWaktuTemp();
       }
     });
   }
@@ -285,9 +285,14 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
       _istimerunning.value = false;
     } else {
       bool result = await _kamarTerapisMgr.setSelesai();
-
       if (result) {
-        Get.offAll(() => TerapisConfirm());
+        // Get.offAll(() => TerapisConfirm());
+        _timer?.cancel();
+        _istimerunning.value = false;
+        _apiSyncTimer?.cancel();
+
+        // panggil api utk delete waktu sementara disini.
+        _deleteWaktuTemp();
       } else {
         log("Error di fn _checkAndNavigate");
       }
@@ -776,6 +781,18 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
     }
   }
 
+  Future<void> panggilob() async {
+    try {
+      String idTransaksi = _kamarTerapisMgr.getData()['idTransaksi'];
+      var response = await dio.put(
+        '${myIpAddr()}/kamar_terapis/panggilob',
+        data: {"id_transaksi": idTransaksi},
+      );
+    } catch (e) {
+      log("Error di panggilob : $e");
+    }
+  }
+
   void _showdialogterapis() async {
     await Future.wait([_getTerapis(), _getCurrentTransaksi()]);
 
@@ -1075,13 +1092,23 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(child: Text('')),
+                    Container(
+                      margin: EdgeInsets.only(top: 25, left: 30, right: 100),
+                      child: ElevatedButton(
+                        onPressed: panggilob,
+                        child: Text(
+                          'Panggil OB',
+                          style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
+                        ),
+                      ),
+                    ),
                     Expanded(
                       child: Container(
+                        margin: EdgeInsets.only(left: 100),
                         alignment: Alignment.center,
                         child: AutoSizeText(
                           'Sisa Waktu',
-                          style: TextStyle(fontSize: 40, fontFamily: 'Poppins'),
+                          style: TextStyle(fontSize: 60, fontFamily: 'Poppins'),
                         ),
                       ),
                     ),
