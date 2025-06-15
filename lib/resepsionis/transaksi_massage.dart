@@ -243,6 +243,7 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
         log("Error Get Data ruangan, gro & terapis $e");
       }
       controllerPekerja.statusshowing.value = "notpressed";
+      dropdownValue = null;
     });
   }
 
