@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
 
+import 'package:Project_SPA/resepsionis/store_locker.dart';
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:get/get.dart';
@@ -14,12 +15,12 @@ import 'package:cherry_toast/cherry_toast.dart';
 import 'package:just_audio/just_audio.dart';
 
 // Parent Widget
-class DetailFoodNBeverages extends StatefulWidget {
+class DetailFnbAddon extends StatefulWidget {
   final String idTrans;
-  const DetailFoodNBeverages({super.key, required this.idTrans});
+  const DetailFnbAddon({super.key, required this.idTrans});
 
   @override
-  State<DetailFoodNBeverages> createState() => _DetailFoodNBeveragesState();
+  State<DetailFnbAddon> createState() => _DetailFnbAddonState();
 }
 
 var storage = GetStorage();
@@ -28,7 +29,7 @@ Map<String, int> itemTapCounts = {};
 String? retrieveindex = '';
 RxList<Map<String, dynamic>> datafnb = <Map<String, dynamic>>[].obs;
 
-class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
+class _DetailFnbAddonState extends State<DetailFnbAddon> {
   String dropdownDisc = listDisc.first;
 
   // Like React state, passing props
@@ -48,7 +49,11 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
             dataJual[existsIndex]['harga_fnb'] * dataJual[existsIndex]['jlh'];
       } else {
         // Jika g ad, tambah item baru
-        dataJual.add({...newItem, 'harga_total': newItem['harga_fnb']});
+        dataJual.add({
+          ...newItem,
+          'harga_total': newItem['harga_fnb'],
+          'is_addon': 1,
+        });
       }
     });
 
@@ -149,6 +154,8 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
       _dialogTxtTotalOri = result["stlh_disc"]!;
     });
   }
+
+  final LockerManager _lockerManager = LockerManager();
 
   // Manipulasi tinggi Item utk IsiFoodNBeverages. Props drilling juga
   double heightIsiData = 350;
@@ -535,33 +542,11 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
 
   Future<void> _storeTrans() async {
     try {
-      var rincian = getHargaAfterDisc();
       var token = await getTokenSharedPref();
-      var data = {
-        "id_transaksi": widget.idTrans,
-        "total_harga": rincian['sblm_disc'],
-        "disc": rincian['desimal_persen'],
-        "grand_total": rincian['stlh_disc'],
-        "jumlah_bayar": _parsedTotalBayar,
-        "detail_trans": dataJual,
-      };
-
-      if (isCash.value) {
-        data['metode_pembayaran'] = "cash";
-        data['jumlah_bayar'] = _parsedTotalBayar;
-      } else {
-        data['metode_pembayaran'] = isQris.value ? "qris" : "debit";
-        data['jumlah_bayar'] = _dialogTxtTotalStlhPjk.value;
-        data['nama_akun'] = _namaAkun.text;
-        data['no_rek'] = _noRek.text;
-        data['nama_bank'] = _namaBank.text;
-      }
-
-      data['pajak'] = desimalPjk.value;
-      data['gtotal_stlh_pajak'] = _dialogTxtTotalStlhPjk.value;
+      var data = {"id_transaksi": widget.idTrans, "detail_trans": dataJual};
 
       var response = await dio.post(
-        '${myIpAddr()}/fnb/store',
+        '${myIpAddr()}/fnb/store_addon',
         options: Options(headers: {"Authorization": "Bearer " + token!}),
         data: data,
       );
@@ -579,6 +564,7 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
         animationDuration: const Duration(milliseconds: 2000),
         autoDismiss: true,
       ).show(context);
+      dataJual.clear();
     } catch (e) {
       if (e is DioException) {
         log("Error fn storeTrans ${e.response!.data}");
@@ -676,6 +662,35 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
                               flex: 6,
                               child: AutoSizeText(
                                 widget.idTrans,
+                                minFontSize: 16,
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              flex: 1,
+                              child: AutoSizeText(
+                                "No Loker",
+                                minFontSize: 16,
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                            ),
+                            Flexible(
+                              child: AutoSizeText(
+                                " : ",
+                                minFontSize: 16,
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 6,
+                              child: AutoSizeText(
+                                _lockerManager.getLocker().toString(),
                                 minFontSize: 16,
                                 style: TextStyle(fontFamily: 'Poppins'),
                               ),
@@ -810,11 +825,13 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
                         Align(
                           alignment: Alignment.centerRight,
                           child: ElevatedButton(
-                            onPressed: () {
-                              _showDialogConfirmPayment(context);
+                            onPressed: () async {
+                              await _storeTrans().then((_) {
+                                Get.offAll(() => MainResepsionis());
+                              });
                             },
                             child: Text(
-                              "Konfirmasi Pembayaran",
+                              "Simpan Transaksi",
                               style: TextStyle(fontFamily: 'Poppins'),
                             ),
                           ),

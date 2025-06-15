@@ -23,7 +23,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import 'package:get/get.dart';
+import 'package:get/get.dart' hide FormData, MultipartFile;
 import 'package:Project_SPA/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -129,6 +129,8 @@ class _ListpekerjaState extends State<Listpekerja> {
     );
     String? dropdownStatus = item['status'];
     String? dropdownJK = item['jk'];
+    List<String> oldFileNames = [];
+    oldFileNames = item['kontrak_img']?.split(',') ?? [];
     List<PlatformFile> selectedFiles = [];
     Get.dialog(
       StatefulBuilder(
@@ -141,6 +143,7 @@ class _ListpekerjaState extends State<Listpekerja> {
             if (result != null) {
               setState(() {
                 selectedFiles = result.files;
+                oldFileNames.clear();
               });
             }
           }
@@ -442,13 +445,26 @@ class _ListpekerjaState extends State<Listpekerja> {
                                   ),
                                   Wrap(
                                     spacing: 8,
-                                    children:
-                                        selectedFiles
-                                            .map(
-                                              (f) => Chip(label: Text(f.name)),
-                                            )
-                                            .toList(),
+                                    children: [
+                                      if (oldFileNames.isNotEmpty)
+                                        ...oldFileNames.map(
+                                          (name) => Chip(
+                                            avatar: Icon(
+                                              Icons.insert_drive_file,
+                                            ),
+                                            label: Text(name),
+                                          ),
+                                        ),
+                                      if (selectedFiles.isNotEmpty)
+                                        ...selectedFiles.map(
+                                          (f) => Chip(
+                                            avatar: Icon(Icons.upload_file),
+                                            label: Text(f.name),
+                                          ),
+                                        ),
+                                    ],
                                   ),
+
                                   SizedBox(height: 10),
                                   Padding(
                                     padding: const EdgeInsets.only(
@@ -485,9 +501,10 @@ class _ListpekerjaState extends State<Listpekerja> {
                                               backgroundColor: Colors.green,
                                             ),
                                             onPressed: () async {
-                                              final response = await dio.put(
-                                                '${myIpAddr()}/listpekerja/update_pekerja/${item['id_karyawan']}',
-                                                data: {
+                                              try {
+                                                final formData = FormData.fromMap({
+                                                  "id_karyawan":
+                                                      item['id_karyawan'],
                                                   "nama_karyawan":
                                                       namaController.text,
                                                   "nik": nikController.text,
@@ -496,21 +513,41 @@ class _ListpekerjaState extends State<Listpekerja> {
                                                       alamatController.text,
                                                   "jk": dropdownJK,
                                                   "status": dropdownStatus,
-                                                },
-                                              );
-                                              if (response.statusCode == 200) {
-                                                Get.back(result: "updated");
-                                                await refreshData();
-                                                textcari.clear();
-                                                namaController.clear();
-                                                nikController.clear();
-                                                noHpController.clear();
-                                                alamatController.clear();
-                                                dropdownStatus = null;
-                                                dropdownJK = null;
-                                                CherryToast.success(
+                                                  "kontrak_img":
+                                                      selectedFiles.map((file) {
+                                                        return MultipartFile.fromBytes(
+                                                          file.bytes!,
+                                                          filename: file.name,
+                                                        );
+                                                      }).toList(),
+                                                });
+
+                                                final response = await dio.post(
+                                                  "${myIpAddr()}/listpekerja/update_pekerja",
+                                                  data: formData,
+                                                );
+
+                                                if (response.statusCode ==
+                                                    200) {
+                                                  Get.back(result: "updated");
+                                                  await refreshData();
+                                                  textcari.clear();
+                                                  namaController.clear();
+                                                  nikController.clear();
+                                                  noHpController.clear();
+                                                  alamatController.clear();
+                                                  dropdownStatus = null;
+                                                  dropdownJK = null;
+                                                  CherryToast.success(
+                                                    title: Text(
+                                                      'Data berhasil diupdate',
+                                                    ),
+                                                  ).show(context);
+                                                }
+                                              } catch (e) {
+                                                CherryToast.error(
                                                   title: Text(
-                                                    'Data berhasil diupdate',
+                                                    "Gagal update: $e",
                                                   ),
                                                 ).show(context);
                                               }
@@ -519,7 +556,7 @@ class _ListpekerjaState extends State<Listpekerja> {
                                               'Simpan',
                                               style: TextStyle(
                                                 fontFamily: 'Poppins',
-                                                fontSize: 18,
+                                                fontSize: 16,
                                                 color: Colors.white,
                                               ),
                                             ),
