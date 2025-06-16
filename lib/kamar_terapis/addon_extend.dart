@@ -245,7 +245,8 @@ class ExtendAddOn extends StatelessWidget {
   final String idDetailTransaksi;
   // Constructor Stless
   ExtendAddOn({super.key, required this.idDetailTransaksi}) {
-    Get.put(ExtendAddOnController(idDetailTransaksi: idDetailTransaksi));
+    // Get.put(ExtendAddOnController(idDetailTransaksi: idDetailTransaksi));
+    Get.lazyPut<ExtendAddOnController>(() => ExtendAddOnController(idDetailTransaksi: idDetailTransaksi), fenix: false);
   }
   int displayPrice = 0;
   int displayPrice2 = 0;

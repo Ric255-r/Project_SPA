@@ -22,20 +22,14 @@ class FoodAddOnController extends GetxController {
   RxList<Map<String, dynamic>> datafnb = <Map<String, dynamic>>[].obs;
 
   void addItem(Map<String, dynamic> newItem) {
-    final existsIndex = selectedDataMenu.indexWhere(
-      (item) => item['id_fnb'] == newItem['id_fnb'],
-    );
+    final existsIndex = selectedDataMenu.indexWhere((item) => item['id_fnb'] == newItem['id_fnb']);
 
     if (existsIndex != -1) {
       var data = selectedDataMenu[existsIndex];
       data['jlh'] += 1;
       data['harga_total'] = data['harga_fnb'] * data['jlh'];
     } else {
-      selectedDataMenu.add({
-        ...newItem,
-        'harga_total': newItem['harga_fnb'],
-        'is_addon': 1,
-      });
+      selectedDataMenu.add({...newItem, 'harga_total': newItem['harga_fnb'], 'is_addon': 1});
     }
 
     // force refresh obs variable
@@ -45,9 +39,7 @@ class FoodAddOnController extends GetxController {
   }
 
   void removeItem(String id_fnb) {
-    var exists = selectedDataMenu.indexWhere(
-      (item) => item['id_fnb'] == id_fnb,
-    );
+    var exists = selectedDataMenu.indexWhere((item) => item['id_fnb'] == id_fnb);
 
     if (exists != -1) {
       selectedDataMenu.removeAt(exists);
@@ -60,9 +52,7 @@ class FoodAddOnController extends GetxController {
 
       List<dynamic> responseData = response.data;
 
-      dataMenu.assignAll(
-        responseData.map((item) => item as Map<String, dynamic>).toList(),
-      );
+      dataMenu.assignAll(responseData.map((item) => item as Map<String, dynamic>).toList());
 
       log("isi data menu $dataMenu");
     } catch (e) {
@@ -74,13 +64,7 @@ class FoodAddOnController extends GetxController {
     try {
       var data = _kamarTerapisMgr.getData();
 
-      var response = await dio.post(
-        '${myIpAddr()}/fnb/store_addon',
-        data: {
-          "id_transaksi": data['idTransaksi'],
-          "detail_trans": selectedDataMenu,
-        },
-      );
+      var response = await dio.post('${myIpAddr()}/fnb/store_addon', data: {"id_transaksi": data['idTransaksi'], "detail_trans": selectedDataMenu});
 
       if (response.statusCode == 200) {
         _kamarTerapisMgr.updateFood(data['idTransaksi']);
@@ -135,7 +119,8 @@ bool isloading = false;
 // ignore: must_be_immutable
 class FoodAddOn extends StatefulWidget {
   FoodAddOn({super.key}) {
-    Get.put(FoodAddOnController());
+    // Get.put(FoodAddOnController());
+    Get.lazyPut<FoodAddOnController>(() => FoodAddOnController(), fenix: false);
   }
 
   @override
@@ -158,16 +143,7 @@ class _FoodAddOnState extends State<FoodAddOn> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Center(
-          child: Text(
-            "Add On (+)",
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 40,
-              fontFamily: 'Poppins',
-            ),
-          ),
-        ),
+        title: Center(child: Text("Add On (+)", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 40, fontFamily: 'Poppins'))),
         backgroundColor: Color(0XFFFFE0B2),
       ),
       body: PopScope(
@@ -185,14 +161,7 @@ class _FoodAddOnState extends State<FoodAddOn> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(height: 20),
-                Text(
-                  "Food & Beverages",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                    fontFamily: 'Poppins',
-                  ),
-                ),
+                Text("Food & Beverages", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, fontFamily: 'Poppins')),
                 SizedBox(height: 30),
                 Container(
                   height: 250,
@@ -204,15 +173,13 @@ class _FoodAddOnState extends State<FoodAddOn> {
                       child: Obx(
                         () => GridView.builder(
                           controller: _scrollController,
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 3, // 3 item 1 row
-                                crossAxisSpacing:
-                                    60, // space horizontal tiap item
-                                mainAxisSpacing: 25, // space vertical tiap item
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3, // 3 item 1 row
+                            crossAxisSpacing: 60, // space horizontal tiap item
+                            mainAxisSpacing: 25, // space vertical tiap item
 
-                                childAspectRatio: 20 / 12,
-                              ),
+                            childAspectRatio: 20 / 12,
+                          ),
                           itemCount: c.dataMenu.length,
                           itemBuilder: (context, index) {
                             RxBool _isTapped = false.obs;
@@ -225,44 +192,25 @@ class _FoodAddOnState extends State<FoodAddOn> {
                                 _isTapped.value = true;
                               },
                               onTapUp: (_) async {
-                                await Future.delayed(
-                                  const Duration(milliseconds: 100),
-                                );
-                                for (var fnb in c.datafnb.where(
-                                  (p) => p['nama_fnb'] == item['nama_fnb'],
-                                )) {
-                                  sisastok =
-                                      int.tryParse(
-                                        fnb['stok_fnb'].toString(),
-                                      ) ??
-                                      0;
+                                await Future.delayed(const Duration(milliseconds: 100));
+                                for (var fnb in c.datafnb.where((p) => p['nama_fnb'] == item['nama_fnb'])) {
+                                  sisastok = int.tryParse(fnb['stok_fnb'].toString()) ?? 0;
                                 }
                                 log('sisa stok : $sisastok');
                                 String itemname = item['nama_fnb'];
 
                                 retrieveindex = itemname;
-                                if (retrieveindex != null &&
-                                    itemTapCounts.containsKey(retrieveindex)) {
-                                  itemTapCounts[retrieveindex!] =
-                                      itemTapCounts[retrieveindex]! + 1;
+                                if (retrieveindex != null && itemTapCounts.containsKey(retrieveindex)) {
+                                  itemTapCounts[retrieveindex!] = itemTapCounts[retrieveindex]! + 1;
                                 } else if (retrieveindex != null) {
                                   itemTapCounts[retrieveindex!] = 1;
                                 }
                                 log('counter : $itemTapCounts');
                                 if (sisastok == 0) {
-                                  CherryToast.error(
-                                    title: Text('Error'),
-                                    description: Text('Stok sudah kosong'),
-                                  ).show(context);
+                                  CherryToast.error(title: Text('Error'), description: Text('Stok sudah kosong')).show(context);
                                 } else if (retrieveindex != null) {
-                                  if (itemTapCounts[retrieveindex]! >
-                                      sisastok) {
-                                    CherryToast.error(
-                                      title: Text('Error'),
-                                      description: Text(
-                                        'Penggunaan item melebihi stok',
-                                      ),
-                                    ).show(context);
+                                  if (itemTapCounts[retrieveindex]! > sisastok) {
+                                    CherryToast.error(title: Text('Error'), description: Text('Penggunaan item melebihi stok')).show(context);
                                   } else {
                                     c.addItem({
                                       "id_fnb": item['id_fnb'],
@@ -285,40 +233,13 @@ class _FoodAddOnState extends State<FoodAddOn> {
                                 () => Transform.scale(
                                   scale: _isTapped.isTrue ? 0.80 : 1.0,
                                   child: Container(
-                                    decoration: BoxDecoration(
-                                      color: const Color.fromARGB(
-                                        255,
-                                        64,
-                                        97,
-                                        55,
-                                      ),
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
+                                    decoration: BoxDecoration(color: const Color.fromARGB(255, 64, 97, 55), borderRadius: BorderRadius.circular(20)),
                                     child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
+                                      mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
-                                        Icon(
-                                          Icons.food_bank,
-                                          size: 50,
-                                          color: Colors.white,
-                                        ),
-                                        Text(
-                                          "${item['nama_fnb']}",
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 16,
-                                            fontFamily: 'Poppins',
-                                          ),
-                                        ),
-                                        Text(
-                                          "Rp. ${item['harga_fnb']}",
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 16,
-                                            fontFamily: 'Poppins',
-                                          ),
-                                        ),
+                                        Icon(Icons.food_bank, size: 50, color: Colors.white),
+                                        Text("${item['nama_fnb']}", style: const TextStyle(color: Colors.white, fontSize: 16, fontFamily: 'Poppins')),
+                                        Text("Rp. ${item['harga_fnb']}", style: const TextStyle(color: Colors.white, fontSize: 16, fontFamily: 'Poppins')),
                                       ],
                                     ),
                                   ),
@@ -332,14 +253,7 @@ class _FoodAddOnState extends State<FoodAddOn> {
                   ),
                 ),
                 SizedBox(height: 30),
-                Text(
-                  "List Pesanan: ",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                    fontFamily: 'Poppins',
-                  ),
-                ),
+                Text("List Pesanan: ", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, fontFamily: 'Poppins')),
                 SizedBox(
                   height: 100,
                   child: SingleChildScrollView(
@@ -351,30 +265,12 @@ class _FoodAddOnState extends State<FoodAddOn> {
                           Row(
                             children: [
                               Expanded(child: Text("Nama Item")),
-                              Expanded(
-                                child: Text(
-                                  "Jumlah",
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(fontFamily: 'Poppins'),
-                                ),
-                              ),
-                              Expanded(
-                                child: Text(
-                                  "Harga Satuan",
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(fontFamily: 'Poppins'),
-                                ),
-                              ),
+                              Expanded(child: Text("Jumlah", textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Poppins'))),
+                              Expanded(child: Text("Harga Satuan", textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Poppins'))),
                               Expanded(
                                 child: Row(
                                   children: [
-                                    Expanded(
-                                      child: Text(
-                                        "Harga Total",
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(fontFamily: 'Poppins'),
-                                      ),
-                                    ),
+                                    Expanded(child: Text("Harga Total", textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Poppins'))),
                                     Expanded(child: Text("")),
                                   ],
                                 ),
@@ -384,68 +280,27 @@ class _FoodAddOnState extends State<FoodAddOn> {
                           for (var item in c.selectedDataMenu)
                             Row(
                               children: [
-                                Expanded(
-                                  child: Text(
-                                    "${item['nama_fnb']}",
-                                    style: TextStyle(fontFamily: 'Poppins'),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    "x${item['jlh']}",
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(fontFamily: 'Poppins'),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    "Rp. ${item['harga_fnb']}",
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(fontFamily: 'Poppins'),
-                                  ),
-                                ),
+                                Expanded(child: Text("${item['nama_fnb']}", style: TextStyle(fontFamily: 'Poppins'))),
+                                Expanded(child: Text("x${item['jlh']}", textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Poppins'))),
+                                Expanded(child: Text("Rp. ${item['harga_fnb']}", textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Poppins'))),
                                 Expanded(
                                   child: Row(
                                     children: [
-                                      Expanded(
-                                        child: Text(
-                                          "Rp. ${item['harga_total']}",
-                                          textAlign: TextAlign.right,
-                                          style: TextStyle(
-                                            fontFamily: 'Poppins',
-                                          ),
-                                        ),
-                                      ),
+                                      Expanded(child: Text("Rp. ${item['harga_total']}", textAlign: TextAlign.right, style: TextStyle(fontFamily: 'Poppins'))),
                                       Expanded(
                                         child: TextButton(
                                           onPressed: () {
-                                            for (var fnb in datafnb.where(
-                                              (p) =>
-                                                  p['nama_fnb'] ==
-                                                  item['nama_fnb'],
-                                            )) {
-                                              sisastok =
-                                                  int.tryParse(
-                                                    fnb['stok_fnb'].toString(),
-                                                  ) ??
-                                                  0;
+                                            for (var fnb in datafnb.where((p) => p['nama_fnb'] == item['nama_fnb'])) {
+                                              sisastok = int.tryParse(fnb['stok_fnb'].toString()) ?? 0;
                                             }
                                             if (retrieveindex != null) {
-                                              String itemname =
-                                                  item['nama_fnb'];
+                                              String itemname = item['nama_fnb'];
                                               retrieveindex = itemname;
                                               itemTapCounts[retrieveindex!] = 0;
                                             }
                                             c.removeItem(item['id_fnb']);
                                           },
-                                          child: Text(
-                                            "X",
-                                            textAlign: TextAlign.right,
-                                            style: TextStyle(
-                                              fontFamily: 'Poppins',
-                                              height: 1.0,
-                                            ),
-                                          ),
+                                          child: Text("X", textAlign: TextAlign.right, style: TextStyle(fontFamily: 'Poppins', height: 1.0)),
                                         ),
                                       ),
                                     ],
@@ -464,32 +319,17 @@ class _FoodAddOnState extends State<FoodAddOn> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Expanded(child: Text("")),
-                    Expanded(
-                      child: Text(
-                        "Total Add On: ",
-                        textAlign: TextAlign.right,
-                        style: TextStyle(fontFamily: 'Poppins'),
-                      ),
-                    ),
+                    Expanded(child: Text("Total Add On: ", textAlign: TextAlign.right, style: TextStyle(fontFamily: 'Poppins'))),
                     Expanded(
                       child: Row(
                         children: [
                           Expanded(
                             child: Obx(() {
                               var sum = 0;
-                              for (
-                                var i = 0;
-                                i < c.selectedDataMenu.length;
-                                i++
-                              ) {
-                                sum +=
-                                    c.selectedDataMenu[i]['harga_total'] as int;
+                              for (var i = 0; i < c.selectedDataMenu.length; i++) {
+                                sum += c.selectedDataMenu[i]['harga_total'] as int;
                               }
-                              return Text(
-                                "Rp. ${sum}",
-                                textAlign: TextAlign.right,
-                                style: TextStyle(fontFamily: 'Poppins'),
-                              );
+                              return Text("Rp. ${sum}", textAlign: TextAlign.right, style: TextStyle(fontFamily: 'Poppins'));
                             }),
                           ),
                           Expanded(child: Text("")),
@@ -501,20 +341,11 @@ class _FoodAddOnState extends State<FoodAddOn> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.greenAccent,
-                      minimumSize: Size(100, 40),
-                    ),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.greenAccent, minimumSize: Size(100, 40)),
                     onPressed: () async {
                       await c._postData();
                     },
-                    child: Text(
-                      "Proses",
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontFamily: 'Poppins',
-                      ),
-                    ),
+                    child: Text("Proses", style: TextStyle(color: Colors.black, fontFamily: 'Poppins')),
                   ),
                 ),
               ],
