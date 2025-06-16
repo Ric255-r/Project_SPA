@@ -44,6 +44,7 @@ class ListTransaksiController extends GetxController {
     _profileUser().then((_) {
       refreshData();
       startAutoRefresh();
+      _getPajak();
     });
   }
 
@@ -101,6 +102,33 @@ class ListTransaksiController extends GetxController {
       }
     } on DioException catch (e) {
       throw Exception("Dio error: ${e.response!.data}");
+    }
+  }
+
+  RxDouble pajakMsg = 0.0.obs;
+  RxDouble pajakFnb = 0.0.obs;
+
+  Future<void> _getPajak() async {
+    try {
+      var response = await dio.get('${myIpAddr()}/pajak/getpajak');
+
+      // Parse the first record (assumes response is a list of maps)
+      List<dynamic> data = response.data;
+      if (data.isNotEmpty) {
+        var firstRecord = data[0];
+        double pjk = double.tryParse(firstRecord['pajak_msg'].toString()) ?? 0.0;
+        double pjkFnb = double.tryParse(firstRecord['pajak_fnb'].toString()) ?? 0.0;
+
+        pajakMsg.value = pjk;
+        pajakFnb.value = pjkFnb;
+      } else {
+        throw Exception("Empty data received");
+      }
+    } catch (e) {
+      if (e is DioException) {
+        throw Exception("Error Get Pajak Dio ${e.response?.data}");
+      }
+      throw Exception("Error Get Pajak $e");
     }
   }
 
@@ -395,7 +423,7 @@ class ListTransaksiController extends GetxController {
   TextEditingController _noRek = TextEditingController();
   TextEditingController _namaBank = TextEditingController();
 
-  void dialogPelunasan(String idTrans, int grandTotal, int totalAddOn, int jumlahBayar, int kembalian, String status) async {
+  void dialogPelunasan(String idTrans, int grandTotal, int paramsTtlAddOn, int jumlahBayar, int kembalian, String status) async {
     _selectedMetode?.value = _metodeByr.first;
 
     // new dari deepseek
@@ -406,7 +434,7 @@ class ListTransaksiController extends GetxController {
     // Hitung total dgn Pajak yg sesuai
     int totalAddOnAll = 0;
     for (var i in dataAddOn) {
-      double pajak = i['type'] == 'fnb' ? 0.11 : 0.35;
+      double pajak = i['type'] == 'fnb' ? pajakFnb.value : pajakMsg.value;
       double nominalPjk = i['harga_total'] * pajak;
       double hrgPjkSblmRound = i['harga_total'] + nominalPjk;
 
@@ -420,12 +448,12 @@ class ListTransaksiController extends GetxController {
 
     if (status == "unpaid" || status == "done-unpaid") {
       _sisaBayar.value = totalDanAddon - jlhBayar;
-    } else if (status == "done-unpaid-addon" || (totalAddOn != 0 && status == "paid")) {
+    } else if (status == "done-unpaid-addon" || (paramsTtlAddOn != 0 && status == "paid")) {
       _sisaBayar.value = totalAddOnAll; // Gunakan totalAddOnAll yang sudah termasuk pajak
     }
     // end new
 
-    // int totalDanAddon = grandTotal + totalAddOn;
+    // int totalDanAddon = grandTotal + paramsTtlAddOn;
     // int jlhBayar = jumlahBayar - kembalian;
 
     // if (status == "unpaid" || status == "done-unpaid") {
@@ -435,8 +463,8 @@ class ListTransaksiController extends GetxController {
     //   // if (totalDanAddon > jlhBayar) {
     //   //   _sisaBayar.value = totalDanAddon - jlhBayar;
     //   // }
-    // } else if (status == "done-unpaid-addon" || (totalAddOn != 0 && status == "paid")) {
-    //   _sisaBayar.value = totalAddOn;
+    // } else if (status == "done-unpaid-addon" || (paramsTtlAddOn != 0 && status == "paid")) {
+    //   _sisaBayar.value = paramsTtlAddOn;
     // }
 
     _txtSisaBayar.text = currencyFormatter.format(_sisaBayar.value);
@@ -483,15 +511,27 @@ class ListTransaksiController extends GetxController {
               Row(
                 children: [
                   Expanded(child: Padding(padding: const EdgeInsets.only(top: 20), child: Text("Jumlah Bayar Konsumen"))),
-                  Expanded(
-                    flex: 3,
-                    child: TextField(
-                      controller: _txtJlhBayar,
-                      onChanged: (value) {
-                        _fnFormatTotalBayar(value);
-                      },
-                    ),
-                  ),
+                  Obx(() {
+                    if (_selectedMetode!.value != "cash") {
+                      // samakan jlhbayar dgn sisabayar kalo dia debit/qris
+                      _txtJlhBayar.text = currencyFormatter.format(_sisaBayar.value);
+                    } else {
+                      _txtJlhBayar.text = "";
+                      _kembalian.value = 0;
+                      _txtKembalian.text = "";
+                    }
+
+                    return Expanded(
+                      flex: 3,
+                      child: TextField(
+                        controller: _txtJlhBayar,
+                        readOnly: _selectedMetode!.value != "cash",
+                        onChanged: (value) {
+                          _fnFormatTotalBayar(value);
+                        },
+                      ),
+                    );
+                  }),
                 ],
               ),
               Obx(() {
@@ -501,7 +541,7 @@ class ListTransaksiController extends GetxController {
                       Row(
                         children: [
                           Expanded(child: Padding(padding: const EdgeInsets.only(top: 20), child: Text("Kembalian"))),
-                          Expanded(flex: 3, child: TextField(controller: _txtKembalian)),
+                          Expanded(flex: 3, child: TextField(controller: _txtKembalian, readOnly: true)),
                         ],
                       ),
                       Row(
@@ -1692,7 +1732,7 @@ class ListTransaksi extends StatelessWidget {
                                                 // Calculate the total for all add-ons with tax, performed only once.
                                                 if (item['total_addon'] != 0) {
                                                   for (var addon in dataAddOn) {
-                                                    double pajak = addon['type'] == 'fnb' ? 0.11 : 0.35;
+                                                    double pajak = addon['type'] == 'fnb' ? c.pajakFnb.value : c.pajakMsg.value;
                                                     double nominalPjk = addon['harga_total'] * pajak;
                                                     double addOnSblmBulat = addon['harga_total'] + nominalPjk;
                                                     totalAddOnAll += (addOnSblmBulat / 1000).round() * 1000;
