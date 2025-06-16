@@ -285,14 +285,14 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
       var data = {
         "id_transaksi": _txtIdTrans.text,
         "id_fasilitas": idFasilitas,
-        "harga": _dialogTxtTotalOri,
+        "harga": hrgStlhDisc!,
         if (idMember != null) "id_member": idMember,
         "nama_tamu": _txtNamaTamu.text,
         "no_hp": _txtNoHP.text,
       };
 
       double nominalDisc = hrgStlhDisc! * (discSetelahPromo / 100);
-      double hrgSblmDisc = hrgStlhDisc! - nominalDisc;
+      double hrgSblmDisc = harga;
 
       if (varJenisPembayaran == "awal") {
         // false = awal
@@ -319,6 +319,8 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
         data['total_harga'] = hrgSblmDisc;
         data['grand_total'] = hrgStlhDisc!;
       }
+
+      data['disc'] = (discSetelahPromo / 100);
 
       var response = await dio.post(
         '${myIpAddr()}/fasilitas/store',
@@ -352,6 +354,9 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
         autoDismiss: true,
       ).show(context);
       log("Error fn storeTrans $e");
+      log(harga.toString());
+      log(hrgStlhDisc.toString());
+      log(_parsedTotalBayar.toString());
     }
   }
 
@@ -1170,8 +1175,10 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                                             harga =
                                                 hasTahunanPromo
                                                     ? 0
-                                                    : selectedFasilitas['harga_fasilitas']
-                                                        .toDouble();
+                                                    : double.parse(
+                                                      selectedFasilitas['harga_fasilitas']
+                                                          .toString(),
+                                                    );
                                             idFasilitas =
                                                 selectedFasilitas['id_fasilitas'];
                                             _txtHargaFasilitas.text =
@@ -1180,9 +1187,10 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                                         } else {
                                           setState(() {
                                             dropdownNamaFasilitas = value;
-                                            harga =
-                                                selectedFasilitas['harga_fasilitas']
-                                                    .toDouble();
+                                            harga = double.parse(
+                                              selectedFasilitas['harga_fasilitas']
+                                                  .toString(),
+                                            );
                                             idFasilitas =
                                                 selectedFasilitas['id_fasilitas'];
                                             _txtHargaFasilitas.text =
