@@ -29,6 +29,8 @@ class _PageKomisiPekerjaState extends State<PageKomisiPekerja> {
   var isloadingkomisibulanan = true.obs;
 
   RxList<Map<String, dynamic>> listdatakomisi = <Map<String, dynamic>>[].obs;
+  RxList<Map<String, dynamic>> isidetailpaket = <Map<String, dynamic>>[].obs;
+  RxList<Map<String, dynamic>> isidetailproduk = <Map<String, dynamic>>[].obs;
   RxList<Map<String, dynamic>> listdatakomisibulanan =
       <Map<String, dynamic>>[].obs;
 
@@ -87,6 +89,7 @@ class _PageKomisiPekerjaState extends State<PageKomisiPekerja> {
               "id_karyawan": item['id_karyawan'],
               "nominal_komisi": item['nominal_komisi'],
               "created_at": DateTime.parse(item['created_at']),
+              "id": item['id'],
             };
           }).toList();
       setState(() {
@@ -160,6 +163,346 @@ class _PageKomisiPekerjaState extends State<PageKomisiPekerja> {
     for (int i = 0; i < listdatakomisibulanan.length; i++) {
       totalkomisibulanan.value += listdatakomisibulanan[i]['total_komisi'];
     }
+  }
+
+  Future<void> getdetailpaket(id) async {
+    try {
+      var response = await dio.get(
+        '${myIpAddr()}/cekkomisi/detailpaket',
+        data: {
+          "id_user": idkaryawan,
+          "month": int.parse(selectedvalue.value),
+          "year": int.parse(selectedyearvalue.value),
+          "id": id,
+        },
+      );
+      List<dynamic> responseData = response.data['data_transaksi'];
+      List<Map<String, dynamic>> fetcheddata =
+          responseData.map((item) {
+            return {
+              "nama_paket": item['nama_paket_msg'],
+              "qty": item['qty'],
+              "harga_total": item['harga_total'],
+              "tipe_komisi": item['tipe_komisi'],
+              "nominal_komisi": item['nominal_komisi'],
+              "tipe_komisi_gro": item['tipe_komisi_gro'],
+              "nominal_komisi_gro": item['nominal_komisi_gro'],
+              "addon": item['addon'],
+            };
+          }).toList();
+      setState(() {
+        isidetailpaket.clear();
+        isidetailpaket.assignAll(fetcheddata);
+        isidetailpaket.refresh();
+      });
+
+      log('hasil data : $isidetailpaket');
+    } catch (e) {
+      log("Error di fn getdetailpaket : $e");
+      // isloadingkomisiharian.value = false;
+    }
+  }
+
+  Future<void> getdetailproduk(id) async {
+    try {
+      var response = await dio.get(
+        '${myIpAddr()}/cekkomisi/detailproduk',
+        data: {
+          "id_user": idkaryawan,
+          "month": int.parse(selectedvalue.value),
+          "year": int.parse(selectedyearvalue.value),
+          "id": id,
+        },
+      );
+      List<dynamic> responseData = response.data['data_transaksi'];
+      List<Map<String, dynamic>> fetcheddata =
+          responseData.map((item) {
+            return {
+              "nama_produk": item['nama_produk'],
+              "qty": item['qty'],
+              "harga_total": item['harga_total'],
+              "tipe_komisi": item['tipe_komisi'],
+              "nominal_komisi": item['nominal_komisi'],
+              "tipe_komisi_gro": item['tipe_komisi_gro'],
+              "nominal_komisi_gro": item['nominal_komisi_gro'],
+              "addon": item['addon'],
+            };
+          }).toList();
+      setState(() {
+        isidetailproduk.clear();
+        isidetailproduk.assignAll(fetcheddata);
+        isidetailproduk.refresh();
+      });
+
+      log('hasil data : $isidetailproduk');
+    } catch (e) {
+      log("Error di fn getdetailproduk : $e");
+      // isloadingkomisiharian.value = false;
+    }
+  }
+
+  void dialogdetail() {
+    Get.dialog(
+      AlertDialog(
+        content: Container(
+          width: Get.width - 200,
+          height: Get.height - 200,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    child: Text(
+                      'DETAIL KOMISI',
+                      style: TextStyle(fontSize: 40),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 20),
+                Container(
+                  child: Text(
+                    'Detail Komisi Paket',
+                    style: TextStyle(fontSize: 20),
+                  ),
+                ),
+                SizedBox(height: 20),
+                Row(
+                  children: [
+                    Text('Nama Paket', style: TextStyle(fontSize: 17)),
+                    SizedBox(width: 95),
+                    Text('Qty', style: TextStyle(fontSize: 17)),
+                    SizedBox(width: 30),
+                    Text('Harga Total', style: TextStyle(fontSize: 17)),
+                    SizedBox(width: 30),
+                    Text('Tipe Komisi', style: TextStyle(fontSize: 17)),
+                    SizedBox(width: 30),
+                    Text('Komisi Paket', style: TextStyle(fontSize: 17)),
+                    SizedBox(width: 30),
+                    Text('Nominal Komisi', style: TextStyle(fontSize: 17)),
+                  ],
+                ),
+                ListView.builder(
+                  itemCount: isidetailpaket.length,
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemBuilder: (context, index) {
+                    var item = isidetailpaket[index];
+                    var nominalkomisi = 0.0;
+                    var komisijabatan = 0;
+                    var tipekomisi = 0;
+                    if (jabatan == 'Terapis') {
+                      tipekomisi = item['tipe_komisi'];
+                      komisijabatan = item['nominal_komisi'];
+                    } else {
+                      tipekomisi = item['tipe_komisi_gro'];
+
+                      if (item['addon'] == 1) {
+                        komisijabatan = 0;
+                      } else {
+                        komisijabatan = item['nominal_komisi_gro'];
+                      }
+                    }
+                    if (tipekomisi == 0) {
+                      nominalkomisi =
+                          komisijabatan /
+                          100 *
+                          item['harga_total'] *
+                          item['qty'];
+                    } else {
+                      nominalkomisi =
+                          (komisijabatan as int).toDouble() *
+                          (item['qty'] as int).toDouble();
+                    }
+                    return Column(
+                      children: [
+                        SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 200,
+                              child: Text(
+                                '${item['nama_paket']} ${item['addon'] == 1 ? '(addon)' : ''}',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ),
+                            Container(
+                              width: 20,
+                              child: Text(
+                                item['qty'].toString(),
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ),
+                            SizedBox(width: 25),
+                            Container(
+                              width: 110,
+                              child: Text(
+                                item['harga_total'].toString(),
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ),
+                            SizedBox(width: 20),
+                            Container(
+                              width: 70,
+                              child: Text(
+                                tipekomisi == 0 ? 'Persenan' : 'Nominal',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ),
+                            SizedBox(width: 45),
+                            Container(
+                              width: 120,
+                              child: Text(
+                                tipekomisi == 0
+                                    ? '${komisijabatan.toString()} %'
+                                    : komisijabatan.toString(),
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ),
+                            SizedBox(width: 10),
+                            Container(
+                              width: 150,
+                              child: Text(
+                                nominalkomisi.toInt().toString(),
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 10),
+                      ],
+                    );
+                  },
+                ),
+
+                SizedBox(height: 20),
+                isidetailproduk.isNotEmpty
+                    ? Container(
+                      child: Text(
+                        'Detail Komisi Produk',
+                        style: TextStyle(fontSize: 20),
+                      ),
+                    )
+                    : SizedBox.shrink(),
+                SizedBox(height: 20),
+                isidetailproduk.isNotEmpty
+                    ? Row(
+                      children: [
+                        Text('Nama Produk', style: TextStyle(fontSize: 17)),
+                        SizedBox(width: 95),
+                        Text('Qty', style: TextStyle(fontSize: 17)),
+                        SizedBox(width: 30),
+                        Text('Harga Total', style: TextStyle(fontSize: 17)),
+                        SizedBox(width: 30),
+                        Text('Tipe Komisi', style: TextStyle(fontSize: 17)),
+                        SizedBox(width: 30),
+                        Text('Komisi Paket', style: TextStyle(fontSize: 17)),
+                        SizedBox(width: 30),
+                        Text('Nominal Komisi', style: TextStyle(fontSize: 17)),
+                      ],
+                    )
+                    : SizedBox.shrink(),
+                ListView.builder(
+                  itemCount: isidetailproduk.length,
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemBuilder: (context, index) {
+                    var item = isidetailproduk[index];
+                    var nominalkomisi = 0.0;
+                    var komisijabatan = 0;
+                    var tipekomisi = 0;
+                    if (jabatan == 'Terapis') {
+                      tipekomisi = item['tipe_komisi'];
+                      komisijabatan = item['nominal_komisi'];
+                    } else {
+                      tipekomisi = item['tipe_komisi_gro'];
+
+                      if (item['addon'] == 1) {
+                        komisijabatan = 0;
+                      } else {
+                        komisijabatan = item['nominal_komisi_gro'];
+                      }
+                    }
+                    if (tipekomisi == 0) {
+                      nominalkomisi =
+                          komisijabatan /
+                          100 *
+                          item['harga_total'] *
+                          item['qty'];
+                    } else {
+                      nominalkomisi =
+                          (komisijabatan as int).toDouble() *
+                          (item['qty'] as int).toDouble();
+                    }
+                    return Column(
+                      children: [
+                        SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 200,
+                              child: Text(
+                                '${item['nama_produk']} ${item['addon'] == 1 ? '(addon)' : ''}',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ),
+                            Container(
+                              width: 20,
+                              child: Text(
+                                item['qty'].toString(),
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ),
+                            SizedBox(width: 25),
+                            Container(
+                              width: 110,
+                              child: Text(
+                                item['harga_total'].toString(),
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ),
+                            SizedBox(width: 20),
+                            Container(
+                              width: 70,
+                              child: Text(
+                                tipekomisi == 0 ? 'Persenan' : 'Nominal',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ),
+                            SizedBox(width: 45),
+                            Container(
+                              width: 120,
+                              child: Text(
+                                tipekomisi == 0
+                                    ? '${komisijabatan.toString()} %'
+                                    : komisijabatan.toString(),
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ),
+                            SizedBox(width: 10),
+                            Container(
+                              width: 150,
+                              child: Text(
+                                nominalkomisi.toInt().toString(),
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 10),
+                      ],
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -531,7 +874,7 @@ class _PageKomisiPekerjaState extends State<PageKomisiPekerja> {
                                                             Row(
                                                               mainAxisAlignment:
                                                                   MainAxisAlignment
-                                                                      .end,
+                                                                      .start,
                                                               children: [
                                                                 Expanded(
                                                                   child: Text(
@@ -545,19 +888,53 @@ class _PageKomisiPekerjaState extends State<PageKomisiPekerja> {
                                                                     ),
                                                                   ),
                                                                 ),
-                                                                Expanded(
+                                                                Container(
+                                                                  margin:
+                                                                      EdgeInsets.only(
+                                                                        right:
+                                                                            0,
+                                                                      ),
                                                                   child: Text(
                                                                     formatrupiah(
                                                                       item['nominal_komisi'],
                                                                     ),
                                                                     textAlign:
                                                                         TextAlign
-                                                                            .right,
+                                                                            .left,
                                                                     style: TextStyle(
                                                                       fontFamily:
                                                                           'Poppins',
                                                                       fontSize:
                                                                           20,
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                                Expanded(
+                                                                  child: Container(
+                                                                    margin:
+                                                                        EdgeInsets.only(
+                                                                          left:
+                                                                              300,
+                                                                        ),
+                                                                    child: ElevatedButton(
+                                                                      onPressed: () {
+                                                                        getdetailpaket(
+                                                                          item['id'],
+                                                                        ).then((
+                                                                          _,
+                                                                        ) {
+                                                                          getdetailproduk(
+                                                                            item['id'],
+                                                                          ).then((
+                                                                            _,
+                                                                          ) {
+                                                                            dialogdetail();
+                                                                          });
+                                                                        });
+                                                                      },
+                                                                      child: Text(
+                                                                        'Detail Paket',
+                                                                      ),
                                                                     ),
                                                                   ),
                                                                 ),
