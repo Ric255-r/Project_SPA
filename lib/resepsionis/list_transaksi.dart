@@ -423,7 +423,7 @@ class ListTransaksiController extends GetxController {
   TextEditingController _noRek = TextEditingController();
   TextEditingController _namaBank = TextEditingController();
 
-  void dialogPelunasan(String idTrans, int grandTotal, int paramsTtlAddOn, int jumlahBayar, int kembalian, String status) async {
+  void dialogPelunasan(String idTrans, int grandTotal, int jumlahBayar, int kembalian, String status) async {
     _selectedMetode?.value = _metodeByr.first;
 
     // new dari deepseek
@@ -448,7 +448,7 @@ class ListTransaksiController extends GetxController {
 
     if (status == "unpaid" || status == "done-unpaid") {
       _sisaBayar.value = totalDanAddon - jlhBayar;
-    } else if (status == "done-unpaid-addon" || (paramsTtlAddOn != 0 && status == "paid")) {
+    } else if (status == "done-unpaid-addon" || (totalAddOnAll != 0 && status == "paid")) {
       _sisaBayar.value = totalAddOnAll; // Gunakan totalAddOnAll yang sudah termasuk pajak
     }
     // end new
@@ -2020,20 +2020,19 @@ class ListTransaksi extends StatelessWidget {
                                                     //     item['id_transaksi']);
                                                     // Add your button action here
                                                     log("Isi Item adalah $item");
-                                                    int totalAddOnOri = item['total_addon'];
-                                                    var totalAddOnAll = 0;
-                                                    if (item['total_addon'] != 0) {
-                                                      double desimalPjk = item['pajak'];
-                                                      double nominalPjk = totalAddOnOri * desimalPjk;
-                                                      // Pembulatan 1000
-                                                      double addOnSblmBulat = totalAddOnOri + nominalPjk;
-                                                      totalAddOnAll = (addOnSblmBulat / 1000).round() * 1000;
-                                                    }
+                                                    // int totalAddOnOri = item['total_addon'];
+                                                    // var totalAddOnAll = 0;
+                                                    // if (item['total_addon'] != 0) {
+                                                    //   double desimalPjk = item['pajak'];
+                                                    //   double nominalPjk = totalAddOnOri * desimalPjk;
+                                                    //   // Pembulatan 1000
+                                                    //   double addOnSblmBulat = totalAddOnOri + nominalPjk;
+                                                    //   totalAddOnAll = (addOnSblmBulat / 1000).round() * 1000;
+                                                    // }
 
                                                     c.dialogPelunasan(
                                                       item['id_transaksi'],
                                                       item['gtotal_stlh_pajak'],
-                                                      totalAddOnAll,
                                                       item['jumlah_bayar'],
                                                       item['jumlah_kembalian'],
                                                       item['status'],
