@@ -12,7 +12,8 @@ class CustEndSblmWaktunyaController extends GetxController {
 
 class CustEndSblmWaktunya extends StatelessWidget {
   CustEndSblmWaktunya({super.key}) {
-    Get.put(CustEndSblmWaktunyaController());
+    // Get.put(CustEndSblmWaktunyaController());
+    Get.lazyPut<CustEndSblmWaktunyaController>(() => CustEndSblmWaktunyaController(), fenix: false);
   }
 
   @override
@@ -33,31 +34,14 @@ class CustEndSblmWaktunya extends StatelessWidget {
           height: Get.height,
           child: Column(
             children: [
-              Padding(
-                padding: EdgeInsets.only(top: Get.height * 0.1),
-                child: Text('PLATINUM', style: TextStyle(fontSize: 60)),
-              ),
+              Padding(padding: EdgeInsets.only(top: Get.height * 0.1), child: Text('PLATINUM', style: TextStyle(fontSize: 60))),
               Padding(
                 padding: EdgeInsets.only(top: 40),
                 child: Center(
                   child: Column(
                     children: [
-                      Text(
-                        "Alasan Menyelesaikan Paket",
-                        style: TextStyle(
-                          fontSize: 40,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Poppins',
-                        ),
-                      ),
-                      Text(
-                        "Sebelum Waktunya :",
-                        style: TextStyle(
-                          fontSize: 40,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Poppins',
-                        ),
-                      ),
+                      Text("Alasan Menyelesaikan Paket", style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
+                      Text("Sebelum Waktunya :", style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
                     ],
                   ),
                 ),
@@ -69,21 +53,14 @@ class CustEndSblmWaktunya extends StatelessWidget {
                   children: [
                     GestureDetector(
                       onTap: () async {
-                        bool result = await c._kamarTerapisMgr.setSelesai(
-                          cepatSelesai: true,
-                          alasan: "Atas_Permintaan_Tamu",
-                        );
+                        bool result = await c._kamarTerapisMgr.setSelesai(cepatSelesai: true, alasan: "Atas_Permintaan_Tamu");
 
                         if (result) {
                           Get.offAll(() => MainKamarTerapis());
                         }
                       },
                       child: Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.white),
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(15),
-                        ),
+                        decoration: BoxDecoration(border: Border.all(color: Colors.white), color: Colors.white, borderRadius: BorderRadius.circular(15)),
                         height: 180,
                         width: 250,
                         child: Center(
@@ -91,20 +68,8 @@ class CustEndSblmWaktunya extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text('1.', style: TextStyle(fontSize: 30)),
-                              Text(
-                                'Atas Permintaan',
-                                style: TextStyle(
-                                  fontSize: 28,
-                                  fontFamily: 'Poppins',
-                                ),
-                              ),
-                              Text(
-                                'Tamu',
-                                style: TextStyle(
-                                  fontSize: 28,
-                                  fontFamily: 'Poppins',
-                                ),
-                              ),
+                              Text('Atas Permintaan', style: TextStyle(fontSize: 28, fontFamily: 'Poppins')),
+                              Text('Tamu', style: TextStyle(fontSize: 28, fontFamily: 'Poppins')),
                             ],
                           ),
                         ),
@@ -112,21 +77,14 @@ class CustEndSblmWaktunya extends StatelessWidget {
                     ),
                     GestureDetector(
                       onTap: () async {
-                        bool result = await c._kamarTerapisMgr.setSelesai(
-                          cepatSelesai: true,
-                          alasan: "Tamu_Complain",
-                        );
+                        bool result = await c._kamarTerapisMgr.setSelesai(cepatSelesai: true, alasan: "Tamu_Complain");
 
                         if (result) {
                           Get.offAll(() => MainKamarTerapis());
                         }
                       },
                       child: Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.white),
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(15),
-                        ),
+                        decoration: BoxDecoration(border: Border.all(color: Colors.white), color: Colors.white, borderRadius: BorderRadius.circular(15)),
                         height: 180,
                         width: 250,
                         child: Center(
@@ -136,20 +94,8 @@ class CustEndSblmWaktunya extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.start,
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                Text(
-                                  '2.',
-                                  style: TextStyle(
-                                    fontSize: 28,
-                                    fontFamily: 'Poppins',
-                                  ),
-                                ),
-                                Text(
-                                  'Tamu Komplain',
-                                  style: TextStyle(
-                                    fontSize: 28,
-                                    fontFamily: 'Poppins',
-                                  ),
-                                ),
+                                Text('2.', style: TextStyle(fontSize: 28, fontFamily: 'Poppins')),
+                                Text('Tamu Komplain', style: TextStyle(fontSize: 28, fontFamily: 'Poppins')),
                               ],
                             ),
                           ),

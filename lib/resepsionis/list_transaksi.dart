@@ -1592,7 +1592,7 @@ class ListTransaksiController extends GetxController {
 
 class ListTransaksi extends StatelessWidget {
   ListTransaksi({super.key}) {
-    Get.put(ListTransaksiController());
+    Get.lazyPut<ListTransaksiController>(() => ListTransaksiController(), fenix: false);
   }
 
   @override
@@ -2164,65 +2164,64 @@ class ListTransaksi extends StatelessWidget {
   }
 }
 
-void showCancelTransactionDialog(BuildContext context, void Function(String) onConfirm) {
+void showCancelTransactionDialog(BuildContext context, void Function(String) onConfirm) async {
   final TextEditingController passwordController = TextEditingController();
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-  bool isPasswordVisible = false;
 
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return StatefulBuilder(
-        builder: (context, setState) {
-          return AlertDialog(
-            title: Text("Batal Transaksi"),
-            content: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text("Masukkan Password untuk membatalkan transaksi"),
-                  SizedBox(height: 10),
-                  TextFormField(
-                    controller: passwordController,
-                    obscureText: !isPasswordVisible,
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: "Password",
-                      suffixIcon: IconButton(
-                        icon: Icon(isPasswordVisible ? Icons.visibility : Icons.visibility_off),
-                        onPressed: () {
-                          setState(() {
-                            isPasswordVisible = !isPasswordVisible;
-                          });
-                        },
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Password tidak boleh kosong';
-                      }
-                      return null;
+  // Use an RxBool for reactive state management with GetX
+  final RxBool isPasswordVisible = false.obs;
+
+  Get.dialog(
+    AlertDialog(
+      title: const Text("Batal Transaksi"),
+      content: Form(
+        key: formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text("Masukkan Password untuk membatalkan transaksi"),
+            const SizedBox(height: 10),
+            Obx(
+              // Obx listens to changes in observable variables
+              () => TextFormField(
+                controller: passwordController,
+                obscureText: !isPasswordVisible.value, // Access value with .value
+                decoration: InputDecoration(
+                  border: const OutlineInputBorder(),
+                  labelText: "Password",
+                  suffixIcon: IconButton(
+                    icon: Icon(isPasswordVisible.value ? Icons.visibility : Icons.visibility_off),
+                    onPressed: () {
+                      isPasswordVisible.toggle(); // Toggle the RxBool value
                     },
                   ),
-                ],
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Password tidak boleh kosong';
+                  }
+                  return null;
+                },
               ),
             ),
-            actions: [
-              TextButton(onPressed: () => Navigator.of(context).pop(), child: Text("Cancel")),
-              ElevatedButton(
-                onPressed: () {
-                  if (formKey.currentState!.validate()) {
-                    Navigator.of(context).pop(); // Close dialog
-                    onConfirm(passwordController.text); // Handle password
-                  }
-                },
-                child: Text("Confirm"),
-              ),
-            ],
-          );
-        },
-      );
-    },
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Get.back(), // Use Get.back() to close dialog
+          child: const Text("Cancel"),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            if (formKey.currentState!.validate()) {
+              Get.back(); // Close dialog
+              onConfirm(passwordController.text); // Handle password
+            }
+          },
+          child: const Text("Confirm"),
+        ),
+      ],
+    ),
   );
 }
