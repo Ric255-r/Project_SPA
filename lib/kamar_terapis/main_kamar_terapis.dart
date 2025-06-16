@@ -113,7 +113,10 @@ class _MainKamarTerapisState extends State<MainKamarTerapis> {
         ),
         content: SingleChildScrollView(
           child: ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: 250, minWidth: Get.width - 300),
+            constraints: BoxConstraints(
+              maxHeight: 250,
+              minWidth: Get.width - 300,
+            ),
             child: Obx(() {
               if (_dataOb.isEmpty) {
                 return const Center(child: CircularProgressIndicator());
@@ -134,7 +137,8 @@ class _MainKamarTerapisState extends State<MainKamarTerapis> {
                     width: Get.width - 300,
                     child: DropdownMenu<String>(
                       width: Get.width - 300,
-                      initialSelection: '', // Default to empty (our "Select item first")
+                      initialSelection:
+                          '', // Default to empty (our "Select item first")
                       onSelected: (String? value) {
                         if (value?.isNotEmpty ?? false) {
                           // Only update if not default
@@ -145,7 +149,8 @@ class _MainKamarTerapisState extends State<MainKamarTerapis> {
                           allOptions.map((item) {
                             return DropdownMenuEntry<String>(
                               value: item['id_karyawan'],
-                              label: "${item['id_karyawan']} - ${item['nama_karyawan']}",
+                              label:
+                                  "${item['id_karyawan']} - ${item['nama_karyawan']}",
                               // Disable default option
                               enabled: item['id_karyawan'].isNotEmpty,
                             );
@@ -158,7 +163,7 @@ class _MainKamarTerapisState extends State<MainKamarTerapis> {
                       onPressed: () {
                         _verifikasiOb();
                       },
-                      child: Text("Pencet"),
+                      child: Text("Konfirmasi"),
                     ),
                   ),
                 ],
@@ -280,7 +285,11 @@ class _MainKamarTerapisState extends State<MainKamarTerapis> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(""), toolbarHeight: 50, backgroundColor: Color(0XFFFFE0B2)),
+      appBar: AppBar(
+        title: Text(""),
+        toolbarHeight: 50,
+        backgroundColor: Color(0XFFFFE0B2),
+      ),
       body: Container(
         decoration: BoxDecoration(color: Color(0XFFFFE0B2)),
         width: Get.width,
@@ -289,9 +298,22 @@ class _MainKamarTerapisState extends State<MainKamarTerapis> {
           children: [
             Padding(
               padding: EdgeInsets.only(top: 5),
-              child: Text('PLATINUM', style: TextStyle(fontSize: 60, fontFamily: 'Poppins', fontWeight: FontWeight.w500)),
+              child: Text(
+                'PLATINUM',
+                style: TextStyle(
+                  fontSize: 60,
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
-            Padding(padding: EdgeInsets.only(top: 40), child: Text("Pilih Jenis Aktivitas", style: TextStyle(fontSize: 30, fontFamily: 'Poppins'))),
+            Padding(
+              padding: EdgeInsets.only(top: 40),
+              child: Text(
+                "Pilih Jenis Aktivitas",
+                style: TextStyle(fontSize: 30, fontFamily: 'Poppins'),
+              ),
+            ),
             Padding(
               padding: EdgeInsets.only(top: 60, left: 220, right: 220),
               child: Row(
@@ -303,15 +325,34 @@ class _MainKamarTerapisState extends State<MainKamarTerapis> {
                       // _dialogLogin("terapis");
                     },
                     child: Container(
-                      decoration: BoxDecoration(border: Border.all(color: Colors.white), color: Colors.white, borderRadius: BorderRadius.circular(15)),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.white),
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(15),
+                      ),
                       height: 300,
                       width: 250,
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Padding(padding: EdgeInsets.only(top: 68), child: Icon(FontAwesomeIcons.handHoldingHeart, size: 140)),
-                          Padding(padding: EdgeInsets.only(top: 20), child: Text('Terapis', style: TextStyle(fontSize: 26, fontFamily: 'Poppins'))),
+                          Padding(
+                            padding: EdgeInsets.only(top: 68),
+                            child: Icon(
+                              FontAwesomeIcons.handHoldingHeart,
+                              size: 140,
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(top: 20),
+                            child: Text(
+                              'Terapis',
+                              style: TextStyle(
+                                fontSize: 26,
+                                fontFamily: 'Poppins',
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -325,13 +366,26 @@ class _MainKamarTerapisState extends State<MainKamarTerapis> {
                       // ),);
                     },
                     child: Container(
-                      decoration: BoxDecoration(border: Border.all(color: Colors.white), color: Colors.white, borderRadius: BorderRadius.circular(15)),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.white),
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(15),
+                      ),
                       height: 300,
                       width: 250,
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [Icon(Icons.cleaning_services_rounded, size: 200), Text('Office Boy', style: TextStyle(fontSize: 26, fontFamily: 'Poppins'))],
+                        children: [
+                          Icon(Icons.cleaning_services_rounded, size: 200),
+                          Text(
+                            'Office Boy',
+                            style: TextStyle(
+                              fontSize: 26,
+                              fontFamily: 'Poppins',
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

@@ -1966,6 +1966,17 @@ class ListTransaksi extends StatelessWidget {
                                           child: Row(
                                             mainAxisAlignment: MainAxisAlignment.end,
                                             children: [
+                                              IconButton(
+                                                onPressed: () {
+                                                  showCancelTransactionDialog(context, (password) {
+                                                    // Do validation with the password
+                                                    print("Password entered: $password");
+                                                    // You can now validate password and cancel transaction here
+                                                  });
+                                                },
+                                                icon: Icon(Icons.cancel),
+                                              ),
+                                              SizedBox(width: 10),
                                               ElevatedButton(
                                                 onPressed: () {
                                                   log("isi item adalah $item");
@@ -2152,4 +2163,67 @@ class ListTransaksi extends StatelessWidget {
       drawer: OurDrawer(),
     );
   }
+}
+
+void showCancelTransactionDialog(BuildContext context, void Function(String) onConfirm) {
+  final TextEditingController passwordController = TextEditingController();
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  bool isPasswordVisible = false;
+
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: Text("Batal Transaksi"),
+            content: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text("Masukkan Password untuk membatalkan transaksi"),
+                  SizedBox(height: 10),
+                  TextFormField(
+                    controller: passwordController,
+                    obscureText: !isPasswordVisible,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: "Password",
+                      suffixIcon: IconButton(
+                        icon: Icon(isPasswordVisible ? Icons.visibility : Icons.visibility_off),
+                        onPressed: () {
+                          setState(() {
+                            isPasswordVisible = !isPasswordVisible;
+                          });
+                        },
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Password tidak boleh kosong';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.of(context).pop(), child: Text("Cancel")),
+              ElevatedButton(
+                onPressed: () {
+                  if (formKey.currentState!.validate()) {
+                    Navigator.of(context).pop(); // Close dialog
+                    onConfirm(passwordController.text); // Handle password
+                  }
+                },
+                child: Text("Confirm"),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
 }
