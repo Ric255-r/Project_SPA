@@ -238,6 +238,9 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
   String varJenisPembayaran = jenisPembayaran.first;
 
+  String? _selectedBank;
+  final List<String> _bankList = ['BCA', 'BNI', 'BRI', 'Mandiri'];
+
   Future<void> _storeTrans() async {
     try {
       var rincian = getHargaAfterDisc();
@@ -263,11 +266,17 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
           // _parsedTotalBayar = ini input manual, misal dia bayar ga mungkin nilainya bulat.
           data['jumlah_bayar'] = _parsedTotalBayar;
         } else {
-          data['metode_pembayaran'] = isQris ? "qris" : "debit";
+          if (isQris) {
+            data['metode_pembayaran'] = "qris";
+          } else if (isKredit) {
+            data['metode_pembayaran'] = "kredit";
+          } else {
+            data['metode_pembayaran'] = "debit";
+          }
           data['jumlah_bayar'] = hrgStlhPjk.value;
           data['nama_akun'] = _namaAkun.text;
           data['no_rek'] = _noRek.text;
-          data['nama_bank'] = _namaBank.text;
+          data['nama_bank'] = _selectedBank;
         }
       } else {
         // Panggil Ini Krn Ga lewat dialog
@@ -380,6 +389,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
   bool isCash = true;
   bool isDebit = false;
   bool isQris = false;
+  bool isKredit = false;
 
   Future<void> _getPajak() async {
     try {
@@ -407,7 +417,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
   void _showDialogConfirmPayment(BuildContext context) async {
     await _getPajak();
 
-    List<String> metodeByr = ["Cash", "Debit", "QRIS"];
+    List<String> metodeByr = ["cash", "debit", "kredit", "qris"];
     String dropdownValue = metodeByr.first;
     int statusloker = 0;
     final LockerManager LockerInput = LockerManager();
@@ -528,21 +538,31 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                 // dipanggil kalo user select metode byr
                                 setState(() {
                                   switch (value) {
-                                    case "Cash":
+                                    case "cash":
                                       isCash = true;
                                       isDebit = false;
                                       isQris = false;
+                                      isKredit = false;
                                       break;
-                                    case "Debit":
+                                    case "debit":
                                       isDebit = true;
                                       isCash = false;
                                       isQris = false;
+                                      isKredit = false;
                                       break;
 
-                                    case "QRIS":
+                                    case "qris":
                                       isQris = true;
                                       isCash = false;
                                       isDebit = false;
+                                      isKredit = false;
+                                      break;
+
+                                    case "kredit":
+                                      isQris = false;
+                                      isCash = false;
+                                      isDebit = false;
+                                      isKredit = true;
                                       break;
                                   }
 
@@ -686,7 +706,28 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                 ),
                                 Expanded(
                                   flex: 3,
-                                  child: TextField(controller: _namaBank),
+                                  child: DropdownButtonFormField<String>(
+                                    value: _selectedBank,
+                                    onChanged: (String? Value) {
+                                      setState(() {
+                                        _selectedBank = Value!;
+                                      });
+                                    },
+                                    items:
+                                        _bankList.map((String bank) {
+                                          return DropdownMenuItem<String>(
+                                            value: bank,
+                                            child: Text(bank),
+                                          );
+                                        }).toList(),
+                                    decoration: InputDecoration(
+                                      border: OutlineInputBorder(),
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 12,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
@@ -763,6 +804,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
         isCash = true;
         isDebit = false;
         isQris = false;
+        isKredit = false;
         _totalBayarController.clear();
         _kembalianController.clear();
       });

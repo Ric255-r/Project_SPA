@@ -102,6 +102,8 @@ class _ListpaketState extends State<Listpaket> {
 
   Timer? debounce;
 
+  bool changekategori = false;
+
   List<RxString> dropdownpenerimakomisi = ['Terapis'.obs, 'Gro'.obs];
   RxString? selecteditem = ''.obs;
   RxString cekpenerima = ''.obs;
@@ -980,7 +982,7 @@ class _ListpaketState extends State<Listpaket> {
     );
   }
 
-  void isibuttoneditfnb(id_fnb) {
+  void isibuttoneditfnb(id_fnb, idkategori) {
     Get.dialog(
       StatefulBuilder(
         builder: (context, setState) {
@@ -1166,6 +1168,7 @@ class _ListpaketState extends State<Listpaket> {
                                           ),
                                           onChanged: (String? value) {
                                             setState(() {
+                                              changekategori = true;
                                               selectedKategoriIdFnb = value;
                                             });
                                           },
@@ -1206,6 +1209,12 @@ class _ListpaketState extends State<Listpaket> {
                                           backgroundColor: Colors.green,
                                         ),
                                         onPressed: () {
+                                          log(selectedKategoriIdFnb.toString());
+                                          log('ini loh : $idkategori');
+                                          if (changekategori == false) {
+                                            selectedKategoriIdFnb = idkategori;
+                                          }
+                                          changekategori = false;
                                           updatedatafnb(id_fnb);
                                           refreshDatafnb();
                                           Get.back();
@@ -3122,6 +3131,7 @@ class _ListpaketState extends State<Listpaket> {
                                   itemCount: datafnb.length,
                                   itemBuilder: (context, index) {
                                     var item = datafnb[index];
+                                    var valkategori = item['id_kategori'];
                                     return Container(
                                       margin: EdgeInsets.all(10),
                                       decoration: BoxDecoration(
@@ -3279,6 +3289,7 @@ class _ListpaketState extends State<Listpaket> {
                                                     });
                                                     isibuttoneditfnb(
                                                       item['id_fnb'],
+                                                      valkategori,
                                                     );
                                                     getkategorifnb();
                                                   },

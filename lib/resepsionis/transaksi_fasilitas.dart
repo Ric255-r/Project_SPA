@@ -320,7 +320,11 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
         data['grand_total'] = hrgStlhDisc!;
       }
 
-      data['disc'] = (discSetelahPromo / 100);
+      if (dropdownHappyHour != null) {
+        data['disc'] = (discSetelahPromo / 100);
+      } else {
+        data['disc'] = 0;
+      }
 
       var response = await dio.post(
         '${myIpAddr()}/fasilitas/store',

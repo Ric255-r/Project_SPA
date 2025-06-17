@@ -93,6 +93,7 @@ flutter:
     - assets/audio/clicksound.mp3
     - assets/audio/kamarselesai.mp3
     - assets/audio/f1sport.mp3
+    - assets/audio/bass_sound.mp3
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

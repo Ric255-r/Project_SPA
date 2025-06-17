@@ -48,6 +48,7 @@ class MainResepsionisController extends GetxController
     _profileUser();
     getDataTerapis();
     _loadSound();
+    _loadSound2();
 
     // Init AwesomeNotif
     AwesomeNotifications().initialize(
@@ -119,11 +120,21 @@ class MainResepsionisController extends GetxController
   }
 
   final AudioPlayer _audioPlayer = AudioPlayer();
+  final AudioPlayer _audioPlayer2 = AudioPlayer();
 
   Future<void> _loadSound() async {
     try {
       await _audioPlayer.setAsset('assets/audio/kamarselesai.mp3');
       await _audioPlayer.setVolume(1.0);
+    } catch (e) {
+      debugPrint("Error loading sound: $e");
+    }
+  }
+
+  Future<void> _loadSound2() async {
+    try {
+      await _audioPlayer2.setAsset('assets/audio/bass_sound.mp3');
+      await _audioPlayer2.setVolume(1.0);
     } catch (e) {
       debugPrint("Error loading sound: $e");
     }
@@ -135,6 +146,17 @@ class MainResepsionisController extends GetxController
 
       await _audioPlayer.seek(Duration.zero);
       await _audioPlayer.play();
+    } catch (e) {
+      debugPrint("Error playing sound: $e");
+    }
+  }
+
+  Future<void> _playBassSound() async {
+    try {
+      // await Future.delayed(const Duration(milliseconds: 100)); // Give time for press animation
+
+      await _audioPlayer2.seek(Duration.zero);
+      await _audioPlayer2.play();
     } catch (e) {
       debugPrint("Error playing sound: $e");
     }
@@ -194,9 +216,9 @@ class MainResepsionisController extends GetxController
         title = "Penambahan Paket/produk";
       } else if (data['status'] == "terapis_tiba") {
         title = "Terapis Tiba";
+        _playBassSound();
       } else if (data['status'] == "kamar_selesai") {
         title = "Selesai Massage";
-
         _playNotifSelesai();
       }
 

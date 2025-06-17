@@ -682,12 +682,15 @@ class ListTransaksiController extends GetxController {
   RxInt _kembalian = 0.obs;
   TextEditingController _txtKembalian = TextEditingController();
   // List Metode Bayar
-  RxList<String> _metodeByr = <String>['cash', 'debit', 'qris'].obs;
+  RxList<String> _metodeByr = <String>['cash', 'debit', 'kredit', 'qris'].obs;
   RxnString? _selectedMetode = RxnString(null);
   // data utk metode bank / qris
   TextEditingController _namaAkun = TextEditingController();
   TextEditingController _noRek = TextEditingController();
   TextEditingController _namaBank = TextEditingController();
+
+  RxString selectedBank = ''.obs;
+  final List<String> bankList = ['BCA', 'BNI', 'BRI', 'Mandiri'];
 
   void dialogPelunasan(String idTrans, int grandTotal, int jumlahBayar, int kembalian, String status) async {
     _selectedMetode?.value = _metodeByr.first;
@@ -792,6 +795,8 @@ class ListTransaksiController extends GetxController {
                       child: TextField(
                         controller: _txtJlhBayar,
                         readOnly: _selectedMetode!.value != "cash",
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                         onChanged: (value) {
                           _fnFormatTotalBayar(value);
                         },
@@ -801,6 +806,8 @@ class ListTransaksiController extends GetxController {
                 ],
               ),
               Obx(() {
+                final c = Get.find<ListTransaksiController>();
+
                 if (_selectedMetode!.value == "cash") {
                   return Column(
                     children: [
@@ -826,7 +833,7 @@ class ListTransaksiController extends GetxController {
                                     return;
                                   }
 
-                                  await _storeTrans(idTrans);
+                                  await _storeTrans(Get.context!, idTrans);
                                   Get.back();
                                 },
                                 child: Text("Proses"),
@@ -837,7 +844,7 @@ class ListTransaksiController extends GetxController {
                       ),
                     ],
                   );
-                } else if (_selectedMetode!.value == 'debit' || _selectedMetode!.value == 'qris') {
+                } else if (_selectedMetode!.value == 'debit' || _selectedMetode!.value == 'qris' || _selectedMetode!.value == 'kredit') {
                   return Column(
                     children: [
                       SizedBox(height: 20),
@@ -857,9 +864,27 @@ class ListTransaksiController extends GetxController {
                       Row(
                         children: [
                           Expanded(child: Text("Nama Bank: ", style: TextStyle(fontFamily: 'Poppins'))),
-                          Expanded(flex: 3, child: TextField(controller: _namaBank)),
+                          Expanded(
+                            flex: 3,
+                            child: Obx(
+                              () => DropdownButtonFormField<String>(
+                                value: c.selectedBank.value.isEmpty ? null : c.selectedBank.value,
+                                onChanged: (String? newValue) {
+                                  if (newValue != null) {
+                                    c.selectedBank.value = newValue;
+                                  }
+                                },
+                                items:
+                                    c.bankList.map((String bank) {
+                                      return DropdownMenuItem<String>(value: bank, child: Text(bank));
+                                    }).toList(),
+                                decoration: InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12)),
+                              ),
+                            ),
+                          ),
                         ],
                       ),
+
                       Row(
                         children: [
                           Expanded(
@@ -871,7 +896,7 @@ class ListTransaksiController extends GetxController {
                                     return;
                                   }
 
-                                  await _storeTrans(idTrans);
+                                  await _storeTrans(Get.context!, idTrans);
                                   Get.back();
                                 },
                                 child: Text("Proses"),
@@ -1031,7 +1056,7 @@ class ListTransaksiController extends GetxController {
   //   await Printing.layoutPdf(onLayout: (PdfPageFormat format) async => pdf.save());
   // }
 
-  Future<void> _storeTrans(String idTrans) async {
+  Future<void> _storeTrans(BuildContext context, String idTrans) async {
     try {
       var data = {
         "id_transaksi": idTrans,
@@ -1041,17 +1066,26 @@ class ListTransaksiController extends GetxController {
 
       if (_selectedMetode!.value == "cash") {
         data['metode_pembayaran'] = "cash";
+      } else if (_selectedMetode!.value == "qris") {
+        data['metode_pembayaran'] = "qris";
+      } else if (_selectedMetode!.value == "debit") {
+        data['metode_pembayaran'] = "debit";
+      } else if (_selectedMetode!.value == "kredit") {
+        data['metode_pembayaran'] = "kredit";
       } else {
-        data['metode_pembayaran'] = _selectedMetode!.value == "qris" ? "qris" : "debit";
+        data['metode_pembayaran'] = "unknown"; // fallback for unexpected values
+      }
+      if (_selectedMetode!.value != "cash") {
         data['nama_akun'] = _namaAkun.text;
         data['no_rek'] = _noRek.text;
-        data['nama_bank'] = _namaBank.text;
+        data['nama_bank'] = selectedBank.value;
       }
 
       var response = await dio.put('${myIpAddr()}/massages/pelunasan', data: data);
 
       if (response.statusCode == 200) {
         await refreshData();
+        CherryToast.success(title: Text("Pelunasan Berhasil"), toastDuration: Duration(seconds: 3)).show(context);
       }
       // log("Isi data jual $dataJual");
       log("Sukses SImpan $response");
@@ -2337,13 +2371,13 @@ class ListTransaksi extends StatelessWidget {
                       ),
                     ),
 
-                    // QRIS
+                    // Qris
                     Expanded(
                       child: InkWell(
-                        onTap: () => c.showDialogOmset("qris"),
+                        onTap: () => c.showDialogOmset("debit"),
                         child: Obx(
                           () => Text(
-                            "QRIS: ${c.currencyFormatter.format(c.omsetQris.value)}",
+                            "Qris: ${c.currencyFormatter.format(c.omsetQris.value)}",
                             textAlign: TextAlign.end,
                             style: TextStyle(color: Colors.purple[700], fontWeight: FontWeight.w900),
                           ),

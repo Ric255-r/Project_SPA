@@ -174,9 +174,13 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
   RxBool isCash = true.obs;
   RxBool isDebit = false.obs;
   RxBool isQris = false.obs;
+  RxBool isKredit = false.obs;
   TextEditingController _namaAkun = TextEditingController();
   TextEditingController _noRek = TextEditingController();
   TextEditingController _namaBank = TextEditingController();
+
+  String? _selectedBank;
+  final List<String> _bankList = ['BCA', 'BNI', 'BRI', 'Mandiri'];
 
   RxDouble desimalPjk = 0.0.obs;
   Future<void> _getPajak() async {
@@ -206,7 +210,7 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
     await _getPajak();
     log("Isi Desimal Pajak Fnb = ${desimalPjk.value}");
 
-    List<String> metodeByr = ["Cash", "Debit", "QRIS"];
+    List<String> metodeByr = ["cash", "debit", "kredit", "qris"];
     RxString dropdownByr = metodeByr.first.obs;
 
     Get.dialog(
@@ -317,21 +321,31 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
                           onChanged: (String? val) {
                             // dipanggil kalo user select metode byr
                             switch (val) {
-                              case "Cash":
+                              case "cash":
                                 isCash.value = true;
                                 isDebit.value = false;
                                 isQris.value = false;
+                                isKredit.value = false;
                                 break;
-                              case "Debit":
+                              case "debit":
                                 isDebit.value = true;
                                 isCash.value = false;
                                 isQris.value = false;
+                                isKredit.value = false;
                                 break;
 
-                              case "QRIS":
+                              case "qris":
                                 isQris.value = true;
                                 isCash.value = false;
                                 isDebit.value = false;
+                                isKredit.value = false;
+                                break;
+
+                              case "kredit":
+                                isQris.value = false;
+                                isCash.value = false;
+                                isDebit.value = false;
+                                isKredit.value = true;
                                 break;
                             }
 
@@ -471,7 +485,28 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
                           ),
                           Expanded(
                             flex: 3,
-                            child: TextField(controller: _namaBank),
+                            child: DropdownButtonFormField<String>(
+                              value: _selectedBank,
+                              onChanged: (String? Value) {
+                                setState(() {
+                                  _selectedBank = Value!;
+                                });
+                              },
+                              items:
+                                  _bankList.map((String bank) {
+                                    return DropdownMenuItem<String>(
+                                      value: bank,
+                                      child: Text(bank),
+                                    );
+                                  }).toList(),
+                              decoration: InputDecoration(
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 12,
+                                ),
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -523,6 +558,7 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
       isCash.value = true;
       isDebit.value = false;
       isQris.value = false;
+      isKredit.value = false;
       _totalBayarController.clear();
       _kembalianController.clear();
       _namaAkun.clear();
@@ -550,11 +586,17 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
         data['metode_pembayaran'] = "cash";
         data['jumlah_bayar'] = _parsedTotalBayar;
       } else {
-        data['metode_pembayaran'] = isQris.value ? "qris" : "debit";
+        if (isQris.value) {
+          data['metode_pembayaran'] = "qris";
+        } else if (isKredit.value) {
+          data['metode_pembayaran'] = "kredit";
+        } else {
+          data['metode_pembayaran'] = "debit";
+        }
         data['jumlah_bayar'] = _dialogTxtTotalStlhPjk.value;
         data['nama_akun'] = _namaAkun.text;
         data['no_rek'] = _noRek.text;
-        data['nama_bank'] = _namaBank.text;
+        data['nama_bank'] = _selectedBank;
       }
 
       data['pajak'] = desimalPjk.value;
