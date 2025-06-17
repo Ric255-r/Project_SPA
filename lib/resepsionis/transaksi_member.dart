@@ -204,6 +204,9 @@ class _TransaksiMemberState extends State<TransaksiMember> {
     }
   }
 
+  String? _selectedBank;
+  final List<String> _bankList = ['BCA', 'BNI', 'BRI', 'Mandiri'];
+
   final currencyFormatter = NumberFormat.currency(
     locale: 'id_ID',
     symbol: 'Rp ',
@@ -213,12 +216,13 @@ class _TransaksiMemberState extends State<TransaksiMember> {
   bool isCash = true;
   bool isDebit = false;
   bool isQris = false;
+  bool isKredit = false;
 
   void _showDialogConfirmPayment(BuildContext context) {
     String totalhargavalue = totalHarga
         .replaceAll("Rp ", "")
         .replaceAll('.', '');
-    List<String> metodeByr = ["Cash", "Debit", "QRIS"];
+    List<String> metodeByr = ["cash", "debit", "kredit", "qris"];
     String dropdownValue = metodeByr.first;
     bool totalbayarenabled = true;
     bool namaakunenabled = true;
@@ -247,11 +251,17 @@ class _TransaksiMemberState extends State<TransaksiMember> {
           data['metode_pembayaran'] = "cash";
           data['jumlah_bayar'] = _parsedTotalBayar;
         } else {
-          data['metode_pembayaran'] = isQris ? "qris" : "debit";
+          if (isQris) {
+            data['metode_pembayaran'] = "qris";
+          } else if (isKredit) {
+            data['metode_pembayaran'] = "kredit";
+          } else {
+            data['metode_pembayaran'] = "debit";
+          }
           data['jumlah_bayar'] = int.parse(totalhargavalue);
           data['nama_akun'] = _namaAkun.text;
           data['no_rek'] = _noRek.text;
-          data['nama_bank'] = _namaBank.text;
+          data['nama_bank'] = _selectedBank;
         }
 
         data['total_harga'] = int.parse(totalhargavalue);
@@ -329,11 +339,17 @@ class _TransaksiMemberState extends State<TransaksiMember> {
           data['metode_pembayaran'] = "cash";
           data['jumlah_bayar'] = _parsedTotalBayar;
         } else {
-          data['metode_pembayaran'] = isQris ? "qris" : "debit";
+          if (isQris) {
+            data['metode_pembayaran'] = "qris";
+          } else if (isKredit) {
+            data['metode_pembayaran'] = "kredit";
+          } else {
+            data['metode_pembayaran'] = "debit";
+          }
           data['jumlah_bayar'] = int.parse(totalhargavalue);
           data['nama_akun'] = _namaAkun.text;
           data['no_rek'] = _noRek.text;
-          data['nama_bank'] = _namaBank.text;
+          data['nama_bank'] = _selectedBank;
         }
 
         data['total_harga'] = int.parse(totalhargavalue);
@@ -452,21 +468,31 @@ class _TransaksiMemberState extends State<TransaksiMember> {
                                   // dipanggil kalo user select metode byr
                                   setState(() {
                                     switch (value) {
-                                      case "Cash":
+                                      case "cash":
                                         isCash = true;
                                         isDebit = false;
                                         isQris = false;
+                                        isKredit = false;
                                         break;
-                                      case "Debit":
+                                      case "debit":
                                         isDebit = true;
                                         isCash = false;
                                         isQris = false;
+                                        isKredit = false;
                                         break;
 
-                                      case "QRIS":
+                                      case "qris":
                                         isQris = true;
                                         isCash = false;
                                         isDebit = false;
+                                        isKredit = false;
+                                        break;
+
+                                      case "kredit":
+                                        isQris = false;
+                                        isCash = false;
+                                        isDebit = false;
+                                        isKredit = true;
                                         break;
                                     }
                                     _totalBayarController.clear();
@@ -622,9 +648,27 @@ class _TransaksiMemberState extends State<TransaksiMember> {
                                     ),
                                     Expanded(
                                       flex: 3,
-                                      child: TextField(
-                                        controller: _namaBank,
-                                        enabled: namabankenabled,
+                                      child: DropdownButtonFormField<String>(
+                                        value: _selectedBank,
+                                        onChanged: (String? Value) {
+                                          setState(() {
+                                            _selectedBank = Value!;
+                                          });
+                                        },
+                                        items:
+                                            _bankList.map((String bank) {
+                                              return DropdownMenuItem<String>(
+                                                value: bank,
+                                                child: Text(bank),
+                                              );
+                                            }).toList(),
+                                        decoration: InputDecoration(
+                                          border: OutlineInputBorder(),
+                                          contentPadding: EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 12,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -702,6 +746,7 @@ class _TransaksiMemberState extends State<TransaksiMember> {
         isCash = true;
         isDebit = false;
         isQris = false;
+        isKredit = false;
         _totalBayarController.clear();
         _kembalianController.clear();
       });
