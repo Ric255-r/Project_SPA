@@ -107,6 +107,8 @@ class ListTransaksiController extends GetxController {
         dataDebit.assignAll((response.data['data_debit'] as List).map((el) => {...el}));
         dataQris.assignAll((response.data['data_qris'] as List).map((el) => {...el}));
 
+        log("Isi Data Cash $dataCash");
+
         return List<Map<String, dynamic>>.from(response.data['main_data']);
       } else {
         throw Exception("Failed to load data: ${response.statusCode}");
@@ -422,7 +424,7 @@ class ListTransaksiController extends GetxController {
                     if (mode == "cash") ...[
                       Expanded(child: Text("Id Transaksi")),
                       Expanded(child: Text("Metode Bayar")),
-                      Expanded(child: Text("Jumlah Bayar")),
+                      Expanded(child: Text("Jumlah Bayar", textAlign: TextAlign.right)),
                     ] else ...[
                       Expanded(child: Text("Id Transaksi")),
                       Expanded(child: Text("Metode Bayar")),
@@ -443,16 +445,52 @@ class ListTransaksiController extends GetxController {
 
                     // Ini Bkl Nampung Semua Widget
                     List<Widget> bankDataWidgets = [];
+                    List<Widget> cashWidgets = [];
 
                     if (mode == "cash") {
-                      for (var data in allDataOmset!) {
-                        return Row(
-                          children: [
-                            Expanded(child: Text(data['id_transaksi'])),
-                            Expanded(child: Text(data['metode_pembayaran'])),
-                            Expanded(child: Text(currencyFormatter.format(data['jumlah_bayar']))),
-                          ],
+                      // Handle only cash transactions
+                      RxInt omsetCash = 0.obs;
+
+                      if (allDataOmset != null && allDataOmset!.isNotEmpty) {
+                        // Add cash header
+                        cashWidgets.add(
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8.0, bottom: 5.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(child: Text("CASH", style: TextStyle(fontWeight: FontWeight.bold))),
+                                Expanded(
+                                  child: Obx(
+                                    () => Text(
+                                      "Total Cash: ${currencyFormatter.format(omsetCash.value)}",
+                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                      textAlign: TextAlign.right,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         );
+
+                        // Add cash transactions
+                        for (var data in allDataOmset!) {
+                          omsetCash.value += (data['jumlah_bayar'] as int);
+                          cashWidgets.add(
+                            Row(
+                              children: [
+                                Expanded(child: Text(data['id_transaksi'])),
+                                Expanded(child: Text(data['metode_pembayaran'])),
+                                Expanded(child: Text(currencyFormatter.format(data['jumlah_bayar']), textAlign: TextAlign.right)),
+                              ],
+                            ),
+                          );
+                        }
+
+                        return Column(children: cashWidgets);
+                      } else {
+                        return Text("Tidak Ada Transaksi Cash");
                       }
                     } else {
                       dataBCA = allDataOmset?.where((el) => el['nama_bank'].toLowerCase() == "bca").toList();
