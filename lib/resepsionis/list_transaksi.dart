@@ -29,6 +29,7 @@ import 'package:esc_pos_printer/esc_pos_printer.dart';
 import 'printer_mgr.dart';
 import 'package:esc_pos_utils/esc_pos_utils.dart'; // This is crucial
 // import 'package:thermal_printer/thermal_printer.dart';
+import 'package:dartx/dartx.dart';
 
 class ListTransaksiController extends GetxController {
   RxList<Map<String, dynamic>> dataList = <Map<String, dynamic>>[].obs;
@@ -86,6 +87,12 @@ class ListTransaksiController extends GetxController {
   RxInt omsetCash = 0.obs;
   RxInt omsetDebit = 0.obs;
   RxInt omsetQris = 0.obs;
+  RxList<Map<String, dynamic>> dataCash = <Map<String, dynamic>>[].obs;
+  RxList<Map<String, dynamic>> dataDebit = <Map<String, dynamic>>[].obs;
+  RxList<Map<String, dynamic>> dataKredit = <Map<String, dynamic>>[].obs;
+  RxList<Map<String, dynamic>> dataQris = <Map<String, dynamic>>[].obs;
+
+  RxMap<String, Map<String, dynamic>> detailTrans = <String, Map<String, dynamic>>{}.obs;
 
   Future<List<Map<String, dynamic>>> fetchData() async {
     try {
@@ -95,6 +102,10 @@ class ListTransaksiController extends GetxController {
         omsetCash.value = (response.data['total_cash'] as int);
         omsetDebit.value = (response.data['total_debit'] as int);
         omsetQris.value = (response.data['total_qris'] as int);
+
+        dataCash.assignAll((response.data['data_cash'] as List).map((el) => {...el}));
+        dataDebit.assignAll((response.data['data_debit'] as List).map((el) => {...el}));
+        dataQris.assignAll((response.data['data_qris'] as List).map((el) => {...el}));
 
         return List<Map<String, dynamic>>.from(response.data['main_data']);
       } else {
@@ -384,6 +395,261 @@ class ListTransaksiController extends GetxController {
 
       return {};
     }
+  }
+
+  List<dynamic>? allDataOmset;
+  void showDialogOmset(String mode) {
+    if (mode == "cash") {
+      allDataOmset = dataCash;
+    } else if (mode == "debit") {
+      allDataOmset = dataDebit;
+    } else if (mode == "kredit") {
+      allDataOmset = dataKredit;
+    } else if (mode == "qris") {
+      allDataOmset = dataQris;
+    }
+
+    Get.dialog(
+      AlertDialog(
+        title: Center(child: Text("Detail Omset $mode")),
+        content: SingleChildScrollView(
+          child: SizedBox(
+            width: Get.width - 200,
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    if (mode == "cash") ...[
+                      Expanded(child: Text("Id Transaksi")),
+                      Expanded(child: Text("Metode Bayar")),
+                      Expanded(child: Text("Jumlah Bayar")),
+                    ] else ...[
+                      Expanded(child: Text("Id Transaksi")),
+                      Expanded(child: Text("Metode Bayar")),
+                      Expanded(child: Text("Nama Akun")),
+                      Expanded(child: Text("No_Rek")),
+                      Expanded(child: Text("Nama Bank")),
+                      Expanded(child: Text("Jumlah Bayar", textAlign: TextAlign.right)),
+                    ],
+                  ],
+                ),
+                Divider(),
+                Builder(
+                  builder: (context) {
+                    List<dynamic>? dataBCA;
+                    List<dynamic>? dataBNI;
+                    List<dynamic>? dataBRI;
+                    List<dynamic>? dataMandiri;
+
+                    // Ini Bkl Nampung Semua Widget
+                    List<Widget> bankDataWidgets = [];
+
+                    if (mode == "cash") {
+                      for (var data in allDataOmset!) {
+                        return Row(
+                          children: [
+                            Expanded(child: Text(data['id_transaksi'])),
+                            Expanded(child: Text(data['metode_pembayaran'])),
+                            Expanded(child: Text(currencyFormatter.format(data['jumlah_bayar']))),
+                          ],
+                        );
+                      }
+                    } else {
+                      dataBCA = allDataOmset?.where((el) => el['nama_bank'].toLowerCase() == "bca").toList();
+                      dataBNI = allDataOmset?.where((el) => el['nama_bank'].toLowerCase() == "bni").toList();
+                      dataBRI = allDataOmset?.where((el) => el['nama_bank'].toLowerCase() == "bri").toList();
+                      dataMandiri = allDataOmset?.where((el) => el['nama_bank'].toLowerCase() == "mandiri").toList();
+
+                      RxInt omsetBCA = 0.obs;
+                      RxInt omsetBNI = 0.obs;
+                      RxInt omsetBRI = 0.obs;
+                      RxInt omsetMandiri = 0.obs;
+
+                      // BCA
+                      if (dataBCA!.isNotEmpty) {
+                        bankDataWidgets.add(
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8.0, bottom: 5.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(child: Text("BCA", style: TextStyle(fontWeight: FontWeight.bold))),
+
+                                Expanded(
+                                  child: Obx(
+                                    () => Text(
+                                      "Total BCA : ${currencyFormatter.format(omsetBCA.value)}",
+                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                      textAlign: TextAlign.right,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+
+                        for (var data in dataBCA) {
+                          omsetBCA.value += (data['jumlah_bayar'] as int);
+
+                          bankDataWidgets.add(
+                            Row(
+                              children: [
+                                Expanded(child: Text(data['id_transaksi'])),
+                                Expanded(child: Text(data['metode_pembayaran'])),
+                                Expanded(child: Text(data['nama_akun'])),
+                                Expanded(child: Text(data['no_rek'])),
+                                Expanded(child: Text(data['nama_bank'])),
+                                Expanded(child: Text(currencyFormatter.format(data['jumlah_bayar']), textAlign: TextAlign.right)),
+                              ],
+                            ),
+                          );
+                        }
+                      }
+                      // BNI
+                      if (dataBNI!.isNotEmpty) {
+                        bankDataWidgets.add(
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8.0, bottom: 5.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(child: Text("BNI", style: TextStyle(fontWeight: FontWeight.bold))),
+
+                                Expanded(
+                                  child: Obx(
+                                    () => Text(
+                                      "Total BNI : ${currencyFormatter.format(omsetBNI.value)}",
+                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                      textAlign: TextAlign.right,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+
+                        for (var data in dataBNI) {
+                          omsetBNI.value += (data['jumlah_bayar'] as int);
+
+                          bankDataWidgets.add(
+                            Row(
+                              children: [
+                                Expanded(child: Text(data['id_transaksi'])),
+                                Expanded(child: Text(data['metode_pembayaran'])),
+                                Expanded(child: Text(data['nama_akun'])),
+                                Expanded(child: Text(data['no_rek'])),
+                                Expanded(child: Text(data['nama_bank'])),
+                                Expanded(child: Text(currencyFormatter.format(data['jumlah_bayar']), textAlign: TextAlign.right)),
+                              ],
+                            ),
+                          );
+                        }
+                      }
+
+                      // BRI
+                      if (dataBRI!.isNotEmpty) {
+                        bankDataWidgets.add(
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8.0, bottom: 5.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(child: Text("BRI", style: TextStyle(fontWeight: FontWeight.bold))),
+
+                                Expanded(
+                                  child: Obx(
+                                    () => Text(
+                                      "Total BRI : ${currencyFormatter.format(omsetBRI.value)}",
+                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                      textAlign: TextAlign.right,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+
+                        for (var data in dataBRI) {
+                          omsetBRI.value += (data['jumlah_bayar'] as int);
+
+                          bankDataWidgets.add(
+                            Row(
+                              children: [
+                                Expanded(child: Text(data['id_transaksi'])),
+                                Expanded(child: Text(data['metode_pembayaran'])),
+                                Expanded(child: Text(data['nama_akun'])),
+                                Expanded(child: Text(data['no_rek'])),
+                                Expanded(child: Text(data['nama_bank'])),
+                                Expanded(child: Text(currencyFormatter.format(data['jumlah_bayar']), textAlign: TextAlign.right)),
+                              ],
+                            ),
+                          );
+                        }
+                      }
+
+                      // Mandiri
+                      if (dataMandiri!.isNotEmpty) {
+                        bankDataWidgets.add(
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8.0, bottom: 5.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(child: Text("Mandiri", style: TextStyle(fontWeight: FontWeight.bold))),
+
+                                Expanded(
+                                  child: Obx(
+                                    () => Text(
+                                      "Total Mandiri : ${currencyFormatter.format(omsetMandiri.value)}",
+                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                      textAlign: TextAlign.right,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+
+                        for (var data in dataMandiri) {
+                          omsetMandiri.value += (data['jumlah_bayar'] as int);
+
+                          bankDataWidgets.add(
+                            Row(
+                              children: [
+                                Expanded(child: Text(data['id_transaksi'])),
+                                Expanded(child: Text(data['metode_pembayaran'])),
+                                Expanded(child: Text(data['nama_akun'])),
+                                Expanded(child: Text(data['no_rek'])),
+                                Expanded(child: Text(data['nama_bank'])),
+                                Expanded(child: Text(currencyFormatter.format(data['jumlah_bayar']), textAlign: TextAlign.right)),
+                              ],
+                            ),
+                          );
+                        }
+                      }
+                    }
+
+                    if (bankDataWidgets.isEmpty) {
+                      return Text("Tidak Ada Transaksi");
+                    }
+
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch, // pastikan rows stretch
+                      children: bankDataWidgets,
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   void _fnFormatTotalBayar(String value) {
@@ -1703,6 +1969,7 @@ class ListTransaksi extends StatelessWidget {
                                         ),
                                         Expanded(
                                           // Use a single FutureBuilder to fetch the data once.
+                                          // cara ori ku pindahkan paling bawah
                                           child: FutureBuilder(
                                             future: c.getDetailTrans(item['id_transaksi']),
                                             builder: (context, snapshot) {
@@ -1795,84 +2062,6 @@ class ListTransaksi extends StatelessWidget {
                                             },
                                           ),
                                         ),
-                                        // Expanded(
-                                        //   child: Row(
-                                        //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        //     children: [
-                                        //       if (item['status'] == "unpaid" ||
-                                        //           item['status'] == 'done-unpaid' ||
-                                        //           item['status'] == 'done-unpaid-addon' ||
-                                        //           item['total_addon'] != 0) ...[
-
-                                        //         // Pake widget builder buat bs anok fungsi
-                                        //         Builder(
-                                        //           builder: (context) {
-                                        //             var teks = "";
-
-                                        //             int totalAddOnOri = item['total_addon'];
-                                        //             var totalAddOnAll = 0;
-                                        //             if (item['total_addon'] != 0) {
-                                        //               double desimalPjk = item['pajak'];
-                                        //               double nominalPjk = totalAddOnOri * desimalPjk;
-                                        //               // Pembulatan 1000
-                                        //               double addOnSblmBulat = totalAddOnOri + nominalPjk;
-                                        //               totalAddOnAll = (addOnSblmBulat / 1000).round() * 1000;
-                                        //             }
-
-                                        //             int totalDanAddon = item['gtotal_stlh_pajak'] + totalAddOnAll;
-                                        //             int jlhBayar = item['jumlah_bayar'] - item['jumlah_kembalian'];
-
-                                        //             if (item['status'] == "done-unpaid" || item['status'] == "unpaid") {
-                                        //               teks = "Belum Lunas: ${c.currencyFormatter.format(totalDanAddon - jlhBayar)}";
-
-                                        //               // Case kalo dia udh bayar, tp ganti paket yg lebih mahal
-                                        //               // if (totalDanAddon > jlhBayar) {
-                                        //               //   teks = "Belum Lunas: ${c.currencyFormatter.format(totalDanAddon - jlhBayar)}";
-                                        //               // }
-                                        //             } else {
-                                        //               teks = "Belum Lunas: ${c.currencyFormatter.format(totalAddOnAll)}";
-                                        //             }
-                                        //             return Text(
-                                        //               teks,
-                                        //               style: TextStyle(
-                                        //                 fontFamily: 'Poppins',
-                                        //                 fontSize: 16,
-                                        //                 fontWeight: FontWeight.bold,
-                                        //                 color: Colors.red.shade700,
-                                        //               ),
-                                        //             );
-                                        //           },
-                                        //         ),
-                                        //       ] else ...[
-                                        //         Text(""),
-                                        //       ],
-
-                                        //       Builder(
-                                        //         builder: (context) {
-                                        //           int totalAddOnOri = item['total_addon'];
-                                        //           var totalAddOnAll = 0;
-                                        //           if (item['total_addon'] != 0) {
-                                        //             double desimalPjk = item['pajak'];
-                                        //             double nominalPjk = totalAddOnOri * desimalPjk;
-                                        //             // Pembulatan 1000
-                                        //             double addOnSblmBulat = totalAddOnOri + nominalPjk;
-                                        //             totalAddOnAll = (addOnSblmBulat / 1000).round() * 1000;
-                                        //           }
-
-                                        //           return Text(
-                                        //             'Total: ${c.currencyFormatter.format(item['gtotal_stlh_pajak'] + totalAddOnAll)}',
-                                        //             style: TextStyle(
-                                        //               fontFamily: 'Poppins',
-                                        //               fontSize: 16,
-                                        //               fontWeight: FontWeight.bold,
-                                        //               color: Colors.blue.shade700,
-                                        //             ),
-                                        //           );
-                                        //         },
-                                        //       ),
-                                        //     ],
-                                        //   ),
-                                        // ),
                                       ],
                                     ),
 
@@ -2122,33 +2311,42 @@ class ListTransaksi extends StatelessWidget {
 
                     // Cash
                     Expanded(
-                      child: Obx(
-                        () => Text(
-                          "Cash: ${c.currencyFormatter.format(c.omsetCash.value)}",
-                          textAlign: TextAlign.end,
-                          style: TextStyle(color: Colors.green[700], fontWeight: FontWeight.w900),
+                      child: InkWell(
+                        onTap: () => c.showDialogOmset("cash"),
+                        child: Obx(
+                          () => Text(
+                            "Cash: ${c.currencyFormatter.format(c.omsetCash.value)}",
+                            textAlign: TextAlign.end,
+                            style: TextStyle(color: Colors.green[700], fontWeight: FontWeight.w900),
+                          ),
                         ),
                       ),
                     ),
 
                     // Debit
                     Expanded(
-                      child: Obx(
-                        () => Text(
-                          "Debit: ${c.currencyFormatter.format(c.omsetDebit.value)}",
-                          textAlign: TextAlign.end,
-                          style: TextStyle(color: Colors.blue[700], fontWeight: FontWeight.w900),
+                      child: InkWell(
+                        onTap: () => c.showDialogOmset("debit"),
+                        child: Obx(
+                          () => Text(
+                            "Debit: ${c.currencyFormatter.format(c.omsetDebit.value)}",
+                            textAlign: TextAlign.end,
+                            style: TextStyle(color: Colors.blue[700], fontWeight: FontWeight.w900),
+                          ),
                         ),
                       ),
                     ),
 
                     // QRIS
                     Expanded(
-                      child: Obx(
-                        () => Text(
-                          "QRIS: ${c.currencyFormatter.format(c.omsetQris.value)}",
-                          textAlign: TextAlign.end,
-                          style: TextStyle(color: Colors.purple[700], fontWeight: FontWeight.w900),
+                      child: InkWell(
+                        onTap: () => c.showDialogOmset("qris"),
+                        child: Obx(
+                          () => Text(
+                            "QRIS: ${c.currencyFormatter.format(c.omsetQris.value)}",
+                            textAlign: TextAlign.end,
+                            style: TextStyle(color: Colors.purple[700], fontWeight: FontWeight.w900),
+                          ),
                         ),
                       ),
                     ),
@@ -2225,3 +2423,156 @@ void showCancelTransactionDialog(BuildContext context, void Function(String) onC
     ),
   );
 }
+
+
+  // Cara Caching. Minusnya Ntr Klo Update tktny g fungsi
+  // Expanded(
+  //   // Use a single FutureBuilder to fetch the data once.
+  //   child: Builder(
+  //     builder: (context) {
+  //       // Gunakan data yang sudah di-cache
+  //       final dataOri = c.detailTrans[item['id_transaksi']] ?? {};
+  //       List<dynamic> dataAddOn = dataOri['all_addon'] ?? [];
+  //       int totalAddOnAll = 0;
+
+  //       // Calculate the total for all add-ons with tax, performed only once.
+  //       if (item['total_addon'] != 0) {
+  //         for (var addon in dataAddOn) {
+  //           double pajak = addon['type'] == 'fnb' ? c.pajakFnb.value : c.pajakMsg.value;
+  //           double nominalPjk = addon['harga_total'] * pajak;
+  //           double addOnSblmBulat = addon['harga_total'] + nominalPjk;
+  //           totalAddOnAll += (addOnSblmBulat / 1000).round() * 1000;
+  //         }
+  //       }
+
+  //       // Build the Row with the calculated data.
+  //       return Row(
+  //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //         children: [
+  //           // First child: Conditionally display the "Unpaid" status.
+  //           if (item['status'] == "unpaid" ||
+  //               item['status'] == 'done-unpaid' ||
+  //               item['status'] == 'done-unpaid-addon' ||
+  //               item['total_addon'] != 0) ...[
+  //             Builder(
+  //               builder: (context) {
+  //                 String teks;
+  //                 int totalDanAddon = item['gtotal_stlh_pajak'] + totalAddOnAll;
+  //                 int jlhBayar = item['jumlah_bayar'] - item['jumlah_kembalian'];
+
+  //                 if (item['status'] == "done-unpaid" || item['status'] == "unpaid") {
+  //                   teks = "Belum Lunas: ${c.currencyFormatter.format(totalDanAddon - jlhBayar)}";
+  //                 } else {
+  //                   teks = "Belum Lunas: ${c.currencyFormatter.format(totalAddOnAll)}";
+  //                 }
+
+  //                 return Text(
+  //                   teks,
+  //                   style: TextStyle(
+  //                     fontFamily: 'Poppins',
+  //                     fontSize: 16,
+  //                     fontWeight: FontWeight.bold,
+  //                     color: Colors.red.shade700,
+  //                   ),
+  //                 );
+  //               },
+  //             ),
+  //           ] else ...[
+  //             // Render an empty Text to maintain space if the condition is false.
+  //             Text(""),
+  //           ],
+
+  //           // Second child: Always display the final total.
+  //           Text(
+  //             'Total: ${c.currencyFormatter.format(item['gtotal_stlh_pajak'] + totalAddOnAll)}',
+  //             style: TextStyle(
+  //               fontFamily: 'Poppins',
+  //               fontSize: 16,
+  //               fontWeight: FontWeight.bold,
+  //               color: Colors.blue.shade700,
+  //             ),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   ),
+  // ),
+  //  Cara Awal
+  // Expanded(
+  //   child: Row(
+  //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //     children: [
+  //       if (item['status'] == "unpaid" ||
+  //           item['status'] == 'done-unpaid' ||
+  //           item['status'] == 'done-unpaid-addon' ||
+  //           item['total_addon'] != 0) ...[
+
+  //         // Pake widget builder buat bs anok fungsi
+  //         Builder(
+  //           builder: (context) {
+  //             var teks = "";
+
+  //             int totalAddOnOri = item['total_addon'];
+  //             var totalAddOnAll = 0;
+  //             if (item['total_addon'] != 0) {
+  //               double desimalPjk = item['pajak'];
+  //               double nominalPjk = totalAddOnOri * desimalPjk;
+  //               // Pembulatan 1000
+  //               double addOnSblmBulat = totalAddOnOri + nominalPjk;
+  //               totalAddOnAll = (addOnSblmBulat / 1000).round() * 1000;
+  //             }
+
+  //             int totalDanAddon = item['gtotal_stlh_pajak'] + totalAddOnAll;
+  //             int jlhBayar = item['jumlah_bayar'] - item['jumlah_kembalian'];
+
+  //             if (item['status'] == "done-unpaid" || item['status'] == "unpaid") {
+  //               teks = "Belum Lunas: ${c.currencyFormatter.format(totalDanAddon - jlhBayar)}";
+
+  //               // Case kalo dia udh bayar, tp ganti paket yg lebih mahal
+  //               // if (totalDanAddon > jlhBayar) {
+  //               //   teks = "Belum Lunas: ${c.currencyFormatter.format(totalDanAddon - jlhBayar)}";
+  //               // }
+  //             } else {
+  //               teks = "Belum Lunas: ${c.currencyFormatter.format(totalAddOnAll)}";
+  //             }
+  //             return Text(
+  //               teks,
+  //               style: TextStyle(
+  //                 fontFamily: 'Poppins',
+  //                 fontSize: 16,
+  //                 fontWeight: FontWeight.bold,
+  //                 color: Colors.red.shade700,
+  //               ),
+  //             );
+  //           },
+  //         ),
+  //       ] else ...[
+  //         Text(""),
+  //       ],
+
+  //       Builder(
+  //         builder: (context) {
+  //           int totalAddOnOri = item['total_addon'];
+  //           var totalAddOnAll = 0;
+  //           if (item['total_addon'] != 0) {
+  //             double desimalPjk = item['pajak'];
+  //             double nominalPjk = totalAddOnOri * desimalPjk;
+  //             // Pembulatan 1000
+  //             double addOnSblmBulat = totalAddOnOri + nominalPjk;
+  //             totalAddOnAll = (addOnSblmBulat / 1000).round() * 1000;
+  //           }
+
+  //           return Text(
+  //             'Total: ${c.currencyFormatter.format(item['gtotal_stlh_pajak'] + totalAddOnAll)}',
+  //             style: TextStyle(
+  //               fontFamily: 'Poppins',
+  //               fontSize: 16,
+  //               fontWeight: FontWeight.bold,
+  //               color: Colors.blue.shade700,
+  //             ),
+  //           );
+  //         },
+  //       ),
+  //     ],
+  //   ),
+  // ),
