@@ -290,63 +290,68 @@ class _Hp_ObState extends State<Hp_Ob> with WidgetsBindingObserver {
                 controller: _scrollControllerLV,
                 child: Padding(
                   padding: const EdgeInsets.only(left: 40, right: 40),
-                  child: ListView.builder(
-                    controller: _scrollControllerLV,
-                    itemCount: dataruanganbersihkan.length,
-                    itemBuilder: (context, index) {
-                      var item = dataruanganbersihkan[index];
-                      return Column(
-                        children: [
-                          SizedBox(height: 70),
-                          Text(
-                            item['keterangan'],
-                            style: TextStyle(
-                              fontSize: 40,
-                              height: 1,
-                              fontFamily: 'Poppins',
-                            ),
-                          ),
-                          Text(
-                            item['nama_ruangan'].toString(),
-                            style: TextStyle(
-                              fontSize: 40,
-                              height: 1,
-                              fontFamily: 'Poppins',
-                            ),
-                          ),
-                          SizedBox(height: 40),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color.fromARGB(
-                                255,
-                                168,
-                                232,
-                                170,
+                  child: Obx(
+                    () => ListView.builder(
+                      controller: _scrollControllerLV,
+                      itemCount: dataruanganbersihkan.length,
+                      itemBuilder: (context, index) {
+                        var item = dataruanganbersihkan[index];
+                        return Column(
+                          children: [
+                            SizedBox(height: 70),
+                            Text(
+                              item['keterangan'],
+                              style: TextStyle(
+                                fontSize: 40,
+                                height: 1,
+                                fontFamily: 'Poppins',
                               ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              minimumSize: Size(100, 100),
                             ),
-                            onPressed: () {
-                              print('id adalah ${item['id']}');
-                              confirmob(item['id']);
-                              refreshruanganbersihkan();
-                            },
-                            child: Column(
-                              children: [
-                                Icon(Icons.check, size: 50),
-                                SizedBox(height: 10),
-                                Text(
-                                  "Confirm",
-                                  style: TextStyle(fontFamily: 'Poppins'),
+                            Text(
+                              item['nama_ruangan'].toString(),
+                              style: TextStyle(
+                                fontSize: 40,
+                                height: 1,
+                                fontFamily: 'Poppins',
+                              ),
+                            ),
+                            SizedBox(height: 40),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color.fromARGB(
+                                  255,
+                                  168,
+                                  232,
+                                  170,
                                 ),
-                              ],
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                minimumSize: Size(100, 100),
+                              ),
+                              onPressed: () {
+                                print('id adalah ${item['id']}');
+                                confirmob(item['id']);
+                                dataruanganbersihkan.removeWhere(
+                                  (element) => element['id'] == item['id'],
+                                );
+                                dataruanganbersihkan.refresh();
+                              },
+                              child: Column(
+                                children: [
+                                  Icon(Icons.check, size: 50),
+                                  SizedBox(height: 10),
+                                  Text(
+                                    "Confirm",
+                                    style: TextStyle(fontFamily: 'Poppins'),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
-                      );
-                    },
+                          ],
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),
