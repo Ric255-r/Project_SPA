@@ -108,7 +108,7 @@ class Rating extends StatelessWidget {
   var idTransaksi;
 
   Rating({super.key, this.idTransaksi}) {
-    Get.put(RatingController(idTransaksi: idTransaksi));
+    Get.lazyPut(() => RatingController(idTransaksi: idTransaksi), fenix: false);
   }
 
   final List<String> emojis = ["☹️", "😐", "😊"];

@@ -968,6 +968,28 @@ class ListTransaksiController extends GetxController {
     });
   }
 
+  Future<void> cancelTransaksi(String idTrans, String password, context) async {
+    try {
+      var response = await dio.put(
+        '${myIpAddr()}/listtrans/cancel_transaksi',
+        data: {"id_trans": idTrans, "passwd": password},
+        options: Options(contentType: Headers.jsonContentType, responseType: ResponseType.json),
+      );
+
+      if (response.statusCode == 200) {
+        await refreshData();
+        CherryToast.success(title: Text(" Berhasil Cancel"), toastDuration: Duration(seconds: 3)).show(context);
+      }
+    } catch (e) {
+      if (e is DioException) {
+        if (e.response!.statusCode == 401) {
+          CherryToast.error(title: Text("Password SPV Salah"), toastDuration: Duration(seconds: 3)).show(context);
+        }
+      }
+      log("Error di fn CancelTransaksi ${e}");
+    }
+  }
+
   // versi pdf
   // void printStruk(Map<String, dynamic> data, String idTrans) async {
   //   final pdf = pw.Document();
@@ -1312,7 +1334,7 @@ class ListTransaksiController extends GetxController {
   //   await manager.disconnect(type: PrinterType.usb);
   // }
 
-  void dialogDetail(String idTrans, double disc, int jenisPembayaran) async {
+  void dialogDetail(String idTrans, double disc, int jenisPembayaran, int isCancel) async {
     final dataOri = await getDetailTrans(idTrans);
     List<dynamic> dataProduk = dataOri['detail_produk'];
     List<dynamic> dataPaket = dataOri['detail_paket'];
@@ -2038,9 +2060,21 @@ class ListTransaksi extends StatelessWidget {
                                                 teks += " - Loker: ${item['no_loker']}";
                                               }
 
+                                              if (item['is_cancel'] == 1) {
+                                                teks += " - DIBATALKAN -";
+                                              }
+
                                               // teks += " (${item['metode_pembayaran']})";
 
-                                              return Text(teks, style: TextStyle(fontFamily: 'Poppins', fontSize: 18, fontWeight: FontWeight.bold));
+                                              return Text(
+                                                teks,
+                                                style: TextStyle(
+                                                  fontFamily: 'Poppins',
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: item['is_cancel'] == 1 ? Colors.red : Colors.black,
+                                                ),
+                                              );
                                             },
                                           ),
                                         ),
@@ -2127,7 +2161,7 @@ class ListTransaksi extends StatelessWidget {
                                                         fontFamily: 'Poppins',
                                                         fontSize: 16,
                                                         fontWeight: FontWeight.bold,
-                                                        color: Colors.blue.shade700,
+                                                        color: item['is_cancel'] == 1 ? Colors.red : Colors.blue.shade700,
                                                       ),
                                                     ),
                                                   ],
@@ -2232,21 +2266,29 @@ class ListTransaksi extends StatelessWidget {
                                           child: Row(
                                             mainAxisAlignment: MainAxisAlignment.end,
                                             children: [
-                                              IconButton(
-                                                onPressed: () {
-                                                  showCancelTransactionDialog(context, (password) {
-                                                    // Do validation with the password
-                                                    print("Password entered: $password");
-                                                    // You can now validate password and cancel transaction here
-                                                  });
-                                                },
-                                                icon: Icon(Icons.cancel),
+                                              Visibility(
+                                                visible: item['is_cancel'] == 0,
+                                                child: IconButton(
+                                                  onPressed: () {
+                                                    showCancelTransactionDialog(context, (password) async {
+                                                      // Do validation with the password
+                                                      print("Password entered: $password");
+                                                      // You can now validate password and cancel transaction here
+                                                      try {
+                                                        await c.cancelTransaksi(item['id_transaksi'], password, Get.context);
+                                                      } catch (e) {
+                                                        log("Error di Button ShowCancelTransaction $e");
+                                                      }
+                                                    });
+                                                  },
+                                                  icon: Icon(Icons.cancel),
+                                                ),
                                               ),
                                               SizedBox(width: 10),
                                               ElevatedButton(
                                                 onPressed: () {
                                                   log("isi item adalah $item");
-                                                  c.dialogDetail(item['id_transaksi'], item['disc'], item['jenis_pembayaran']);
+                                                  c.dialogDetail(item['id_transaksi'], item['disc'], item['jenis_pembayaran'], item['is_cancel']);
                                                   // Add your button action here
                                                 },
                                                 style: ElevatedButton.styleFrom(
