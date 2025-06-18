@@ -86,11 +86,13 @@ class ListTransaksiController extends GetxController {
   var dio = Dio();
   RxInt omsetCash = 0.obs;
   RxInt omsetDebit = 0.obs;
+  RxInt omsetKredit = 0.obs;
   RxInt omsetQris = 0.obs;
   RxList<Map<String, dynamic>> dataCash = <Map<String, dynamic>>[].obs;
   RxList<Map<String, dynamic>> dataDebit = <Map<String, dynamic>>[].obs;
   RxList<Map<String, dynamic>> dataKredit = <Map<String, dynamic>>[].obs;
   RxList<Map<String, dynamic>> dataQris = <Map<String, dynamic>>[].obs;
+  RxString tglNow = "".obs;
 
   RxMap<String, Map<String, dynamic>> detailTrans = <String, Map<String, dynamic>>{}.obs;
 
@@ -99,12 +101,15 @@ class ListTransaksiController extends GetxController {
       final response = await dio.get('${myIpAddr()}/listtrans/datatrans?hak_akses=${_hakAkses.value}');
 
       if (response.statusCode == 200) {
-        omsetCash.value = (response.data['total_cash'] as int);
-        omsetDebit.value = (response.data['total_debit'] as int);
-        omsetQris.value = (response.data['total_qris'] as int);
+        omsetCash.value = response.data['total_cash'] ?? 0;
+        omsetDebit.value = response.data['total_debit'] ?? 0;
+        omsetKredit.value = response.data['total_kredit'] ?? 0;
+        omsetQris.value = response.data['total_qris'] ?? 0;
+        tglNow.value = (response.data['tgl'] as String);
 
         dataCash.assignAll((response.data['data_cash'] as List).map((el) => {...el}));
         dataDebit.assignAll((response.data['data_debit'] as List).map((el) => {...el}));
+        dataKredit.assignAll((response.data['data_kredit'] as List).map((el) => {...el}));
         dataQris.assignAll((response.data['data_qris'] as List).map((el) => {...el}));
 
         log("Isi Data Cash $dataCash");
@@ -413,7 +418,7 @@ class ListTransaksiController extends GetxController {
 
     Get.dialog(
       AlertDialog(
-        title: Center(child: Text("Detail Omset $mode")),
+        title: Center(child: Obx(() => Text("Detail Omset ${capitalize(mode)} - ${formatDate(tglNow.value, format: "dd-MM-yyyy")}"))),
         content: SingleChildScrollView(
           child: SizedBox(
             width: Get.width - 200,
@@ -2377,7 +2382,7 @@ class ListTransaksi extends StatelessWidget {
                   children: [
                     // Label
                     const Expanded(
-                      flex: 2, // Give more space to the label
+                      flex: 1, // Give more space to the label
                       child: Text("Omset Harian:", style: TextStyle(fontWeight: FontWeight.w900)),
                     ),
 
@@ -2404,6 +2409,20 @@ class ListTransaksi extends StatelessWidget {
                             "Debit: ${c.currencyFormatter.format(c.omsetDebit.value)}",
                             textAlign: TextAlign.end,
                             style: TextStyle(color: Colors.blue[700], fontWeight: FontWeight.w900),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Kredit
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => c.showDialogOmset("kredit"),
+                        child: Obx(
+                          () => Text(
+                            "Kredit: ${c.currencyFormatter.format(c.omsetKredit.value)}",
+                            textAlign: TextAlign.end,
+                            style: TextStyle(color: const Color.fromARGB(255, 142, 205, 83), fontWeight: FontWeight.w900),
                           ),
                         ),
                       ),
