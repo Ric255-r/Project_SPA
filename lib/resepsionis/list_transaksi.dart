@@ -86,11 +86,13 @@ class ListTransaksiController extends GetxController {
   var dio = Dio();
   RxInt omsetCash = 0.obs;
   RxInt omsetDebit = 0.obs;
+  RxInt omsetKredit = 0.obs;
   RxInt omsetQris = 0.obs;
   RxList<Map<String, dynamic>> dataCash = <Map<String, dynamic>>[].obs;
   RxList<Map<String, dynamic>> dataDebit = <Map<String, dynamic>>[].obs;
   RxList<Map<String, dynamic>> dataKredit = <Map<String, dynamic>>[].obs;
   RxList<Map<String, dynamic>> dataQris = <Map<String, dynamic>>[].obs;
+  RxString tglNow = "".obs;
 
   RxMap<String, Map<String, dynamic>> detailTrans = <String, Map<String, dynamic>>{}.obs;
 
@@ -99,12 +101,15 @@ class ListTransaksiController extends GetxController {
       final response = await dio.get('${myIpAddr()}/listtrans/datatrans?hak_akses=${_hakAkses.value}');
 
       if (response.statusCode == 200) {
-        omsetCash.value = (response.data['total_cash'] as int);
-        omsetDebit.value = (response.data['total_debit'] as int);
-        omsetQris.value = (response.data['total_qris'] as int);
+        omsetCash.value = response.data['total_cash'] ?? 0;
+        omsetDebit.value = response.data['total_debit'] ?? 0;
+        omsetKredit.value = response.data['total_kredit'] ?? 0;
+        omsetQris.value = response.data['total_qris'] ?? 0;
+        tglNow.value = (response.data['tgl'] as String);
 
         dataCash.assignAll((response.data['data_cash'] as List).map((el) => {...el}));
         dataDebit.assignAll((response.data['data_debit'] as List).map((el) => {...el}));
+        dataKredit.assignAll((response.data['data_kredit'] as List).map((el) => {...el}));
         dataQris.assignAll((response.data['data_qris'] as List).map((el) => {...el}));
 
         log("Isi Data Cash $dataCash");
@@ -399,6 +404,24 @@ class ListTransaksiController extends GetxController {
     }
   }
 
+  Future<Map<String, dynamic>> getTerapisData(String idTrans) async {
+    try {
+      final response = await dio.get('${myIpAddr()}/listtrans/data_terapis/${idTrans}');
+
+      if (response.statusCode == 200) {
+        return (response.data as Map<String, dynamic>);
+      } else {
+        throw Exception("Failed to load data terapis: ${response.statusCode}");
+      }
+    } catch (e) {
+      if (e is DioException) {
+        throw Exception("Gagal di Dio ${e.response!.data}");
+      }
+
+      return {};
+    }
+  }
+
   List<dynamic>? allDataOmset;
   void showDialogOmset(String mode) {
     if (mode == "cash") {
@@ -413,7 +436,7 @@ class ListTransaksiController extends GetxController {
 
     Get.dialog(
       AlertDialog(
-        title: Center(child: Text("Detail Omset $mode")),
+        title: Center(child: Obx(() => Text("Detail Omset ${capitalize(mode)} - ${formatDate(tglNow.value, format: "dd-MM-yyyy")}"))),
         content: SingleChildScrollView(
           child: SizedBox(
             width: Get.width - 200,
@@ -963,6 +986,28 @@ class ListTransaksiController extends GetxController {
     });
   }
 
+  Future<void> cancelTransaksi(String idTrans, String password, context) async {
+    try {
+      var response = await dio.put(
+        '${myIpAddr()}/listtrans/cancel_transaksi',
+        data: {"id_trans": idTrans, "passwd": password},
+        options: Options(contentType: Headers.jsonContentType, responseType: ResponseType.json),
+      );
+
+      if (response.statusCode == 200) {
+        await refreshData();
+        CherryToast.success(title: Text(" Berhasil Cancel"), toastDuration: Duration(seconds: 3)).show(context);
+      }
+    } catch (e) {
+      if (e is DioException) {
+        if (e.response!.statusCode == 401) {
+          CherryToast.error(title: Text("Password SPV Salah"), toastDuration: Duration(seconds: 3)).show(context);
+        }
+      }
+      log("Error di fn CancelTransaksi ${e}");
+    }
+  }
+
   // versi pdf
   // void printStruk(Map<String, dynamic> data, String idTrans) async {
   //   final pdf = pw.Document();
@@ -1307,8 +1352,11 @@ class ListTransaksiController extends GetxController {
   //   await manager.disconnect(type: PrinterType.usb);
   // }
 
-  void dialogDetail(String idTrans, double disc, int jenisPembayaran) async {
-    final dataOri = await getDetailTrans(idTrans);
+  void dialogDetail(String idTrans, double disc, int jenisPembayaran, int isCancel) async {
+    var fetchAll = await Future.wait([getDetailTrans(idTrans), getTerapisData(idTrans)]);
+    final dataOri = fetchAll[0];
+    final dataTerapis = fetchAll[1];
+
     List<dynamic> dataProduk = dataOri['detail_produk'];
     List<dynamic> dataPaket = dataOri['detail_paket'];
     List<dynamic> dataFood = dataOri['detail_food'];
@@ -1378,6 +1426,57 @@ class ListTransaksiController extends GetxController {
           child: SingleChildScrollView(
             child: Column(
               children: [
+                if (dataTerapis.isNotEmpty) ...[
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 16, top: 8, bottom: 10),
+                      child: Column(
+                        // align children kekanan
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(mainAxisAlignment: MainAxisAlignment.start, children: [Text("Data Terapis")]),
+                          SizedBox(height: 5),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start, // Align row contents to end
+                            children: [
+                              Text("Nama Terapis: "),
+                              SizedBox(width: 8), // Add some spacing
+                              Text(dataTerapis['nama_karyawan']),
+                            ],
+                          ),
+                          SizedBox(height: 2),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start, // Align row contents to end
+                            children: [
+                              Text("Kode Terapis: "),
+                              SizedBox(width: 8), // Add some spacing
+                              Text(dataTerapis['id_terapis']),
+                            ],
+                          ),
+                          SizedBox(height: 2),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start, // Align row contents to end
+                            children: [
+                              Text("Jam Datang: "),
+                              SizedBox(width: 8), // Add some spacing
+                              Text("${dataTerapis['jam_datang']} | "),
+                              SizedBox(width: 8),
+                              Text("Jam Mulai: "),
+                              SizedBox(width: 8), // Add some spacing
+                              Text("${dataTerapis['jam_mulai']} | "),
+                              SizedBox(width: 8),
+                              Text("Jam Selesai: "),
+                              SizedBox(width: 8), // Add some spacing
+                              Text("${dataTerapis['jam_selesai']} "),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+
                 if (_combinedAddOn.isNotEmpty) ...[
                   Padding(
                     padding: const EdgeInsets.only(left: 16, top: 8, bottom: 10),
@@ -2033,9 +2132,21 @@ class ListTransaksi extends StatelessWidget {
                                                 teks += " - Loker: ${item['no_loker']}";
                                               }
 
+                                              if (item['is_cancel'] == 1) {
+                                                teks += " - DIBATALKAN -";
+                                              }
+
                                               // teks += " (${item['metode_pembayaran']})";
 
-                                              return Text(teks, style: TextStyle(fontFamily: 'Poppins', fontSize: 18, fontWeight: FontWeight.bold));
+                                              return Text(
+                                                teks,
+                                                style: TextStyle(
+                                                  fontFamily: 'Poppins',
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: item['is_cancel'] == 1 ? Colors.red : Colors.black,
+                                                ),
+                                              );
                                             },
                                           ),
                                         ),
@@ -2122,7 +2233,7 @@ class ListTransaksi extends StatelessWidget {
                                                         fontFamily: 'Poppins',
                                                         fontSize: 16,
                                                         fontWeight: FontWeight.bold,
-                                                        color: Colors.blue.shade700,
+                                                        color: item['is_cancel'] == 1 ? Colors.red : Colors.blue.shade700,
                                                       ),
                                                     ),
                                                   ],
@@ -2227,21 +2338,29 @@ class ListTransaksi extends StatelessWidget {
                                           child: Row(
                                             mainAxisAlignment: MainAxisAlignment.end,
                                             children: [
-                                              IconButton(
-                                                onPressed: () {
-                                                  showCancelTransactionDialog(context, (password) {
-                                                    // Do validation with the password
-                                                    print("Password entered: $password");
-                                                    // You can now validate password and cancel transaction here
-                                                  });
-                                                },
-                                                icon: Icon(Icons.cancel),
+                                              Visibility(
+                                                visible: item['is_cancel'] == 0,
+                                                child: IconButton(
+                                                  onPressed: () {
+                                                    showCancelTransactionDialog(context, (password) async {
+                                                      // Do validation with the password
+                                                      print("Password entered: $password");
+                                                      // You can now validate password and cancel transaction here
+                                                      try {
+                                                        await c.cancelTransaksi(item['id_transaksi'], password, Get.context);
+                                                      } catch (e) {
+                                                        log("Error di Button ShowCancelTransaction $e");
+                                                      }
+                                                    });
+                                                  },
+                                                  icon: Icon(Icons.cancel),
+                                                ),
                                               ),
                                               SizedBox(width: 10),
                                               ElevatedButton(
                                                 onPressed: () {
                                                   log("isi item adalah $item");
-                                                  c.dialogDetail(item['id_transaksi'], item['disc'], item['jenis_pembayaran']);
+                                                  c.dialogDetail(item['id_transaksi'], item['disc'], item['jenis_pembayaran'], item['is_cancel']);
                                                   // Add your button action here
                                                 },
                                                 style: ElevatedButton.styleFrom(
@@ -2377,7 +2496,7 @@ class ListTransaksi extends StatelessWidget {
                   children: [
                     // Label
                     const Expanded(
-                      flex: 2, // Give more space to the label
+                      flex: 1, // Give more space to the label
                       child: Text("Omset Harian:", style: TextStyle(fontWeight: FontWeight.w900)),
                     ),
 
@@ -2404,6 +2523,20 @@ class ListTransaksi extends StatelessWidget {
                             "Debit: ${c.currencyFormatter.format(c.omsetDebit.value)}",
                             textAlign: TextAlign.end,
                             style: TextStyle(color: Colors.blue[700], fontWeight: FontWeight.w900),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Kredit
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => c.showDialogOmset("kredit"),
+                        child: Obx(
+                          () => Text(
+                            "Kredit: ${c.currencyFormatter.format(c.omsetKredit.value)}",
+                            textAlign: TextAlign.end,
+                            style: TextStyle(color: const Color.fromARGB(255, 142, 205, 83), fontWeight: FontWeight.w900),
                           ),
                         ),
                       ),
