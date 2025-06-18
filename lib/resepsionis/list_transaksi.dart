@@ -2537,7 +2537,7 @@ class ListTransaksi extends StatelessWidget {
                           () => Text(
                             "Kredit: ${c.currencyFormatter.format(c.omsetKredit.value)}",
                             textAlign: TextAlign.end,
-                            style: TextStyle(color: const Color.fromARGB(255, 142, 205, 83), fontWeight: FontWeight.w900),
+                            style: TextStyle(color: const Color.fromARGB(255, 54, 109, 2), fontWeight: FontWeight.w900),
                           ),
                         ),
                       ),
