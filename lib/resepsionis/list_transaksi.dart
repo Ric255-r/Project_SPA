@@ -404,6 +404,24 @@ class ListTransaksiController extends GetxController {
     }
   }
 
+  Future<Map<String, dynamic>> getTerapisData(String idTrans) async {
+    try {
+      final response = await dio.get('${myIpAddr()}/listtrans/data_terapis/${idTrans}');
+
+      if (response.statusCode == 200) {
+        return (response.data as Map<String, dynamic>);
+      } else {
+        throw Exception("Failed to load data terapis: ${response.statusCode}");
+      }
+    } catch (e) {
+      if (e is DioException) {
+        throw Exception("Gagal di Dio ${e.response!.data}");
+      }
+
+      return {};
+    }
+  }
+
   List<dynamic>? allDataOmset;
   void showDialogOmset(String mode) {
     if (mode == "cash") {
@@ -1335,7 +1353,10 @@ class ListTransaksiController extends GetxController {
   // }
 
   void dialogDetail(String idTrans, double disc, int jenisPembayaran, int isCancel) async {
-    final dataOri = await getDetailTrans(idTrans);
+    var fetchAll = await Future.wait([getDetailTrans(idTrans), getTerapisData(idTrans)]);
+    final dataOri = fetchAll[0];
+    final dataTerapis = fetchAll[1];
+
     List<dynamic> dataProduk = dataOri['detail_produk'];
     List<dynamic> dataPaket = dataOri['detail_paket'];
     List<dynamic> dataFood = dataOri['detail_food'];
@@ -1405,6 +1426,57 @@ class ListTransaksiController extends GetxController {
           child: SingleChildScrollView(
             child: Column(
               children: [
+                if (dataTerapis.isNotEmpty) ...[
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 16, top: 8, bottom: 10),
+                      child: Column(
+                        // align children kekanan
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(mainAxisAlignment: MainAxisAlignment.start, children: [Text("Data Terapis")]),
+                          SizedBox(height: 5),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start, // Align row contents to end
+                            children: [
+                              Text("Nama Terapis: "),
+                              SizedBox(width: 8), // Add some spacing
+                              Text(dataTerapis['nama_karyawan']),
+                            ],
+                          ),
+                          SizedBox(height: 2),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start, // Align row contents to end
+                            children: [
+                              Text("Kode Terapis: "),
+                              SizedBox(width: 8), // Add some spacing
+                              Text(dataTerapis['id_terapis']),
+                            ],
+                          ),
+                          SizedBox(height: 2),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start, // Align row contents to end
+                            children: [
+                              Text("Jam Datang: "),
+                              SizedBox(width: 8), // Add some spacing
+                              Text("${dataTerapis['jam_datang']} | "),
+                              SizedBox(width: 8),
+                              Text("Jam Mulai: "),
+                              SizedBox(width: 8), // Add some spacing
+                              Text("${dataTerapis['jam_mulai']} | "),
+                              SizedBox(width: 8),
+                              Text("Jam Selesai: "),
+                              SizedBox(width: 8), // Add some spacing
+                              Text("${dataTerapis['jam_selesai']} "),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+
                 if (_combinedAddOn.isNotEmpty) ...[
                   Padding(
                     padding: const EdgeInsets.only(left: 16, top: 8, bottom: 10),
