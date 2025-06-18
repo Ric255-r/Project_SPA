@@ -63,9 +63,7 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
 
     // Ambil Controller Yg Udh D Hitung
     String totalHrgFasilitas = _dialogTxtTotalFormatted.text;
-    String withoutRp = totalHrgFasilitas
-        .replaceAll("Rp ", "")
-        .replaceAll(".", ""); // "243.000"
+    String withoutRp = totalHrgFasilitas.replaceAll("Rp ", "").replaceAll(".", ""); // "243.000"
     // End Ambil Controller
 
     int totalhargavalue = int.parse(withoutRp);
@@ -77,14 +75,8 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
     String formattedKembali = currencyFormatter.format(kembalian);
 
     // Update controller tanpa trigger infinite loop
-    _totalBayarController.value = TextEditingValue(
-      text: formatted,
-      selection: TextSelection.collapsed(offset: formatted.length),
-    );
-    _kembalianController.value = TextEditingValue(
-      text: formattedKembali,
-      selection: TextSelection.collapsed(offset: formattedKembali.length),
-    );
+    _totalBayarController.value = TextEditingValue(text: formatted, selection: TextSelection.collapsed(offset: formatted.length));
+    _kembalianController.value = TextEditingValue(text: formattedKembali, selection: TextSelection.collapsed(offset: formattedKembali.length));
   }
 
   TextEditingController _namaAkun = TextEditingController();
@@ -93,10 +85,7 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
 
   Future<void> updatedataloker(statusloker, nomor_locker) async {
     try {
-      var response = await dio.put(
-        '${myIpAddr()}/billinglocker/updatelocker',
-        data: {"status": statusloker, "nomor_locker": nomor_locker},
-      );
+      var response = await dio.put('${myIpAddr()}/billinglocker/updatelocker', data: {"status": statusloker, "nomor_locker": nomor_locker});
     } catch (e) {
       log("Error di fn updatedataloker : $e");
     }
@@ -109,11 +98,7 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
       setState(() {
         _listNamaFasilitas =
             (response.data as List).map((item) {
-              return {
-                "id_fasilitas": item["id_fasilitas"],
-                "nama_fasilitas": item["nama_fasilitas"],
-                "harga_fasilitas": item["harga_fasilitas"],
-              };
+              return {"id_fasilitas": item["id_fasilitas"], "nama_fasilitas": item["nama_fasilitas"], "harga_fasilitas": item["harga_fasilitas"]};
             }).toList();
       });
     } catch (e) {
@@ -127,10 +112,7 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
       print(token);
 
       // pake method post. jadi alurny post dlu id transaksi ke tabel, lalu update
-      var response = await dio.post(
-        '${myIpAddr()}/id_trans/createDraft',
-        options: Options(headers: {"Authorization": "Bearer " + token!}),
-      );
+      var response = await dio.post('${myIpAddr()}/id_trans/createDraft', options: Options(headers: {"Authorization": "Bearer " + token!}));
 
       var newId = response.data['id_transaksi'];
       log("New Transaction ID: $newId");
@@ -153,11 +135,7 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
       var response = await dio.put(
         '${myIpAddr()}/id_trans/updateDraft/${idTrans}',
         options: Options(headers: {"Authorization": "Bearer " + token!}),
-        data: {
-          "jenis_tamu": dropdownjenistamu,
-          "no_loker": int.parse(_txtNoLocker.text),
-          "mode": "for_fasilitas",
-        },
+        data: {"jenis_tamu": dropdownjenistamu, "no_loker": int.parse(_txtNoLocker.text), "mode": "for_fasilitas"},
       );
 
       log("Update Draft $response");
@@ -171,10 +149,7 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
       var token = await getTokenSharedPref();
       print(token);
 
-      var response = await dio.delete(
-        '${myIpAddr()}/id_trans/deleteDraftId/${idTrans}',
-        options: Options(headers: {"Authorization": "Bearer " + token!}),
-      );
+      var response = await dio.delete('${myIpAddr()}/id_trans/deleteDraftId/${idTrans}', options: Options(headers: {"Authorization": "Bearer " + token!}));
 
       log("Delete Draft $response");
     } catch (e) {
@@ -206,10 +181,7 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
 
   Future<bool> checkPromoTahunan(String idMember) async {
     try {
-      final response = await dio.get(
-        '${myIpAddr()}/transmember/checkpromo',
-        queryParameters: {'id_member': idMember},
-      );
+      final response = await dio.get('${myIpAddr()}/transmember/checkpromo', queryParameters: {'id_member': idMember});
       if (response.statusCode == 200) {
         final data = response.data;
         return data['has_promo'] == true;
@@ -232,11 +204,7 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
       setState(() {
         _listHappyHour =
             (response.data as List).map((item) {
-              return {
-                "kode_promo": item["kode_promo"],
-                "nama_promo": item["nama_promo"],
-                "disc": item["disc"],
-              };
+              return {"kode_promo": item["kode_promo"], "nama_promo": item["nama_promo"], "disc": item["disc"]};
             }).toList();
       });
     } catch (e) {
@@ -244,11 +212,7 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
     }
   }
 
-  final currencyFormatter = NumberFormat.currency(
-    locale: 'id_ID',
-    symbol: 'Rp ',
-    decimalDigits: 0,
-  );
+  final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
   bool isCash = true;
   bool isDebit = false;
@@ -263,8 +227,7 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
       List<dynamic> data = response.data;
       if (data.isNotEmpty) {
         var firstRecord = data[0];
-        double pjk =
-            double.tryParse(firstRecord['pajak_msg'].toString()) ?? 0.0;
+        double pjk = double.tryParse(firstRecord['pajak_msg'].toString()) ?? 0.0;
 
         desimalPjk = pjk;
       } else {
@@ -326,34 +289,16 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
         data['disc'] = 0;
       }
 
-      var response = await dio.post(
-        '${myIpAddr()}/fasilitas/store',
-        options: Options(headers: {"Authorization": "Bearer " + token!}),
-        data: data,
-      );
+      var response = await dio.post('${myIpAddr()}/fasilitas/store', options: Options(headers: {"Authorization": "Bearer " + token!}), data: data);
       CherryToast.success(
-        title: Text(
-          "Transaksi Sukses!",
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'Poppins',
-          ),
-        ),
+        title: Text("Transaksi Sukses!", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
         animationDuration: const Duration(milliseconds: 2000),
         autoDismiss: true,
       ).show(context);
       log("Sukses SImpan $response");
     } catch (e) {
       CherryToast.error(
-        title: Text(
-          "Transaksi Gagal!",
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'Poppins',
-          ),
-        ),
+        title: Text("Transaksi Gagal!", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
         animationDuration: const Duration(milliseconds: 2000),
         autoDismiss: true,
       ).show(context);
@@ -395,11 +340,7 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text(
-                "Pembayaran",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontFamily: 'Poppins'),
-              ),
+              title: Text("Pembayaran", textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Poppins')),
               content: SingleChildScrollView(
                 child: Container(
                   width: Get.width,
@@ -409,49 +350,22 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                     children: [
                       Row(
                         children: [
-                          Expanded(
-                            child: Text(
-                              "Disc: ",
-                              style: TextStyle(fontFamily: 'Poppins'),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 3,
-                            child: Text(
-                              "$selectedDisc %",
-                              style: TextStyle(fontFamily: 'Poppins'),
-                            ),
-                          ),
+                          Expanded(child: Text("Disc: ", style: TextStyle(fontFamily: 'Poppins'))),
+                          Expanded(flex: 3, child: Text("$selectedDisc %", style: TextStyle(fontFamily: 'Poppins'))),
                         ],
                       ),
                       Padding(
                         padding: const EdgeInsets.only(top: 10),
                         child: Row(
                           children: [
-                            Expanded(
-                              child: Text(
-                                "Total Harga: ",
-                                style: TextStyle(fontFamily: 'Poppins'),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 3,
-                              child: TextField(
-                                controller: _dialogTxtTotalFormatted,
-                                readOnly: true,
-                              ),
-                            ),
+                            Expanded(child: Text("Total Harga: ", style: TextStyle(fontFamily: 'Poppins'))),
+                            Expanded(flex: 3, child: TextField(controller: _dialogTxtTotalFormatted, readOnly: true)),
                           ],
                         ),
                       ),
                       Row(
                         children: [
-                          Expanded(
-                            child: Text(
-                              "Metode Pembayaran: ",
-                              style: TextStyle(fontFamily: 'Poppins'),
-                            ),
-                          ),
+                          Expanded(child: Text("Metode Pembayaran: ", style: TextStyle(fontFamily: 'Poppins'))),
                           Expanded(
                             flex: 3,
                             child: DropdownButton<String>(
@@ -488,16 +402,8 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                               },
                               icon: SizedBox.shrink(),
                               items:
-                                  metodeByr.map<DropdownMenuItem<String>>((
-                                    String value,
-                                  ) {
-                                    return DropdownMenuItem(
-                                      value: value,
-                                      child: AutoSizeText(
-                                        value,
-                                        minFontSize: 20,
-                                      ),
-                                    );
+                                  metodeByr.map<DropdownMenuItem<String>>((String value) {
+                                    return DropdownMenuItem(value: value, child: AutoSizeText(value, minFontSize: 20));
                                   }).toList(),
                             ),
                           ),
@@ -508,26 +414,13 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                           Column(
                             children: [
                               SizedBox(height: 30),
-                              Row(
-                                children: [
-                                  Text(
-                                    "Rincian Biaya",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: 'Poppins',
-                                    ),
-                                  ),
-                                ],
-                              ),
+                              Row(children: [Text("Rincian Biaya", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'))]),
                               Row(
                                 children: [
                                   Expanded(
                                     child: Padding(
                                       padding: const EdgeInsets.only(top: 20),
-                                      child: Text(
-                                        "Total Bayar: ",
-                                        style: TextStyle(fontFamily: 'Poppins'),
-                                      ),
+                                      child: Text("Total Bayar: ", style: TextStyle(fontFamily: 'Poppins')),
                                     ),
                                   ),
                                   Expanded(
@@ -536,9 +429,7 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                                       controller: _totalBayarController,
                                       enabled: totalbayarenabled,
                                       keyboardType: TextInputType.number,
-                                      decoration: InputDecoration(
-                                        hintText: "Rp. 0",
-                                      ),
+                                      decoration: InputDecoration(hintText: "Rp. 0"),
                                       onChanged: (value) {
                                         _fnFormatTotalBayar(value);
                                       },
@@ -551,19 +442,10 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                                   Expanded(
                                     child: Padding(
                                       padding: const EdgeInsets.only(top: 20),
-                                      child: Text(
-                                        "Kembalian: ",
-                                        style: TextStyle(fontFamily: 'Poppins'),
-                                      ),
+                                      child: Text("Kembalian: ", style: TextStyle(fontFamily: 'Poppins')),
                                     ),
                                   ),
-                                  Expanded(
-                                    flex: 3,
-                                    child: TextField(
-                                      controller: _kembalianController,
-                                      readOnly: true,
-                                    ),
-                                  ),
+                                  Expanded(flex: 3, child: TextField(controller: _kembalianController, readOnly: true)),
                                 ],
                               ),
                             ],
@@ -573,66 +455,23 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                           Column(
                             children: [
                               SizedBox(height: 30),
+                              Row(children: [Text("Informasi Bank Pemilik", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'))]),
                               Row(
                                 children: [
-                                  Text(
-                                    "Informasi Bank Pemilik",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: 'Poppins',
-                                    ),
-                                  ),
+                                  Expanded(child: Text("Nama Akun: ", style: TextStyle(fontFamily: 'Poppins'))),
+                                  Expanded(flex: 3, child: TextField(controller: _namaAkun, enabled: namaakunenabled)),
                                 ],
                               ),
                               Row(
                                 children: [
-                                  Expanded(
-                                    child: Text(
-                                      "Nama Akun: ",
-                                      style: TextStyle(fontFamily: 'Poppins'),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 3,
-                                    child: TextField(
-                                      controller: _namaAkun,
-                                      enabled: namaakunenabled,
-                                    ),
-                                  ),
+                                  Expanded(child: Text("Nomor Rekening: ", style: TextStyle(fontFamily: 'Poppins'))),
+                                  Expanded(flex: 3, child: TextField(controller: _noRek, enabled: nomorrekeningenabled)),
                                 ],
                               ),
                               Row(
                                 children: [
-                                  Expanded(
-                                    child: Text(
-                                      "Nomor Rekening: ",
-                                      style: TextStyle(fontFamily: 'Poppins'),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 3,
-                                    child: TextField(
-                                      controller: _noRek,
-                                      enabled: nomorrekeningenabled,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      "Nama Bank: ",
-                                      style: TextStyle(fontFamily: 'Poppins'),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 3,
-                                    child: TextField(
-                                      controller: _namaBank,
-                                      enabled: namabankenabled,
-                                    ),
-                                  ),
+                                  Expanded(child: Text("Nama Bank: ", style: TextStyle(fontFamily: 'Poppins'))),
+                                  Expanded(flex: 3, child: TextField(controller: _namaBank, enabled: namabankenabled)),
                                 ],
                               ),
                             ],
@@ -651,10 +490,7 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              "Jenis Pembayaran",
-                              style: TextStyle(fontFamily: 'Poppins'),
-                            ),
+                            Text("Jenis Pembayaran", style: TextStyle(fontFamily: 'Poppins')),
                             Container(
                               width: 200,
                               height: 40,
@@ -662,9 +498,7 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                                 value: varJenisPembayaran,
                                 isExpanded: true,
                                 elevation: 18,
-                                style: const TextStyle(
-                                  color: Colors.deepPurple,
-                                ),
+                                style: const TextStyle(color: Colors.deepPurple),
                                 onChanged: (String? value) {
                                   // dipanggil kalo user select item
                                   setState(() {
@@ -683,31 +517,19 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                                     }
                                   });
 
-                                  print(
-                                    "Jenis Pembayaran skrg $varJenisPembayaran",
-                                  );
+                                  print("Jenis Pembayaran skrg $varJenisPembayaran");
                                 },
                                 icon: Icon(Icons.arrow_drop_down_circle),
                                 items:
-                                    _jenisPembayaran
-                                        .map<DropdownMenuItem<String>>((
-                                          String value,
-                                        ) {
-                                          return DropdownMenuItem(
-                                            value: value,
-                                            child: Align(
-                                              alignment: Alignment.centerLeft,
-                                              child: AutoSizeText(
-                                                "Pembayaran di" + value,
-                                                minFontSize: 15,
-                                                style: TextStyle(
-                                                  fontFamily: 'Poppins',
-                                                ),
-                                              ),
-                                            ),
-                                          );
-                                        })
-                                        .toList(),
+                                    _jenisPembayaran.map<DropdownMenuItem<String>>((String value) {
+                                      return DropdownMenuItem(
+                                        value: value,
+                                        child: Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: AutoSizeText("Pembayaran di" + value, minFontSize: 15, style: TextStyle(fontFamily: 'Poppins')),
+                                        ),
+                                      );
+                                    }).toList(),
                               ),
                             ),
                           ],
@@ -722,17 +544,8 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                             onPressed: () {
                               if (kembalian < 0) {
                                 CherryToast.error(
-                                  title: Text(
-                                    "Jumlah Bayar Kurang",
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: 'Poppins',
-                                    ),
-                                  ),
-                                  animationDuration: const Duration(
-                                    milliseconds: 1500,
-                                  ),
+                                  title: Text("Jumlah Bayar Kurang", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
+                                  animationDuration: const Duration(milliseconds: 1500),
                                   autoDismiss: true,
                                 ).show(context);
                               } else {
@@ -743,10 +556,7 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                                 });
                               }
                             },
-                            child: Text(
-                              "Konfirmasi Pembayaran",
-                              style: TextStyle(fontFamily: 'Poppins'),
-                            ),
+                            child: Text("Konfirmasi Pembayaran", style: TextStyle(fontFamily: 'Poppins')),
                           ),
                         ),
                       ),
@@ -762,10 +572,7 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                                 Get.offAll(() => MainResepsionis());
                               });
                             },
-                            child: Text(
-                              "Simpan Transaksi",
-                              style: TextStyle(fontFamily: 'Poppins'),
-                            ),
+                            child: Text("Simpan Transaksi", style: TextStyle(fontFamily: 'Poppins')),
                           ),
                         ),
                       ),
@@ -855,16 +662,14 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
             padding: const EdgeInsets.only(left: 20),
             child: IconButton(
               icon: Icon(Icons.arrow_back, size: 40), // Back Icon
-              onPressed: () async {
-                await removeIdDraft();
-                Get.back(); // Navigate back
+              onPressed: () {
+                removeIdDraft().then((_) {
+                  Get.back(); // Navigate back
+                });
               },
             ),
           ),
-          title: Text(
-            'Transaksi Fasilitas',
-            style: TextStyle(fontSize: 60, fontFamily: 'Poppins'),
-          ),
+          title: Text('Transaksi Fasilitas', style: TextStyle(fontSize: 60, fontFamily: 'Poppins')),
           centerTitle: true,
           leadingWidth: 100,
           toolbarHeight: 100,
@@ -895,86 +700,20 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                               children: [
                                 Padding(
                                   padding: EdgeInsets.only(top: 10),
-                                  child: Text(
-                                    'No Transaksi : ',
-                                    style: TextStyle(
-                                      fontSize: 22,
-                                      fontFamily: 'Poppins',
-                                    ),
-                                  ),
+                                  child: Text('No Transaksi : ', style: TextStyle(fontSize: 22, fontFamily: 'Poppins')),
                                 ),
 
-                                Padding(
-                                  padding: EdgeInsets.only(top: 25),
-                                  child: Text(
-                                    'No Locker : ',
-                                    style: TextStyle(
-                                      fontSize: 22,
-                                      fontFamily: 'Poppins',
-                                    ),
-                                  ),
-                                ),
+                                Padding(padding: EdgeInsets.only(top: 25), child: Text('No Locker : ', style: TextStyle(fontSize: 22, fontFamily: 'Poppins'))),
 
+                                Padding(padding: EdgeInsets.only(top: 25), child: Text('Jenis Tamu : ', style: TextStyle(fontSize: 22, fontFamily: 'Poppins'))),
+                                Padding(padding: EdgeInsets.only(top: 25), child: Text('Nama Tamu : ', style: TextStyle(fontSize: 22, fontFamily: 'Poppins'))),
+                                Padding(padding: EdgeInsets.only(top: 25), child: Text('No HP : ', style: TextStyle(fontSize: 22, fontFamily: 'Poppins'))),
                                 Padding(
                                   padding: EdgeInsets.only(top: 25),
-                                  child: Text(
-                                    'Jenis Tamu : ',
-                                    style: TextStyle(
-                                      fontSize: 22,
-                                      fontFamily: 'Poppins',
-                                    ),
-                                  ),
+                                  child: Text('Nama Fasilitas : ', style: TextStyle(fontSize: 22, fontFamily: 'Poppins')),
                                 ),
-                                Padding(
-                                  padding: EdgeInsets.only(top: 25),
-                                  child: Text(
-                                    'Nama Tamu : ',
-                                    style: TextStyle(
-                                      fontSize: 22,
-                                      fontFamily: 'Poppins',
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.only(top: 25),
-                                  child: Text(
-                                    'No HP : ',
-                                    style: TextStyle(
-                                      fontSize: 22,
-                                      fontFamily: 'Poppins',
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.only(top: 25),
-                                  child: Text(
-                                    'Nama Fasilitas : ',
-                                    style: TextStyle(
-                                      fontSize: 22,
-                                      fontFamily: 'Poppins',
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.only(top: 25),
-                                  child: Text(
-                                    'Harga : ',
-                                    style: TextStyle(
-                                      fontSize: 22,
-                                      fontFamily: 'Poppins',
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.only(top: 25),
-                                  child: Text(
-                                    'Promo : ',
-                                    style: TextStyle(
-                                      fontSize: 22,
-                                      fontFamily: 'Poppins',
-                                    ),
-                                  ),
-                                ),
+                                Padding(padding: EdgeInsets.only(top: 25), child: Text('Harga : ', style: TextStyle(fontSize: 22, fontFamily: 'Poppins'))),
+                                Padding(padding: EdgeInsets.only(top: 25), child: Text('Promo : ', style: TextStyle(fontSize: 22, fontFamily: 'Poppins'))),
                               ],
                             ),
                           ),
@@ -989,20 +728,11 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                                   child: Container(
                                     width: 350,
                                     height: 50,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: Colors.white,
-                                    ),
+                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
                                     child: TextField(
                                       readOnly: true,
                                       controller: _txtIdTrans,
-                                      decoration: InputDecoration(
-                                        border: InputBorder.none,
-                                        contentPadding: EdgeInsets.symmetric(
-                                          vertical: 15,
-                                          horizontal: 10,
-                                        ),
-                                      ),
+                                      decoration: InputDecoration(border: InputBorder.none, contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 10)),
                                       style: TextStyle(fontSize: 22),
                                     ),
                                   ),
@@ -1012,19 +742,10 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                                   child: Container(
                                     width: 350,
                                     height: 50,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: Colors.white,
-                                    ),
+                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
                                     child: TextField(
                                       controller: _txtNoLocker,
-                                      decoration: InputDecoration(
-                                        border: InputBorder.none,
-                                        contentPadding: EdgeInsets.symmetric(
-                                          vertical: 15,
-                                          horizontal: 10,
-                                        ),
-                                      ),
+                                      decoration: InputDecoration(border: InputBorder.none, contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 10)),
                                       style: TextStyle(fontSize: 22),
                                     ),
                                   ),
@@ -1035,42 +756,25 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                                   child: Container(
                                     width: 350,
                                     height: 50,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: Colors.white,
-                                    ),
+                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
                                     child: DropdownButton<String>(
                                       value: dropdownjenistamu,
                                       icon: const Icon(Icons.arrow_drop_down),
                                       isExpanded: true,
                                       elevation: 16,
-                                      style: const TextStyle(
-                                        color: Colors.deepPurple,
-                                      ),
+                                      style: const TextStyle(color: Colors.deepPurple),
                                       underline: SizedBox(),
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                      ),
+                                      padding: EdgeInsets.symmetric(horizontal: 10),
                                       onChanged: (String? value) {
                                         setState(() {
                                           dropdownjenistamu = value;
                                         });
                                       },
                                       items:
-                                          list.map<DropdownMenuItem<String>>((
-                                            String value,
-                                          ) {
+                                          list.map<DropdownMenuItem<String>>((String value) {
                                             return DropdownMenuItem<String>(
                                               value: value,
-                                              child: Align(
-                                                alignment: Alignment.centerLeft,
-                                                child: Text(
-                                                  value,
-                                                  style: TextStyle(
-                                                    fontSize: 22,
-                                                  ),
-                                                ),
-                                              ),
+                                              child: Align(alignment: Alignment.centerLeft, child: Text(value, style: TextStyle(fontSize: 22))),
                                             );
                                           }).toList(),
                                     ),
@@ -1081,10 +785,7 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                                   child: Container(
                                     width: 350,
                                     height: 50,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: Colors.white,
-                                    ),
+                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
                                     child: TextField(
                                       maxLines: 1,
                                       controller: _txtNamaTamu,
@@ -1093,17 +794,8 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                                       textInputAction: TextInputAction.done,
                                       textAlign: TextAlign.start,
                                       scrollPhysics: BouncingScrollPhysics(),
-                                      decoration: InputDecoration(
-                                        border: InputBorder.none,
-                                        contentPadding: EdgeInsets.only(
-                                          left: 10,
-                                          bottom: 7,
-                                        ),
-                                      ),
-                                      style: TextStyle(
-                                        fontSize: 22,
-                                        fontFamily: 'Poppins',
-                                      ),
+                                      decoration: InputDecoration(border: InputBorder.none, contentPadding: EdgeInsets.only(left: 10, bottom: 7)),
+                                      style: TextStyle(fontSize: 22, fontFamily: 'Poppins'),
                                     ),
                                   ),
                                 ),
@@ -1112,24 +804,12 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                                   child: Container(
                                     width: 350,
                                     height: 50,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: Colors.white,
-                                    ),
+                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
                                     child: TextField(
                                       controller: _txtNoHP,
                                       readOnly: true,
-                                      decoration: InputDecoration(
-                                        border: InputBorder.none,
-                                        contentPadding: EdgeInsets.symmetric(
-                                          vertical: 15,
-                                          horizontal: 10,
-                                        ),
-                                      ),
-                                      style: TextStyle(
-                                        fontSize: 22,
-                                        fontFamily: 'Poppins',
-                                      ),
+                                      decoration: InputDecoration(border: InputBorder.none, contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 10)),
+                                      style: TextStyle(fontSize: 22, fontFamily: 'Poppins'),
                                     ),
                                   ),
                                 ),
@@ -1138,86 +818,48 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                                   child: Container(
                                     width: 350,
                                     height: 50,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: Colors.white,
-                                    ),
+                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
                                     child: DropdownButton<String>(
                                       value: dropdownNamaFasilitas,
                                       isExpanded: true,
                                       icon: const Icon(Icons.arrow_drop_down),
                                       elevation: 16,
-                                      style: const TextStyle(
-                                        color: Colors.deepPurple,
-                                      ),
+                                      style: const TextStyle(color: Colors.deepPurple),
                                       underline: SizedBox(),
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                      ),
+                                      padding: EdgeInsets.symmetric(horizontal: 10),
                                       onChanged: (String? value) async {
-                                        var selectedFasilitas =
-                                            _listNamaFasilitas.firstWhere(
-                                              (item) =>
-                                                  item['nama_fasilitas'] ==
-                                                  value,
-                                              orElse:
-                                                  () => {
-                                                    "id_fasilitas": "",
-                                                    "nama_fasilitas": "",
-                                                    "harga_fasilitas": 0,
-                                                  },
-                                            );
+                                        var selectedFasilitas = _listNamaFasilitas.firstWhere(
+                                          (item) => item['nama_fasilitas'] == value,
+                                          orElse: () => {"id_fasilitas": "", "nama_fasilitas": "", "harga_fasilitas": 0},
+                                        );
 
                                         if (idMember != null) {
-                                          final hasTahunanPromo =
-                                              await checkPromoTahunan(
-                                                idMember!,
-                                              );
+                                          final hasTahunanPromo = await checkPromoTahunan(idMember!);
 
                                           setState(() {
                                             dropdownNamaFasilitas = value;
-                                            harga =
-                                                hasTahunanPromo
-                                                    ? 0
-                                                    : double.parse(
-                                                      selectedFasilitas['harga_fasilitas']
-                                                          .toString(),
-                                                    );
-                                            idFasilitas =
-                                                selectedFasilitas['id_fasilitas'];
-                                            _txtHargaFasilitas.text =
-                                                currencyFormatter.format(harga);
+                                            harga = hasTahunanPromo ? 0 : double.parse(selectedFasilitas['harga_fasilitas'].toString());
+                                            idFasilitas = selectedFasilitas['id_fasilitas'];
+                                            _txtHargaFasilitas.text = currencyFormatter.format(harga);
                                           });
                                         } else {
                                           setState(() {
                                             dropdownNamaFasilitas = value;
-                                            harga = double.parse(
-                                              selectedFasilitas['harga_fasilitas']
-                                                  .toString(),
-                                            );
-                                            idFasilitas =
-                                                selectedFasilitas['id_fasilitas'];
-                                            _txtHargaFasilitas.text =
-                                                currencyFormatter.format(harga);
+                                            harga = double.parse(selectedFasilitas['harga_fasilitas'].toString());
+                                            idFasilitas = selectedFasilitas['id_fasilitas'];
+                                            _txtHargaFasilitas.text = currencyFormatter.format(harga);
                                           });
                                         }
                                       },
                                       items:
-                                          _listNamaFasilitas.map<
-                                            DropdownMenuItem<String>
-                                          >((item) {
+                                          _listNamaFasilitas.map<DropdownMenuItem<String>>((item) {
                                             return DropdownMenuItem<String>(
-                                              value:
-                                                  item['nama_fasilitas'], // Use ID as value
+                                              value: item['nama_fasilitas'], // Use ID as value
                                               child: Align(
                                                 alignment: Alignment.centerLeft,
                                                 child: Text(
-                                                  item['nama_fasilitas']
-                                                      .toString(), // Display category name
-                                                  style: const TextStyle(
-                                                    fontSize: 18,
-                                                    fontFamily: 'Poppins',
-                                                  ),
+                                                  item['nama_fasilitas'].toString(), // Display category name
+                                                  style: const TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                 ),
                                               ),
                                             );
@@ -1230,19 +872,10 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                                   child: Container(
                                     width: 350,
                                     height: 50,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: Colors.white,
-                                    ),
+                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
                                     child: TextField(
                                       controller: _txtHargaFasilitas,
-                                      decoration: InputDecoration(
-                                        border: InputBorder.none,
-                                        contentPadding: EdgeInsets.symmetric(
-                                          vertical: 15,
-                                          horizontal: 10,
-                                        ),
-                                      ),
+                                      decoration: InputDecoration(border: InputBorder.none, contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 10)),
                                       style: TextStyle(fontSize: 22),
                                     ),
                                   ),
@@ -1252,58 +885,35 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                                   child: Container(
                                     width: 350,
                                     height: 50,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: Colors.white,
-                                    ),
+                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
                                     child: DropdownButton<String>(
                                       value: dropdownHappyHour,
                                       icon: const Icon(Icons.arrow_drop_down),
                                       isExpanded: true,
                                       elevation: 16,
-                                      style: const TextStyle(
-                                        color: Colors.deepPurple,
-                                      ),
+                                      style: const TextStyle(color: Colors.deepPurple),
                                       underline: SizedBox(),
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                      ),
+                                      padding: EdgeInsets.symmetric(horizontal: 10),
                                       onChanged: (String? value) async {
-                                        var selectedPromo = _listHappyHour
-                                            .firstWhere(
-                                              (item) =>
-                                                  item['nama_promo'] == value,
-                                              orElse:
-                                                  () => {
-                                                    "kode_promo": "",
-                                                    "nama_promo": "",
-                                                    "disc": 0,
-                                                  },
-                                            );
+                                        var selectedPromo = _listHappyHour.firstWhere(
+                                          (item) => item['nama_promo'] == value,
+                                          orElse: () => {"kode_promo": "", "nama_promo": "", "disc": 0},
+                                        );
                                         setState(() {
                                           dropdownHappyHour = value;
-                                          discSetelahPromo =
-                                              selectedPromo['disc'];
-                                          selectedDisc =
-                                              discSetelahPromo.toString();
+                                          discSetelahPromo = selectedPromo['disc'];
+                                          selectedDisc = discSetelahPromo.toString();
                                         });
                                       },
                                       items:
-                                          _listHappyHour.map<
-                                            DropdownMenuItem<String>
-                                          >((item) {
+                                          _listHappyHour.map<DropdownMenuItem<String>>((item) {
                                             return DropdownMenuItem<String>(
-                                              value:
-                                                  item['nama_promo'], // Use ID as value
+                                              value: item['nama_promo'], // Use ID as value
                                               child: Align(
                                                 alignment: Alignment.centerLeft,
                                                 child: Text(
-                                                  item['nama_promo']
-                                                      .toString(), // Display category name
-                                                  style: const TextStyle(
-                                                    fontSize: 18,
-                                                    fontFamily: 'Poppins',
-                                                  ),
+                                                  item['nama_promo'].toString(), // Display category name
+                                                  style: const TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                 ),
                                               ),
                                             );
@@ -1320,10 +930,7 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                       Row(
                         children: [
                           Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(15),
-                              color: Color(0XFFF6F7C4),
-                            ),
+                            decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), color: Color(0XFFF6F7C4)),
                             height: 80,
                             width: 280,
                             child: TextButton(
@@ -1331,38 +938,19 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                                 _updateLastTrans();
                                 _showDialogConfirmPayment(context);
                               },
-                              style: TextButton.styleFrom(
-                                foregroundColor: Colors.black,
-                              ),
-                              child: Text(
-                                'Bayar',
-                                style: TextStyle(
-                                  fontSize: 30,
-                                  fontFamily: 'Poppins',
-                                ),
-                              ),
+                              style: TextButton.styleFrom(foregroundColor: Colors.black),
+                              child: Text('Bayar', style: TextStyle(fontSize: 30, fontFamily: 'Poppins')),
                             ),
                           ),
                           SizedBox(width: 30),
                           Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(15),
-                              color: Color(0XCCCDFADB),
-                            ),
+                            decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), color: Color(0XCCCDFADB)),
                             height: 80,
                             width: 280,
                             child: TextButton(
                               onPressed: scanMember,
-                              style: TextButton.styleFrom(
-                                foregroundColor: Colors.black,
-                              ),
-                              child: Text(
-                                'SCAN QR',
-                                style: TextStyle(
-                                  fontSize: 30,
-                                  fontFamily: 'Poppins',
-                                ),
-                              ),
+                              style: TextButton.styleFrom(foregroundColor: Colors.black),
+                              child: Text('SCAN QR', style: TextStyle(fontSize: 30, fontFamily: 'Poppins')),
                             ),
                           ),
                         ],

@@ -110,11 +110,11 @@ class PrinterHelper {
       printer.hr();
 
       // Print item berdasarkan data
-      _printPackages(printer, dataPaket, jenisPembayaran, disc, currentDataMember);
-      _printProducts(printer, dataProduk, jenisPembayaran, disc);
-      _printFood(printer, dataFood, jenisPembayaran, disc);
-      _printFasilitas(printer, dataFasilitas, jenisPembayaran, disc);
-      _printAddOn(printer, combinedAddOn, jenisPembayaran, disc);
+      _printPackages(printer, dataPaket, jenisPembayaran, disc, currentDataMember, pajak);
+      _printProducts(printer, dataProduk, jenisPembayaran, disc, pajak);
+      _printFood(printer, dataFood, jenisPembayaran, disc, pajak);
+      _printFasilitas(printer, dataFasilitas, jenisPembayaran, disc, pajak);
+      _printAddOn(printer, combinedAddOn, jenisPembayaran, disc, pajak);
 
       // ⬇️ Pindahkan dan jalankan filtering di sini. krn proses filtering dilakukan di fungsi _printPackages sama _fasilitas
       List<dynamic> filteredDataMember = currentDataMember.where((item) => gNamaPaketYgMember.contains(item['nama_promo'])).toList();
@@ -122,9 +122,9 @@ class PrinterHelper {
       log("Isi gNamaPaketYgMember $gNamaPaketYgMember");
 
       if (isFirstTimeMember) {
-        _printMember(printer, dataMemberFirstTime, jenisPembayaran, disc, true);
+        _printMember(printer, dataMemberFirstTime, jenisPembayaran, disc, true, pajak);
       } else {
-        _printMember(printer, filteredDataMember, jenisPembayaran, disc, false);
+        _printMember(printer, filteredDataMember, jenisPembayaran, disc, false, pajak);
       }
       // End Print Item
 
@@ -148,7 +148,7 @@ class PrinterHelper {
       printer.row([
         PosColumn(text: 'Subtotal', width: 6, styles: const PosStyles(bold: true)),
         PosColumn(
-          text: '${formatter.format(subtotal)}', //timpa dgn subtotal asli
+          text: isFirstTimeMember ? formatter.format(subtotal * pajak + subtotal) : formatter.format(subtotal), //timpa dgn subtotal asli
           width: 6,
           styles: const PosStyles(align: PosAlign.right),
         ),
@@ -159,22 +159,22 @@ class PrinterHelper {
         PosColumn(text: '-${formatter.format(nominalDisc)}', width: 6, styles: const PosStyles(align: PosAlign.right)),
       ]);
 
-      int nominalPjk = (total * pajak).ceil();
-      int ttlStlhPjk = total - nominalPjk;
+      // int nominalPjk = (total * pajak).ceil();
+      // int ttlStlhPjk = total + nominalPjk;
 
-      printer.row([
-        PosColumn(text: 'Pajak', width: 6, styles: const PosStyles(bold: true, height: PosTextSize.size2)),
-        PosColumn(
-          text: '${pajak.toInt()}%', // Replace with actual total
-          width: 6,
-          styles: const PosStyles(align: PosAlign.right, height: PosTextSize.size2, bold: true),
-        ),
-      ]);
+      // printer.row([
+      //   PosColumn(text: 'Pajak', width: 6, styles: const PosStyles(bold: true, height: PosTextSize.size2)),
+      //   PosColumn(
+      //     text: '${pajak.toInt()}%', // Replace with actual total
+      //     width: 6,
+      //     styles: const PosStyles(align: PosAlign.right, height: PosTextSize.size2, bold: true),
+      //   ),
+      // ]);
 
       printer.row([
         PosColumn(text: 'Total', width: 6, styles: const PosStyles(bold: true, height: PosTextSize.size2)),
         PosColumn(
-          text: '${formatter.format(ttlStlhPjk)}', // Replace with actual total
+          text: isFirstTimeMember ? formatter.format(subtotal * pajak + subtotal) : '${formatter.format(total)}', // Replace with actual total
           width: 6,
           styles: const PosStyles(align: PosAlign.right, height: PosTextSize.size2, bold: true),
         ),
@@ -200,7 +200,7 @@ class PrinterHelper {
     }
   }
 
-  static void _printProducts(NetworkPrinter printer, List<dynamic> products, int jenisPembayaran, double disc) {
+  static void _printProducts(NetworkPrinter printer, List<dynamic> products, int jenisPembayaran, double disc, double pajak) {
     if (products.isEmpty) return;
 
     printer.text("Produk", styles: const PosStyles(bold: true, underline: true));
@@ -209,14 +209,38 @@ class PrinterHelper {
     int totalProduk = 0;
 
     for (var product in products) {
-      printer.row([
-        PosColumn(text: product['nama_produk'], width: 4),
-        PosColumn(text: 'x${product['qty']}', width: 1, styles: const PosStyles(align: PosAlign.center)),
-        PosColumn(text: '${formatter.format(product['harga_item'])}', width: 3, styles: const PosStyles(align: PosAlign.right)),
-        PosColumn(text: '${formatter.format(product['harga_total'])}', width: 4, styles: const PosStyles(align: PosAlign.right)),
-      ]);
+      double hargaItem = product['harga_item'] * pajak + product['harga_item'];
+      int maxNameLength = 15; // Example: Adjust this value
+      List<String> nameLines = _splitTextIntoLines(product['nama_produk'], maxNameLength);
 
-      totalProduk += (product['harga_total'] as int);
+      if (nameLines.isNotEmpty) {
+        printer.row([
+          PosColumn(text: nameLines[0], width: 4),
+          PosColumn(text: 'x${product['qty']}', width: 1, styles: const PosStyles(align: PosAlign.center)),
+          PosColumn(text: '${formatter.format(hargaItem)}', width: 3, styles: const PosStyles(align: PosAlign.right)),
+          PosColumn(text: '${formatter.format(product['qty'] * hargaItem)}', width: 4, styles: const PosStyles(align: PosAlign.right)),
+        ]);
+
+        // Print subsequent lines without the other columns, just the name
+        for (int i = 1; i < nameLines.length; i++) {
+          printer.row([
+            PosColumn(text: nameLines[i], width: 4),
+            PosColumn(text: '', width: 1), // Empty columns to align
+            PosColumn(text: '', width: 3),
+            PosColumn(text: '', width: 4),
+          ]);
+        }
+      }
+
+      totalProduk += (hargaItem).toInt();
+
+      // printer.row([
+      //   PosColumn(text: product['nama_produk'], width: 4),
+      //   PosColumn(text: 'x${product['qty']}', width: 1, styles: const PosStyles(align: PosAlign.center)),
+      //   PosColumn(text: '${formatter.format(product['harga_item'])}', width: 3, styles: const PosStyles(align: PosAlign.right)),
+      //   PosColumn(text: '${formatter.format(product['harga_total'])}', width: 4, styles: const PosStyles(align: PosAlign.right)),
+      // ]);
+      // totalProduk += (product['harga_total'] as int);
     }
 
     // jika beli di awal
@@ -236,7 +260,34 @@ class PrinterHelper {
     printer.feed(1);
   }
 
-  static void _printPackages(NetworkPrinter printer, List<dynamic> packages, int jenisPembayaran, double disc, List<dynamic> currentDataMember) async {
+  // Helper function to split text into lines
+  static List<String> _splitTextIntoLines(String text, int maxLength) {
+    List<String> lines = [];
+    String currentLine = '';
+    List<String> words = text.split(' ');
+
+    for (String word in words) {
+      if ((currentLine + word).length <= maxLength) {
+        currentLine += (currentLine.isEmpty ? '' : ' ') + word;
+      } else {
+        lines.add(currentLine);
+        currentLine = word;
+      }
+    }
+    if (currentLine.isNotEmpty) {
+      lines.add(currentLine);
+    }
+    return lines;
+  }
+
+  static void _printPackages(
+    NetworkPrinter printer,
+    List<dynamic> packages,
+    int jenisPembayaran,
+    double disc,
+    List<dynamic> currentDataMember,
+    double pajak,
+  ) async {
     if (packages.isEmpty) return;
 
     // Pisahin yg retur sm yg nda
@@ -260,14 +311,30 @@ class PrinterHelper {
         }
         // End Query
 
-        printer.row([
-          PosColumn(text: package['nama_paket_msg'], width: 4),
-          PosColumn(text: 'x${package['qty']}', width: 1, styles: const PosStyles(align: PosAlign.center)),
-          PosColumn(text: '${formatter.format(package['harga_item'])}', width: 3, styles: const PosStyles(align: PosAlign.right)),
-          PosColumn(text: '${formatter.format(package['harga_total'])}', width: 4, styles: const PosStyles(align: PosAlign.right)),
-        ]);
+        double hargaItem = package['harga_item'] * pajak + package['harga_item'];
+        int maxNameLength = 15; // Example: Adjust this value
+        List<String> nameLines = _splitTextIntoLines(package['nama_paket_msg'], maxNameLength);
 
-        totalProduk += (package['harga_total'] as int);
+        if (nameLines.isNotEmpty) {
+          printer.row([
+            PosColumn(text: nameLines[0], width: 4),
+            PosColumn(text: 'x${package['qty']}', width: 1, styles: const PosStyles(align: PosAlign.center)),
+            PosColumn(text: '${formatter.format(hargaItem)}', width: 3, styles: const PosStyles(align: PosAlign.right)),
+            PosColumn(text: '${formatter.format(package['qty'] * hargaItem)}', width: 4, styles: const PosStyles(align: PosAlign.right)),
+          ]);
+
+          // Print subsequent lines without the other columns, just the name
+          for (int i = 1; i < nameLines.length; i++) {
+            printer.row([
+              PosColumn(text: nameLines[i], width: 4),
+              PosColumn(text: '', width: 1), // Empty columns to align
+              PosColumn(text: '', width: 3),
+              PosColumn(text: '', width: 4),
+            ]);
+          }
+        }
+
+        totalProduk += (hargaItem).toInt();
       }
 
       // jika beli di awal
@@ -288,19 +355,40 @@ class PrinterHelper {
     if (returPaket.isNotEmpty) {
       printer.text('Retur-Paket', styles: const PosStyles(bold: true, underline: true));
       for (var package in returPaket) {
+        int hargaItem = package['harga_item'] * pajak + package['harga_item'];
+        int maxNameLength = 15; // Example: Adjust this value
+        List<String> nameLines = _splitTextIntoLines(package['nama_paket_msg'], maxNameLength);
+
         printer.row([
-          PosColumn(text: package['nama_paket_msg'], width: 4),
+          PosColumn(text: nameLines[0], width: 4),
           PosColumn(text: 'x${package['qty']}', width: 1, styles: const PosStyles(align: PosAlign.center)),
-          PosColumn(text: '(-${formatter.format(package['harga_item'])})', width: 3, styles: const PosStyles(align: PosAlign.right)),
-          PosColumn(text: '(-${formatter.format(package['harga_total'])})', width: 4, styles: const PosStyles(align: PosAlign.right)),
+          PosColumn(text: '(-${formatter.format(hargaItem)})', width: 3, styles: const PosStyles(align: PosAlign.right)),
+          PosColumn(text: '(-${formatter.format(package['qty'] + hargaItem)})', width: 4, styles: const PosStyles(align: PosAlign.right)),
         ]);
+
+        // Print subsequent lines without the other columns, just the name
+        for (int i = 1; i < nameLines.length; i++) {
+          printer.row([
+            PosColumn(text: nameLines[i], width: 4),
+            PosColumn(text: '', width: 1), // Empty columns to align
+            PosColumn(text: '', width: 3),
+            PosColumn(text: '', width: 4),
+          ]);
+        }
+
+        // printer.row([
+        //   PosColumn(text: package['nama_paket_msg'], width: 4),
+        //   PosColumn(text: 'x${package['qty']}', width: 1, styles: const PosStyles(align: PosAlign.center)),
+        //   PosColumn(text: '(-${formatter.format(package['harga_item'])})', width: 3, styles: const PosStyles(align: PosAlign.right)),
+        //   PosColumn(text: '(-${formatter.format(package['harga_total'])})', width: 4, styles: const PosStyles(align: PosAlign.right)),
+        // ]);
       }
     }
 
     printer.feed(1);
   }
 
-  static void _printFood(NetworkPrinter printer, List<dynamic> foods, int jenisPembayaran, double disc) {
+  static void _printFood(NetworkPrinter printer, List<dynamic> foods, int jenisPembayaran, double disc, double pajak) {
     if (foods.isEmpty) return;
 
     printer.text('FnB', styles: const PosStyles(bold: true, underline: true));
@@ -309,14 +397,39 @@ class PrinterHelper {
     int totalProduk = 0;
 
     for (var data in foods) {
-      printer.row([
-        PosColumn(text: data['nama_fnb'], width: 4),
-        PosColumn(text: 'x${data['qty']}', width: 1, styles: const PosStyles(align: PosAlign.center)),
-        PosColumn(text: '${formatter.format(data['harga_item'])}', width: 3, styles: const PosStyles(align: PosAlign.right)),
-        PosColumn(text: '${formatter.format(data['harga_total'])}', width: 4, styles: const PosStyles(align: PosAlign.right)),
-      ]);
+      double hargaItem = data['harga_item'] * pajak + data['harga_item'];
+      int maxNameLength = 15; // Example: Adjust this value
+      List<String> nameLines = _splitTextIntoLines(data['nama_fnb'], maxNameLength);
 
-      totalProduk += (data['harga_total'] as int);
+      if (nameLines.isNotEmpty) {
+        printer.row([
+          PosColumn(text: nameLines[0], width: 4),
+          PosColumn(text: 'x${data['qty']}', width: 1, styles: const PosStyles(align: PosAlign.center)),
+          PosColumn(text: '${formatter.format(hargaItem)}', width: 3, styles: const PosStyles(align: PosAlign.right)),
+          PosColumn(text: '${formatter.format(data['qty'] * hargaItem)}', width: 4, styles: const PosStyles(align: PosAlign.right)),
+        ]);
+
+        // Print subsequent lines without the other columns, just the name
+        for (int i = 1; i < nameLines.length; i++) {
+          printer.row([
+            PosColumn(text: nameLines[i], width: 4),
+            PosColumn(text: '', width: 1), // Empty columns to align
+            PosColumn(text: '', width: 3),
+            PosColumn(text: '', width: 4),
+          ]);
+        }
+      }
+
+      totalProduk += (hargaItem).toInt();
+
+      // printer.row([
+      //   PosColumn(text: data['nama_fnb'], width: 4),
+      //   PosColumn(text: 'x${data['qty']}', width: 1, styles: const PosStyles(align: PosAlign.center)),
+      //   PosColumn(text: '${formatter.format(data['harga_item'])}', width: 3, styles: const PosStyles(align: PosAlign.right)),
+      //   PosColumn(text: '${formatter.format(data['harga_total'])}', width: 4, styles: const PosStyles(align: PosAlign.right)),
+      // ]);
+
+      // totalProduk += (data['harga_total'] as int);
     }
 
     // jika beli di awal
@@ -336,7 +449,7 @@ class PrinterHelper {
     printer.feed(1);
   }
 
-  static void _printFasilitas(NetworkPrinter printer, List<dynamic> fasilitas, int jenisPembayaran, double disc) {
+  static void _printFasilitas(NetworkPrinter printer, List<dynamic> fasilitas, int jenisPembayaran, double disc, double pajak) {
     if (fasilitas.isEmpty) return;
 
     printer.text('Fasilitas', styles: const PosStyles(bold: true, underline: true));
@@ -345,14 +458,39 @@ class PrinterHelper {
     int totalProduk = 0;
 
     for (var data in fasilitas) {
-      printer.row([
-        PosColumn(text: data['nama_fasilitas'], width: 4),
-        PosColumn(text: 'x${data['qty']}', width: 1, styles: const PosStyles(align: PosAlign.center)),
-        PosColumn(text: '${formatter.format(data['harga'])}', width: 3, styles: const PosStyles(align: PosAlign.right)),
-        PosColumn(text: '${formatter.format(data['harga'])}', width: 4, styles: const PosStyles(align: PosAlign.right)),
-      ]);
+      double hargaItem = data['harga'] * pajak + data['harga'];
+      int maxNameLength = 15; // Example: Adjust this value
+      List<String> nameLines = _splitTextIntoLines(data['nama_fasilitas'], maxNameLength);
 
-      totalProduk += (data['harga'] as int);
+      if (nameLines.isNotEmpty) {
+        printer.row([
+          PosColumn(text: nameLines[0], width: 4),
+          PosColumn(text: 'x${data['qty']}', width: 1, styles: const PosStyles(align: PosAlign.center)),
+          PosColumn(text: '${formatter.format(hargaItem)}', width: 3, styles: const PosStyles(align: PosAlign.right)),
+          PosColumn(text: '${formatter.format(data['qty'] * hargaItem)}', width: 4, styles: const PosStyles(align: PosAlign.right)),
+        ]);
+
+        // Print subsequent lines without the other columns, just the name
+        for (int i = 1; i < nameLines.length; i++) {
+          printer.row([
+            PosColumn(text: nameLines[i], width: 4),
+            PosColumn(text: '', width: 1), // Empty columns to align
+            PosColumn(text: '', width: 3),
+            PosColumn(text: '', width: 4),
+          ]);
+        }
+      }
+
+      totalProduk += (hargaItem).toInt();
+
+      // printer.row([
+      //   PosColumn(text: data['nama_fasilitas'], width: 4),
+      //   PosColumn(text: 'x${data['qty']}', width: 1, styles: const PosStyles(align: PosAlign.center)),
+      //   PosColumn(text: '${formatter.format(data['harga'])}', width: 3, styles: const PosStyles(align: PosAlign.right)),
+      //   PosColumn(text: '${formatter.format(data['harga'])}', width: 4, styles: const PosStyles(align: PosAlign.right)),
+      // ]);
+
+      // totalProduk += (data['harga'] as int);
     }
 
     // jika beli di awal
@@ -372,7 +510,7 @@ class PrinterHelper {
     printer.feed(1);
   }
 
-  static void _printAddOn(NetworkPrinter printer, List<dynamic> addOns, int jenisPembayaran, double disc) {
+  static void _printAddOn(NetworkPrinter printer, List<dynamic> addOns, int jenisPembayaran, double disc, double pajak) {
     if (addOns.isEmpty) return;
 
     printer.text('AddOn', styles: const PosStyles(bold: true, underline: true));
@@ -381,14 +519,39 @@ class PrinterHelper {
     int totalProduk = 0;
 
     for (var data in addOns) {
-      printer.row([
-        PosColumn(text: data['nama_item'], width: 4),
-        PosColumn(text: 'x${data['qty']}', width: 1, styles: const PosStyles(align: PosAlign.center)),
-        PosColumn(text: '${formatter.format(data['harga_item'])}', width: 3, styles: const PosStyles(align: PosAlign.right)),
-        PosColumn(text: '${formatter.format(data['harga_total'])}', width: 4, styles: const PosStyles(align: PosAlign.right)),
-      ]);
+      double hargaItem = data['harga_item'] * pajak + data['harga_item'];
+      int maxNameLength = 15; // Example: Adjust this value
+      List<String> nameLines = _splitTextIntoLines(data['nama_item'], maxNameLength);
 
-      totalProduk += (data['harga_total'] as int);
+      if (nameLines.isNotEmpty) {
+        printer.row([
+          PosColumn(text: nameLines[0], width: 4),
+          PosColumn(text: 'x${data['qty']}', width: 1, styles: const PosStyles(align: PosAlign.center)),
+          PosColumn(text: '${formatter.format(hargaItem)}', width: 3, styles: const PosStyles(align: PosAlign.right)),
+          PosColumn(text: '${formatter.format(data['qty'] * hargaItem)}', width: 4, styles: const PosStyles(align: PosAlign.right)),
+        ]);
+
+        // Print subsequent lines without the other columns, just the name
+        for (int i = 1; i < nameLines.length; i++) {
+          printer.row([
+            PosColumn(text: nameLines[i], width: 4),
+            PosColumn(text: '', width: 1), // Empty columns to align
+            PosColumn(text: '', width: 3),
+            PosColumn(text: '', width: 4),
+          ]);
+        }
+      }
+
+      totalProduk += (hargaItem).toInt();
+
+      // printer.row([
+      //   PosColumn(text: data['nama_item'], width: 4),
+      //   PosColumn(text: 'x${data['qty']}', width: 1, styles: const PosStyles(align: PosAlign.center)),
+      //   PosColumn(text: '${formatter.format(data['harga_item'])}', width: 3, styles: const PosStyles(align: PosAlign.right)),
+      //   PosColumn(text: '${formatter.format(data['harga_total'])}', width: 4, styles: const PosStyles(align: PosAlign.right)),
+      // ]);
+
+      // totalProduk += (data['harga_total'] as int);
     }
 
     // bagian addOn Beda cerita. kalo payment d akhir, dpt disc, klo awal, nd dpt
@@ -416,7 +579,7 @@ class PrinterHelper {
     printer.feed(1);
   }
 
-  static void _printMember(NetworkPrinter printer, List<dynamic> dataMember, int jenisPembayaran, double disc, bool isFirstTimeMember) async {
+  static void _printMember(NetworkPrinter printer, List<dynamic> dataMember, int jenisPembayaran, double disc, bool isFirstTimeMember, double pajak) async {
     if (dataMember.isEmpty) return;
 
     printer.text("Program Member", styles: const PosStyles(bold: true, underline: true));
@@ -459,7 +622,7 @@ class PrinterHelper {
       printer.row([
         PosColumn(text: product['nama_promo'], width: 6),
         PosColumn(
-          text: isFirstTimeMember ? formatter.format(product['harga_promo']) : '(${formatter.format(product['harga_promo'])})',
+          text: isFirstTimeMember ? formatter.format(product['harga_promo'] * pajak + product['harga_promo']) : '(${formatter.format(product['harga_promo'])})',
           width: 6,
           styles: const PosStyles(align: PosAlign.right),
         ),

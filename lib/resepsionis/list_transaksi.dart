@@ -1187,6 +1187,7 @@ class ListTransaksiController extends GetxController {
     List<dynamic> dataFasilitas = data['detail_fasilitas'];
     List<dynamic> dataAddOn = data['all_addon'];
     List<dynamic> dataMember = data['detail_member'];
+    log("Isi data member $dataMember");
     List<Map<String, dynamic>> _combinedAddOn = [];
     _combinedAddOn.clear();
 
@@ -1246,7 +1247,7 @@ class ListTransaksiController extends GetxController {
     List<dynamic> dataMemberFirstTime,
   ) async {
     // Set Ip Printer static
-    const String printerIp = '192.168.1.30';
+    const String printerIp = '192.168.1.77';
     const int printerPort = 9100; //biasanya
 
     try {
