@@ -68,9 +68,7 @@ class _TransaksiMemberState extends State<TransaksiMember> {
     int numValue = int.tryParse(digits) ?? 0;
     _parsedTotalBayar = numValue;
 
-    String totalhargavalue = totalHarga
-        .replaceAll("Rp ", "")
-        .replaceAll('.', '');
+    String totalhargavalue = totalHarga.replaceAll("Rp ", "").replaceAll('.', '');
     _dialogTxtTotalOri = int.parse(totalhargavalue);
     kembalian = numValue - _dialogTxtTotalOri.toInt();
 
@@ -79,15 +77,9 @@ class _TransaksiMemberState extends State<TransaksiMember> {
     String formattedKembali = currencyFormatter.format(kembalian);
 
     // Update controller tanpa trigger infinite loop
-    _totalBayarController.value = TextEditingValue(
-      text: formatted,
-      selection: TextSelection.collapsed(offset: formatted.length),
-    );
+    _totalBayarController.value = TextEditingValue(text: formatted, selection: TextSelection.collapsed(offset: formatted.length));
 
-    _kembalianController.value = TextEditingValue(
-      text: formattedKembali,
-      selection: TextSelection.collapsed(offset: formattedKembali.length),
-    );
+    _kembalianController.value = TextEditingValue(text: formattedKembali, selection: TextSelection.collapsed(offset: formattedKembali.length));
   }
 
   TextEditingController _namaAkun = TextEditingController();
@@ -109,6 +101,7 @@ class _TransaksiMemberState extends State<TransaksiMember> {
                 "limit_promo": item['limit_promo'],
               };
             }).toList();
+        log(_listNamaPaket.toString());
       });
     } catch (e) {
       log("Error di fn Get Data Promo Kunjungan $e");
@@ -134,12 +127,7 @@ class _TransaksiMemberState extends State<TransaksiMember> {
     }
   }
 
-  void _updateFields(
-    String nama,
-    String noHp,
-    String status,
-    String id_member,
-  ) {
+  void _updateFields(String nama, String noHp, String status, String id_member) {
     setState(() {
       _txtNamaTamu.text = nama;
       _txtNoHP.text = noHp;
@@ -154,10 +142,7 @@ class _TransaksiMemberState extends State<TransaksiMember> {
       print(token);
 
       // pake method post. jadi alurny post dlu id transaksi ke tabel, lalu update
-      var response = await dio.post(
-        '${myIpAddr()}/id_trans/createDraft',
-        options: Options(headers: {"Authorization": "Bearer " + token!}),
-      );
+      var response = await dio.post('${myIpAddr()}/id_trans/createDraft', options: Options(headers: {"Authorization": "Bearer " + token!}));
 
       var newId = response.data['id_transaksi'];
       log("New Transaction ID: $newId");
@@ -193,10 +178,7 @@ class _TransaksiMemberState extends State<TransaksiMember> {
       var token = await getTokenSharedPref();
       print(token);
 
-      var response = await dio.delete(
-        '${myIpAddr()}/id_trans/deleteDraftId/${idTrans}',
-        options: Options(headers: {"Authorization": "Bearer " + token!}),
-      );
+      var response = await dio.delete('${myIpAddr()}/id_trans/deleteDraftId/${idTrans}', options: Options(headers: {"Authorization": "Bearer " + token!}));
 
       log("Delete Draft $response");
     } catch (e) {
@@ -207,11 +189,7 @@ class _TransaksiMemberState extends State<TransaksiMember> {
   String? _selectedBank;
   final List<String> _bankList = ['BCA', 'BNI', 'BRI', 'Mandiri'];
 
-  final currencyFormatter = NumberFormat.currency(
-    locale: 'id_ID',
-    symbol: 'Rp ',
-    decimalDigits: 0,
-  );
+  final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
   bool isCash = true;
   bool isDebit = false;
@@ -219,9 +197,7 @@ class _TransaksiMemberState extends State<TransaksiMember> {
   bool isKredit = false;
 
   void _showDialogConfirmPayment(BuildContext context) {
-    String totalhargavalue = totalHarga
-        .replaceAll("Rp ", "")
-        .replaceAll('.', '');
+    String totalhargavalue = totalHarga.replaceAll("Rp ", "").replaceAll('.', '');
     List<String> metodeByr = ["cash", "debit", "kredit", "qris"];
     String dropdownValue = metodeByr.first;
     bool totalbayarenabled = true;
@@ -240,10 +216,7 @@ class _TransaksiMemberState extends State<TransaksiMember> {
           "no_hp": int.parse(_txtNoHP.text),
           "nama_tamu": _txtNamaTamu.text,
           "limit_kunjungan": limitKunjungan,
-          "exp_kunjungan":
-              DateTime.now()
-                  .add(Duration(days: tahunKeHariLimitPromoKunjungan))
-                  .toIso8601String(),
+          "exp_kunjungan": DateTime.now().add(Duration(days: tahunKeHariLimitPromoKunjungan)).toIso8601String(),
         };
 
         // Always payment now ("awal")
@@ -267,52 +240,28 @@ class _TransaksiMemberState extends State<TransaksiMember> {
         data['total_harga'] = int.parse(totalhargavalue);
         data['grand_total'] = int.parse(totalhargavalue);
 
-        var response = await dio.post(
-          '${myIpAddr()}/transmember/storekunjungan',
-          options: Options(headers: {"Authorization": "Bearer $token"}),
-          data: data,
-        );
+        var response = await dio.post('${myIpAddr()}/transmember/storekunjungan', options: Options(headers: {"Authorization": "Bearer $token"}), data: data);
 
         log("Payment successful: ${response.data}");
         log(idMember);
         // Show success message
         CherryToast.success(
-          title: Text(
-            "Transaksi Sukses!",
-            style: TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Poppins',
-            ),
-          ),
+          title: Text("Transaksi Sukses!", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
         ).show(context);
 
         // Navigate back after successful payment
         Get.offAll(() => MainResepsionis());
       } on DioError catch (e) {
         log("Payment failed: ${e.response?.data}");
+        log(_namaAkun.text);
         CherryToast.error(
-          title: Text(
-            "Transaksi Gagal!",
-            style: TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Poppins',
-            ),
-          ),
+          title: Text("Transaksi Gagal!", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
           description: Text(e.response?.data['message'] ?? "Please try again"),
         ).show(context);
       } catch (e) {
         log("Unexpected error: $e");
         CherryToast.error(
-          title: Text(
-            "Error",
-            style: TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Poppins',
-            ),
-          ),
+          title: Text("Error", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
           description: Text("An unexpected error occurred"),
         ).show(context);
       }
@@ -328,10 +277,7 @@ class _TransaksiMemberState extends State<TransaksiMember> {
           "harga": int.parse(totalhargavalue),
           "no_hp": _txtNoHP.text,
           "nama_tamu": _txtNamaTamu.text,
-          "exp_tahunan":
-              DateTime.now()
-                  .add(Duration(days: tahunKeHariJangkaTahun))
-                  .toIso8601String(),
+          "exp_tahunan": DateTime.now().add(Duration(days: tahunKeHariJangkaTahun)).toIso8601String(),
         };
 
         // Always payment now ("awal")
@@ -355,24 +301,13 @@ class _TransaksiMemberState extends State<TransaksiMember> {
         data['total_harga'] = int.parse(totalhargavalue);
         data['grand_total'] = int.parse(totalhargavalue);
 
-        var response = await dio.post(
-          '${myIpAddr()}/transmember/storetahunan',
-          options: Options(headers: {"Authorization": "Bearer $token"}),
-          data: data,
-        );
+        var response = await dio.post('${myIpAddr()}/transmember/storetahunan', options: Options(headers: {"Authorization": "Bearer $token"}), data: data);
 
         log("Payment successful: ${response.data}");
         log(idMember);
         // Show success message
         CherryToast.success(
-          title: Text(
-            "Payment Successful",
-            style: TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Poppins',
-            ),
-          ),
+          title: Text("Payment Successful", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
         ).show(context);
 
         // Navigate back after successful payment
@@ -380,27 +315,13 @@ class _TransaksiMemberState extends State<TransaksiMember> {
       } on DioError catch (e) {
         log("Payment failed: ${e.response?.data}");
         CherryToast.error(
-          title: Text(
-            "Payment Failed",
-            style: TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Poppins',
-            ),
-          ),
+          title: Text("Payment Failed", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
           description: Text(e.response?.data['message'] ?? "Please try again"),
         ).show(context);
       } catch (e) {
         log("Unexpected error: $e");
         CherryToast.error(
-          title: Text(
-            "Error",
-            style: TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Poppins',
-            ),
-          ),
+          title: Text("Error", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
           description: Text("An unexpected error occurred"),
         ).show(context);
       }
@@ -413,11 +334,7 @@ class _TransaksiMemberState extends State<TransaksiMember> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text(
-                "Pembayaran",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontFamily: 'Poppins'),
-              ),
+              title: Text("Pembayaran", textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Poppins')),
               content: MediaQuery.removeViewInsets(
                 context: context,
                 removeBottom: false,
@@ -431,39 +348,20 @@ class _TransaksiMemberState extends State<TransaksiMember> {
                         Row(
                           children: [
                             Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 20),
-                                child: Text(
-                                  "Total Harga: ",
-                                  style: TextStyle(fontFamily: 'Poppins'),
-                                ),
-                              ),
+                              child: Padding(padding: const EdgeInsets.only(top: 20), child: Text("Total Harga: ", style: TextStyle(fontFamily: 'Poppins'))),
                             ),
-                            Expanded(
-                              flex: 3,
-                              child: TextField(
-                                controller: _txtTotalHarga,
-                                readOnly: true,
-                              ),
-                            ),
+                            Expanded(flex: 3, child: TextField(controller: _txtTotalHarga, readOnly: true)),
                           ],
                         ),
                         Row(
                           children: [
-                            Expanded(
-                              child: Text(
-                                "Metode Pembayaran: ",
-                                style: TextStyle(fontFamily: 'Poppins'),
-                              ),
-                            ),
+                            Expanded(child: Text("Metode Pembayaran: ", style: TextStyle(fontFamily: 'Poppins'))),
                             Expanded(
                               flex: 3,
                               child: DropdownButton<String>(
                                 value: dropdownValue,
                                 elevation: 16,
-                                style: const TextStyle(
-                                  color: Colors.deepPurple,
-                                ),
+                                style: const TextStyle(color: Colors.deepPurple),
                                 onChanged: (String? value) {
                                   // dipanggil kalo user select metode byr
                                   setState(() {
@@ -504,16 +402,8 @@ class _TransaksiMemberState extends State<TransaksiMember> {
                                 },
                                 icon: SizedBox.shrink(),
                                 items:
-                                    metodeByr.map<DropdownMenuItem<String>>((
-                                      String value,
-                                    ) {
-                                      return DropdownMenuItem(
-                                        value: value,
-                                        child: AutoSizeText(
-                                          value,
-                                          minFontSize: 20,
-                                        ),
-                                      );
+                                    metodeByr.map<DropdownMenuItem<String>>((String value) {
+                                      return DropdownMenuItem(value: value, child: AutoSizeText(value, minFontSize: 20));
                                     }).toList(),
                               ),
                             ),
@@ -524,28 +414,13 @@ class _TransaksiMemberState extends State<TransaksiMember> {
                             Column(
                               children: [
                                 SizedBox(height: 30),
-                                Row(
-                                  children: [
-                                    Text(
-                                      "Rincian Biaya",
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontFamily: 'Poppins',
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                Row(children: [Text("Rincian Biaya", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'))]),
                                 Row(
                                   children: [
                                     Expanded(
                                       child: Padding(
                                         padding: const EdgeInsets.only(top: 20),
-                                        child: Text(
-                                          "Total Bayar: ",
-                                          style: TextStyle(
-                                            fontFamily: 'Poppins',
-                                          ),
-                                        ),
+                                        child: Text("Total Bayar: ", style: TextStyle(fontFamily: 'Poppins')),
                                       ),
                                     ),
                                     Expanded(
@@ -554,9 +429,7 @@ class _TransaksiMemberState extends State<TransaksiMember> {
                                         controller: _totalBayarController,
                                         enabled: totalbayarenabled,
                                         keyboardType: TextInputType.number,
-                                        decoration: InputDecoration(
-                                          hintText: "Rp. 0",
-                                        ),
+                                        decoration: InputDecoration(hintText: "Rp. 0"),
                                         onChanged: (value) {
                                           _fnFormatTotalBayar(value);
                                         },
@@ -569,21 +442,10 @@ class _TransaksiMemberState extends State<TransaksiMember> {
                                     Expanded(
                                       child: Padding(
                                         padding: const EdgeInsets.only(top: 20),
-                                        child: Text(
-                                          "Kembalian: ",
-                                          style: TextStyle(
-                                            fontFamily: 'Poppins',
-                                          ),
-                                        ),
+                                        child: Text("Kembalian: ", style: TextStyle(fontFamily: 'Poppins')),
                                       ),
                                     ),
-                                    Expanded(
-                                      flex: 3,
-                                      child: TextField(
-                                        controller: _kembalianController,
-                                        readOnly: true,
-                                      ),
-                                    ),
+                                    Expanded(flex: 3, child: TextField(controller: _kembalianController, readOnly: true)),
                                   ],
                                 ),
                               ],
@@ -593,59 +455,22 @@ class _TransaksiMemberState extends State<TransaksiMember> {
                             Column(
                               children: [
                                 SizedBox(height: 30),
+                                Row(children: [Text("Informasi Bank Pemilik", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'))]),
                                 Row(
                                   children: [
-                                    Text(
-                                      "Informasi Bank Pemilik",
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontFamily: 'Poppins',
-                                      ),
-                                    ),
+                                    Expanded(child: Text("Nama Akun: ", style: TextStyle(fontFamily: 'Poppins'))),
+                                    Expanded(flex: 3, child: TextField(controller: _namaAkun, enabled: namaakunenabled)),
                                   ],
                                 ),
                                 Row(
                                   children: [
-                                    Expanded(
-                                      child: Text(
-                                        "Nama Akun: ",
-                                        style: TextStyle(fontFamily: 'Poppins'),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 3,
-                                      child: TextField(
-                                        controller: _namaAkun,
-                                        enabled: namaakunenabled,
-                                      ),
-                                    ),
+                                    Expanded(child: Text("Nomor Rekening: ", style: TextStyle(fontFamily: 'Poppins'))),
+                                    Expanded(flex: 3, child: TextField(controller: _noRek, enabled: nomorrekeningenabled)),
                                   ],
                                 ),
                                 Row(
                                   children: [
-                                    Expanded(
-                                      child: Text(
-                                        "Nomor Rekening: ",
-                                        style: TextStyle(fontFamily: 'Poppins'),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 3,
-                                      child: TextField(
-                                        controller: _noRek,
-                                        enabled: nomorrekeningenabled,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        "Nama Bank: ",
-                                        style: TextStyle(fontFamily: 'Poppins'),
-                                      ),
-                                    ),
+                                    Expanded(child: Text("Nama Bank: ", style: TextStyle(fontFamily: 'Poppins'))),
                                     Expanded(
                                       flex: 3,
                                       child: DropdownButtonFormField<String>(
@@ -657,17 +482,11 @@ class _TransaksiMemberState extends State<TransaksiMember> {
                                         },
                                         items:
                                             _bankList.map((String bank) {
-                                              return DropdownMenuItem<String>(
-                                                value: bank,
-                                                child: Text(bank),
-                                              );
+                                              return DropdownMenuItem<String>(value: bank, child: Text(bank));
                                             }).toList(),
                                         decoration: InputDecoration(
                                           border: OutlineInputBorder(),
-                                          contentPadding: EdgeInsets.symmetric(
-                                            horizontal: 10,
-                                            vertical: 12,
-                                          ),
+                                          contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
                                         ),
                                       ),
                                     ),
@@ -688,17 +507,8 @@ class _TransaksiMemberState extends State<TransaksiMember> {
                       onPressed: () {
                         if (kembalian < 0) {
                           CherryToast.error(
-                            title: Text(
-                              "Jumlah Bayar Kurang",
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'Poppins',
-                              ),
-                            ),
-                            animationDuration: const Duration(
-                              milliseconds: 1500,
-                            ),
+                            title: Text("Jumlah Bayar Kurang", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
+                            animationDuration: const Duration(milliseconds: 1500),
                             autoDismiss: true,
                           ).show(context);
                         } else {
@@ -714,24 +524,15 @@ class _TransaksiMemberState extends State<TransaksiMember> {
                             CherryToast.error(
                               title: Text(
                                 "Pilih Jenis Transaksi Terlebih Dahulu",
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'Poppins',
-                                ),
+                                style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
                               ),
-                              animationDuration: const Duration(
-                                milliseconds: 1500,
-                              ),
+                              animationDuration: const Duration(milliseconds: 1500),
                               autoDismiss: true,
                             ).show(context);
                           }
                         }
                       },
-                      child: Text(
-                        "Konfirmasi Pembayaran",
-                        style: TextStyle(fontFamily: 'Poppins'),
-                      ),
+                      child: Text("Konfirmasi Pembayaran", style: TextStyle(fontFamily: 'Poppins')),
                     ),
                   ),
                 ),
@@ -781,10 +582,7 @@ class _TransaksiMemberState extends State<TransaksiMember> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(
-            'Transaksi Member',
-            style: TextStyle(fontSize: 60, fontFamily: 'Poppins'),
-          ),
+          title: Text('Transaksi Member', style: TextStyle(fontSize: 60, fontFamily: 'Poppins')),
           leading: Padding(
             padding: const EdgeInsets.only(left: 30),
             child: IconButton(
@@ -827,74 +625,17 @@ class _TransaksiMemberState extends State<TransaksiMember> {
                               children: [
                                 Padding(
                                   padding: EdgeInsets.only(top: 10),
-                                  child: Text(
-                                    'No Transaksi : ',
-                                    style: TextStyle(
-                                      fontSize: 22,
-                                      fontFamily: 'Poppins',
-                                    ),
-                                  ),
+                                  child: Text('No Transaksi : ', style: TextStyle(fontSize: 22, fontFamily: 'Poppins')),
                                 ),
                                 Padding(
                                   padding: EdgeInsets.only(top: 25),
-                                  child: Text(
-                                    'Jenis Transaksi : ',
-                                    style: TextStyle(
-                                      fontSize: 22,
-                                      fontFamily: 'Poppins',
-                                    ),
-                                  ),
+                                  child: Text('Jenis Transaksi : ', style: TextStyle(fontSize: 22, fontFamily: 'Poppins')),
                                 ),
-                                Padding(
-                                  padding: EdgeInsets.only(top: 25),
-                                  child: Text(
-                                    'Jenis Tamu : ',
-                                    style: TextStyle(
-                                      fontSize: 22,
-                                      fontFamily: 'Poppins',
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.only(top: 25),
-                                  child: Text(
-                                    'Nama Tamu : ',
-                                    style: TextStyle(
-                                      fontSize: 22,
-                                      fontFamily: 'Poppins',
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.only(top: 25),
-                                  child: Text(
-                                    'No HP : ',
-                                    style: TextStyle(
-                                      fontSize: 22,
-                                      fontFamily: 'Poppins',
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.only(top: 25),
-                                  child: Text(
-                                    'Nama Paket : ',
-                                    style: TextStyle(
-                                      fontSize: 22,
-                                      fontFamily: 'Poppins',
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.only(top: 25),
-                                  child: Text(
-                                    'Harga : ',
-                                    style: TextStyle(
-                                      fontSize: 22,
-                                      fontFamily: 'Poppins',
-                                    ),
-                                  ),
-                                ),
+                                Padding(padding: EdgeInsets.only(top: 25), child: Text('Jenis Tamu : ', style: TextStyle(fontSize: 22, fontFamily: 'Poppins'))),
+                                Padding(padding: EdgeInsets.only(top: 25), child: Text('Nama Tamu : ', style: TextStyle(fontSize: 22, fontFamily: 'Poppins'))),
+                                Padding(padding: EdgeInsets.only(top: 25), child: Text('No HP : ', style: TextStyle(fontSize: 22, fontFamily: 'Poppins'))),
+                                Padding(padding: EdgeInsets.only(top: 25), child: Text('Nama Paket : ', style: TextStyle(fontSize: 22, fontFamily: 'Poppins'))),
+                                Padding(padding: EdgeInsets.only(top: 25), child: Text('Harga : ', style: TextStyle(fontSize: 22, fontFamily: 'Poppins'))),
                               ],
                             ),
                           ),
@@ -910,72 +651,42 @@ class _TransaksiMemberState extends State<TransaksiMember> {
                                   child: Container(
                                     width: 350,
                                     height: 50,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: Colors.white,
-                                    ),
+                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
                                     child: TextField(
                                       controller: _txtIdTrans,
                                       readOnly: true,
-                                      decoration: InputDecoration(
-                                        border: InputBorder.none,
-                                        contentPadding: EdgeInsets.symmetric(
-                                          vertical: 15,
-                                          horizontal: 10,
-                                        ),
-                                      ),
-                                      style: TextStyle(
-                                        fontSize: 22,
-                                        fontFamily: 'Poppins',
-                                      ),
+                                      decoration: InputDecoration(border: InputBorder.none, contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 10)),
+                                      style: TextStyle(fontSize: 22, fontFamily: 'Poppins'),
                                     ),
                                   ),
                                 ),
                                 Padding(
-                                  padding: const EdgeInsets.only(
-                                    left: 10,
-                                    top: 7,
-                                  ),
+                                  padding: const EdgeInsets.only(left: 10, top: 7),
                                   child: Container(
                                     alignment: Alignment.centerLeft,
                                     width: 350,
                                     height: 50,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: Colors.white,
-                                    ),
+                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
                                     child: DropdownButton<String>(
                                       value: dropdownJenisTrans,
                                       isExpanded: true,
                                       icon: const Icon(Icons.arrow_drop_down),
                                       elevation: 16,
-                                      style: const TextStyle(
-                                        color: Colors.deepPurple,
-                                      ),
+                                      style: const TextStyle(color: Colors.deepPurple),
                                       underline: SizedBox(),
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                      ),
+                                      padding: EdgeInsets.symmetric(horizontal: 10),
                                       onChanged: (String? value) {
                                         setState(() {
                                           dropdownJenisTrans = value;
                                         });
                                       },
                                       items:
-                                          _listJenisTrans.map<
-                                            DropdownMenuItem<String>
-                                          >((String value) {
+                                          _listJenisTrans.map<DropdownMenuItem<String>>((String value) {
                                             return DropdownMenuItem<String>(
                                               value: value,
                                               child: Align(
                                                 alignment: Alignment.centerLeft,
-                                                child: Text(
-                                                  value,
-                                                  style: TextStyle(
-                                                    fontSize: 18,
-                                                    fontFamily: 'Poppins',
-                                                  ),
-                                                ),
+                                                child: Text(value, style: TextStyle(fontSize: 18, fontFamily: 'Poppins')),
                                               ),
                                             );
                                           }).toList(),
@@ -987,24 +698,12 @@ class _TransaksiMemberState extends State<TransaksiMember> {
                                   child: Container(
                                     width: 350,
                                     height: 50,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: Colors.white,
-                                    ),
+                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
                                     child: TextField(
                                       controller: _txtJenisTamu,
                                       readOnly: true,
-                                      decoration: InputDecoration(
-                                        border: InputBorder.none,
-                                        contentPadding: EdgeInsets.symmetric(
-                                          vertical: 15,
-                                          horizontal: 10,
-                                        ),
-                                      ),
-                                      style: TextStyle(
-                                        fontSize: 22,
-                                        fontFamily: 'Poppins',
-                                      ),
+                                      decoration: InputDecoration(border: InputBorder.none, contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 10)),
+                                      style: TextStyle(fontSize: 22, fontFamily: 'Poppins'),
                                     ),
                                   ),
                                 ),
@@ -1013,10 +712,7 @@ class _TransaksiMemberState extends State<TransaksiMember> {
                                   child: Container(
                                     width: 350,
                                     height: 50,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: Colors.white,
-                                    ),
+                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
                                     child: TextField(
                                       maxLines: 1,
                                       controller: _txtNamaTamu,
@@ -1025,17 +721,8 @@ class _TransaksiMemberState extends State<TransaksiMember> {
                                       textInputAction: TextInputAction.done,
                                       textAlign: TextAlign.start,
                                       scrollPhysics: BouncingScrollPhysics(),
-                                      decoration: InputDecoration(
-                                        border: InputBorder.none,
-                                        contentPadding: EdgeInsets.only(
-                                          left: 10,
-                                          bottom: 7,
-                                        ),
-                                      ),
-                                      style: TextStyle(
-                                        fontSize: 22,
-                                        fontFamily: 'Poppins',
-                                      ),
+                                      decoration: InputDecoration(border: InputBorder.none, contentPadding: EdgeInsets.only(left: 10, bottom: 7)),
+                                      style: TextStyle(fontSize: 22, fontFamily: 'Poppins'),
                                     ),
                                   ),
                                 ),
@@ -1044,24 +731,12 @@ class _TransaksiMemberState extends State<TransaksiMember> {
                                   child: Container(
                                     width: 350,
                                     height: 50,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: Colors.white,
-                                    ),
+                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
                                     child: TextField(
                                       controller: _txtNoHP,
                                       readOnly: true,
-                                      decoration: InputDecoration(
-                                        border: InputBorder.none,
-                                        contentPadding: EdgeInsets.symmetric(
-                                          vertical: 15,
-                                          horizontal: 10,
-                                        ),
-                                      ),
-                                      style: TextStyle(
-                                        fontSize: 22,
-                                        fontFamily: 'Poppins',
-                                      ),
+                                      decoration: InputDecoration(border: InputBorder.none, contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 10)),
+                                      style: TextStyle(fontSize: 22, fontFamily: 'Poppins'),
                                     ),
                                   ),
                                 ),
@@ -1071,23 +746,14 @@ class _TransaksiMemberState extends State<TransaksiMember> {
                                     child: Container(
                                       width: 350,
                                       height: 50,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10),
-                                        color: Colors.white,
-                                      ),
+                                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
                                       child: TextField(
                                         readOnly: true,
                                         decoration: InputDecoration(
                                           border: InputBorder.none,
-                                          contentPadding: EdgeInsets.symmetric(
-                                            vertical: 15,
-                                            horizontal: 10,
-                                          ),
+                                          contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 10),
                                         ),
-                                        style: TextStyle(
-                                          fontSize: 22,
-                                          fontFamily: 'Poppins',
-                                        ),
+                                        style: TextStyle(fontSize: 22, fontFamily: 'Poppins'),
                                       ),
                                     ),
                                   ),
@@ -1097,74 +763,41 @@ class _TransaksiMemberState extends State<TransaksiMember> {
                                     child: Container(
                                       width: 350,
                                       height: 50,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10),
-                                        color: Colors.white,
-                                      ),
+                                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
                                       child: DropdownButton<String>(
                                         value: dropdownNamaPaket,
                                         isExpanded: true,
                                         icon: const Icon(Icons.arrow_drop_down),
                                         elevation: 16,
-                                        style: const TextStyle(
-                                          color: Colors.deepPurple,
-                                        ),
+                                        style: const TextStyle(color: Colors.deepPurple),
                                         underline: SizedBox(),
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                        ),
+                                        padding: EdgeInsets.symmetric(horizontal: 10),
                                         onChanged: (String? value) {
                                           setState(() {
                                             dropdownNamaPaket = value;
                                             // Find the corresponding id_karyawan
-                                            var selectedPaket = _listNamaPaket
-                                                .firstWhere(
-                                                  (item) =>
-                                                      item['nama_promo'] ==
-                                                      value,
-                                                  orElse:
-                                                      () => {
-                                                        "nama_promo": "",
-                                                        "harga_promo": 0,
-                                                      },
-                                                );
-                                            _txtHargaPaketKunjungan.text =
-                                                currencyFormatter.format(
-                                                  selectedPaket['harga_promo'],
-                                                );
-                                            totalHarga =
-                                                _txtHargaPaketKunjungan.text;
-                                            _txtTotalHarga.text =
-                                                currencyFormatter.format(
-                                                  selectedPaket['harga_promo'],
-                                                );
-                                            kodePromo =
-                                                selectedPaket['kode_promo'];
-                                            limitKunjungan =
-                                                selectedPaket['limit_kunjungan'];
-                                            limitPromo =
-                                                selectedPaket['limit_promo'];
-                                            tahunKeHariLimitPromoKunjungan =
-                                                limitPromo * 365;
+                                            var selectedPaket = _listNamaPaket.firstWhere(
+                                              (item) => item['nama_promo'] == value,
+                                              orElse: () => {"nama_promo": "", "harga_promo": 0},
+                                            );
+                                            _txtHargaPaketKunjungan.text = currencyFormatter.format(selectedPaket['harga_promo']);
+                                            totalHarga = _txtHargaPaketKunjungan.text;
+                                            _txtTotalHarga.text = currencyFormatter.format(selectedPaket['harga_promo']);
+                                            kodePromo = selectedPaket['kode_promo'];
+                                            limitKunjungan = selectedPaket['limit_kunjungan'];
+                                            limitPromo = selectedPaket['limit_promo'];
+                                            tahunKeHariLimitPromoKunjungan = limitPromo * 365;
                                           });
                                         },
                                         items:
-                                            _listNamaPaket.map<
-                                              DropdownMenuItem<String>
-                                            >((item) {
+                                            _listNamaPaket.map<DropdownMenuItem<String>>((item) {
                                               return DropdownMenuItem<String>(
-                                                value:
-                                                    item['nama_promo'], // Use ID as value
+                                                value: item['nama_promo'], // Use ID as value
                                                 child: Align(
-                                                  alignment:
-                                                      Alignment.centerLeft,
+                                                  alignment: Alignment.centerLeft,
                                                   child: Text(
-                                                    item['nama_promo']
-                                                        .toString(), // Display category name
-                                                    style: const TextStyle(
-                                                      fontSize: 18,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    item['nama_promo'].toString(), // Display category name
+                                                    style: const TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                               );
@@ -1178,72 +811,40 @@ class _TransaksiMemberState extends State<TransaksiMember> {
                                     child: Container(
                                       width: 350,
                                       height: 50,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10),
-                                        color: Colors.white,
-                                      ),
+                                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
                                       child: DropdownButton<String>(
                                         value: dropdownNamaPaketTahunan,
                                         isExpanded: true,
                                         icon: const Icon(Icons.arrow_drop_down),
                                         elevation: 16,
-                                        style: const TextStyle(
-                                          color: Colors.deepPurple,
-                                        ),
+                                        style: const TextStyle(color: Colors.deepPurple),
                                         underline: SizedBox(),
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                        ),
+                                        padding: EdgeInsets.symmetric(horizontal: 10),
                                         onChanged: (String? value) {
                                           setState(() {
                                             dropdownNamaPaketTahunan = value;
                                             // Find the corresponding id_karyawan
-                                            var selectedTahunan =
-                                                _listNamaTahunan.firstWhere(
-                                                  (item) =>
-                                                      item['nama_promo'] ==
-                                                      value,
-                                                  orElse:
-                                                      () => {
-                                                        "nama_promo": "",
-                                                        "harga_promo": 0,
-                                                      },
-                                                );
-                                            _txtHargaPaketTahunan
-                                                .text = currencyFormatter.format(
-                                              selectedTahunan['harga_promo'],
+                                            var selectedTahunan = _listNamaTahunan.firstWhere(
+                                              (item) => item['nama_promo'] == value,
+                                              orElse: () => {"nama_promo": "", "harga_promo": 0},
                                             );
-                                            totalHarga =
-                                                _txtHargaPaketTahunan.text;
-                                            _txtTotalHarga
-                                                .text = currencyFormatter.format(
-                                              selectedTahunan['harga_promo'],
-                                            );
-                                            kodePromo =
-                                                selectedTahunan['kode_promo'];
-                                            jangkaTahun =
-                                                selectedTahunan['jangka_tahun'];
-                                            tahunKeHariJangkaTahun =
-                                                jangkaTahun * 365;
+                                            _txtHargaPaketTahunan.text = currencyFormatter.format(selectedTahunan['harga_promo']);
+                                            totalHarga = _txtHargaPaketTahunan.text;
+                                            _txtTotalHarga.text = currencyFormatter.format(selectedTahunan['harga_promo']);
+                                            kodePromo = selectedTahunan['kode_promo'];
+                                            jangkaTahun = selectedTahunan['jangka_tahun'];
+                                            tahunKeHariJangkaTahun = jangkaTahun * 365;
                                           });
                                         },
                                         items:
-                                            _listNamaTahunan.map<
-                                              DropdownMenuItem<String>
-                                            >((item) {
+                                            _listNamaTahunan.map<DropdownMenuItem<String>>((item) {
                                               return DropdownMenuItem<String>(
-                                                value:
-                                                    item['nama_promo'], // Use ID as value
+                                                value: item['nama_promo'], // Use ID as value
                                                 child: Align(
-                                                  alignment:
-                                                      Alignment.centerLeft,
+                                                  alignment: Alignment.centerLeft,
                                                   child: Text(
-                                                    item['nama_promo']
-                                                        .toString(), // Display category name
-                                                    style: const TextStyle(
-                                                      fontSize: 18,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    item['nama_promo'].toString(), // Display category name
+                                                    style: const TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                               );
@@ -1257,23 +858,14 @@ class _TransaksiMemberState extends State<TransaksiMember> {
                                     child: Container(
                                       width: 350,
                                       height: 50,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10),
-                                        color: Colors.white,
-                                      ),
+                                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
                                       child: TextField(
                                         readOnly: true,
                                         decoration: InputDecoration(
                                           border: InputBorder.none,
-                                          contentPadding: EdgeInsets.symmetric(
-                                            vertical: 15,
-                                            horizontal: 10,
-                                          ),
+                                          contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 10),
                                         ),
-                                        style: TextStyle(
-                                          fontSize: 22,
-                                          fontFamily: 'Poppins',
-                                        ),
+                                        style: TextStyle(fontSize: 22, fontFamily: 'Poppins'),
                                       ),
                                     ),
                                   ),
@@ -1283,24 +875,15 @@ class _TransaksiMemberState extends State<TransaksiMember> {
                                     child: Container(
                                       width: 350,
                                       height: 50,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10),
-                                        color: Colors.white,
-                                      ),
+                                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
                                       child: TextField(
                                         readOnly: true,
                                         controller: _txtHargaPaketKunjungan,
                                         decoration: InputDecoration(
                                           border: InputBorder.none,
-                                          contentPadding: EdgeInsets.symmetric(
-                                            vertical: 15,
-                                            horizontal: 10,
-                                          ),
+                                          contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 10),
                                         ),
-                                        style: TextStyle(
-                                          fontSize: 22,
-                                          fontFamily: 'Poppins',
-                                        ),
+                                        style: TextStyle(fontSize: 22, fontFamily: 'Poppins'),
                                       ),
                                     ),
                                   ),
@@ -1310,24 +893,15 @@ class _TransaksiMemberState extends State<TransaksiMember> {
                                     child: Container(
                                       width: 350,
                                       height: 50,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10),
-                                        color: Colors.white,
-                                      ),
+                                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
                                       child: TextField(
                                         readOnly: true,
                                         controller: _txtHargaPaketTahunan,
                                         decoration: InputDecoration(
                                           border: InputBorder.none,
-                                          contentPadding: EdgeInsets.symmetric(
-                                            vertical: 15,
-                                            horizontal: 10,
-                                          ),
+                                          contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 10),
                                         ),
-                                        style: TextStyle(
-                                          fontSize: 22,
-                                          fontFamily: 'Poppins',
-                                        ),
+                                        style: TextStyle(fontSize: 22, fontFamily: 'Poppins'),
                                       ),
                                     ),
                                   ),
@@ -1340,10 +914,7 @@ class _TransaksiMemberState extends State<TransaksiMember> {
                       Row(
                         children: [
                           Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(15),
-                              color: Color(0XFFF6F7C4),
-                            ),
+                            decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), color: Color(0XFFF6F7C4)),
                             height: 80,
                             width: 280,
                             child: TextButton(
@@ -1353,22 +924,14 @@ class _TransaksiMemberState extends State<TransaksiMember> {
                                     _txtJenisTamu.text.isEmpty ||
                                     _txtNamaTamu.text.isEmpty ||
                                     _txtNoHP.text.isEmpty ||
-                                    (dropdownJenisTrans == "Massage" &&
-                                        dropdownNamaPaket == null) ||
-                                    (dropdownJenisTrans == "Fasilitas" &&
-                                        dropdownNamaPaketTahunan == null)) {
+                                    (dropdownJenisTrans == "Massage" && dropdownNamaPaket == null) ||
+                                    (dropdownJenisTrans == "Fasilitas" && dropdownNamaPaketTahunan == null)) {
                                   CherryToast.warning(
                                     title: Text(
                                       "Harap Mengisi Semua Kolom",
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.bold,
-                                        fontFamily: 'Poppins',
-                                      ),
+                                      style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
                                     ),
-                                    animationDuration: Duration(
-                                      milliseconds: 1500,
-                                    ),
+                                    animationDuration: Duration(milliseconds: 1500),
                                     autoDismiss: true,
                                   ).show(context);
                                 } else {
@@ -1376,48 +939,21 @@ class _TransaksiMemberState extends State<TransaksiMember> {
                                   _showDialogConfirmPayment(context);
                                 }
                               },
-                              style: TextButton.styleFrom(
-                                foregroundColor: Colors.black,
-                              ),
-                              child: Text(
-                                'Bayar',
-                                style: TextStyle(
-                                  fontSize: 30,
-                                  fontFamily: 'Poppins',
-                                ),
-                              ),
+                              style: TextButton.styleFrom(foregroundColor: Colors.black),
+                              child: Text('Bayar', style: TextStyle(fontSize: 30, fontFamily: 'Poppins')),
                             ),
                           ),
                           SizedBox(width: 30),
                           Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(15),
-                              color: Color(0XCCCDFADB),
-                            ),
+                            decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), color: Color(0XCCCDFADB)),
                             height: 80,
                             width: 280,
                             child: TextButton(
                               onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (context) => QRScannerScreen(
-                                          onScannedData: _updateFields,
-                                        ),
-                                  ),
-                                );
+                                Navigator.push(context, MaterialPageRoute(builder: (context) => QRScannerScreen(onScannedData: _updateFields)));
                               },
-                              style: TextButton.styleFrom(
-                                foregroundColor: Colors.black,
-                              ),
-                              child: Text(
-                                'SCAN QR',
-                                style: TextStyle(
-                                  fontSize: 30,
-                                  fontFamily: 'Poppins',
-                                ),
-                              ),
+                              style: TextButton.styleFrom(foregroundColor: Colors.black),
+                              child: Text('SCAN QR', style: TextStyle(fontSize: 30, fontFamily: 'Poppins')),
                             ),
                           ),
                         ],
