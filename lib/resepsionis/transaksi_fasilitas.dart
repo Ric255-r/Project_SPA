@@ -217,6 +217,7 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
   bool isCash = true;
   bool isDebit = false;
   bool isQris = false;
+  bool isKredit = false;
   double desimalPjk = 0;
 
   Future<void> _getPajak() async {
@@ -240,6 +241,9 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
       throw Exception("Error Get Pajak $e");
     }
   }
+
+  String? _selectedBank;
+  final List<String> _bankList = ['BCA', 'BNI', 'BRI', 'Mandiri'];
 
   Future<void> _storeTrans() async {
     try {
@@ -268,13 +272,19 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
           data['total_harga'] = hrgSblmDisc;
           data['grand_total'] = hrgStlhDisc!;
         } else {
-          data['metode_pembayaran'] = isQris ? "qris" : "debit";
+          if (isQris) {
+            data['metode_pembayaran'] = "qris";
+          } else if (isKredit) {
+            data['metode_pembayaran'] = "kredit";
+          } else {
+            data['metode_pembayaran'] = "debit";
+          }
           data['total_harga'] = hrgSblmDisc;
           data['jumlah_bayar'] = hrgStlhDisc!;
           data['grand_total'] = hrgStlhDisc!;
           data['nama_akun'] = _namaAkun.text;
           data['no_rek'] = _noRek.text;
-          data['nama_bank'] = _namaBank.text;
+          data['nama_bank'] = _selectedBank;
         }
       } else {
         data['jenis_pembayaran'] = true;
@@ -312,7 +322,7 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
   void _showDialogConfirmPayment(BuildContext context) async {
     await _getPajak();
 
-    List<String> metodeByr = ["Cash", "Debit", "QRIS"];
+    List<String> metodeByr = ["cash", "debit", "kredit", "qris"];
     String dropdownValue = metodeByr.first;
     int statusloker = 0;
     final LockerManager LockerInput = LockerManager();
@@ -376,21 +386,31 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                                 // dipanggil kalo user select metode byr
                                 setState(() {
                                   switch (value) {
-                                    case "Cash":
+                                    case "cash":
                                       isCash = true;
                                       isDebit = false;
                                       isQris = false;
+                                      isKredit = false;
                                       break;
-                                    case "Debit":
+                                    case "debit":
                                       isDebit = true;
                                       isCash = false;
                                       isQris = false;
+                                      isKredit = false;
                                       break;
 
-                                    case "QRIS":
+                                    case "qris":
                                       isQris = true;
                                       isCash = false;
                                       isDebit = false;
+                                      isKredit = false;
+                                      break;
+
+                                    case "kredit":
+                                      isQris = false;
+                                      isCash = false;
+                                      isDebit = false;
+                                      isKredit = true;
                                       break;
                                   }
                                   _totalBayarController.clear();
@@ -471,7 +491,25 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                               Row(
                                 children: [
                                   Expanded(child: Text("Nama Bank: ", style: TextStyle(fontFamily: 'Poppins'))),
-                                  Expanded(flex: 3, child: TextField(controller: _namaBank, enabled: namabankenabled)),
+                                  Expanded(
+                                    flex: 3,
+                                    child: DropdownButtonFormField<String>(
+                                      value: _selectedBank,
+                                      onChanged: (String? Value) {
+                                        setState(() {
+                                          _selectedBank = Value!;
+                                        });
+                                      },
+                                      items:
+                                          _bankList.map((String bank) {
+                                            return DropdownMenuItem<String>(value: bank, child: Text(bank));
+                                          }).toList(),
+                                      decoration: InputDecoration(
+                                        border: OutlineInputBorder(),
+                                        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                                      ),
+                                    ),
+                                  ),
                                 ],
                               ),
                             ],
@@ -619,6 +657,7 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
         isCash = true;
         isDebit = false;
         isQris = false;
+        isKredit = false;
         _totalBayarController.clear();
         _kembalianController.clear();
       });
@@ -926,7 +965,7 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 10),
+                      SizedBox(height: 5),
                       Row(
                         children: [
                           Container(

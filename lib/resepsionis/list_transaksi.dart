@@ -434,6 +434,8 @@ class ListTransaksiController extends GetxController {
       allDataOmset = dataQris;
     }
 
+    log("Isi data omset $allDataOmset");
+
     Get.dialog(
       AlertDialog(
         title: Center(child: Obx(() => Text("Detail Omset ${capitalize(mode)} - ${formatDate(tglNow.value, format: "dd-MM-yyyy")}"))),

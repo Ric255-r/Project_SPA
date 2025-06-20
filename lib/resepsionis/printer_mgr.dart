@@ -212,13 +212,15 @@ class PrinterHelper {
       double hargaItem = product['harga_item'] * pajak + product['harga_item'];
       int maxNameLength = 15; // Example: Adjust this value
       List<String> nameLines = _splitTextIntoLines(product['nama_produk'], maxNameLength);
+      double hargaTotalItem = product['qty'] * hargaItem;
+      int stlhRoundTotalItem = (hargaTotalItem / 1000).round() * 1000;
 
       if (nameLines.isNotEmpty) {
         printer.row([
           PosColumn(text: nameLines[0], width: 4),
           PosColumn(text: 'x${product['qty']}', width: 1, styles: const PosStyles(align: PosAlign.center)),
           PosColumn(text: '${formatter.format(hargaItem)}', width: 3, styles: const PosStyles(align: PosAlign.right)),
-          PosColumn(text: '${formatter.format(product['qty'] * hargaItem)}', width: 4, styles: const PosStyles(align: PosAlign.right)),
+          PosColumn(text: '${formatter.format(stlhRoundTotalItem)}', width: 4, styles: const PosStyles(align: PosAlign.right)),
         ]);
 
         // Print subsequent lines without the other columns, just the name
@@ -232,7 +234,7 @@ class PrinterHelper {
         }
       }
 
-      totalProduk += (hargaItem).toInt();
+      totalProduk += (stlhRoundTotalItem).toInt();
 
       // printer.row([
       //   PosColumn(text: product['nama_produk'], width: 4),
@@ -312,6 +314,8 @@ class PrinterHelper {
         // End Query
 
         double hargaItem = package['harga_item'] * pajak + package['harga_item'];
+        double hargaTotalItem = package['qty'] * hargaItem;
+        int stlhRoundTotalItem = (hargaTotalItem / 1000).round() * 1000;
         int maxNameLength = 15; // Example: Adjust this value
         List<String> nameLines = _splitTextIntoLines(package['nama_paket_msg'], maxNameLength);
 
@@ -320,7 +324,7 @@ class PrinterHelper {
             PosColumn(text: nameLines[0], width: 4),
             PosColumn(text: 'x${package['qty']}', width: 1, styles: const PosStyles(align: PosAlign.center)),
             PosColumn(text: '${formatter.format(hargaItem)}', width: 3, styles: const PosStyles(align: PosAlign.right)),
-            PosColumn(text: '${formatter.format(package['qty'] * hargaItem)}', width: 4, styles: const PosStyles(align: PosAlign.right)),
+            PosColumn(text: '${formatter.format(hargaTotalItem)}', width: 4, styles: const PosStyles(align: PosAlign.right)),
           ]);
 
           // Print subsequent lines without the other columns, just the name
@@ -334,7 +338,7 @@ class PrinterHelper {
           }
         }
 
-        totalProduk += (hargaItem).toInt();
+        totalProduk += (stlhRoundTotalItem).toInt();
       }
 
       // jika beli di awal
@@ -400,13 +404,15 @@ class PrinterHelper {
       double hargaItem = data['harga_item'] * pajak + data['harga_item'];
       int maxNameLength = 15; // Example: Adjust this value
       List<String> nameLines = _splitTextIntoLines(data['nama_fnb'], maxNameLength);
+      double hargaTotalItem = data['qty'] * hargaItem;
+      int stlhRoundTotalItem = (hargaTotalItem / 1000).round() * 1000;
 
       if (nameLines.isNotEmpty) {
         printer.row([
           PosColumn(text: nameLines[0], width: 4),
           PosColumn(text: 'x${data['qty']}', width: 1, styles: const PosStyles(align: PosAlign.center)),
           PosColumn(text: '${formatter.format(hargaItem)}', width: 3, styles: const PosStyles(align: PosAlign.right)),
-          PosColumn(text: '${formatter.format(data['qty'] * hargaItem)}', width: 4, styles: const PosStyles(align: PosAlign.right)),
+          PosColumn(text: '${formatter.format(stlhRoundTotalItem)}', width: 4, styles: const PosStyles(align: PosAlign.right)),
         ]);
 
         // Print subsequent lines without the other columns, just the name
@@ -420,7 +426,7 @@ class PrinterHelper {
         }
       }
 
-      totalProduk += (hargaItem).toInt();
+      totalProduk += (stlhRoundTotalItem).toInt();
 
       // printer.row([
       //   PosColumn(text: data['nama_fnb'], width: 4),
@@ -461,13 +467,15 @@ class PrinterHelper {
       double hargaItem = data['harga'] * pajak + data['harga'];
       int maxNameLength = 15; // Example: Adjust this value
       List<String> nameLines = _splitTextIntoLines(data['nama_fasilitas'], maxNameLength);
+      double hargaTotalItem = data['qty'] * hargaItem;
+      int stlhRoundTotalItem = (hargaTotalItem / 1000).round() * 1000;
 
       if (nameLines.isNotEmpty) {
         printer.row([
           PosColumn(text: nameLines[0], width: 4),
           PosColumn(text: 'x${data['qty']}', width: 1, styles: const PosStyles(align: PosAlign.center)),
           PosColumn(text: '${formatter.format(hargaItem)}', width: 3, styles: const PosStyles(align: PosAlign.right)),
-          PosColumn(text: '${formatter.format(data['qty'] * hargaItem)}', width: 4, styles: const PosStyles(align: PosAlign.right)),
+          PosColumn(text: '${formatter.format(stlhRoundTotalItem)}', width: 4, styles: const PosStyles(align: PosAlign.right)),
         ]);
 
         // Print subsequent lines without the other columns, just the name
@@ -481,7 +489,7 @@ class PrinterHelper {
         }
       }
 
-      totalProduk += (hargaItem).toInt();
+      totalProduk += (stlhRoundTotalItem).toInt();
 
       // printer.row([
       //   PosColumn(text: data['nama_fasilitas'], width: 4),
@@ -522,13 +530,15 @@ class PrinterHelper {
       double hargaItem = data['harga_item'] * pajak + data['harga_item'];
       int maxNameLength = 15; // Example: Adjust this value
       List<String> nameLines = _splitTextIntoLines(data['nama_item'], maxNameLength);
+      double hargaTotalItem = data['qty'] * hargaItem;
+      int stlhRoundTotalItem = (hargaTotalItem / 1000).round() * 1000;
 
       if (nameLines.isNotEmpty) {
         printer.row([
           PosColumn(text: nameLines[0], width: 4),
           PosColumn(text: 'x${data['qty']}', width: 1, styles: const PosStyles(align: PosAlign.center)),
           PosColumn(text: '${formatter.format(hargaItem)}', width: 3, styles: const PosStyles(align: PosAlign.right)),
-          PosColumn(text: '${formatter.format(data['qty'] * hargaItem)}', width: 4, styles: const PosStyles(align: PosAlign.right)),
+          PosColumn(text: '${formatter.format(stlhRoundTotalItem)}', width: 4, styles: const PosStyles(align: PosAlign.right)),
         ]);
 
         // Print subsequent lines without the other columns, just the name
@@ -542,7 +552,7 @@ class PrinterHelper {
         }
       }
 
-      totalProduk += (hargaItem).toInt();
+      totalProduk += (stlhRoundTotalItem).toInt();
 
       // printer.row([
       //   PosColumn(text: data['nama_item'], width: 4),
