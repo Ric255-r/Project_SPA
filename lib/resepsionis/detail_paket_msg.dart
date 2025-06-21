@@ -773,14 +773,21 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                         // log(controllerPekerja.statusshowing.value.toString());
                         if (controllerPekerja.statusshowing.value !=
                             'pressed') {
-                          daftapanggilankerja(namaruangan, namaterapis);
+                          daftapanggilankerja(
+                            "Room " + namaruangan,
+                            namaterapis,
+                          );
+
+                          if (Get.isRegistered<ControllerPanggilanKerja>()) {
+                            Get.delete<ControllerPanggilanKerja>();
+                          }
 
                           var c = Get.put(ControllerPanggilanKerja());
                           c.refreshDataPanggilanKerja();
                         }
                         daftarruangtunggu(
                           idtransaksi,
-                          namaruangan,
+                          "Room " + namaruangan,
                           idterapis,
                           namaterapis,
                         );
