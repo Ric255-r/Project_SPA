@@ -15,7 +15,8 @@ var dio = Dio();
 
 class ControllerPanggilanKerja extends GetxController {
   late IOWebSocketChannel channel;
-  RxList<Map<String, dynamic>> datapanggilankerja = <Map<String, dynamic>>[].obs;
+  RxList<Map<String, dynamic>> datapanggilankerja =
+      <Map<String, dynamic>>[].obs;
 
   var refreshtrigger = false.obs;
   Timer? notifytimer;
@@ -23,6 +24,10 @@ class ControllerPanggilanKerja extends GetxController {
   final playeraudio = AudioPlayer();
   var activescreen = ''.obs;
   var showtoast = false.obs;
+
+  int _reconnectattempt = 0;
+  final int _maxreconnectattempt = 5;
+  final Duration _reconnectdelay = Duration(seconds: 5);
 
   @override
   void onInit() {
@@ -43,39 +48,60 @@ class ControllerPanggilanKerja extends GetxController {
     var originalUrl = myIpAddr();
     var replacedUrl = originalUrl.replaceAll("http", "ws");
     var wsUri = Uri.parse("$replacedUrl/spv/ws-spv");
-    channel = IOWebSocketChannel.connect(wsUri);
-    log('websocket connected');
 
-    _startheartbeat();
+    try {
+      channel = IOWebSocketChannel.connect(wsUri);
+      log('websocket connected');
+      _reconnectattempt = 0;
 
-    channel.stream.listen(
-      (message) async {
-        notifytimer?.cancel();
-        notifytimer = Timer(Duration(seconds: 1), () {
-          log('received websocket message : $message');
-          updateDataFromWebSocket(message);
-          if (activescreen.value == 'ruang_tunggu') {
-            playeraudio.stop();
-            try {
-              playeraudio.setAsset('assets/audio/f1sport.mp3').then((_) {
-                playeraudio.play();
-              });
-            } catch (e) {
-              log('player playing audio : $e');
+      _startheartbeat();
+
+      channel.stream.listen(
+        (message) async {
+          notifytimer?.cancel();
+          notifytimer = Timer(Duration(seconds: 1), () {
+            log('received websocket message : $message');
+            updateDataFromWebSocket(message);
+            if (activescreen.value == 'ruang_tunggu') {
+              playeraudio.stop();
+              try {
+                playeraudio.setAsset('assets/audio/f1sport.mp3').then((_) {
+                  playeraudio.play();
+                });
+              } catch (e) {
+                log('player playing audio : $e');
+              }
+              showtoast.value = true;
             }
-            showtoast.value = true;
-          }
-        });
-      },
-      onDone: () {
-        log('ws spv done');
-        _heartbeatws?.cancel();
-      },
-      onError: (error) {
-        log('ws spv error');
-        _heartbeatws?.cancel();
-      },
-    );
+          });
+        },
+        onDone: () {
+          log('ws spv done');
+          _heartbeatws?.cancel();
+          _attemptrecconect();
+        },
+        onError: (error) {
+          log('ws spv error');
+          _heartbeatws?.cancel();
+          _attemptrecconect();
+        },
+      );
+    } catch (e) {
+      log('failed to initiate websocket connection :$e');
+      _attemptrecconect();
+    }
+  }
+
+  void _attemptrecconect() {
+    if (_reconnectattempt < _maxreconnectattempt) {
+      _reconnectattempt++;
+      log('attempt recconecting ws');
+      Future.delayed(_reconnectdelay, () {
+        connectWebSocket();
+      });
+    } else {
+      log('maximum attempt connect reached. stop connecting');
+    }
   }
 
   void _startheartbeat() {
@@ -91,7 +117,9 @@ class ControllerPanggilanKerja extends GetxController {
     List<Map<String, dynamic>> newdata = parseWebSocketData(message);
     log('parsed data:$newdata');
     for (var item in newdata) {
-      var existingindex = datapanggilankerja.indexWhere((existing) => existing['id_panggilan'] == item['id_panggilan']);
+      var existingindex = datapanggilankerja.indexWhere(
+        (existing) => existing['id_panggilan'] == item['id_panggilan'],
+      );
       if (existingindex == -1) {
         datapanggilankerja.add(item);
       } else {
@@ -112,7 +140,12 @@ class ControllerPanggilanKerja extends GetxController {
       var decodedata = jsonDecode(message);
       if (decodedata is List) {
         return decodedata.map((item) {
-          return {"ruangan": item['ruangan'], "nama_terapis": item['nama_terapis'], "id_panggilan": item['id_panggilan'], "timestamp": item['timestamp']};
+          return {
+            "ruangan": item['ruangan'],
+            "nama_terapis": item['nama_terapis'],
+            "id_panggilan": item['id_panggilan'],
+            "timestamp": item['timestamp'],
+          };
         }).toList();
       } else {
         print('websocket data is not a list : $decodedata');
@@ -129,11 +162,17 @@ class ControllerPanggilanKerja extends GetxController {
       var response = await dio.get('${myIpAddr()}/spv/getdatapanggilankerja');
       List<Map<String, dynamic>> fetcheddata =
           (response.data as List).map((item) {
-            return {"ruangan": item['ruangan'], "nama_terapis": item['nama_terapis'], "id_panggilan": item['id_panggilan']};
+            return {
+              "ruangan": item['ruangan'],
+              "nama_terapis": item['nama_terapis'],
+              "id_panggilan": item['id_panggilan'],
+            };
           }).toList();
 
       for (var item in fetcheddata) {
-        var existingindex = datapanggilankerja.indexWhere((existing) => existing['id_panggilan'] == item['id_panggilan']);
+        var existingindex = datapanggilankerja.indexWhere(
+          (existing) => existing['id_panggilan'] == item['id_panggilan'],
+        );
         if (existingindex == -1) {
           datapanggilankerja.add(item);
         } else {
@@ -148,7 +187,10 @@ class ControllerPanggilanKerja extends GetxController {
 
   Future<void> deletepanggilankerja(id_panggilan) async {
     try {
-      var response = await dio.delete('${myIpAddr()}/spv/deletepanggilankerja', data: {"id_panggilan": id_panggilan});
+      var response = await dio.delete(
+        '${myIpAddr()}/spv/deletepanggilankerja',
+        data: {"id_panggilan": id_panggilan},
+      );
     } catch (e) {
       log("Error di fn deletepanggilankerja : $e");
     }
@@ -175,13 +217,18 @@ class MainRt extends StatefulWidget {
 class _MainRtState extends State<MainRt> {
   ScrollController _scrollControllerLV = ScrollController();
 
-  final ControllerPanggilanKerja controllerPanggilanKerja = Get.find<ControllerPanggilanKerja>();
+  final ControllerPanggilanKerja controllerPanggilanKerja =
+      Get.find<ControllerPanggilanKerja>();
 
-  RxList<Map<String, dynamic>> datapanggilankerja = <Map<String, dynamic>>[].obs;
+  RxList<Map<String, dynamic>> datapanggilankerja =
+      <Map<String, dynamic>>[].obs;
 
   Future<void> deletepanggilankerja(id_panggilan) async {
     try {
-      var response = await dio.delete('${myIpAddr()}/spv/deletepanggilankerja', data: {"id_panggilan": id_panggilan});
+      var response = await dio.delete(
+        '${myIpAddr()}/spv/deletepanggilankerja',
+        data: {"id_panggilan": id_panggilan},
+      );
     } catch (e) {
       log("Error di fn deletepanggilankerja : $e");
     }
@@ -196,7 +243,8 @@ class _MainRtState extends State<MainRt> {
 
   @override
   void dispose() {
-    Get.find<ControllerPanggilanKerja>().activescreen.value = 'not_ruang_tunggu';
+    Get.find<ControllerPanggilanKerja>().activescreen.value =
+        'not_ruang_tunggu';
     super.dispose();
   }
 
@@ -208,7 +256,13 @@ class _MainRtState extends State<MainRt> {
         title: Center(
           child: Padding(
             padding: const EdgeInsets.only(right: 50),
-            child: Text("PANGGILAN KERJA", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
+            child: Text(
+              "PANGGILAN KERJA",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Poppins',
+              ),
+            ),
           ),
         ),
       ),
@@ -223,7 +277,10 @@ class _MainRtState extends State<MainRt> {
               height: Get.height - 150,
               width: Get.width - 100,
               margin: const EdgeInsets.only(left: 40, right: 40),
-              decoration: BoxDecoration(borderRadius: BorderRadius.circular(20), color: Colors.white),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                color: Colors.white,
+              ),
               child: Scrollbar(
                 thickness: 15,
                 radius: Radius.circular(20),
@@ -241,23 +298,55 @@ class _MainRtState extends State<MainRt> {
                         return Column(
                           children: [
                             SizedBox(height: 70),
-                            Text(item['nama_terapis'], style: TextStyle(fontSize: 100, height: 1, fontFamily: 'Poppins')),
-                            Text(item['ruangan'], style: TextStyle(fontSize: 110, height: 1, fontFamily: 'Poppins')),
+                            Text(
+                              item['nama_terapis'],
+                              style: TextStyle(
+                                fontSize: 100,
+                                height: 1,
+                                fontFamily: 'Poppins',
+                              ),
+                            ),
+                            Text(
+                              item['ruangan'],
+                              style: TextStyle(
+                                fontSize: 110,
+                                height: 1,
+                                fontFamily: 'Poppins',
+                              ),
+                            ),
                             SizedBox(height: 40),
                             ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color.fromARGB(255, 168, 232, 170),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                backgroundColor: const Color.fromARGB(
+                                  255,
+                                  168,
+                                  232,
+                                  170,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                                 minimumSize: Size(100, 100),
                               ),
                               onPressed: () {
                                 log(item['id_panggilan'].toString());
-                                controller.datapanggilankerja.removeWhere((element) => element['id_panggilan'] == item['id_panggilan']);
+                                controller.datapanggilankerja.removeWhere(
+                                  (element) =>
+                                      element['id_panggilan'] ==
+                                      item['id_panggilan'],
+                                );
                                 deletepanggilankerja(item['id_panggilan']);
                                 controller.datapanggilankerja.refresh();
                               },
                               child: Column(
-                                children: [Icon(Icons.check, size: 50), SizedBox(height: 10), Text("Confirm", style: TextStyle(fontFamily: 'Poppins'))],
+                                children: [
+                                  Icon(Icons.check, size: 50),
+                                  SizedBox(height: 10),
+                                  Text(
+                                    "Confirm",
+                                    style: TextStyle(fontFamily: 'Poppins'),
+                                  ),
+                                ],
                               ),
                             ),
                             SizedBox(height: 80),
@@ -273,12 +362,17 @@ class _MainRtState extends State<MainRt> {
             Container(
               margin: const EdgeInsets.only(top: 20, right: 50),
               alignment: Alignment.centerRight,
-              child: Text("PLATINUM", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30)),
+              child: Text(
+                "PLATINUM",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
+              ),
             ),
             Obx(() {
               if (Get.find<ControllerPanggilanKerja>().showtoast.value) {
                 Future.delayed(Duration.zero, () {
-                  CherryToast.success(title: Text('Panggilan Kerja Masuk')).show(context);
+                  CherryToast.success(
+                    title: Text('Panggilan Kerja Masuk'),
+                  ).show(context);
                   Get.find<ControllerPanggilanKerja>().showtoast.value = false;
                 });
               }
