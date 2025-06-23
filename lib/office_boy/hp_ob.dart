@@ -154,6 +154,7 @@ class _Hp_ObState extends State<Hp_Ob> with WidgetsBindingObserver {
               List<Map<String, dynamic>> fetcheddata =
                   rawList.map((item) {
                     return {
+                      "id": item['id'],
                       "nama_ruangan": item['nama_ruangan'],
                       "keterangan": item['keterangan'],
                     };
@@ -308,7 +309,7 @@ class _Hp_ObState extends State<Hp_Ob> with WidgetsBindingObserver {
                               ),
                             ),
                             Text(
-                              item['nama_ruangan'].toString(),
+                              'Room ${item['nama_ruangan'].toString()}',
                               style: TextStyle(
                                 fontSize: 40,
                                 height: 1,
@@ -330,6 +331,7 @@ class _Hp_ObState extends State<Hp_Ob> with WidgetsBindingObserver {
                                 minimumSize: Size(100, 100),
                               ),
                               onPressed: () {
+                                log(dataruanganbersihkan.length.toString());
                                 print('id adalah ${item['id']}');
                                 confirmob(item['id']);
                                 dataruanganbersihkan.removeWhere(

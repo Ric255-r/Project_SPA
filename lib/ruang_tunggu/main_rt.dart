@@ -29,6 +29,8 @@ class ControllerPanggilanKerja extends GetxController {
   final int _maxreconnectattempt = 5;
   final Duration _reconnectdelay = Duration(seconds: 5);
 
+  bool _isdisposed = false;
+
   @override
   void onInit() {
     super.onInit();
@@ -37,6 +39,7 @@ class ControllerPanggilanKerja extends GetxController {
 
   @override
   void onClose() {
+    _isdisposed = true;
     _heartbeatws?.cancel();
     playeraudio.dispose();
     notifytimer?.cancel();
@@ -49,12 +52,12 @@ class ControllerPanggilanKerja extends GetxController {
     var replacedUrl = originalUrl.replaceAll("http", "ws");
     var wsUri = Uri.parse("$replacedUrl/spv/ws-spv");
 
+    _heartbeatws?.cancel();
+
     try {
       channel = IOWebSocketChannel.connect(wsUri);
       log('websocket connected');
       _reconnectattempt = 0;
-
-      _startheartbeat();
 
       channel.stream.listen(
         (message) async {
@@ -86,6 +89,17 @@ class ControllerPanggilanKerja extends GetxController {
           _attemptrecconect();
         },
       );
+
+      channel.ready
+          .then((_) {
+            log('websocket connected successfull');
+            _reconnectattempt = 0;
+            _startheartbeat();
+          })
+          .catchError((error) {
+            log('websocket fail to connect : $error');
+            _attemptrecconect();
+          });
     } catch (e) {
       log('failed to initiate websocket connection :$e');
       _attemptrecconect();
@@ -93,6 +107,7 @@ class ControllerPanggilanKerja extends GetxController {
   }
 
   void _attemptrecconect() {
+    if (_isdisposed) return;
     if (_reconnectattempt < _maxreconnectattempt) {
       _reconnectattempt++;
       log('attempt recconecting ws');
@@ -105,10 +120,22 @@ class ControllerPanggilanKerja extends GetxController {
   }
 
   void _startheartbeat() {
+    if (_heartbeatws != null && _heartbeatws!.isActive) {
+      _heartbeatws!.cancel();
+    }
     _heartbeatws = Timer.periodic(const Duration(seconds: 30), (timer) {
-      final pingmsg = jsonEncode({"type": "ping"});
-      channel.sink.add(pingmsg);
-      log('send heartbeat to ws spv');
+      if (channel != null &&
+          channel.sink != null &&
+          channel.stream != null &&
+          channel.closeCode == null) {
+        final pingmsg = jsonEncode({"type": "ping"});
+        channel.sink.add(pingmsg);
+        log('send heartbeat to ws spv');
+      } else {
+        log('Websocket not opening for heartbeat, cancel timer');
+        _heartbeatws?.cancel();
+        _heartbeatws = null;
+      }
     });
   }
 
@@ -245,6 +272,7 @@ class _MainRtState extends State<MainRt> {
   void dispose() {
     Get.find<ControllerPanggilanKerja>().activescreen.value =
         'not_ruang_tunggu';
+    Get.delete<ControllerPanggilanKerja>(force: true);
     super.dispose();
   }
 

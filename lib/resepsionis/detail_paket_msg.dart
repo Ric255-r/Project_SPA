@@ -763,7 +763,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                         autoDismiss: true,
                       ).show(context);
                     } else {
-                      _storeTrans().then((_) {
+                      _storeTrans().then((_) async {
                         statusloker = statusloker == 0 ? 1 : 0;
                         updatedataloker(statusloker, inputlocker);
                         idtransaksi = controllerPekerja.getnotrans.value;
@@ -771,26 +771,27 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                         idterapis = controllerPekerja.getidterapis.value;
                         namaterapis = controllerPekerja.getnamaterapis.value;
                         // log(controllerPekerja.statusshowing.value.toString());
+                        // if (Get.isRegistered<ControllerPanggilanKerja>()) {
+                        //   await Get.delete<ControllerPanggilanKerja>();
+                        // }
+
+                        // final c = Get.put(ControllerPanggilanKerja());
                         if (controllerPekerja.statusshowing.value !=
                             'pressed') {
                           daftapanggilankerja(
-                            "Room " + namaruangan,
+                              namaruangan,
                             namaterapis,
                           );
-
-                          if (Get.isRegistered<ControllerPanggilanKerja>()) {
-                            Get.delete<ControllerPanggilanKerja>();
-                          }
-
-                          var c = Get.put(ControllerPanggilanKerja());
-                          c.refreshDataPanggilanKerja();
+                          // c.refreshDataPanggilanKerja();
                         }
                         daftarruangtunggu(
                           idtransaksi,
-                          "Room " + namaruangan,
+                           namaruangan,
                           idterapis,
                           namaterapis,
                         );
+                        // c.channel.sink.close();
+
                         Get.offAll(() => MainResepsionis());
                       });
                     }
