@@ -89,7 +89,7 @@ class PrinterHelper {
 
     bytes += generator.text('PLATINUM', styles: const PosStyles(align: PosAlign.center, height: PosTextSize.size2, width: PosTextSize.size2, bold: true));
     bytes += generator.text('Jl. Teuku Umar, Komplek Pontianak Mall', styles: const PosStyles(align: PosAlign.center));
-    bytes += generator.text('Phone: (123) 456-7890', styles: const PosStyles(align: PosAlign.center));
+    bytes += generator.text('Phone: 0853-4820-9415', styles: const PosStyles(align: PosAlign.center));
     bytes += generator.hr();
 
     bytes += generator.row([

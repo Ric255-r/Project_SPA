@@ -1344,8 +1344,8 @@ class ListTransaksiController extends GetxController {
   Future<void> _sendToPrinter(List<int> bytes) async {
     try {
       final response = await dio.post(
-        '${myIpAddr()}/api/listtrans/print',
-        data: bytes,
+        '${myIpAddr()}/listtrans/print',
+        data: Stream.fromIterable([bytes]),
         options: Options(contentType: 'application/octet-stream', responseType: ResponseType.json),
       );
 
