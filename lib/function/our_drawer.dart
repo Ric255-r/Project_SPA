@@ -178,7 +178,7 @@ class _OurDrawerState extends State<OurDrawer> {
                 Get.to(() => PageKomisiPekerja());
               },
             ),
-          if (_listSecondHakAkses.contains("owner") || _firstHakAkses == "owner")
+          if (_listSecondHakAkses.contains("owner") || _firstHakAkses == "owner") ...[
             ListTile(
               leading: const Icon(Icons.admin_panel_settings_rounded),
               title: const Text('Owner', style: TextStyle(fontFamily: 'Poppins')),
@@ -186,6 +186,21 @@ class _OurDrawerState extends State<OurDrawer> {
                 Get.to(() => OwnerPage());
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.admin_panel_settings_rounded),
+              title: const Text('Admin', style: TextStyle(fontFamily: 'Poppins')),
+              onTap: () {
+                Get.to(() => MainAdmin());
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.list_rounded),
+              title: const Text('List Transaksi', style: TextStyle(fontFamily: 'Poppins')),
+              onTap: () {
+                Get.offAll(() => ListTransaksi());
+              },
+            ),
+          ],
 
           Expanded(child: Container()), // Pushes the Log Out ListTile to the bottom
           ListTile(
