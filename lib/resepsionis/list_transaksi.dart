@@ -1,3 +1,5 @@
+// ignore_for_file: unused_import
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
@@ -26,7 +28,7 @@ import 'package:Project_SPA/main.dart';
 // import 'package:pdf/pdf.dart';
 // import 'package:pdf/widgets.dart' as pw;
 import 'package:esc_pos_printer/esc_pos_printer.dart';
-import 'printer_mgr.dart';
+import 'printer_mgr_api.dart';
 import 'package:esc_pos_utils/esc_pos_utils.dart'; // This is crucial
 // import 'package:thermal_printer/thermal_printer.dart';
 import 'package:dartx/dartx.dart';
@@ -93,9 +95,6 @@ class ListTransaksiController extends GetxController {
   RxList<Map<String, dynamic>> dataKredit = <Map<String, dynamic>>[].obs;
   RxList<Map<String, dynamic>> dataQris = <Map<String, dynamic>>[].obs;
   RxString tglNow = "".obs;
-
-  RxMap<String, Map<String, dynamic>> detailTrans =
-      <String, Map<String, dynamic>>{}.obs;
 
   Future<List<Map<String, dynamic>>> fetchData() async {
     try {
@@ -240,246 +239,6 @@ class ListTransaksiController extends GetxController {
   List<String> listJenisRuang = <String>['Fasilitas', 'Reguler', 'VIP'];
   String? dropdownValue;
 
-  void isibuttoneditruangan(BuildContext context, Map<String, dynamic> item) {
-    TextEditingController nmRuangController = TextEditingController(
-      text: item['nama_ruangan'],
-    );
-    TextEditingController lantaiController = TextEditingController(
-      text: item['lantai'].toString(),
-    );
-    String? dropdownValue = item['jenis_ruangan'];
-
-    Get.dialog(
-      StatefulBuilder(
-        builder: (context, setState) {
-          return AlertDialog(
-            actions: [
-              Container(
-                width: Get.width - 350,
-                height: Get.height - 350,
-                child: ListView(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.zero,
-                          child: Container(
-                            margin: EdgeInsets.only(top: 80),
-                            height: 140,
-                            width: 200,
-                            child: Padding(
-                              padding: EdgeInsets.only(right: 10),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  SizedBox(height: 15),
-                                  Text(
-                                    'Nama Kamar :',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 18,
-                                    ),
-                                  ),
-                                  SizedBox(height: 15),
-                                  Text(
-                                    'Lantai :',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 18,
-                                    ),
-                                  ),
-                                  SizedBox(height: 15),
-                                  Text(
-                                    'Jenis Kamar :',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 18,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        Container(
-                          margin: EdgeInsets.only(top: 80),
-                          height: 230,
-                          width: 500,
-                          child: Padding(
-                            padding: EdgeInsets.only(left: 10),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SizedBox(height: 12),
-                                Container(
-                                  alignment: Alignment.centerLeft,
-                                  width: 480,
-                                  height: 30,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
-                                    color: Colors.grey[300],
-                                  ),
-                                  child: TextField(
-                                    controller: nmRuangController,
-                                    decoration: InputDecoration(
-                                      border: InputBorder.none,
-                                      contentPadding: EdgeInsets.symmetric(
-                                        vertical: 13.5,
-                                        horizontal: 10,
-                                      ),
-                                    ),
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontFamily: 'Poppins',
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(height: 12),
-                                Container(
-                                  alignment: Alignment.centerLeft,
-                                  width: 480,
-                                  height: 30,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
-                                    color: Colors.grey[300],
-                                  ),
-                                  child: TextField(
-                                    keyboardType: TextInputType.number,
-                                    inputFormatters: <TextInputFormatter>[
-                                      FilteringTextInputFormatter.digitsOnly,
-                                    ],
-                                    controller: lantaiController,
-                                    decoration: InputDecoration(
-                                      border: InputBorder.none,
-                                      contentPadding: EdgeInsets.symmetric(
-                                        vertical: 13.5,
-                                        horizontal: 10,
-                                      ),
-                                    ),
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontFamily: 'Poppins',
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(height: 12),
-                                Container(
-                                  width: 480,
-                                  height: 30,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
-                                    color: Colors.grey[300],
-                                  ),
-                                  child: DropdownButton<String>(
-                                    value: dropdownValue,
-                                    isExpanded: true,
-                                    icon: const Icon(Icons.arrow_drop_down),
-                                    elevation: 16,
-                                    style: const TextStyle(
-                                      color: Colors.deepPurple,
-                                    ),
-                                    underline: SizedBox(),
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                    ),
-                                    onChanged: (String? value) {
-                                      setState(() {
-                                        dropdownValue = value;
-                                      });
-                                    },
-                                    items:
-                                        listJenisRuang.map<
-                                          DropdownMenuItem<String>
-                                        >((String value) {
-                                          return DropdownMenuItem<String>(
-                                            value: value,
-                                            child: Align(
-                                              alignment: Alignment.centerLeft,
-                                              child: Text(
-                                                value,
-                                                style: TextStyle(
-                                                  fontSize: 18,
-                                                  fontFamily: 'Poppins',
-                                                ),
-                                              ),
-                                            ),
-                                          );
-                                        }).toList(),
-                                  ),
-                                ),
-                                SizedBox(height: 20),
-                                Padding(
-                                  padding: const EdgeInsets.only(
-                                    right: 170,
-                                    top: 20,
-                                  ),
-                                  child: Center(
-                                    child: SizedBox(
-                                      height: 50,
-                                      width: 120,
-                                      child: TextButton(
-                                        style: TextButton.styleFrom(
-                                          backgroundColor: Colors.green,
-                                        ),
-                                        onPressed: () async {
-                                          final response = await dio.put(
-                                            '${myIpAddr()}/ListTransaksi/update_room/${item['id_ruangan'].toString()}',
-                                            data: {
-                                              "nama_ruangan":
-                                                  nmRuangController.text,
-                                              "lantai":
-                                                  int.tryParse(
-                                                    lantaiController.text,
-                                                  ) ??
-                                                  0,
-                                              "jenis_ruangan": dropdownValue,
-                                            },
-                                          );
-                                          if (response.statusCode == 200) {
-                                            Get.back(result: "updated");
-                                            await refreshData();
-                                            textcari.clear();
-                                            nmRuangController.clear();
-                                            lantaiController.clear();
-                                            dropdownValue = null;
-                                            CherryToast.success(
-                                              title: Text(
-                                                'Data berhasil diupdate',
-                                              ),
-                                            ).show(context);
-                                          }
-                                        },
-                                        child: Text(
-                                          'Simpan',
-                                          style: TextStyle(
-                                            fontFamily: 'Poppins',
-                                            fontSize: 18,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
   String capitalize(String? text) {
     if (text == null || text.isEmpty) return "Unknown"; // Handle null or empty
     return text[0].toUpperCase() + text.substring(1);
@@ -498,7 +257,8 @@ class ListTransaksiController extends GetxController {
       );
 
       if (response.statusCode == 200) {
-        return (response.data as Map<String, dynamic>);
+        Map<String, dynamic> responseData = response.data;
+        return responseData;
       } else {
         throw Exception("Failed to load data detail: ${response.statusCode}");
       }
@@ -1540,7 +1300,113 @@ class ListTransaksiController extends GetxController {
     }
   }
 
-  // Alur awalnya Process dlu baru Print Receipt
+  // // Alur awalnya Process dlu baru Print Receipt
+  // Future<void> _processPrintViaLAN(data, Map<String, dynamic> mainTrans) async {
+  //   List<dynamic> dataProduk = data['detail_produk'];
+  //   List<dynamic> dataPaket = data['detail_paket'];
+  //   List<dynamic> dataFood = data['detail_food'];
+  //   List<dynamic> dataFasilitas = data['detail_fasilitas'];
+  //   List<dynamic> dataAddOn = data['all_addon'];
+  //   List<dynamic> dataMember = data['detail_member'];
+  //   log("Isi data member $dataMember");
+  //   List<Map<String, dynamic>> _combinedAddOn = [];
+  //   _combinedAddOn.clear();
+
+  //   for (var i = 0; i < dataAddOn.length; i++) {
+  //     var tipe = dataAddOn[i]['type'];
+  //     var data = {
+  //       "type": tipe,
+  //       "id_detail_transaksi": dataAddOn[i]['id_detail_transaksi'],
+  //       "id_transaksi": dataAddOn[i]['id_transaksi'],
+  //       "id_item": dataAddOn[i]['id_fnb'] ?? dataAddOn[i]['id_produk'] ?? dataAddOn[i]['id_paket'],
+  //       "nama_item": dataAddOn[i]['nama_fnb'] ?? dataAddOn[i]['nama_produk'] ?? dataAddOn[i]['nama_paket_msg'],
+  //       "qty": dataAddOn[i]['qty'],
+  //       "satuan": dataAddOn[i]['satuan'],
+  //       "harga_item": dataAddOn[i]['harga_item'],
+  //       "harga_total": dataAddOn[i]['harga_total'],
+  //       "durasi": tipe == "fnb" ? "-" : dataAddOn[i]['durasi_awal'],
+  //       "status": dataAddOn[i]['status'],
+  //     };
+
+  //     _combinedAddOn.add(data);
+  //   }
+
+  //   await _printReceiptViaLAN(
+  //     mainTrans['id_transaksi'],
+  //     mainTrans['disc'],
+  //     mainTrans['jenis_pembayaran'],
+  //     mainTrans['no_loker'],
+  //     mainTrans['nama_tamu'],
+  //     mainTrans['metode_pembayaran'],
+  //     mainTrans['nama_bank'] ?? "-",
+  //     mainTrans['pajak'],
+  //     mainTrans['gtotal_stlh_pajak'],
+  //     dataProduk,
+  //     dataPaket,
+  //     dataFood,
+  //     dataFasilitas,
+  //     _combinedAddOn,
+  //     dataMember,
+  //   );
+  // }
+
+  // Future<void> _printReceiptViaLAN(
+  //   String idTrans,
+  //   double disc,
+  //   int jenisPembayaran,
+  //   int noLoker,
+  //   String namaTamu,
+  //   String metodePembayaran,
+  //   String namaBank,
+  //   double pajak,
+  //   int gTotalStlhPajak,
+  //   List<dynamic> dataProduk,
+  //   List<dynamic> dataPaket,
+  //   List<dynamic> dataFood,
+  //   List<dynamic> dataFasilitas,
+  //   List<Map<String, dynamic>> combinedAddOn,
+  //   List<dynamic> dataMemberFirstTime,
+  // ) async {
+  //   // Set Ip Printer static
+  //   const String printerIp = '192.168.1.77';
+  //   const int printerPort = 9100; //biasanya
+
+  //   try {
+  //     final printer = NetworkPrinter(PaperSize.mm80, await CapabilityProfile.load(name: 'default'));
+  //     final PosPrintResult res = await printer.connect(printerIp, port: printerPort);
+
+  //     if (res == PosPrintResult.success) {
+  //       // printer.text('Special characters: áéíóú', styles: PosStyles(codeTable: 'CP1252')); // Western European
+
+  //       await PrinterHelper.printReceipt(
+  //         idTrans: idTrans,
+  //         disc: disc,
+  //         jenisPembayaran: jenisPembayaran,
+  //         noLoker: noLoker,
+  //         namaTamu: namaTamu == "" ? "-" : namaTamu,
+  //         metodePembayaran: metodePembayaran,
+  //         namaBank: namaBank,
+  //         pajak: pajak,
+  //         gTotalStlhPajak: gTotalStlhPajak,
+  //         printer: printer,
+  //         dataProduk: dataProduk,
+  //         dataPaket: dataPaket,
+  //         dataFood: dataFood,
+  //         dataFasilitas: dataFasilitas,
+  //         combinedAddOn: combinedAddOn,
+  //         dataMemberFirstTime: dataMemberFirstTime,
+  //       );
+
+  //       printer.disconnect();
+  //     } else {
+  //       Get.snackbar('Error', 'Gagal Konek Printer');
+  //     }
+  //   } catch (e) {
+  //     Get.snackbar('Error', 'Gagal Printing $e');
+  //   }
+  // }
+  // // End Print Via LAN
+
   Future<void> _processPrintViaLAN(data, Map<String, dynamic> mainTrans) async {
     List<dynamic> dataProduk = data['detail_produk'];
     List<dynamic> dataPaket = data['detail_paket'];
@@ -1548,7 +1414,7 @@ class ListTransaksiController extends GetxController {
     List<dynamic> dataFasilitas = data['detail_fasilitas'];
     List<dynamic> dataAddOn = data['all_addon'];
     List<dynamic> dataMember = data['detail_member'];
-    log("Isi data member $dataMember");
+
     List<Map<String, dynamic>> _combinedAddOn = [];
     _combinedAddOn.clear();
 
@@ -1573,174 +1439,53 @@ class ListTransaksiController extends GetxController {
         "durasi": tipe == "fnb" ? "-" : dataAddOn[i]['durasi_awal'],
         "status": dataAddOn[i]['status'],
       };
-
       _combinedAddOn.add(data);
     }
 
-    await _printReceiptViaLAN(
-      mainTrans['id_transaksi'],
-      mainTrans['disc'],
-      mainTrans['jenis_pembayaran'],
-      mainTrans['no_loker'],
-      mainTrans['nama_tamu'],
-      mainTrans['metode_pembayaran'],
-      mainTrans['nama_bank'] ?? "-",
-      mainTrans['pajak'],
-      mainTrans['gtotal_stlh_pajak'],
-      dataProduk,
-      dataPaket,
-      dataFood,
-      dataFasilitas,
-      _combinedAddOn,
-      dataMember,
+    // Generate the receipt bytes
+    final bytes = await PrinterHelper.generateReceipt(
+      idTrans: mainTrans['id_transaksi'],
+      disc: mainTrans['disc'],
+      jenisPembayaran: mainTrans['jenis_pembayaran'],
+      noLoker: mainTrans['no_loker'],
+      namaTamu: mainTrans['nama_tamu'] == "" ? "-" : mainTrans['nama_tamu'],
+      metodePembayaran: mainTrans['metode_pembayaran'],
+      namaBank: mainTrans['nama_bank'] ?? "-",
+      pajak: mainTrans['pajak'],
+      gTotalStlhPajak: mainTrans['gtotal_stlh_pajak'],
+      dataProduk: dataProduk,
+      dataPaket: dataPaket,
+      dataFood: dataFood,
+      dataFasilitas: dataFasilitas,
+      combinedAddOn: _combinedAddOn,
+      dataMemberFirstTime: dataMember,
     );
+
+    // Send to printer via your API
+    await _sendToPrinter(bytes);
   }
 
-  Future<void> _printReceiptViaLAN(
-    String idTrans,
-    double disc,
-    int jenisPembayaran,
-    int noLoker,
-    String namaTamu,
-    String metodePembayaran,
-    String namaBank,
-    double pajak,
-    int gTotalStlhPajak,
-    List<dynamic> dataProduk,
-    List<dynamic> dataPaket,
-    List<dynamic> dataFood,
-    List<dynamic> dataFasilitas,
-    List<Map<String, dynamic>> combinedAddOn,
-    List<dynamic> dataMemberFirstTime,
-  ) async {
-    // Set Ip Printer static
-    const String printerIp = '192.168.1.77';
-    const int printerPort = 9100; //biasanya
-
+  Future<void> _sendToPrinter(List<int> bytes) async {
     try {
-      final printer = NetworkPrinter(
-        PaperSize.mm80,
-        await CapabilityProfile.load(name: 'default'),
-      );
-      final PosPrintResult res = await printer.connect(
-        printerIp,
-        port: printerPort,
+      final response = await dio.post(
+        '${myIpAddr()}/listtrans/print',
+        data: Stream.fromIterable([bytes]),
+        options: Options(contentType: 'application/octet-stream', responseType: ResponseType.json),
       );
 
-      if (res == PosPrintResult.success) {
-        // printer.text('Special characters: áéíóú', styles: PosStyles(codeTable: 'CP1252')); // Western European
-
-        await PrinterHelper.printReceipt(
-          idTrans: idTrans,
-          disc: disc,
-          jenisPembayaran: jenisPembayaran,
-          noLoker: noLoker,
-          namaTamu: namaTamu == "" ? "-" : namaTamu,
-          metodePembayaran: metodePembayaran,
-          namaBank: namaBank,
-          pajak: pajak,
-          gTotalStlhPajak: gTotalStlhPajak,
-          printer: printer,
-          dataProduk: dataProduk,
-          dataPaket: dataPaket,
-          dataFood: dataFood,
-          dataFasilitas: dataFasilitas,
-          combinedAddOn: combinedAddOn,
-          dataMemberFirstTime: dataMemberFirstTime,
-        );
-
-        printer.disconnect();
-      } else {
-        String errorMessage =
-            res.toString(); // Convert the enum to its string representation
-        log(
-          'Printer Connection Error: $errorMessage',
-        ); // Log to console for debugging
-        Get.snackbar('Error', 'Gagal Konek Printer: $errorMessage');
+      if (response.statusCode != 200) {
+        Get.snackbar("Error", "Gagal Konek Printer ${response.data}", backgroundColor: Colors.white);
+        throw Exception("Failed to print: ${response.statusCode}");
       }
     } catch (e) {
-      Get.snackbar('Error', 'Gagal Printing $e');
+      Get.snackbar("Error", "Gagal Kirim Ke printer $e", backgroundColor: Colors.white);
+      log("Error sending to printer: $e");
+      rethrow;
     }
   }
-  // End Print Via LAN
 
-  // Print Via USB
-  // Future<void> _processPrintViaUSB(data, String idTrans, double disc, int jenisPembayaran) async {}
-
-  // Future<void> _printReceiptViaUSB(
-  //   String idTrans,
-  //   double disc,
-  //   int jenisPembayaran,
-  //   List<dynamic> dataProduk,
-  //   List<dynamic> dataPaket,
-  //   List<dynamic> dataFood,
-  //   List<dynamic> dataFasilitas,
-  //   List<Map<String, dynamic>> combinedAddOn,
-  // ) async {
-  //   final manager = PrinterManager.instance;
-
-  //   PrinterDevice? selectedPrinter;
-
-  //   // Cari Usb Printer
-  //   final discovery = manager.discovery(type: PrinterType.usb);
-
-  //   await for (final device in discovery) {
-  //     print('🔍 Found USB printer: ${device.name} (${device.vendorId}:${device.productId})');
-  //     selectedPrinter = device;
-  //     break; // just pick the first for this example
-  //   }
-
-  //   if (selectedPrinter == null) {
-  //     print('❌ No USB printer found');
-  //     return;
-  //   }
-
-  //   final connected = await manager.connect(
-  //     type: PrinterType.usb,
-  //     model: UsbPrinterInput(
-  //       name: selectedPrinter.name,
-  //       productId: selectedPrinter.productId,
-  //       vendorId: selectedPrinter.vendorId,
-  //     ),
-  //   );
-
-  //   if (!connected) {
-  //     print('❌ Failed to connect to printer');
-  //     return;
-  //   }
-
-  //   final bytes = await PrinterHelperUSB.buildReceiptContent(
-  //     idTrans: idTrans,
-  //     disc: disc,
-  //     jenisPembayaran: jenisPembayaran,
-  //     dataProduk: dataProduk,
-  //     dataPaket: dataPaket,
-  //     dataFood: dataFood,
-  //     dataFasilitas: dataFasilitas,
-  //     combinedAddOn: combinedAddOn,
-  //   );
-
-  //   final success = await manager.send(type: PrinterType.usb, bytes: bytes);
-  //   if (success) {
-  //     print('✅ Print success!');
-  //   } else {
-  //     print('❌ Print failed!');
-  //   }
-
-  //   // Optional: disconnect
-  //   await manager.disconnect(type: PrinterType.usb);
-  // }
-
-  void dialogDetail(
-    String idTrans,
-    double disc,
-    int jenisPembayaran,
-    int isCancel,
-  ) async {
-    var fetchAll = await Future.wait([
-      getDetailTrans(idTrans),
-      getTerapisData(idTrans),
-    ]);
+  void dialogDetail(String idTrans, double disc, int jenisPembayaran, int isCancel) async {
+    var fetchAll = await Future.wait([getDetailTrans(idTrans), getTerapisData(idTrans)]);
     final dataOri = fetchAll[0];
     final dataTerapis = fetchAll[1];
 
