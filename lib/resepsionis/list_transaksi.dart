@@ -48,27 +48,34 @@ class ListTransaksiController extends GetxController {
 
     Get.dialog(
       AlertDialog(
-        content: SizedBox(
-          height: Get.height - 200,
-          width: Get.width - 200,
+        // Let the AlertDialog handle the padding
+        contentPadding: EdgeInsets.fromLTRB(24.0, 20.0, 24.0, 0),
+        // Use shape for rounded corners
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
+        content: SingleChildScrollView(
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text("Petunjuk : Anda bisa memilih lebih dari 1 Tanggal", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
               SizedBox(height: 10),
               Obx(
-                () => CalendarDatePicker2(
-                  config: CalendarDatePicker2Config(
-                    calendarType: CalendarDatePicker2Type.range,
-                    selectedDayHighlightColor: Colors.deepPurple,
-                    selectedRangeHighlightColor: Colors.purple.withOpacity(0.2),
-                    firstDate: DateTime(2000), // Optional: set earliest selectable date
-                    lastDate: DateTime(2100), // Optional: set latest selectable date
+                () => SizedBox(
+                  height: Get.height - 250,
+                  width: Get.width - 250,
+                  child: CalendarDatePicker2(
+                    config: CalendarDatePicker2Config(
+                      calendarType: CalendarDatePicker2Type.range,
+                      selectedDayHighlightColor: Colors.deepPurple,
+                      selectedRangeHighlightColor: Colors.purple.withOpacity(0.2),
+                      firstDate: DateTime(2000), // Optional: set earliest selectable date
+                      lastDate: DateTime(2100), // Optional: set latest selectable date
+                    ),
+                    value: rangeDatePickerOmset,
+                    onValueChanged: (dates) {
+                      rangeDatePickerOmset.assignAll(dates);
+                      log("Isi Range Date $rangeDatePickerOmset");
+                    },
                   ),
-                  value: rangeDatePickerOmset,
-                  onValueChanged: (dates) {
-                    rangeDatePickerOmset.assignAll(dates);
-                    log("Isi Range Date $rangeDatePickerOmset");
-                  },
                 ),
               ),
             ],
@@ -2001,11 +2008,13 @@ class ListTransaksi extends StatelessWidget {
                 child: Text('List Transaksi', style: TextStyle(fontFamily: 'Poppins', fontSize: 30, fontWeight: FontWeight.bold)),
               ),
               Container(
-                margin: EdgeInsets.only(left: 730),
+                // margin: EdgeInsets.only(left: 730),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Container(
                       width: 250,
+                      margin: const EdgeInsets.only(right: 30),
                       height: 40,
                       child: TextField(
                         controller: c.textcari,
@@ -2021,8 +2030,8 @@ class ListTransaksi extends StatelessWidget {
                 if (c._hakAkses.value == "owner") {
                   return Container(
                     alignment: Alignment.centerLeft,
-                    margin: const EdgeInsets.only(bottom: 5),
-                    width: 900,
+                    margin: const EdgeInsets.only(bottom: 5, left: 30, right: 30),
+                    width: Get.width,
                     child: Row(
                       children: [
                         Text("Pilih Jangka Waktu: "),
@@ -2064,7 +2073,8 @@ class ListTransaksi extends StatelessWidget {
               }),
 
               Container(
-                width: 900,
+                width: Get.width,
+                margin: const EdgeInsets.only(left: 30, right: 30),
                 height: 420,
                 decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(20)), color: Colors.white),
                 child: Container(
@@ -2476,7 +2486,8 @@ class ListTransaksi extends StatelessWidget {
               SizedBox(height: 10),
 
               Container(
-                width: Get.width - 180,
+                width: Get.width,
+                margin: const EdgeInsets.symmetric(horizontal: 30),
                 child: Row(
                   children: [
                     // Label
@@ -2550,6 +2561,8 @@ class ListTransaksi extends StatelessWidget {
                   ],
                 ),
               ),
+
+              SizedBox(height: 40),
             ],
           ),
         ),
