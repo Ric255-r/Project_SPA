@@ -319,8 +319,8 @@ class _LoginPageState extends State<LoginPage> {
             Container(
               decoration: BoxDecoration(gradient: LinearGradient(colors: [Colors.black, Colors.yellow], begin: Alignment.topLeft, end: Alignment.bottomRight)),
             ),
-            SingleChildScrollView(
-              child: Positioned.fill(
+            Positioned.fill(
+              child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
