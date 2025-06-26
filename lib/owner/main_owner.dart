@@ -1,23 +1,18 @@
+// ignore_for_file: unnecessary_import
+
 import 'dart:async';
-import 'dart:math' hide log;
+import 'package:flutter/services.dart';
 import 'package:Project_SPA/owner/download_splash.dart';
 import 'package:flutter/material.dart';
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:get/get.dart';
-import 'dart:io'; // For file operations
-import 'package:image_picker/image_picker.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 import 'package:Project_SPA/function/our_drawer.dart';
-import 'package:Project_SPA/office_boy/image_mgr.dart';
-import 'package:Project_SPA/office_boy/main_ob.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:dio/dio.dart';
 import 'dart:developer';
 import 'package:intl/intl.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 // Model data utk Chart
 class ChartData {
@@ -178,9 +173,51 @@ class OwnerPageController extends GetxController {
   }
 }
 
-class OwnerPage extends StatelessWidget {
-  OwnerPage({super.key}) {
-    Get.put(OwnerPageController());
+class OwnerPage extends StatefulWidget {
+  const OwnerPage({super.key});
+
+  @override
+  State<OwnerPage> createState() => _OwnerPageState();
+}
+
+class _OwnerPageState extends State<OwnerPage> {
+  bool _isReady = false;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    // Kunci Orientasi
+    SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
+
+    // Delay UI building. biar g ancur pas login. minimal 500, klo 100 kecepatan
+    Future.delayed(Duration(milliseconds: 500), () {
+      if (mounted) {
+        setState(() {
+          _isReady = true;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  Widget _buildLoadingScreen() {
+    return Scaffold(backgroundColor: Color(0XFFFFE0B2), body: Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(Colors.white))));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _isReady ? IsiOwnerPage() : _buildLoadingScreen();
+  }
+}
+
+class IsiOwnerPage extends StatelessWidget {
+  IsiOwnerPage({super.key}) {
+    Get.lazyPut(() => OwnerPageController(), fenix: false);
   }
 
   @override
@@ -200,271 +237,275 @@ class OwnerPage extends StatelessWidget {
         ),
       ),
       drawer: OurDrawer(),
-      body: Container(
-        height: Get.height,
-        width: Get.width,
-        padding: const EdgeInsets.only(top: 30, left: 20, right: 20),
-        color: Color(0XFFFFE0B2),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    margin: const EdgeInsets.only(left: 10, right: 10),
-                    height: 40,
-                    width: double.infinity,
-                    child: Text("Dashboard", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins', height: 1, fontSize: 30)),
-                  ),
-                ),
-                Expanded(
-                  child: Container(
-                    alignment: Alignment.centerRight,
-                    margin: const EdgeInsets.only(left: 10, right: 10),
-                    height: 40,
-                    width: double.infinity,
-                    child: InkWell(
-                      onTap: c.downloadExcel,
-                      child: Text("Cetak Laporan", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins', height: 1, fontSize: 20)),
+      body: SingleChildScrollView(
+        child: Container(
+          width: Get.width,
+          height: Get.height + 200,
+          padding: const EdgeInsets.only(top: 30, left: 20, right: 20),
+          color: Color(0XFFFFE0B2),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      margin: const EdgeInsets.only(left: 10, right: 10),
+                      height: 40,
+                      width: double.infinity,
+                      child: Text("Dashboard", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins', height: 1, fontSize: 30)),
                     ),
                   ),
-                ),
-              ],
-            ),
-            SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    margin: const EdgeInsets.only(left: 10, right: 10),
-                    padding: const EdgeInsets.only(left: 15),
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
-                    height: 150,
-                    width: double.infinity,
-                    child: Obx(() {
-                      // ambil data bulan saat ini
-                      var currSales = c._monthlySales.firstWhere(
-                        (item) => item['bulan'] == DateFormat('yyyy-MM').format(DateTime.now()),
-                        orElse: () => {'omset_jual': 0.0},
-                      );
-
-                      // ambil bulan lalu
-                      var prevSales = c._monthlySales.firstWhere(
-                        (item) => item['bulan'] == DateFormat('yyyy-MM').format(DateTime(DateTime.now().year, DateTime.now().month - 1)),
-                        orElse: () => {'omset_jual': 0.0},
-                      );
-
-                      // kalkulasi valuenya
-                      var currSalesValue = currSales['omset_jual'] ?? 0.0;
-                      var prevSalesValue = prevSales['omset_jual'] ?? 0.0;
-
-                      // kalkulasi peningkatan persentase
-                      double peningkatanPersen = 0.0;
-                      if (prevSalesValue != 0) {
-                        peningkatanPersen = ((currSalesValue - prevSalesValue) / prevSalesValue) * 100;
-                      }
-
-                      // format currency
-                      final currencyFormat = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp. ', decimalDigits: 0);
-
-                      final formattedSales = currencyFormat.format(currSalesValue);
-
-                      String statusText;
-                      if (peningkatanPersen > 0) {
-                        statusText = "Meningkat Sebesar ${peningkatanPersen.toStringAsFixed(0)}%";
-                      } else if (peningkatanPersen < 0) {
-                        statusText = "Menurun Sebesar ${peningkatanPersen.abs().toStringAsFixed(0)}% dari bulan lalu";
-                      } else {
-                        statusText = "Tidak Ada Perubahan";
-                      }
-
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(height: 20),
-                          Text("Current Monthly Sales", style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 18)),
-                          SizedBox(height: 10),
-                          Text(formattedSales, style: TextStyle(fontFamily: 'Poppins')),
-                          SizedBox(height: 10),
-                          Text(statusText, style: TextStyle(fontFamily: 'Poppins', fontSize: 13)),
-                        ],
-                      );
-                    }),
-                  ),
-                ),
-                Expanded(
-                  child: Container(
-                    margin: const EdgeInsets.only(left: 10, right: 10),
-                    padding: const EdgeInsets.only(left: 15),
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
-                    height: 150,
-                    width: double.infinity,
-                    child: Obx(() {
-                      // get current month data, asumsi data udh disortir berdasarkan bln
-                      var currentPaketMonth = c._paketSales.firstWhere(
-                        (item) => item['bulan'] == DateFormat('yyyy-MM').format(DateTime.now()),
-                        orElse: () => {'omset_bulanan': 0.0},
-                      );
-
-                      // Ambil previous month
-                      var previousPaketMonth = c._paketSales.firstWhere(
-                        (item) => item['bulan'] == DateFormat('yyyy-MM').format(DateTime(DateTime.now().year, DateTime.now().month - 1)),
-                        orElse: () => {'omset_bulanan': 0.0},
-                      );
-
-                      // calculate values
-                      var currentPaket = currentPaketMonth['omset_bulanan'] ?? 0.0;
-                      var previousPaket = previousPaketMonth['omset_bulanan'] ?? 0.0;
-
-                      // calculate peningkatan persentase (handle pembagian)
-                      double peningkatanPersen = 0.0;
-                      if (previousPaket != 0) {
-                        peningkatanPersen = ((currentPaket - previousPaket) / previousPaket) * 100;
-                      }
-
-                      // format currency
-                      final currencyFormat = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp. ', decimalDigits: 0);
-
-                      final formattedSales = currencyFormat.format(currentPaket);
-
-                      // tentukan status teks
-                      String statusText;
-                      if (peningkatanPersen > 0) {
-                        statusText = "Meningkat Sebesar ${peningkatanPersen.toStringAsFixed(0)}%";
-                      } else if (peningkatanPersen < 0) {
-                        statusText = "Menurun Sebesar ${peningkatanPersen.abs().toStringAsFixed(0)}% dari bulan lalu";
-                      } else {
-                        statusText = "Tidak Ada Perubahan";
-                      }
-
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(height: 20),
-                          Text("Current Paket Sales", style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 18)),
-                          SizedBox(height: 10),
-                          Text(formattedSales, style: TextStyle(fontFamily: 'Poppins')),
-                          SizedBox(height: 10),
-                          Text(statusText, style: TextStyle(fontFamily: 'Poppins', fontSize: 13)),
-                        ],
-                      );
-                    }),
-                  ),
-                ),
-                Expanded(
-                  child: Container(
-                    margin: const EdgeInsets.only(left: 10, right: 10),
-                    padding: const EdgeInsets.only(left: 15),
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
-                    height: 150,
-                    width: double.infinity,
-                    child: Obx(() {
-                      // ambil data bulan saat ini
-                      var currProdukMonth = c._produkSales.firstWhere(
-                        (item) => item['bulan'] == DateFormat('yyyy-MM').format(DateTime.now()),
-                        orElse: () => {'omset_bulanan': 0.0},
-                      );
-
-                      // ambil bulan lalu
-                      var prevProdukMonth = c._produkSales.firstWhere(
-                        (item) => item['bulan'] == DateFormat('yyyy-MM').format(DateTime(DateTime.now().year, DateTime.now().month - 1)),
-                        orElse: () => {'omset_bulanan': 0.0},
-                      );
-
-                      // kalkulasi valuenya
-                      var currProdukValue = currProdukMonth['omset_bulanan'] ?? 0.0;
-                      var prevProdukValue = prevProdukMonth['omset_bulanan'] ?? 0.0;
-
-                      // kalkulasi peningkatan persentase
-                      double peningkatanPersen = 0.0;
-                      if (prevProdukValue != 0) {
-                        peningkatanPersen = ((currProdukValue - prevProdukValue) / prevProdukValue) * 100;
-                      }
-
-                      // format currency
-                      final currencyFormat = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp. ', decimalDigits: 0);
-
-                      final formattedSales = currencyFormat.format(currProdukValue);
-
-                      String statusText;
-                      if (peningkatanPersen > 0) {
-                        statusText = "Meningkat Sebesar ${peningkatanPersen.toStringAsFixed(0)}%";
-                      } else if (peningkatanPersen < 0) {
-                        statusText = "Menurun Sebesar ${peningkatanPersen.abs().toStringAsFixed(0)}% dari bulan lalu";
-                      } else {
-                        statusText = "Tidak Ada Perubahan";
-                      }
-
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(height: 20),
-                          Text("Current Produk Sales", style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 18)),
-                          SizedBox(height: 10),
-                          Text(formattedSales, style: TextStyle(fontFamily: 'Poppins')),
-                          SizedBox(height: 10),
-                          Text(statusText, style: TextStyle(fontFamily: 'Poppins', fontSize: 13)),
-                        ],
-                      );
-                    }),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: Container(
-                    margin: const EdgeInsets.only(left: 10, right: 10),
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
-                    height: 280,
-                    width: double.infinity,
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 10),
-                        const Text('Pendapatan Bulanan (dalam ribuan)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, height: 1)),
-                        Obx(() {
-                          if (c.monthlyData.isEmpty) {
-                            return CircularProgressIndicator();
-                          }
-
-                          return SizedBox(height: 250, width: double.infinity, child: MonthlyRevenueChart(salesData: c.monthlyData));
-                        }),
-                      ],
+                  Expanded(
+                    child: Container(
+                      alignment: Alignment.centerRight,
+                      margin: const EdgeInsets.only(left: 10, right: 10),
+                      height: 40,
+                      width: double.infinity,
+                      child: InkWell(
+                        onTap: c.downloadExcel,
+                        child: Text("Cetak Laporan", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins', height: 1, fontSize: 20)),
+                      ),
                     ),
                   ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: Container(
-                    margin: const EdgeInsets.only(left: 10, right: 10),
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
-                    padding: const EdgeInsets.only(top: 20),
-                    height: 280,
-                    width: double.infinity,
-                    child: Column(
-                      children: [
-                        Text("Paket Terlaris", style: TextStyle(fontSize: 20, fontFamily: 'Poppins', height: 1, fontWeight: FontWeight.bold)),
-                        SizedBox(height: 30),
-                        Obx(() {
-                          if (c.pieChartData.isEmpty) {
-                            return CircularProgressIndicator();
-                          }
+                ],
+              ),
+              SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      margin: const EdgeInsets.only(left: 10, right: 10),
+                      padding: const EdgeInsets.only(left: 15),
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+                      height: 150,
+                      width: double.infinity,
+                      child: Obx(() {
+                        // ambil data bulan saat ini
+                        var currSales = c._monthlySales.firstWhere(
+                          (item) => item['bulan'] == DateFormat('yyyy-MM').format(DateTime.now()),
+                          orElse: () => {'omset_jual': 0.0},
+                        );
 
-                          return DynamicPieChart(chartData: c.pieChartData);
-                        }),
-                      ],
+                        // ambil bulan lalu
+                        var prevSales = c._monthlySales.firstWhere(
+                          (item) => item['bulan'] == DateFormat('yyyy-MM').format(DateTime(DateTime.now().year, DateTime.now().month - 1)),
+                          orElse: () => {'omset_jual': 0.0},
+                        );
+
+                        // kalkulasi valuenya
+                        var currSalesValue = currSales['omset_jual'] ?? 0.0;
+                        var prevSalesValue = prevSales['omset_jual'] ?? 0.0;
+
+                        // kalkulasi peningkatan persentase
+                        double peningkatanPersen = 0.0;
+                        if (prevSalesValue != 0) {
+                          peningkatanPersen = ((currSalesValue - prevSalesValue) / prevSalesValue) * 100;
+                        }
+
+                        // format currency
+                        final currencyFormat = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp. ', decimalDigits: 0);
+
+                        final formattedSales = currencyFormat.format(currSalesValue);
+
+                        String statusText;
+                        if (peningkatanPersen > 0) {
+                          statusText = "Meningkat Sebesar ${peningkatanPersen.toStringAsFixed(0)}%";
+                        } else if (peningkatanPersen < 0) {
+                          statusText = "Menurun Sebesar ${peningkatanPersen.abs().toStringAsFixed(0)}% dari bulan lalu";
+                        } else {
+                          statusText = "Tidak Ada Perubahan";
+                        }
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(height: 20),
+                            Text("Current Monthly Sales", style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 18)),
+                            SizedBox(height: 10),
+                            Text(formattedSales, style: TextStyle(fontFamily: 'Poppins')),
+                            SizedBox(height: 10),
+                            Text(statusText, style: TextStyle(fontFamily: 'Poppins', fontSize: 13)),
+                          ],
+                        );
+                      }),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                  Expanded(
+                    child: Container(
+                      margin: const EdgeInsets.only(left: 10, right: 10),
+                      padding: const EdgeInsets.only(left: 15),
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+                      height: 150,
+                      width: double.infinity,
+                      child: Obx(() {
+                        // get current month data, asumsi data udh disortir berdasarkan bln
+                        var currentPaketMonth = c._paketSales.firstWhere(
+                          (item) => item['bulan'] == DateFormat('yyyy-MM').format(DateTime.now()),
+                          orElse: () => {'omset_bulanan': 0.0},
+                        );
+
+                        // Ambil previous month
+                        var previousPaketMonth = c._paketSales.firstWhere(
+                          (item) => item['bulan'] == DateFormat('yyyy-MM').format(DateTime(DateTime.now().year, DateTime.now().month - 1)),
+                          orElse: () => {'omset_bulanan': 0.0},
+                        );
+
+                        // calculate values
+                        var currentPaket = currentPaketMonth['omset_bulanan'] ?? 0.0;
+                        var previousPaket = previousPaketMonth['omset_bulanan'] ?? 0.0;
+
+                        // calculate peningkatan persentase (handle pembagian)
+                        double peningkatanPersen = 0.0;
+                        if (previousPaket != 0) {
+                          peningkatanPersen = ((currentPaket - previousPaket) / previousPaket) * 100;
+                        }
+
+                        // format currency
+                        final currencyFormat = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp. ', decimalDigits: 0);
+
+                        final formattedSales = currencyFormat.format(currentPaket);
+
+                        // tentukan status teks
+                        String statusText;
+                        if (peningkatanPersen > 0) {
+                          statusText = "Meningkat Sebesar ${peningkatanPersen.toStringAsFixed(0)}%";
+                        } else if (peningkatanPersen < 0) {
+                          statusText = "Menurun Sebesar ${peningkatanPersen.abs().toStringAsFixed(0)}% dari bulan lalu";
+                        } else {
+                          statusText = "Tidak Ada Perubahan";
+                        }
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(height: 20),
+                            Text("Current Paket Sales", style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 18)),
+                            SizedBox(height: 10),
+                            Text(formattedSales, style: TextStyle(fontFamily: 'Poppins')),
+                            SizedBox(height: 10),
+                            Text(statusText, style: TextStyle(fontFamily: 'Poppins', fontSize: 13)),
+                          ],
+                        );
+                      }),
+                    ),
+                  ),
+                  Expanded(
+                    child: Container(
+                      margin: const EdgeInsets.only(left: 10, right: 10),
+                      padding: const EdgeInsets.only(left: 15),
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+                      height: 150,
+                      width: double.infinity,
+                      child: Obx(() {
+                        // ambil data bulan saat ini
+                        var currProdukMonth = c._produkSales.firstWhere(
+                          (item) => item['bulan'] == DateFormat('yyyy-MM').format(DateTime.now()),
+                          orElse: () => {'omset_bulanan': 0.0},
+                        );
+
+                        // ambil bulan lalu
+                        var prevProdukMonth = c._produkSales.firstWhere(
+                          (item) => item['bulan'] == DateFormat('yyyy-MM').format(DateTime(DateTime.now().year, DateTime.now().month - 1)),
+                          orElse: () => {'omset_bulanan': 0.0},
+                        );
+
+                        // kalkulasi valuenya
+                        var currProdukValue = currProdukMonth['omset_bulanan'] ?? 0.0;
+                        var prevProdukValue = prevProdukMonth['omset_bulanan'] ?? 0.0;
+
+                        // kalkulasi peningkatan persentase
+                        double peningkatanPersen = 0.0;
+                        if (prevProdukValue != 0) {
+                          peningkatanPersen = ((currProdukValue - prevProdukValue) / prevProdukValue) * 100;
+                        }
+
+                        // format currency
+                        final currencyFormat = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp. ', decimalDigits: 0);
+
+                        final formattedSales = currencyFormat.format(currProdukValue);
+
+                        String statusText;
+                        if (peningkatanPersen > 0) {
+                          statusText = "Meningkat Sebesar ${peningkatanPersen.toStringAsFixed(0)}%";
+                        } else if (peningkatanPersen < 0) {
+                          statusText = "Menurun Sebesar ${peningkatanPersen.abs().toStringAsFixed(0)}% dari bulan lalu";
+                        } else {
+                          statusText = "Tidak Ada Perubahan";
+                        }
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(height: 20),
+                            Text("Current Produk Sales", style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 18)),
+                            SizedBox(height: 10),
+                            Text(formattedSales, style: TextStyle(fontFamily: 'Poppins')),
+                            SizedBox(height: 10),
+                            Text(statusText, style: TextStyle(fontFamily: 'Poppins', fontSize: 13)),
+                          ],
+                        );
+                      }),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: Container(
+                      margin: const EdgeInsets.only(left: 10, right: 10),
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+                      height: 280,
+                      width: double.infinity,
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 10),
+                          const Text('Pendapatan Bulanan (dalam ribuan)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, height: 1)),
+                          Obx(() {
+                            if (c.monthlyData.isEmpty) {
+                              return CircularProgressIndicator();
+                            }
+
+                            return SizedBox(height: 250, width: double.infinity, child: MonthlyRevenueChart(salesData: c.monthlyData));
+                          }),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: Container(
+                      margin: const EdgeInsets.only(left: 10, right: 10),
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+                      padding: const EdgeInsets.only(top: 20),
+                      height: 280,
+                      width: double.infinity,
+                      child: Column(
+                        children: [
+                          Text("Paket Terlaris", style: TextStyle(fontSize: 20, fontFamily: 'Poppins', height: 1, fontWeight: FontWeight.bold)),
+                          SizedBox(height: 30),
+                          Obx(() {
+                            if (c.pieChartData.isEmpty) {
+                              return CircularProgressIndicator();
+                            }
+
+                            return DynamicPieChart(chartData: c.pieChartData);
+                          }),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
+
+    // return
   }
 }
 

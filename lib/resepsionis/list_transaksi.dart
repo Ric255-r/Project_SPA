@@ -32,6 +32,7 @@ import 'printer_mgr_api.dart';
 import 'package:esc_pos_utils/esc_pos_utils.dart'; // This is crucial
 // import 'package:thermal_printer/thermal_printer.dart';
 import 'package:dartx/dartx.dart';
+import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 
 class ListTransaksiController extends GetxController {
   RxList<Map<String, dynamic>> dataList = <Map<String, dynamic>>[].obs;
@@ -39,6 +40,83 @@ class ListTransaksiController extends GetxController {
   TextEditingController textcari = TextEditingController();
   Timer? _debounce;
   Timer? _refreshTimer;
+  ScrollController _scrollTglController = ScrollController();
+
+  RxList<DateTime?> rangeDatePickerOmset = <DateTime?>[].obs;
+
+  void showDialogTgl() {
+    rangeDatePickerOmset.clear();
+
+    Get.dialog(
+      AlertDialog(
+        // Let the AlertDialog handle the padding
+        contentPadding: EdgeInsets.fromLTRB(24.0, 20.0, 24.0, 0),
+        // Use shape for rounded corners
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.0),
+        ),
+        content: Scrollbar(
+          controller: _scrollTglController,
+          thumbVisibility: true,
+          child: SingleChildScrollView(
+            controller: _scrollTglController,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "Petunjuk : Anda bisa memilih lebih dari 1 Tanggal",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Poppins',
+                  ),
+                ),
+                SizedBox(height: 10),
+                Obx(
+                  () => SizedBox(
+                    height: Get.height - 150,
+                    width: Get.width - 100,
+                    child: CalendarDatePicker2(
+                      config: CalendarDatePicker2Config(
+                        calendarType: CalendarDatePicker2Type.range,
+                        selectedDayHighlightColor: Colors.deepPurple,
+                        selectedRangeHighlightColor: Colors.purple.withOpacity(
+                          0.2,
+                        ),
+                        firstDate: DateTime(
+                          2000,
+                        ), // Optional: set earliest selectable date
+                        lastDate: DateTime(
+                          2100,
+                        ), // Optional: set latest selectable date
+                      ),
+                      value: rangeDatePickerOmset,
+                      onValueChanged: (dates) {
+                        rangeDatePickerOmset.assignAll(dates);
+                        log("Isi Range Date $rangeDatePickerOmset");
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              refreshData();
+              Get.back();
+            },
+            child: Text("SUBMIT"),
+          ),
+        ],
+      ),
+    ).then((_) {
+      if (rangeDatePickerOmset.isEmpty) {
+        refreshData();
+      }
+    });
+  }
 
   @override
   void onInit() {
@@ -96,11 +174,27 @@ class ListTransaksiController extends GetxController {
   RxList<Map<String, dynamic>> dataQris = <Map<String, dynamic>>[].obs;
   RxString tglNow = "".obs;
 
-  Future<List<Map<String, dynamic>>> fetchData() async {
+  Future<List<Map<String, dynamic>>> fetchData({bool isOwner = false}) async {
     try {
-      final response = await dio.get(
-        '${myIpAddr()}/listtrans/datatrans?hak_akses=${_hakAkses.value}',
-      );
+      String myUrl =
+          '${myIpAddr()}/listtrans/datatrans?hak_akses=${_hakAkses.value}';
+
+      if (isOwner) {
+        List<dynamic> rangeDate = rangeDatePickerOmset;
+        if (rangeDate.isNotEmpty) {
+          String startDate = rangeDate[0].toString().split(" ")[0];
+          myUrl += "&start_date=$startDate";
+
+          if (rangeDate.length == 2) {
+            String endDate = rangeDate[1].toString().split(" ")[0];
+            myUrl += "&end_date=$endDate";
+          }
+        }
+      }
+
+      log("isi myUrl adalah $myUrl");
+
+      final response = await dio.get(myUrl);
 
       if (response.statusCode == 200) {
         omsetCash.value = response.data['total_cash'] ?? 0;
@@ -168,7 +262,7 @@ class ListTransaksiController extends GetxController {
     try {
       final prefs = await getTokenSharedPref();
       var response = await getMyData(prefs);
-      print(response);
+      log("Isi Response Profile User listtransaksi $response");
 
       Map<String, dynamic> responseData = response['data'];
       _hakAkses.value = responseData['hak_akses'];
@@ -179,7 +273,7 @@ class ListTransaksiController extends GetxController {
       // namaKaryawan.value = responseData['nama_karyawan'];
       // jabatan.value = responseData['jabatan'];
     } catch (e) {
-      log("Error di $e");
+      log("Error di profile user listtransaksi $e");
     }
   }
 
@@ -194,7 +288,7 @@ class ListTransaksiController extends GetxController {
 
   Future<void> refreshData() async {
     try {
-      final data = await fetchData();
+      final data = await fetchData(isOwner: _hakAkses.value == "owner");
       // assign data yang sama utk dataList dengan filteredList
       dataList.assignAll(data);
       filteredList.assignAll(data);
@@ -308,11 +402,24 @@ class ListTransaksiController extends GetxController {
     Get.dialog(
       AlertDialog(
         title: Center(
-          child: Obx(
-            () => Text(
-              "Detail Omset ${capitalize(mode)} - ${formatDate(tglNow.value, format: "dd-MM-yyyy")}",
-            ),
-          ),
+          child: Obx(() {
+            String teksTgl = "";
+
+            List<dynamic> rangeDate = rangeDatePickerOmset;
+            if (rangeDate.isNotEmpty) {
+              String startDate = rangeDate[0].toString().split(" ")[0];
+              teksTgl += formatDate(startDate, format: "dd-MM-yyyy");
+
+              if (rangeDate.length == 2) {
+                String endDate = rangeDate[1].toString().split(" ")[0];
+                teksTgl += " s/d ${formatDate(endDate, format: "dd-MM-yyyy")}";
+              }
+            } else {
+              teksTgl = formatDate(tglNow.value, format: "dd-MM-yyyy");
+            }
+
+            return Text("Detail Omset ${capitalize(mode)} - $teksTgl");
+          }),
         ),
         content: SingleChildScrollView(
           child: SizedBox(
@@ -1470,22 +1577,41 @@ class ListTransaksiController extends GetxController {
       final response = await dio.post(
         '${myIpAddr()}/listtrans/print',
         data: Stream.fromIterable([bytes]),
-        options: Options(contentType: 'application/octet-stream', responseType: ResponseType.json),
+        options: Options(
+          contentType: 'application/octet-stream',
+          responseType: ResponseType.json,
+        ),
       );
 
       if (response.statusCode != 200) {
-        Get.snackbar("Error", "Gagal Konek Printer ${response.data}", backgroundColor: Colors.white);
+        Get.snackbar(
+          "Error",
+          "Gagal Konek Printer ${response.data}",
+          backgroundColor: Colors.white,
+        );
         throw Exception("Failed to print: ${response.statusCode}");
       }
     } catch (e) {
-      Get.snackbar("Error", "Gagal Kirim Ke printer $e", backgroundColor: Colors.white);
+      Get.snackbar(
+        "Error",
+        "Gagal Kirim Ke printer $e",
+        backgroundColor: Colors.white,
+      );
       log("Error sending to printer: $e");
       rethrow;
     }
   }
 
-  void dialogDetail(String idTrans, double disc, int jenisPembayaran, int isCancel) async {
-    var fetchAll = await Future.wait([getDetailTrans(idTrans), getTerapisData(idTrans)]);
+  void dialogDetail(
+    String idTrans,
+    double disc,
+    int jenisPembayaran,
+    int isCancel,
+  ) async {
+    var fetchAll = await Future.wait([
+      getDetailTrans(idTrans),
+      getTerapisData(idTrans),
+    ]);
     final dataOri = fetchAll[0];
     final dataTerapis = fetchAll[1];
 
@@ -2892,11 +3018,13 @@ class ListTransaksi extends StatelessWidget {
                 ),
               ),
               Container(
-                margin: EdgeInsets.only(left: 730),
+                // margin: EdgeInsets.only(left: 730),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Container(
                       width: 250,
+                      margin: const EdgeInsets.only(right: 30),
                       height: 40,
                       child: TextField(
                         controller: c.textcari,
@@ -2911,8 +3039,63 @@ class ListTransaksi extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 10),
+              Obx(() {
+                if (c._hakAkses.value == "owner") {
+                  return Container(
+                    alignment: Alignment.centerLeft,
+                    margin: const EdgeInsets.only(
+                      bottom: 5,
+                      left: 30,
+                      right: 30,
+                    ),
+                    width: Get.width,
+                    child: Row(
+                      children: [
+                        Text("Pilih Jangka Waktu: "),
+                        SizedBox(width: 10),
+                        ElevatedButton(
+                          onPressed: () {
+                            c.showDialogTgl();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: Text("Pilih", style: TextStyle(height: 1)),
+                        ),
+                        SizedBox(width: 20),
+
+                        Obx(() {
+                          String teks = "";
+                          List<dynamic> rangeDate = c.rangeDatePickerOmset;
+                          if (rangeDate.isNotEmpty) {
+                            String startDate =
+                                rangeDate[0].toString().split(" ")[0];
+                            teks +=
+                                "Tanggal Mulai: ${c.formatDate(startDate, format: "dd-MM-yyyy")} ";
+
+                            if (rangeDate.length == 2) {
+                              String endDate =
+                                  rangeDate[1].toString().split(" ")[0];
+                              teks +=
+                                  "| Tanggal Akhir: ${c.formatDate(endDate, format: "dd-MM-yyyy")}";
+                            }
+                          }
+
+                          return Text(teks);
+                        }),
+                      ],
+                    ),
+                  );
+                }
+
+                return SizedBox.shrink();
+              }),
+
               Container(
-                width: 900,
+                width: Get.width,
+                margin: const EdgeInsets.only(left: 30, right: 30),
                 height: 420,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.all(Radius.circular(20)),
@@ -2927,7 +3110,7 @@ class ListTransaksi extends StatelessWidget {
                   child: Container(
                     width: 400,
                     child: Obx(() {
-                      if (c._isNotFound.value) {
+                      if (c._isNotFound.value || c.filteredList.isEmpty) {
                         return const Center(child: Text("Tidak Ada Transaksi"));
                       }
 
@@ -3606,16 +3789,24 @@ class ListTransaksi extends StatelessWidget {
               SizedBox(height: 10),
 
               Container(
-                width: Get.width - 180,
+                width: Get.width,
+                margin: const EdgeInsets.symmetric(horizontal: 30),
                 child: Row(
                   children: [
                     // Label
-                    const Expanded(
+                    Expanded(
                       flex: 1, // Give more space to the label
-                      child: Text(
-                        "Omset Harian:",
-                        style: TextStyle(fontWeight: FontWeight.w900),
-                      ),
+                      child: Obx(() {
+                        String teksHarian = "Harian";
+                        if (c.rangeDatePickerOmset.isNotEmpty) {
+                          teksHarian = "Keseluruhan";
+                        }
+
+                        return Text(
+                          "Omset $teksHarian",
+                          style: TextStyle(fontWeight: FontWeight.w900),
+                        );
+                      }),
                     ),
 
                     // Cash
@@ -3672,7 +3863,7 @@ class ListTransaksi extends StatelessWidget {
                     // Qris
                     Expanded(
                       child: InkWell(
-                        onTap: () => c.showDialogOmset("debit"),
+                        onTap: () => c.showDialogOmset("qris"),
                         child: Obx(
                           () => Text(
                             "Qris: ${c.currencyFormatter.format(c.omsetQris.value)}",
@@ -3688,6 +3879,8 @@ class ListTransaksi extends StatelessWidget {
                   ],
                 ),
               ),
+
+              SizedBox(height: 40),
             ],
           ),
         ),

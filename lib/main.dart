@@ -25,6 +25,7 @@ import 'package:Project_SPA/resepsionis/transaksi_massage.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:cherry_toast/cherry_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:get/get.dart';
 import 'package:Project_SPA/resepsionis/main_resepsionis.dart';
@@ -40,12 +41,14 @@ Future<void> onNotificationTap(ReceivedAction receivedAction) async {
 }
 
 @pragma('vm:entry-point')
-void onStartBackgroundTask(ServiceInstance service) {
+void onStartBackgroundTask(ServiceInstance service) async {
   DartPluginRegistrant.ensureInitialized();
   print("Background service started!");
 
   if (service is AndroidServiceInstance) {
-    service.setAsForegroundService();
+    await service.setForegroundNotificationInfo(title: "SPA App Service", content: "Running in background");
+
+    await service.setAsForegroundService();
 
     // Keep WebSocket or other logic running
     service.invoke('startForeground', {'id': 1, 'title': 'WebSocket Running', 'content': 'Keeping WebSocket Active'});
@@ -56,17 +59,20 @@ void onStartBackgroundTask(ServiceInstance service) {
   });
 }
 
-void startbackgroundservice() {
+void startbackgroundservice() async {
+  final service = FlutterBackgroundService();
+
   final androidConfiguration = AndroidConfiguration(onStart: onStartBackgroundTask, isForegroundMode: true, autoStart: true);
 
   final iosConfiguration = IosConfiguration(onForeground: onStartBackgroundTask, onBackground: (service) => false);
 
-  FlutterBackgroundService().configure(androidConfiguration: androidConfiguration, iosConfiguration: iosConfiguration);
-  FlutterBackgroundService().startService();
+  await service.configure(androidConfiguration: androidConfiguration, iosConfiguration: iosConfiguration);
+  await service.startService();
 }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  startbackgroundservice();
 
   // Add this error handler
   FlutterError.onError = (details) {
@@ -140,7 +146,6 @@ void main() async {
   }
   Get.put(ControllerPekerja());
 
-  startbackgroundservice();
   runApp(Myapp(initialPage: initialPage));
 }
 
@@ -307,6 +312,8 @@ class _LoginPageState extends State<LoginPage> {
     // TODO: implement initState
     // testStorage();
     super.initState();
+    // Kunci Login Screen Saja
+    SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
   }
 
   @override
@@ -319,8 +326,8 @@ class _LoginPageState extends State<LoginPage> {
             Container(
               decoration: BoxDecoration(gradient: LinearGradient(colors: [Colors.black, Colors.yellow], begin: Alignment.topLeft, end: Alignment.bottomRight)),
             ),
-            SingleChildScrollView(
-              child: Positioned.fill(
+            Positioned.fill(
+              child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
