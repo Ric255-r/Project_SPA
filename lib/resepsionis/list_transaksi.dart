@@ -40,6 +40,7 @@ class ListTransaksiController extends GetxController {
   TextEditingController textcari = TextEditingController();
   Timer? _debounce;
   Timer? _refreshTimer;
+  ScrollController _scrollTglController = ScrollController();
 
   RxList<DateTime?> rangeDatePickerOmset = <DateTime?>[].obs;
 
@@ -52,33 +53,38 @@ class ListTransaksiController extends GetxController {
         contentPadding: EdgeInsets.fromLTRB(24.0, 20.0, 24.0, 0),
         // Use shape for rounded corners
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text("Petunjuk : Anda bisa memilih lebih dari 1 Tanggal", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
-              SizedBox(height: 10),
-              Obx(
-                () => SizedBox(
-                  height: Get.height - 250,
-                  width: Get.width - 250,
-                  child: CalendarDatePicker2(
-                    config: CalendarDatePicker2Config(
-                      calendarType: CalendarDatePicker2Type.range,
-                      selectedDayHighlightColor: Colors.deepPurple,
-                      selectedRangeHighlightColor: Colors.purple.withOpacity(0.2),
-                      firstDate: DateTime(2000), // Optional: set earliest selectable date
-                      lastDate: DateTime(2100), // Optional: set latest selectable date
+        content: Scrollbar(
+          controller: _scrollTglController,
+          thumbVisibility: true,
+          child: SingleChildScrollView(
+            controller: _scrollTglController,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text("Petunjuk : Anda bisa memilih lebih dari 1 Tanggal", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
+                SizedBox(height: 10),
+                Obx(
+                  () => SizedBox(
+                    height: Get.height - 150,
+                    width: Get.width - 100,
+                    child: CalendarDatePicker2(
+                      config: CalendarDatePicker2Config(
+                        calendarType: CalendarDatePicker2Type.range,
+                        selectedDayHighlightColor: Colors.deepPurple,
+                        selectedRangeHighlightColor: Colors.purple.withOpacity(0.2),
+                        firstDate: DateTime(2000), // Optional: set earliest selectable date
+                        lastDate: DateTime(2100), // Optional: set latest selectable date
+                      ),
+                      value: rangeDatePickerOmset,
+                      onValueChanged: (dates) {
+                        rangeDatePickerOmset.assignAll(dates);
+                        log("Isi Range Date $rangeDatePickerOmset");
+                      },
                     ),
-                    value: rangeDatePickerOmset,
-                    onValueChanged: (dates) {
-                      rangeDatePickerOmset.assignAll(dates);
-                      log("Isi Range Date $rangeDatePickerOmset");
-                    },
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
         actions: [
