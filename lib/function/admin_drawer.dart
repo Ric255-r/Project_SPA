@@ -54,6 +54,7 @@ class _AdminDrawerState extends State<AdminDrawer> {
     // TODO: implement initState
     super.initState();
     _profileUser();
+    _getHakAkses();
   }
 
   Future<void> _profileUser() async {
@@ -78,6 +79,37 @@ class _AdminDrawerState extends State<AdminDrawer> {
   }
 
   var dio = Dio();
+  String _firstHakAkses = "";
+  List<String> _listSecondHakAkses = [];
+
+  Future<void> _getHakAkses() async {
+    try {
+      final prefs = await getTokenSharedPref();
+      var response = await dio.get(
+        '${myIpAddr()}/hak_akses',
+        options: Options(headers: {"Authorization": "bearer " + prefs!}),
+      );
+
+      setState(() {
+        Map<String, dynamic> resData = response.data;
+        // Definisikan Hak Akses Masing2
+        _firstHakAkses = resData['nama_hakakses'];
+        List<dynamic> secHakAkses = resData['second_hakakses'];
+
+        _listSecondHakAkses.clear();
+        for (var i = 0; i < secHakAkses.length; i++) {
+          _listSecondHakAkses.add(secHakAkses[i]['nama_hakakses']);
+        }
+      });
+
+      print(_firstHakAkses);
+      print(_listSecondHakAkses);
+
+      log("Hasil Second Hak Akses $_listSecondHakAkses");
+    } catch (e) {
+      log("Error Get Hak Akses Drawer $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -413,6 +445,18 @@ class _AdminDrawerState extends State<AdminDrawer> {
                     ),
                   ),
                 ),
+                if (_firstHakAkses == "owner") ...[
+                  ListTile(
+                    leading: const Icon(Icons.admin_panel_settings_rounded),
+                    title: const Text(
+                      'Owner',
+                      style: TextStyle(fontFamily: 'Poppins'),
+                    ),
+                    onTap: () {
+                      Get.to(() => OwnerPage());
+                    },
+                  ),
+                ],
               ],
             ),
           ),

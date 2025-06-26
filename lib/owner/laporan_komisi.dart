@@ -82,20 +82,42 @@ class _laporankomisiState extends State<laporankomisi> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Center(
-                child: Container(
-                  margin: EdgeInsets.only(top: 50),
-                  child: Text(
-                    'Laporan Komisi Terapis & Gro',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Poppins',
-                      height: 1,
-                      fontSize: 50,
+              Row(
+                children: [
+                  Align(
+                    alignment: Alignment.topLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 20, left: 20),
+                      child: Builder(
+                        builder:
+                            (context) => IconButton(
+                              icon: Icon(Icons.menu),
+                              onPressed: () {
+                                Scaffold.of(context).openDrawer();
+                              },
+                            ),
+                      ),
                     ),
                   ),
-                ),
+                  Expanded(
+                    child: Center(
+                      child: Container(
+                        margin: EdgeInsets.only(top: 50),
+                        child: Text(
+                          'Laporan Komisi Terapis & Gro',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Poppins',
+                            height: 1,
+                            fontSize: 50,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
+
               Container(
                 margin: EdgeInsets.only(top: 50),
                 child: Row(
