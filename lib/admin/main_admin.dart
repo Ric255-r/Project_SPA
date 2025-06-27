@@ -62,38 +62,27 @@ class _MainAdminState extends State<MainAdmin> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(''),
-        centerTitle: true,
-        backgroundColor: Color(0XFFFFE0B2),
-      ),
+      appBar: AppBar(title: Text(''), centerTitle: true, backgroundColor: Color(0XFFFFE0B2)),
       body: Container(
         decoration: BoxDecoration(color: Color(0XFFFFE0B2)),
         width: Get.width,
         height: Get.height,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              height: 250,
-              width: 250,
-              decoration: BoxDecoration(shape: BoxShape.circle),
-              child: ClipOval(
-                child: Image.asset('assets/spa.jpg', fit: BoxFit.cover),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                height: 250,
+                width: 250,
+                decoration: BoxDecoration(shape: BoxShape.circle),
+                child: ClipOval(child: Image.asset('assets/spa.jpg', fit: BoxFit.cover)),
               ),
-            ),
-            Padding(
-              padding: EdgeInsets.only(top: 30),
-              child: Text(
-                'PLATINUM',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 70,
-                  fontWeight: FontWeight.bold,
-                ),
+              Padding(
+                padding: EdgeInsets.only(top: 30),
+                child: Text('PLATINUM', style: TextStyle(fontFamily: 'Poppins', fontSize: 70, fontWeight: FontWeight.bold)),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       drawer: Obx(() {

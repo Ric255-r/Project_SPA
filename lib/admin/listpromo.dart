@@ -1552,7 +1552,7 @@ class _ListpromoState extends State<Listpromo> {
         data: {"kode_promo": kode_promo},
       );
     } catch (e) {
-      log("Error di fn Getdapaketmassage : $e");
+      log("Error di fn deletepromotahunan : $e");
     }
   }
 
