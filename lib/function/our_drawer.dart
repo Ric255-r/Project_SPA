@@ -258,7 +258,7 @@ class _OurDrawerState extends State<OurDrawer> {
             title: const Text(
               'Komisi Terapis',
               style: TextStyle(fontFamily: 'Poppins'),
-            ),  
+            ),
             onTap: () {
               Get.offAll(() => laporankomisi());
             },
