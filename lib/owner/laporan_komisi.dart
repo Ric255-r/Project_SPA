@@ -3,6 +3,8 @@ import 'dart:math' hide log;
 import 'package:Project_SPA/owner/download_splash.dart';
 import 'package:Project_SPA/resepsionis/detail_food_n_beverages.dart';
 import 'package:Project_SPA/ruang_tunggu/main_rt.dart';
+import 'package:calendar_date_picker2/calendar_date_picker2.dart';
+import 'package:dartx/dartx_io.dart';
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:get/get.dart';
@@ -35,7 +37,11 @@ class _laporankomisiState extends State<laporankomisi>
   RxString selectedyearvalue = DateTime.now().year.toString().obs;
   RxList<Map<String, dynamic>> datakomisi = <Map<String, dynamic>>[].obs;
   RxList<Map<String, dynamic>> datakomisitahunan = <Map<String, dynamic>>[].obs;
+  RxList<Map<String, dynamic>> datakomisiharian = <Map<String, dynamic>>[].obs;
   final formatnominal = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ');
+  RxList<DateTime?> _rangedatepickervalue = <DateTime?>[].obs;
+  String startdate = '';
+  String enddate = '';
   int currentmonth = DateTime.now().month;
   int currentyear = DateTime.now().year;
   int pilihanbulan = 1;
@@ -93,6 +99,39 @@ class _laporankomisiState extends State<laporankomisi>
     } catch (e) {
       log("Error di fn getdatakomisi : $e");
     }
+  }
+
+  Future<void> getdatakomisiharian(tanggalawal, tanggalakhir) async {
+    try {
+      print('ini jalan');
+      var response = await dio.get(
+        '${myIpAddr()}/cekkomisi/listkomisiownerharian',
+        data: {'startdate': tanggalawal, 'enddate': tanggalakhir},
+      );
+      List<Map<String, dynamic>> fetcheddata =
+          (response.data as List).map((item) {
+            return {
+              "id_karyawan": item['id_karyawan'],
+              "nama_karyawan": item['nama_karyawan'],
+              "total_komisi": item['total_komisi'],
+            };
+          }).toList();
+      setState(() {
+        datakomisiharian.clear();
+        datakomisiharian.assignAll(fetcheddata);
+        datakomisiharian.refresh();
+      });
+    } catch (e) {
+      log("Error di fn getdatakomisi : $e");
+    }
+  }
+
+  DateTime? _getdateonly(DateTime? dateTime) {
+    if (dateTime == null) {
+      return null;
+    }
+
+    return DateTime(dateTime.year, dateTime.month, dateTime.day);
   }
 
   @override
@@ -328,7 +367,68 @@ class _laporankomisiState extends State<laporankomisi>
                     ),
                   )
                   : selectedtabindex == 0
-                  ? Container(child: Text('harian'))
+                  ? Container(
+                    margin: EdgeInsets.only(top: 50),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () async {
+                            final results = await showCalendarDatePicker2Dialog(
+                              context: context,
+                              config:
+                                  CalendarDatePicker2WithActionButtonsConfig(
+                                    calendarType: CalendarDatePicker2Type.range,
+                                    okButton: const Text('OK'),
+                                    cancelButton: const Text('Cancel'),
+                                    selectedDayHighlightColor:
+                                        Colors.deepPurple,
+                                  ),
+                              dialogSize: const Size(600, 400),
+                              value: _rangedatepickervalue.value,
+                              borderRadius: BorderRadius.circular(15),
+                            );
+
+                            if (results != null) {
+                              _rangedatepickervalue.value =
+                                  results
+                                      .map((date) => _getdateonly(date))
+                                      .toList();
+                              startdate =
+                                  _rangedatepickervalue[0]
+                                      ?.toIso8601String()
+                                      .split('T')
+                                      .first ??
+                                  '';
+                              enddate =
+                                  _rangedatepickervalue.length > 1
+                                      ? _rangedatepickervalue[1]
+                                              ?.toIso8601String()
+                                              .split('T')
+                                              .first ??
+                                          ''
+                                      : startdate;
+
+                              getdatakomisiharian(startdate, enddate);
+
+                              print(datakomisiharian.toString());
+                            }
+                          },
+                          child: Text('Pilih Tanggal'),
+                        ),
+                        SizedBox(width: 20),
+                        Obx(
+                          () => Container(
+                            child: Text(
+                              _rangedatepickervalue.isEmpty
+                                  ? 'Pilihan tanggal : - '
+                                  : 'Pilihan tanggal : ${startdate} - ${enddate}',
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
                   : Container(
                     margin: EdgeInsets.only(top: 50),
                     child: Row(
