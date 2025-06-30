@@ -73,6 +73,7 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
   RxInt _dialogTxtTotalStlhPjk = 0.obs;
   int _parsedTotalBayar = 0;
   int kembalian = 0;
+  RxInt hrgStlhPjk = 0.obs;
   void _fnFormatTotalBayar(String value) {
     // Remove all non-digit characters
     String digits = value.replaceAll(RegExp(r'[^0-9]'), '');
@@ -604,12 +605,18 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
           data['nama_bank'] = _selectedBank;
         }
       } else {
+        await _getPajak();
+        double nominalPjk = rincian['stlh_disc']! * desimalPjk.value;
+        double hrgPjkSblmRound = rincian['stlh_disc']! + nominalPjk;
+
+        // Pembulatan ke ribuan terdekat
+        hrgStlhPjk.value = (hrgPjkSblmRound / 1000).round() * 1000;
         data['jenis_pembayaran'] = true; // true = akhir
         data['status'] = "unpaid";
       }
 
       data['pajak'] = desimalPjk.value;
-      data['gtotal_stlh_pajak'] = _dialogTxtTotalStlhPjk.value;
+      data['gtotal_stlh_pajak'] = hrgStlhPjk.value;
 
       var response = await dio.post(
         '${myIpAddr()}/fnb/store',

@@ -6,6 +6,7 @@ import 'package:Project_SPA/resepsionis/detail_fnb_addon.dart';
 import 'package:Project_SPA/resepsionis/store_locker.dart';
 import 'package:Project_SPA/resepsionis/transaksi_massage.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:cherry_toast/cherry_toast.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -32,7 +33,7 @@ class _BillingLockerState extends State<BillingLocker> {
   RxList<Map<String, dynamic>> databillinglocker = <Map<String, dynamic>>[].obs;
 
   final LockerManager _lockerManager = LockerManager();
-  
+
   Future<void> getdatabillinglocker() async {
     try {
       var response = await dio.get('${myIpAddr()}/billinglocker/getdatalocker');
@@ -183,7 +184,7 @@ class _BillingLockerState extends State<BillingLocker> {
                                                       response
                                                           .data['id_transaksi'];
 
-                                                  if (idTransaksi != null) {
+                                                  if (item['status'] == 1) {
                                                     // Optional: Store locker if still needed
                                                     _lockerManager.addLocker(
                                                       int.parse(nomorLocker),
@@ -196,10 +197,11 @@ class _BillingLockerState extends State<BillingLocker> {
                                                     );
                                                     log(idTransaksi);
                                                   } else {
-                                                    Get.snackbar(
-                                                      "Tidak ditemukan",
-                                                      "Belum ada transaksi untuk locker ini.",
-                                                    );
+                                                    CherryToast.warning(
+                                                      title: Text(
+                                                        "Belum ada transaksi untuk locker ini",
+                                                      ),
+                                                    ).show(context);
                                                   }
                                                 } catch (e) {
                                                   print(

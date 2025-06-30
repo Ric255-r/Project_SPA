@@ -252,7 +252,7 @@ class _RegisPromoState extends State<RegisPromo> {
             isMingguChecked = false;
             isUmumChecked = false;
             isVIPChecked = false;
-            isMemberChecked = false;  
+            isMemberChecked = false;
           });
         } else {
           log("data gagal tersimpan");
@@ -684,6 +684,12 @@ class _RegisPromoState extends State<RegisPromo> {
                                             child: TextField(
                                               controller:
                                                   controller_diskon_promo,
+                                              keyboardType:
+                                                  TextInputType.number,
+                                              inputFormatters: [
+                                                FilteringTextInputFormatter
+                                                    .digitsOnly,
+                                              ],
                                               decoration: InputDecoration(
                                                 border: InputBorder.none,
                                                 contentPadding:
@@ -1796,6 +1802,12 @@ class _RegisPromoState extends State<RegisPromo> {
                                             child: TextField(
                                               controller:
                                                   controller_jangka_tahunan,
+                                              keyboardType:
+                                                  TextInputType.number,
+                                              inputFormatters: [
+                                                FilteringTextInputFormatter
+                                                    .digitsOnly,
+                                              ],
                                               decoration: InputDecoration(
                                                 border: InputBorder.none,
                                                 contentPadding:
@@ -1836,6 +1848,11 @@ class _RegisPromoState extends State<RegisPromo> {
                                         child: TextField(
                                           controller:
                                               controller_harga_promo_tahunan,
+                                          keyboardType: TextInputType.number,
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter
+                                                .digitsOnly,
+                                          ],
                                           decoration: InputDecoration(
                                             border: InputBorder.none,
                                             contentPadding:

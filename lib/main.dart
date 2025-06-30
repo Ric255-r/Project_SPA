@@ -317,9 +317,12 @@ class _LoginPageState extends State<LoginPage> {
           CherryToast.warning(
             title: Text('Username Atau Password Tidak sesuai'),
           ).show(context);
+        } else if (e.response!.statusCode == 404) {
+          CherryToast.warning(
+            title: Text('User Tidak Ditemukan'),
+          ).show(context);
         }
       }
-
       log("Error : ${e}");
     }
   }
