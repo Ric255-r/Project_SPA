@@ -144,16 +144,22 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
     }
   }
 
-  Future<void> removeIdDraft() async {
+  Future<bool> removeIdDraft() async {
     try {
       var token = await getTokenSharedPref();
       print(token);
 
       var response = await dio.delete('${myIpAddr()}/id_trans/deleteDraftId/${idTrans}', options: Options(headers: {"Authorization": "Bearer " + token!}));
 
-      log("Delete Draft $response");
+      if (response.statusCode == 200) {
+        log("Delete Draft $response");
+        return true;
+      }
+
+      return false;
     } catch (e) {
       log("Error di Delete Draft $e");
+      return false;
     }
   }
 
@@ -681,19 +687,18 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
   @override
   void initState() {
     // TODO: implement initState
-
+    super.initState();
     _createDraftLastTrans();
     getDataFasilitas();
     getDataHappyHour();
-    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        await removeIdDraft();
-        return true;
+        bool isDeleted = await removeIdDraft();
+        return isDeleted;
       },
       child: Scaffold(
         appBar: AppBar(
@@ -701,10 +706,9 @@ class _TransaksiFasilitasState extends State<TransaksiFasilitas> {
             padding: const EdgeInsets.only(left: 20),
             child: IconButton(
               icon: Icon(Icons.arrow_back, size: 40), // Back Icon
-              onPressed: () {
-                removeIdDraft().then((_) {
-                  Get.back(); // Navigate back
-                });
+              onPressed: () async {
+                bool isDeleted = await removeIdDraft();
+                if (isDeleted) Get.back();
               },
             ),
           ),

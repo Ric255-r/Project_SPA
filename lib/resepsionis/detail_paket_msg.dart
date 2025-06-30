@@ -574,27 +574,11 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                         namaruangan = controllerPekerja.getroom.value;
                         idterapis = controllerPekerja.getidterapis.value;
                         namaterapis = controllerPekerja.getnamaterapis.value;
-                        // log(controllerPekerja.statusshowing.value.toString());
-                        // if (Get.isRegistered<ControllerPanggilanKerja>()) {
-                        //   await Get.delete<ControllerPanggilanKerja>();
-                        // }
 
-                        // final c = Get.put(ControllerPanggilanKerja());
-                        if (controllerPekerja.statusshowing.value !=
-                            'pressed') {
-                          daftapanggilankerja(
-                              namaruangan,
-                            namaterapis,
-                          );
-                          // c.refreshDataPanggilanKerja();
+                        if (controllerPekerja.statusshowing.value != 'pressed') {
+                          daftapanggilankerja(namaruangan, namaterapis);
                         }
-                        daftarruangtunggu(
-                          idtransaksi,
-                           namaruangan,
-                          idterapis,
-                          namaterapis,
-                        );
-                        // c.channel.sink.close();
+                        daftarruangtunggu(idtransaksi, namaruangan, idterapis, namaterapis);
 
                         Get.offAll(() => MainResepsionis());
                       });

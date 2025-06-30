@@ -28,10 +28,7 @@ class _TransaksiFoodState extends State<TransaksiFood> {
       print(token);
 
       // pake method post. jadi alurny post dlu id transaksi ke tabel, lalu update
-      var response = await dio.post(
-        '${myIpAddr()}/id_trans/createDraft',
-        options: Options(headers: {"Authorization": "Bearer " + token!}),
-      );
+      var response = await dio.post('${myIpAddr()}/id_trans/createDraft', options: Options(headers: {"Authorization": "Bearer " + token!}));
 
       var newId = response.data['id_transaksi'];
       log("New Transaction ID: $newId");
@@ -56,11 +53,7 @@ class _TransaksiFoodState extends State<TransaksiFood> {
       var response = await dio.put(
         '${myIpAddr()}/id_trans/updateDraft/${idTrans}',
         options: Options(headers: {"Authorization": "Bearer " + token!}),
-        data: {
-          "jenis_tamu": dropdownValue,
-          "no_hp": _noHp.text,
-          "nama_tamu": _namaTamu.text,
-        },
+        data: {"jenis_tamu": dropdownValue, "no_hp": _noHp.text, "nama_tamu": _namaTamu.text},
       );
 
       log("Update Draft $response");
@@ -69,19 +62,22 @@ class _TransaksiFoodState extends State<TransaksiFood> {
     }
   }
 
-  Future<void> removeIdDraft() async {
+  Future<bool> removeIdDraft() async {
     try {
       var token = await getTokenSharedPref();
       print(token);
 
-      var response = await dio.delete(
-        '${myIpAddr()}/id_trans/deleteDraftId/${idTrans}',
-        options: Options(headers: {"Authorization": "Bearer " + token!}),
-      );
+      var response = await dio.delete('${myIpAddr()}/id_trans/deleteDraftId/${idTrans}', options: Options(headers: {"Authorization": "Bearer " + token!}));
 
-      log("Delete Draft $response");
+      if (response.statusCode == 200) {
+        log("Delete Draft $response");
+        return true;
+      }
+
+      return false;
     } catch (e) {
       log("Error di Delete Draft $e");
+      return false;
     }
   }
 
@@ -106,22 +102,19 @@ class _TransaksiFoodState extends State<TransaksiFood> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        await removeIdDraft();
-        return true;
+        bool isDeleted = await removeIdDraft();
+        return isDeleted;
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(
-            'Transaksi Food & Beverages',
-            style: TextStyle(fontSize: 60, fontFamily: 'Poppins'),
-          ),
+          title: Text('Transaksi Food & Beverages', style: TextStyle(fontSize: 60, fontFamily: 'Poppins')),
           leading: Padding(
             padding: const EdgeInsets.only(left: 20),
             child: IconButton(
               icon: Icon(Icons.arrow_back, size: 40), // Back Icon
               onPressed: () async {
-                await removeIdDraft();
-                Get.back(); // Navigate back
+                bool isDeleted = await removeIdDraft();
+                if (isDeleted) Get.back(); // Navigate back
               },
             ),
           ),
@@ -137,37 +130,22 @@ class _TransaksiFoodState extends State<TransaksiFood> {
             width: Get.width,
             height: Get.height - 155,
             child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: Get.width * 0.28,
-                vertical: Get.height * 0.08,
-              ),
+              padding: EdgeInsets.symmetric(horizontal: Get.width * 0.28, vertical: Get.height * 0.08),
               child: Column(
                 children: [
                   Row(
                     children: [
-                      Text(
-                        'No Transaksi : ',
-                        style: TextStyle(fontSize: 22, fontFamily: 'Poppins'),
-                      ),
+                      Text('No Transaksi : ', style: TextStyle(fontSize: 22, fontFamily: 'Poppins')),
                       Padding(
                         padding: EdgeInsets.only(left: 10),
                         child: Container(
                           width: 300,
                           height: 50,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: Colors.white,
-                          ),
+                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
                           child: TextField(
                             readOnly: true,
                             controller: _txtIdTrans,
-                            decoration: InputDecoration(
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(
-                                vertical: 15,
-                                horizontal: 10,
-                              ),
-                            ),
+                            decoration: InputDecoration(border: InputBorder.none, contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 10)),
                             style: TextStyle(fontSize: 22),
                           ),
                         ),
@@ -176,22 +154,13 @@ class _TransaksiFoodState extends State<TransaksiFood> {
                   ),
                   Row(
                     children: [
-                      Padding(
-                        padding: EdgeInsets.only(top: 10),
-                        child: Text(
-                          'Jenis Tamu : ',
-                          style: TextStyle(fontSize: 22, fontFamily: 'Poppins'),
-                        ),
-                      ),
+                      Padding(padding: EdgeInsets.only(top: 10), child: Text('Jenis Tamu : ', style: TextStyle(fontSize: 22, fontFamily: 'Poppins'))),
                       Padding(
                         padding: EdgeInsets.only(left: 24, top: 10),
                         child: Container(
                           width: 300,
                           height: 50,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: Colors.white,
-                          ),
+                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
                           child: DropdownButton<String>(
                             value: dropdownValue,
                             icon: const Icon(Icons.arrow_drop_down),
@@ -206,18 +175,10 @@ class _TransaksiFoodState extends State<TransaksiFood> {
                               });
                             },
                             items:
-                                list.map<DropdownMenuItem<String>>((
-                                  String value,
-                                ) {
+                                list.map<DropdownMenuItem<String>>((String value) {
                                   return DropdownMenuItem<String>(
                                     value: value,
-                                    child: Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: Text(
-                                        value,
-                                        style: TextStyle(fontSize: 22),
-                                      ),
-                                    ),
+                                    child: Align(alignment: Alignment.centerLeft, child: Text(value, style: TextStyle(fontSize: 22))),
                                   );
                                 }).toList(),
                           ),
@@ -227,32 +188,17 @@ class _TransaksiFoodState extends State<TransaksiFood> {
                   ),
                   Row(
                     children: [
-                      Text(
-                        'No HP : ',
-                        style: TextStyle(fontSize: 22, fontFamily: 'Poppins'),
-                      ),
+                      Text('No HP : ', style: TextStyle(fontSize: 22, fontFamily: 'Poppins')),
                       Padding(
                         padding: EdgeInsets.only(left: 88, top: 10),
                         child: Container(
                           width: 300,
                           height: 50,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: Colors.white,
-                          ),
+                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
                           child: TextField(
                             controller: _noHp,
-                            decoration: InputDecoration(
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(
-                                vertical: 15,
-                                horizontal: 10,
-                              ),
-                            ),
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontFamily: 'Poppins',
-                            ),
+                            decoration: InputDecoration(border: InputBorder.none, contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 10)),
+                            style: TextStyle(fontSize: 22, fontFamily: 'Poppins'),
                           ),
                         ),
                       ),
@@ -260,32 +206,17 @@ class _TransaksiFoodState extends State<TransaksiFood> {
                   ),
                   Row(
                     children: [
-                      Text(
-                        'Nama : ',
-                        style: TextStyle(fontSize: 22, fontFamily: 'Poppins'),
-                      ),
+                      Text('Nama : ', style: TextStyle(fontSize: 22, fontFamily: 'Poppins')),
                       Padding(
                         padding: EdgeInsets.only(left: 84, top: 10),
                         child: Container(
                           width: 300,
                           height: 50,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: Colors.white,
-                          ),
+                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
                           child: TextField(
                             controller: _namaTamu,
-                            decoration: InputDecoration(
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(
-                                vertical: 15,
-                                horizontal: 10,
-                              ),
-                            ),
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontFamily: 'Poppins',
-                            ),
+                            decoration: InputDecoration(border: InputBorder.none, contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 10)),
+                            style: TextStyle(fontSize: 22, fontFamily: 'Poppins'),
                           ),
                         ),
                       ),
@@ -294,27 +225,17 @@ class _TransaksiFoodState extends State<TransaksiFood> {
                   Padding(
                     padding: EdgeInsets.only(top: 50),
                     child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(15),
-                        color: Color(0XFFF6F7C4),
-                      ),
+                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), color: Color(0XFFF6F7C4)),
                       height: 100,
                       width: 380,
                       child: TextButton(
                         onPressed: () {
                           _updateLastTrans().then((_) {
-                            Get.to(
-                              () => DetailFoodNBeverages(idTrans: idTrans),
-                            );
+                            Get.to(() => DetailFoodNBeverages(idTrans: idTrans));
                           });
                         },
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.black,
-                        ),
-                        child: Text(
-                          'Pilih Paket',
-                          style: TextStyle(fontSize: 40, fontFamily: 'Poppins'),
-                        ),
+                        style: TextButton.styleFrom(foregroundColor: Colors.black),
+                        child: Text('Pilih Paket', style: TextStyle(fontSize: 40, fontFamily: 'Poppins')),
                       ),
                     ),
                   ),
