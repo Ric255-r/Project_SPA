@@ -152,7 +152,7 @@ class _FoodAddOnState extends State<FoodAddOn> {
           if (didPop) c.selectedDataMenu.clear();
         },
         child: Container(
-          height: Get.height,
+          height: Get.height + 200,
           width: Get.width,
           padding: const EdgeInsets.only(left: 80, right: 80),
           decoration: BoxDecoration(color: Color(0XFFFFE0B2)),
@@ -177,7 +177,6 @@ class _FoodAddOnState extends State<FoodAddOn> {
                             crossAxisCount: 3, // 3 item 1 row
                             crossAxisSpacing: 60, // space horizontal tiap item
                             mainAxisSpacing: 25, // space vertical tiap item
-
                             childAspectRatio: 20 / 12,
                           ),
                           itemCount: c.dataMenu.length,

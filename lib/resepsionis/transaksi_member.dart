@@ -173,16 +173,22 @@ class _TransaksiMemberState extends State<TransaksiMember> {
     }
   }
 
-  Future<void> removeIdDraft() async {
+  Future<bool> removeIdDraft() async {
     try {
       var token = await getTokenSharedPref();
       print(token);
 
       var response = await dio.delete('${myIpAddr()}/id_trans/deleteDraftId/${idTrans}', options: Options(headers: {"Authorization": "Bearer " + token!}));
 
-      log("Delete Draft $response");
+      if (response.statusCode == 200) {
+        log("Delete Draft $response");
+        return true;
+      }
+
+      return false;
     } catch (e) {
       log("Error di Delete Draft $e");
+      return false;
     }
   }
 
@@ -577,8 +583,8 @@ class _TransaksiMemberState extends State<TransaksiMember> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        await removeIdDraft();
-        return true;
+        bool isDeleted = await removeIdDraft();
+        return isDeleted;
       },
       child: Scaffold(
         appBar: AppBar(
@@ -588,8 +594,8 @@ class _TransaksiMemberState extends State<TransaksiMember> {
             child: IconButton(
               icon: Icon(Icons.arrow_back, size: 40), // Back Icon
               onPressed: () async {
-                await removeIdDraft();
-                Get.back(); // Navigate back
+                bool isDeleted = await removeIdDraft();
+                if (isDeleted) Get.back(); // Navigate back
               },
             ),
           ),
