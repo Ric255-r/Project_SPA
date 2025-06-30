@@ -851,7 +851,7 @@ class MainResepsionis extends StatelessWidget {
                       },
 
                       child: Text(
-                        'Absensi\nShowing',
+                        'Absensi\n Rolling',
                         style: TextStyle(
                           fontSize: 30,
                           fontFamily: 'Poppins',
