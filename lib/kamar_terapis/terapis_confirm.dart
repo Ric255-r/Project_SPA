@@ -98,6 +98,8 @@ class TerapisConfirmController extends GetxController {
       List<dynamic> responseFood = response2.data;
       _dataFood.assignAll(responseFood.map((e) => Map<String, dynamic>.from(e)).toList());
 
+      log("isi Data food ${_dataFood}");
+
       print("_getLatestTrans Bisa");
     } catch (e) {
       if (e is DioException) {
@@ -277,6 +279,37 @@ class TerapisConfirm extends StatelessWidget {
                                         Expanded(child: Text("${item['id_produk']} - ${item['nama_produk']}")),
                                         Expanded(child: Text("${item['total_durasi']} Menit")),
                                         Expanded(child: Text("${(item['tgl_transaksi'] as String).split("T")[0]}")),
+                                        Flexible(
+                                          child: SizedBox(
+                                            height: 24, // Fixed height matching text
+                                            child: Icon(item['is_addon'] == 1 ? Icons.check : Icons.cancel, size: 20),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                ],
+                              );
+                            } else {
+                              return Text("");
+                            }
+                          }),
+                          Obx(() {
+                            if (c._dataFood.isNotEmpty) {
+                              return Column(
+                                children: [
+                                  SizedBox(height: 10),
+                                  Row(
+                                    children: [
+                                      Expanded(child: Text("Id & Nama Food", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'))),
+                                      Expanded(child: Text("Qty", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'))),
+                                      Expanded(child: Text("Is Add On", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'))),
+                                    ],
+                                  ),
+                                  for (var item in c._dataFood)
+                                    Row(
+                                      children: [
+                                        Expanded(child: Text("${item['id_fnb']} - ${item['nama_fnb']}")),
+                                        Expanded(child: Text("${item['qty']} Pcs")),
                                         Flexible(
                                           child: SizedBox(
                                             height: 24, // Fixed height matching text
