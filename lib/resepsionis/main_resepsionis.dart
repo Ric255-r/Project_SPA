@@ -665,7 +665,7 @@ class MainResepsionis extends StatelessWidget {
                         c.KodeTerapisController.clear();
                       },
 
-                      child: Text('Absensi\nShowing', style: TextStyle(fontSize: 30, fontFamily: 'Poppins', color: Colors.black)),
+                      child: Text('Absensi\n Rolling', style: TextStyle(fontSize: 30, fontFamily: 'Poppins', color: Colors.black)),
                     ),
                   ),
                 ),

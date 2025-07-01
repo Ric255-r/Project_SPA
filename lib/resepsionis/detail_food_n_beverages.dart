@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
 
+import 'package:Project_SPA/resepsionis/detail_paket_msg.dart';
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:get/get.dart';
@@ -72,6 +73,7 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
   RxInt _dialogTxtTotalStlhPjk = 0.obs;
   int _parsedTotalBayar = 0;
   int kembalian = 0;
+  RxInt hrgStlhPjk = 0.obs;
   void _fnFormatTotalBayar(String value) {
     // Remove all non-digit characters
     String digits = value.replaceAll(RegExp(r'[^0-9]'), '');
@@ -568,7 +570,8 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
   }
 
   var dio = Dio();
-
+  late String varJenisPembayaran = jenisPembayaran.first;
+  List<String> jenisPembayaran = ["awal", "akhir"];
   Future<void> _storeTrans() async {
     try {
       var rincian = getHargaAfterDisc();
@@ -578,37 +581,52 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
         "total_harga": rincian['sblm_disc'],
         "disc": rincian['desimal_persen'],
         "grand_total": rincian['stlh_disc'],
-        "jumlah_bayar": _parsedTotalBayar,
         "detail_trans": dataJual,
       };
 
-      if (isCash.value) {
-        data['metode_pembayaran'] = "cash";
-        data['jumlah_bayar'] = _parsedTotalBayar;
-      } else {
-        if (isQris.value) {
-          data['metode_pembayaran'] = "qris";
-        } else if (isKredit.value) {
-          data['metode_pembayaran'] = "kredit";
+      if (varJenisPembayaran == "awal") {
+        data['jenis_pembayaran'] = false;
+        data['status'] = "paid";
+
+        if (isCash.value) {
+          data['metode_pembayaran'] = "cash";
+          data['jumlah_bayar'] = _parsedTotalBayar;
         } else {
-          data['metode_pembayaran'] = "debit";
+          if (isQris.value) {
+            data['metode_pembayaran'] = "qris";
+          } else if (isKredit.value) {
+            data['metode_pembayaran'] = "kredit";
+          } else {
+            data['metode_pembayaran'] = "debit";
+          }
+          data['jumlah_bayar'] = _dialogTxtTotalStlhPjk.value;
+          data['nama_akun'] = _namaAkun.text;
+          data['no_rek'] = _noRek.text;
+          data['nama_bank'] = _selectedBank;
         }
-        data['jumlah_bayar'] = _dialogTxtTotalStlhPjk.value;
-        data['nama_akun'] = _namaAkun.text;
-        data['no_rek'] = _noRek.text;
-        data['nama_bank'] = _selectedBank;
+      } else {
+        await _getPajak();
+        double nominalPjk = rincian['stlh_disc']! * desimalPjk.value;
+        double hrgPjkSblmRound = rincian['stlh_disc']! + nominalPjk;
+
+        // Pembulatan ke ribuan terdekat
+        hrgStlhPjk.value = (hrgPjkSblmRound / 1000).round() * 1000;
+        data['jenis_pembayaran'] = true; // true = akhir
+        data['status'] = "unpaid";
       }
 
       data['pajak'] = desimalPjk.value;
-      data['gtotal_stlh_pajak'] = _dialogTxtTotalStlhPjk.value;
+      data['gtotal_stlh_pajak'] = hrgStlhPjk.value;
 
       var response = await dio.post(
         '${myIpAddr()}/fnb/store',
         options: Options(headers: {"Authorization": "Bearer " + token!}),
         data: data,
       );
+
       log("Isi data jual $dataJual");
       log("Sukses SImpan $response");
+
       CherryToast.success(
         title: Text(
           "Transaksi Sukses!",
@@ -849,17 +867,100 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
                     width: MediaQuery.of(context).size.width - 200,
                     child: Column(
                       children: [
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              _showDialogConfirmPayment(context);
-                            },
-                            child: Text(
-                              "Konfirmasi Pembayaran",
-                              style: TextStyle(fontFamily: 'Poppins'),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Jenis Pembayaran",
+                                      style: TextStyle(fontFamily: 'Poppins'),
+                                    ),
+                                    SizedBox(
+                                      width: 170,
+                                      child: DropdownButton<String>(
+                                        value: varJenisPembayaran,
+                                        isExpanded: true,
+                                        elevation: 18,
+                                        style: const TextStyle(
+                                          color: Colors.deepPurple,
+                                        ),
+                                        onChanged: (String? value) {
+                                          // dipanggil kalo user select item
+                                          setState(() {
+                                            varJenisPembayaran = value!;
+                                          });
+
+                                          print(
+                                            "Jenis Pembayaran skrg $varJenisPembayaran",
+                                          );
+                                        },
+                                        icon: Icon(
+                                          Icons.arrow_drop_down_circle,
+                                        ),
+                                        items:
+                                            jenisPembayaran
+                                                .map<DropdownMenuItem<String>>((
+                                                  String value,
+                                                ) {
+                                                  return DropdownMenuItem(
+                                                    value: value,
+                                                    child: Align(
+                                                      alignment:
+                                                          Alignment.centerLeft,
+                                                      child: AutoSizeText(
+                                                        "Pembayaran di" + value,
+                                                        minFontSize: 15,
+                                                        style: TextStyle(
+                                                          fontFamily: 'Poppins',
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  );
+                                                })
+                                                .toList(),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                          ),
+                            if (varJenisPembayaran == "awal")
+                              Expanded(
+                                child: Align(
+                                  alignment: Alignment.centerRight,
+                                  child: ElevatedButton(
+                                    onPressed: () {
+                                      _showDialogConfirmPayment(context);
+                                    },
+                                    child: Text(
+                                      "Konfirmasi Pembayaran",
+                                      style: TextStyle(fontFamily: 'Poppins'),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            if (varJenisPembayaran == "akhir")
+                              Expanded(
+                                child: Align(
+                                  alignment: Alignment.centerRight,
+                                  child: ElevatedButton(
+                                    onPressed: () {
+                                      _storeTrans().then((_) {
+                                        Get.offAll(() => MainResepsionis());
+                                      });
+                                    },
+                                    child: Text(
+                                      "Simpan Transaksi",
+                                      style: TextStyle(fontFamily: 'Poppins'),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ],
                     ),
@@ -957,7 +1058,6 @@ class _IsiFoodNBeveragesState extends State<IsiFoodNBeverages> {
   @override
   void initState() {
     // TODO: implement initState
-
     super.initState();
     _getMenu().then((_) {
       // Init Tap States
