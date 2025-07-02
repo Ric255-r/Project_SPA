@@ -5,8 +5,10 @@ import 'package:Project_SPA/function/ip_address.dart';
 
 class PrinterHelper {
   // g = global variabel
-  static int gSubTotal = 0;
-  static int gNominalDisc = 0;
+  // static int gSubTotal = 0;
+  // static int gNominalDisc = 0;
+  static double gSubTotal = 0.0;
+  static double gNominalDisc = 0.0;
   static List<dynamic> gNamaPaketYgMember = [];
 
   static Future<Map<String, dynamic>> _cekMember(idTrans) async {
@@ -133,7 +135,7 @@ class PrinterHelper {
 
     List<int> bytes = [];
     var formatter = NumberFormat.currency(locale: "en_ID", symbol: "Rp.", decimalDigits: 0);
-    int totalProduk = 0;
+    double totalProduk = 0;
 
     bytes += generator.text("Produk", styles: const PosStyles(bold: true, underline: true));
 
@@ -142,14 +144,15 @@ class PrinterHelper {
       int maxNameLength = 15;
       List<String> nameLines = _splitTextIntoLines(product['nama_produk'], maxNameLength);
       double hargaTotalItem = product['qty'] * hargaItem;
-      int stlhRoundTotalItem = (hargaTotalItem / 1000).round() * 1000;
+      // int stlhRoundTotalItem = (hargaTotalItem / 1000).round() * 1000;
 
       if (nameLines.isNotEmpty) {
         bytes += generator.row([
           PosColumn(text: nameLines[0], width: 4),
           PosColumn(text: 'x${product['qty']}', width: 1, styles: const PosStyles(align: PosAlign.center)),
           PosColumn(text: formatter.format(hargaItem), width: 3, styles: const PosStyles(align: PosAlign.right)),
-          PosColumn(text: formatter.format(stlhRoundTotalItem), width: 4, styles: const PosStyles(align: PosAlign.right)),
+          // PosColumn(text: formatter.format(stlhRoundTotalItem), width: 4, styles: const PosStyles(align: PosAlign.right)),
+          PosColumn(text: formatter.format(hargaTotalItem), width: 4, styles: const PosStyles(align: PosAlign.right)),
         ]);
 
         for (int i = 1; i < nameLines.length; i++) {
@@ -162,7 +165,8 @@ class PrinterHelper {
         }
       }
 
-      totalProduk += stlhRoundTotalItem;
+      // totalProduk += stlhRoundTotalItem;
+      totalProduk += hargaTotalItem;
     }
 
     if (jenisPembayaran == 0 && disc > 0) {
@@ -171,7 +175,8 @@ class PrinterHelper {
         PosColumn(text: "Disc(${(disc * 100).toInt()}%)", width: 6),
         PosColumn(text: '-${formatter.format(nominalDisc)}', width: 6, styles: const PosStyles(align: PosAlign.right)),
       ]);
-      gNominalDisc += nominalDisc.toInt();
+      // originalnya ada .toInt()
+      gNominalDisc += nominalDisc;
     }
 
     gSubTotal += totalProduk;
@@ -195,7 +200,7 @@ class PrinterHelper {
     final regularPaket = packages.where((p) => p['is_returned'] == 0).toList();
     final returPaket = packages.where((p) => p['is_returned'] == 1).toList();
     var formatter = NumberFormat.currency(locale: "en_ID", symbol: "Rp.", decimalDigits: 0);
-    int totalProduk = 0;
+    double totalProduk = 0;
 
     List<dynamic> isiDetailMember = currentDataMember;
 
@@ -213,7 +218,7 @@ class PrinterHelper {
 
         double hargaItem = package['harga_item'] * pajak + package['harga_item'];
         double hargaTotalItem = package['qty'] * hargaItem;
-        int stlhRoundTotalItem = (hargaTotalItem / 1000).round() * 1000;
+        // int stlhRoundTotalItem = (hargaTotalItem / 1000).round() * 1000;
         int maxNameLength = 15; // panjang karakter utk printer
         List<String> nameLines = _splitTextIntoLines(package['nama_paket_msg'], maxNameLength);
 
@@ -235,7 +240,7 @@ class PrinterHelper {
           }
         }
 
-        totalProduk += stlhRoundTotalItem;
+        totalProduk += hargaTotalItem;
       }
 
       // Jika beli diawal
@@ -245,7 +250,9 @@ class PrinterHelper {
           PosColumn(text: "Disc(${(disc * 100).toInt()}%)", width: 6),
           PosColumn(text: '-${formatter.format(nominalDisc)}', width: 6, styles: const PosStyles(align: PosAlign.right)),
         ]);
-        gNominalDisc += nominalDisc.toInt();
+
+        // Original ada .toInt()
+        gNominalDisc += nominalDisc;
       }
 
       gSubTotal += totalProduk;
@@ -262,7 +269,7 @@ class PrinterHelper {
           PosColumn(text: nameLines[0], width: 4),
           PosColumn(text: 'x${package['qty']}', width: 1, styles: const PosStyles(align: PosAlign.center)),
           PosColumn(text: '(-${formatter.format(hargaItem)})', width: 3, styles: const PosStyles(align: PosAlign.right)),
-          PosColumn(text: '(-${formatter.format(package['qty'] + hargaItem)})', width: 4, styles: const PosStyles(align: PosAlign.right)),
+          PosColumn(text: '(-${formatter.format(package['qty'] * hargaItem)})', width: 4, styles: const PosStyles(align: PosAlign.right)),
         ]);
 
         // Print subsequent lines without the other columns, just the name
@@ -288,21 +295,22 @@ class PrinterHelper {
     List<int> bytes = [];
     bytes += generator.text('FnB', styles: const PosStyles(bold: true, underline: true));
     var formatter = NumberFormat.currency(locale: "en_ID", symbol: "Rp. ", decimalDigits: 0);
-    int totalProduk = 0;
+    double totalProduk = 0;
 
     for (var data in foods) {
       double hargaItem = data['harga_item'] * pajak + data['harga_item'];
       int maxNameLength = 15;
       List<String> nameLines = _splitTextIntoLines(data['nama_fnb'], maxNameLength);
       double hargaTotalItem = data['qty'] * hargaItem;
-      int stlhRoundTotalItem = (hargaTotalItem / 1000).round() * 1000;
+      // int stlhRoundTotalItem = (hargaTotalItem / 1000).round() * 1000;
 
       if (nameLines.isNotEmpty) {
         bytes += generator.row([
           PosColumn(text: nameLines[0], width: 4),
           PosColumn(text: 'x${data['qty']}', width: 1, styles: const PosStyles(align: PosAlign.center)),
           PosColumn(text: formatter.format(hargaItem), width: 3, styles: const PosStyles(align: PosAlign.right)),
-          PosColumn(text: formatter.format(stlhRoundTotalItem), width: 4, styles: const PosStyles(align: PosAlign.right)),
+          // PosColumn(text: formatter.format(stlhRoundTotalItem), width: 4, styles: const PosStyles(align: PosAlign.right)),
+          PosColumn(text: formatter.format(hargaTotalItem), width: 4, styles: const PosStyles(align: PosAlign.right)),
         ]);
 
         for (int i = 1; i < nameLines.length; i++) {
@@ -315,7 +323,8 @@ class PrinterHelper {
         }
       }
 
-      totalProduk += stlhRoundTotalItem;
+      // totalProduk += stlhRoundTotalItem
+      totalProduk += hargaTotalItem;
     }
 
     // jika beli di awal
@@ -325,7 +334,7 @@ class PrinterHelper {
         PosColumn(text: "Disc(${(disc * 100).toInt()}%)", width: 6),
         PosColumn(text: '-${formatter.format(nominalDisc)}', width: 6, styles: const PosStyles(align: PosAlign.right)),
       ]);
-      gNominalDisc += nominalDisc.toInt();
+      gNominalDisc += nominalDisc;
     }
 
     gSubTotal += totalProduk;
@@ -339,21 +348,21 @@ class PrinterHelper {
     List<int> bytes = [];
     bytes += generator.text('Fasilitas', styles: const PosStyles(bold: true, underline: true));
     var formatter = NumberFormat.currency(locale: "en_ID", symbol: "Rp.", decimalDigits: 0);
-    int totalProduk = 0;
+    double totalProduk = 0;
 
     for (var data in fasilitas) {
       double hargaItem = data['harga'] * pajak + data['harga'];
       int maxNameLength = 15;
       List<String> nameLines = _splitTextIntoLines(data['nama_fasilitas'], maxNameLength);
       double hargaTotalItem = data['qty'] * hargaItem;
-      int stlhRoundTotalItem = (hargaTotalItem / 1000).round() * 1000;
+      // int stlhRoundTotalItem = (hargaTotalItem / 1000).round() * 1000;
 
       if (nameLines.isNotEmpty) {
         bytes += generator.row([
           PosColumn(text: nameLines[0], width: 4),
           PosColumn(text: 'x${data['qty']}', width: 1, styles: const PosStyles(align: PosAlign.center)),
           PosColumn(text: formatter.format(hargaItem), width: 3, styles: const PosStyles(align: PosAlign.right)),
-          PosColumn(text: formatter.format(stlhRoundTotalItem), width: 4, styles: const PosStyles(align: PosAlign.right)),
+          PosColumn(text: formatter.format(hargaTotalItem), width: 4, styles: const PosStyles(align: PosAlign.right)),
         ]);
 
         for (int i = 1; i < nameLines.length; i++) {
@@ -366,7 +375,7 @@ class PrinterHelper {
         }
       }
 
-      totalProduk += stlhRoundTotalItem;
+      totalProduk += hargaTotalItem;
     }
 
     // jika beli di awal
@@ -390,21 +399,21 @@ class PrinterHelper {
     List<int> bytes = [];
     bytes += generator.text('AddOn', styles: const PosStyles(bold: true, underline: true));
     var formatter = NumberFormat.currency(locale: "en_ID", symbol: "Rp.", decimalDigits: 0);
-    int totalProduk = 0;
+    double totalProduk = 0;
 
     for (var data in addOns) {
       double hargaItem = data['harga_item'] * pajak + data['harga_item'];
       int maxNameLength = 15;
       List<String> nameLines = _splitTextIntoLines(data['nama_item'], maxNameLength);
       double hargaTotalItem = data['qty'] * hargaItem;
-      int stlhRoundTotalItem = (hargaTotalItem / 1000).round() * 1000;
+      // int stlhRoundTotalItem = (hargaTotalItem / 1000).round() * 1000;
 
       if (nameLines.isNotEmpty) {
         bytes += generator.row([
           PosColumn(text: nameLines[0], width: 4),
           PosColumn(text: 'x${data['qty']}', width: 1, styles: const PosStyles(align: PosAlign.center)),
           PosColumn(text: formatter.format(hargaItem), width: 3, styles: const PosStyles(align: PosAlign.right)),
-          PosColumn(text: formatter.format(stlhRoundTotalItem), width: 4, styles: const PosStyles(align: PosAlign.right)),
+          PosColumn(text: formatter.format(hargaTotalItem), width: 4, styles: const PosStyles(align: PosAlign.right)),
         ]);
 
         for (int i = 1; i < nameLines.length; i++) {
@@ -417,7 +426,7 @@ class PrinterHelper {
         }
       }
 
-      totalProduk += stlhRoundTotalItem;
+      totalProduk += hargaTotalItem;
     }
 
     gSubTotal += totalProduk;
@@ -489,24 +498,26 @@ class PrinterHelper {
     List<int> bytes = [];
     var formatter = NumberFormat.currency(locale: "en_ID", symbol: "Rp.", decimalDigits: 0);
 
-    int subtotal = gSubTotal;
-    int nominalDisc = 0;
+    // Round only ONCE at the very end
+    int finalSubtotal = gSubTotal.round();
+    int finalNominalDisc = 0;
 
-    // jika akhir, jgn make global disc. lgsg kalikan disc aja
     if (jenisPembayaran == 1) {
-      nominalDisc = (subtotal * disc).toInt();
+      // Akhir
+      finalNominalDisc = (gSubTotal * disc).round();
     } else {
-      // awal
-      nominalDisc = gNominalDisc;
+      // Awal
+      finalNominalDisc = gNominalDisc.round();
     }
 
-    int total = subtotal - nominalDisc;
+    int total = finalSubtotal - finalNominalDisc;
 
+    // Use the final rounded values for printing
     bytes += generator.hr();
     bytes += generator.row([
       PosColumn(text: 'Subtotal', width: 6, styles: const PosStyles(bold: true)),
       PosColumn(
-        text: isFirstTimeMember ? formatter.format(subtotal * pajak + subtotal) : formatter.format(subtotal),
+        text: formatter.format(finalSubtotal), // Use rounded value
         width: 6,
         styles: const PosStyles(align: PosAlign.right),
       ),
@@ -514,13 +525,13 @@ class PrinterHelper {
 
     bytes += generator.row([
       PosColumn(text: 'Disc Total ${jenisPembayaran == 1 ? "${(disc * 100).toInt()}%" : ""}', width: 6, styles: const PosStyles(bold: true)),
-      PosColumn(text: '-${formatter.format(nominalDisc)}', width: 6, styles: const PosStyles(align: PosAlign.right)),
+      PosColumn(text: '-${formatter.format(finalNominalDisc)}', width: 6, styles: const PosStyles(align: PosAlign.right)), // Use rounded value
     ]);
 
     bytes += generator.row([
       PosColumn(text: 'Total', width: 6, styles: const PosStyles(bold: true, height: PosTextSize.size2)),
       PosColumn(
-        text: isFirstTimeMember ? formatter.format(subtotal * pajak + subtotal) : formatter.format(total),
+        text: formatter.format(total), // Use final calculated total
         width: 6,
         styles: const PosStyles(align: PosAlign.right, height: PosTextSize.size2, bold: true),
       ),
@@ -530,6 +541,52 @@ class PrinterHelper {
     bytes += generator.text('Payment Method: ${jenisPembayaran == 1 ? "Akhir" : "Awal"} ', styles: const PosStyles(bold: true));
     return bytes;
   }
+
+  // static List<int> _printTotals(Generator generator, double disc, int jenisPembayaran, bool isFirstTimeMember, double pajak) {
+  //   List<int> bytes = [];
+  //   var formatter = NumberFormat.currency(locale: "en_ID", symbol: "Rp.", decimalDigits: 0);
+
+  //   int subtotal = gSubTotal;
+  //   int nominalDisc = 0;
+
+  //   // jika akhir, jgn make global disc. lgsg kalikan disc aja
+  //   if (jenisPembayaran == 1) {
+  //     nominalDisc = (subtotal * disc).toInt();
+  //   } else {
+  //     // awal
+  //     nominalDisc = gNominalDisc;
+  //   }
+
+  //   int total = subtotal - nominalDisc;
+
+  //   bytes += generator.hr();
+  //   bytes += generator.row([
+  //     PosColumn(text: 'Subtotal', width: 6, styles: const PosStyles(bold: true)),
+  //     PosColumn(
+  //       text: isFirstTimeMember ? formatter.format(subtotal * pajak + subtotal) : formatter.format(subtotal),
+  //       width: 6,
+  //       styles: const PosStyles(align: PosAlign.right),
+  //     ),
+  //   ]);
+
+  //   bytes += generator.row([
+  //     PosColumn(text: 'Disc Total ${jenisPembayaran == 1 ? "${(disc * 100).toInt()}%" : ""}', width: 6, styles: const PosStyles(bold: true)),
+  //     PosColumn(text: '-${formatter.format(nominalDisc)}', width: 6, styles: const PosStyles(align: PosAlign.right)),
+  //   ]);
+
+  //   bytes += generator.row([
+  //     PosColumn(text: 'Total', width: 6, styles: const PosStyles(bold: true, height: PosTextSize.size2)),
+  //     PosColumn(
+  //       text: isFirstTimeMember ? formatter.format(subtotal * pajak + subtotal) : formatter.format(total),
+  //       width: 6,
+  //       styles: const PosStyles(align: PosAlign.right, height: PosTextSize.size2, bold: true),
+  //     ),
+  //   ]);
+
+  //   bytes += generator.hr();
+  //   bytes += generator.text('Payment Method: ${jenisPembayaran == 1 ? "Akhir" : "Awal"} ', styles: const PosStyles(bold: true));
+  //   return bytes;
+  // }
 
   static List<int> _printFooter(Generator generator) {
     List<int> bytes = [];
