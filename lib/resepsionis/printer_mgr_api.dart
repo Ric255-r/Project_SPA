@@ -24,6 +24,31 @@ class PrinterHelper {
     }
   }
 
+  static Future<Map<String, double>> _getPajak() async {
+    var dio = Dio();
+
+    try {
+      var response = await dio.get('${myIpAddr()}/pajak/getpajak');
+
+      // Parse the first record (assumes response is a list of maps)
+      List<dynamic> data = response.data;
+      if (data.isNotEmpty) {
+        var firstRecord = data[0];
+        double pjk = double.tryParse(firstRecord['pajak_msg'].toString()) ?? 0.0;
+        double pjkFnb = double.tryParse(firstRecord['pajak_fnb'].toString()) ?? 0.0;
+
+        return {"pajak_msg": pjk, "pajak_fnb": pjkFnb};
+      } else {
+        throw Exception("Empty data received");
+      }
+    } catch (e) {
+      if (e is DioException) {
+        throw Exception("Error Get Pajak Dio ${e.response?.data}");
+      }
+      throw Exception("Error Get Pajak $e");
+    }
+  }
+
   static Future<List<int>> generateReceipt({
     required String idTrans,
     required double disc,
@@ -341,6 +366,12 @@ class PrinterHelper {
     double totalSection = 0;
 
     bytes += generator.text(title, styles: const PosStyles(bold: true, underline: true));
+
+    if (title == "FnB") {
+      _getPajak().then((res) {
+        pajak = res['pajak_fnb']!;
+      });
+    }
 
     for (var item in items) {
       // Use the priceKey to get the price, defaulting to 0.0 if not found
