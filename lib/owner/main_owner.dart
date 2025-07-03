@@ -134,35 +134,6 @@ class OwnerPageController extends GetxController {
     }
   }
 
-  Future<void> downloadExcel() async {
-    Get.dialog(
-      const DownloadSplash(),
-      barrierDismissible: false, // Prevent user from dismissing by tapping outside
-    );
-    try {
-      // final dir = await getApplicationDocumentsDirectory();
-      final dir = await getDownloadsDirectory();
-      final filePath = '${dir?.path}/datapenjualan_platinum.xlsx';
-
-      await dio.download(
-        '${myIpAddr()}/main_owner/export_excel',
-        filePath,
-        options: Options(responseType: ResponseType.bytes, headers: {'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),
-      );
-
-      // Close the loading dialog
-      Get.back();
-
-      // open downloaded file
-      await OpenFile.open(filePath);
-      print('File downloaded to: $filePath');
-    } catch (e) {
-      // Close the loading dialog
-      Get.back();
-      print('Error downloading file: $e');
-    }
-  }
-
   @override
   void onClose() {
     // TODO: implement onClose
@@ -226,9 +197,26 @@ class IsiOwnerPage extends StatelessWidget {
     // DynamicPieChart(chartData: pieChartData)
     final c = Get.find<OwnerPageController>();
 
+    // LOGIKA YANG DIPERBAIKI: Gunakan 'shortestSide' untuk deteksi tipe perangkat
+    // Ini tidak akan terpengaruh oleh rotasi layar.
+    final bool isMobile = MediaQuery.of(context).size.shortestSide < 600;
+    log("isi Shortest Side ${MediaQuery.of(context).size.shortestSide}");
+    // =======================================================================
+
+    // 1. Tentukan lebar desain dasar Anda
+    // 660 ini lebar terkecil DP tablet yg kita patok.
+    const double tabletDesignWidth = 660;
+    const double tabletDesignHeight = 1024;
+
+    // 2. Tentukan faktor penyesuaian untuk mobile.
+    const double mobileAdjustmentFactor = 1.25; // UI akan 25% lebih kecil
+
+    // 3. Hitung designSize yang efektif berdasarkan tipe perangkat
+    final double effectiveDesignWidth = isMobile ? tabletDesignWidth * mobileAdjustmentFactor : tabletDesignWidth;
+    final double effectiveDesignHeight = isMobile ? tabletDesignHeight * mobileAdjustmentFactor : tabletDesignHeight;
+
     return ScreenUtilInit(
-      // 660 ini lebar terkecil DP tablet yg kita patok.
-      designSize: const Size(660, 1024),
+      designSize: Size(effectiveDesignWidth, effectiveDesignHeight),
       minTextAdapt: true,
       splitScreenMode: true,
       // Penting: Gunakan 'builder' untuk membangun UI Anda.
@@ -267,18 +255,6 @@ class IsiOwnerPage extends StatelessWidget {
                             height: 20.w,
                             width: double.infinity,
                             child: Text("Dashboard", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins', height: 1, fontSize: 12.w)),
-                          ),
-                        ),
-                        Expanded(
-                          child: Container(
-                            alignment: Alignment.centerRight,
-                            margin: const EdgeInsets.only(left: 10, right: 10),
-                            height: 40.w,
-                            width: double.infinity,
-                            child: InkWell(
-                              onTap: c.downloadExcel,
-                              child: Text("Cetak Laporan", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins', height: 1, fontSize: 12.w)),
-                            ),
                           ),
                         ),
                       ],
@@ -471,7 +447,7 @@ class IsiOwnerPage extends StatelessWidget {
                           child: Container(
                             margin: const EdgeInsets.only(left: 10, right: 10),
                             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
-                            height: 240.w,
+                            height: isMobile ? 280.w : 300.w,
                             width: double.infinity,
                             child: Column(
                               children: [
@@ -482,7 +458,7 @@ class IsiOwnerPage extends StatelessWidget {
                                     return CircularProgressIndicator();
                                   }
 
-                                  return SizedBox(height: 250, width: double.infinity, child: MonthlyRevenueChart(salesData: c.monthlyData));
+                                  return SizedBox(height: 250.w, width: double.infinity, child: MonthlyRevenueChart(salesData: c.monthlyData));
                                 }),
                               ],
                             ),
@@ -499,20 +475,24 @@ class IsiOwnerPage extends StatelessWidget {
                             margin: const EdgeInsets.only(left: 10, right: 10),
                             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
                             padding: const EdgeInsets.only(top: 20),
-                            height: 205.w,
-                            width: double.infinity,
-                            child: Column(
-                              children: [
-                                Text("Paket Terlaris", style: TextStyle(fontSize: 12.w, fontFamily: 'Poppins', height: 1, fontWeight: FontWeight.bold)),
-                                SizedBox(height: 30.w),
-                                Obx(() {
-                                  if (c.pieChartData.isEmpty) {
-                                    return CircularProgressIndicator();
-                                  }
+                            height: 215.w,
+                            child: InteractiveViewer(
+                              minScale: 0.5,
+                              maxScale: 4.0,
+                              child: Column(
+                                children: [
+                                  Text("Paket Terlaris", style: TextStyle(fontSize: 12.w, fontFamily: 'Poppins', height: 1, fontWeight: FontWeight.bold)),
+                                  SizedBox(height: 0.8.w),
+                                  Obx(() {
+                                    if (c.pieChartData.isEmpty) {
+                                      return CircularProgressIndicator();
+                                    }
 
-                                  return SizedBox(height: 120.w, width: double.infinity, child: DynamicPieChart(chartData: c.pieChartData));
-                                }),
-                              ],
+                                    // Replace SizedBox with Expanded here
+                                    return Expanded(child: DynamicPieChart(chartData: c.pieChartData));
+                                  }),
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -670,25 +650,28 @@ class _DynamicPieChartState extends State<DynamicPieChart> {
     return Padding(
       padding: const EdgeInsets.all(4.0),
       // pake obx utk update reactive
-      child: Obx(
-        () => PieChart(
-          PieChartData(
-            pieTouchData: PieTouchData(
-              touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                // handler klo piechart disentuh
-                if (!event.isInterestedForInteractions || pieTouchResponse == null || pieTouchResponse.touchedSection == null) {
-                  touchedIndex.value = -1; // reset klo g ad sentuh
-                  return;
-                }
+      child: Transform.scale(
+        scale: 0.8.w,
+        child: Obx(
+          () => PieChart(
+            PieChartData(
+              pieTouchData: PieTouchData(
+                touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                  // handler klo piechart disentuh
+                  if (!event.isInterestedForInteractions || pieTouchResponse == null || pieTouchResponse.touchedSection == null) {
+                    touchedIndex.value = -1; // reset klo g ad sentuh
+                    return;
+                  }
 
-                // simpan index yg disentuh
-                touchedIndex.value = pieTouchResponse.touchedSection!.touchedSectionIndex;
-              },
+                  // simpan index yg disentuh
+                  touchedIndex.value = pieTouchResponse.touchedSection!.touchedSectionIndex;
+                },
+              ),
+              borderData: FlBorderData(show: false), //sembunyikan border
+              sectionsSpace: 2, // jarak antar bagian
+              centerSpaceRadius: 40, // bulat tengah. 0 utk pie penuh
+              sections: showingSection(), // bagan chart
             ),
-            borderData: FlBorderData(show: false), //sembunyikan border
-            sectionsSpace: 2, // jarak antar bagian
-            centerSpaceRadius: 40, // bulat tengah. 0 utk pie penuh
-            sections: showingSection(), // bagan chart
           ),
         ),
       ),

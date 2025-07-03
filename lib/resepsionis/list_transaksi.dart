@@ -13,6 +13,7 @@ import 'package:Project_SPA/admin/regis_room.dart';
 import 'package:Project_SPA/admin/regis_users.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 import 'package:Project_SPA/function/our_drawer.dart';
+import 'package:Project_SPA/owner/download_splash.dart';
 import 'package:Project_SPA/resepsionis/rating.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:cherry_toast/cherry_toast.dart';
@@ -29,6 +30,8 @@ import 'package:Project_SPA/main.dart';
 // import 'package:pdf/pdf.dart';
 // import 'package:pdf/widgets.dart' as pw;
 import 'package:esc_pos_printer/esc_pos_printer.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
 import 'printer_mgr_api.dart';
 import 'package:esc_pos_utils/esc_pos_utils.dart'; // This is crucial
 // import 'package:thermal_printer/thermal_printer.dart';
@@ -1979,13 +1982,83 @@ class ListTransaksiController extends GetxController {
     );
   }
 
-  void showDialogFnb() {
+  TextEditingController txtIdTransFnb = TextEditingController();
+
+  Future<void> storeIdTransFnb(String idTrans) async {
+    try {
+      var response = await dio.put('${myIpAddr()}/listtrans/update_fnb', data: {"current_id_trans": idTrans, "new_id_trans": txtIdTransFnb.text});
+
+      if (response.statusCode == 200) {
+        await refreshData();
+      }
+    } catch (e) {
+      if (e is DioException) {
+        log("Error pada Dio storeIdTransFnb ${e.response!.data}");
+      }
+
+      log("Error Store idTrans Fnb $e");
+    }
+  }
+
+  void showDialogFnb(String idTrans) {
     Get.dialog(
       AlertDialog(
-        content: SizedBox(height: 50, child: Column(children: [TextField(decoration: InputDecoration(hintText: "Masukkan Id Transaksi Tambahan"))])),
-        actions: [ElevatedButton(onPressed: () {}, child: Text("Simpan"))],
+        content: SizedBox(
+          height: 50,
+          child: Column(children: [TextField(controller: txtIdTransFnb, decoration: InputDecoration(hintText: "Masukkan Id Transaksi Tambahan"))]),
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () async {
+              await storeIdTransFnb(idTrans);
+              txtIdTransFnb.clear();
+              Get.back();
+            },
+            child: Text("Simpan"),
+          ),
+        ],
       ),
     );
+  }
+
+  Future<void> downloadExcel() async {
+    Get.dialog(
+      const DownloadSplash(),
+      barrierDismissible: false, // Prevent user from dismissing by tapping outside
+    );
+    try {
+      // final dir = await getApplicationDocumentsDirectory();
+      final dir = await getDownloadsDirectory();
+      final filePath = '${dir?.path}/datapenjualan_platinum.pdf';
+
+      String url = '${myIpAddr()}/main_owner/export_excel?';
+
+      if (_hakAkses.value == "owner") {
+        List<dynamic> rangeDate = rangeDatePickerOmset;
+        if (rangeDate.isNotEmpty) {
+          String startDate = rangeDate[0].toString().split(" ")[0];
+          url += "start_date=$startDate";
+
+          if (rangeDate.length == 2) {
+            String endDate = rangeDate[1].toString().split(" ")[0];
+            url += "&end_date=$endDate";
+          }
+        }
+      }
+
+      await dio.download(url, filePath, options: Options(responseType: ResponseType.bytes, headers: {'Accept': 'application/pdf'}));
+
+      // Close the loading dialog
+      Get.back();
+
+      // open downloaded file
+      await OpenFile.open(filePath);
+      log('File downloaded to: $filePath');
+    } catch (e) {
+      // Close the loading dialog
+      Get.back();
+      log('Error downloading file: $e');
+    }
   }
 }
 
@@ -1998,9 +2071,27 @@ class ListTransaksi extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = Get.find<ListTransaksiController>();
 
+    // LOGIKA YANG DIPERBAIKI: Gunakan 'shortestSide' untuk deteksi tipe perangkat
+    // Ini tidak akan terpengaruh oleh rotasi layar.
+    final bool isMobile = MediaQuery.of(context).size.shortestSide < 600;
+    // =======================================================================
+
+    // 1. Tentukan lebar desain dasar Anda
+    // 660 ini lebar terkecil DP tablet yg kita patok.
+    const double tabletDesignWidth = 660;
+    const double tabletDesignHeight = 1024;
+
+    // 2. Tentukan faktor penyesuaian untuk mobile.
+    const double mobileAdjustmentFactor = 1.125; // UI akan 12.5% lebih kecil
+
+    // 3. Hitung designSize yang efektif berdasarkan tipe perangkat
+    final double effectiveDesignWidth = isMobile ? tabletDesignWidth * mobileAdjustmentFactor : tabletDesignWidth;
+
+    final double effectiveDesignHeight = isMobile ? tabletDesignHeight * mobileAdjustmentFactor : tabletDesignHeight;
+
     return ScreenUtilInit(
       // 660 ini lebar dp terkecil yang kita patok
-      designSize: const Size(660, 1024),
+      designSize: Size(effectiveDesignWidth, effectiveDesignHeight),
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
@@ -2087,6 +2178,23 @@ class ListTransaksi extends StatelessWidget {
 
                               return Text(teks);
                             }),
+
+                            SizedBox(width: 20),
+                            Expanded(
+                              child: Container(
+                                alignment: Alignment.centerRight,
+                                margin: const EdgeInsets.only(left: 10, right: 10),
+                                height: 40.w,
+                                width: double.infinity,
+                                child: InkWell(
+                                  onTap: c.downloadExcel,
+                                  child: Text(
+                                    "Cetak Laporan",
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins', height: 0.5.w, fontSize: 11.w),
+                                  ),
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       );
@@ -2155,7 +2263,7 @@ class ListTransaksi extends StatelessWidget {
                                                     teks += " - DIBATALKAN -";
                                                   }
 
-                                                  if (item['jenis_transaksi'] == "fnb") {
+                                                  if (item['jenis_transaksi'] == "fnb" && item['nama_tamu'] == "") {
                                                     return Row(
                                                       children: [
                                                         Text(
@@ -2170,7 +2278,7 @@ class ListTransaksi extends StatelessWidget {
                                                         SizedBox(width: 10.w),
                                                         ElevatedButton(
                                                           onPressed: () {
-                                                            c.showDialogFnb();
+                                                            c.showDialogFnb(item['id_transaksi']);
                                                           },
                                                           style: ElevatedButton.styleFrom(
                                                             padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
@@ -2181,6 +2289,8 @@ class ListTransaksi extends StatelessWidget {
                                                         ),
                                                       ],
                                                     );
+                                                  } else {
+                                                    teks += item['nama_tamu'] == "" ? "" : " / ${item['nama_tamu']}";
                                                   }
 
                                                   // teks += " (${item['metode_pembayaran']})";
