@@ -259,16 +259,6 @@ class _OurDrawerState extends State<OurDrawer> {
                       },
                     ),
                     ListTile(
-                      leading: const Icon(Icons.room),
-                      title: const Text(
-                        'Menu Awal Resepsionis',
-                        style: TextStyle(fontFamily: 'Poppins'),
-                      ),
-                      onTap: () {
-                        Get.offAll(() => MainResepsionis());
-                      },
-                    ),
-                    ListTile(
                       leading: const Icon(Icons.list_rounded),
                       title: const Text(
                         'List Transaksi',
