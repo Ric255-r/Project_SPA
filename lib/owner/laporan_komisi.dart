@@ -80,16 +80,57 @@ class _laporankomisiState extends State<laporankomisi>
   Future<void> exportkomisibulanan(bulan, tahun) async {
     try {
       print('ini jalan');
-      var response = await dio.get(
-        '${myIpAddr()}/main_owner/export_excel_komisi_bulanan',
+      Get.dialog(const DownloadSplash(), barrierDismissible: false);
+      final dir = await getDownloadsDirectory();
+      final filepath = '${dir!.path}/data komisi bulan $bulan tahun $tahun.pdf';
+      String url = '${myIpAddr()}/main_owner/export_excel_komisi_bulanan';
+      var response = await dio.download(
+        url,
+        filepath,
         queryParameters: {'month': bulan, 'year': tahun},
-        options: Options(responseType: ResponseType.bytes),
+        options: Options(
+          responseType: ResponseType.bytes,
+          headers: {'Accept': 'application/pdf'},
+        ),
       );
 
-      final file = File('/storage/emulated/0/Download/datakomisibulanan.xlsx');
-      await file.writeAsBytes(response.data);
+      Get.back();
+
+      await OpenFile.open(filepath);
+      log('file downloaded to $filepath');
     } catch (e) {
+      Get.back();
       log("Error di fn getdatakomisibulanan : $e");
+      Get.snackbar("Download Failed", "Gagal menyiapkan file komisi terapis");
+    }
+  }
+
+  Future<void> exportkomisigrobulanan(bulan, tahun) async {
+    try {
+      print('ini jalan');
+      Get.dialog(const DownloadSplash(), barrierDismissible: false);
+      final dir = await getDownloadsDirectory();
+      final filepath =
+          '${dir!.path}/data komisi terapis bulan $bulan tahun $tahun.pdf';
+      String url = '${myIpAddr()}/main_owner/export_excel_komisi_bulanan_gro';
+      var response = await dio.download(
+        url,
+        filepath,
+        queryParameters: {'month': bulan, 'year': tahun},
+        options: Options(
+          responseType: ResponseType.bytes,
+          headers: {'Accept': 'application/pdf'},
+        ),
+      );
+
+      Get.back();
+
+      await OpenFile.open(filepath);
+      log('file downloaded to $filepath');
+    } catch (e) {
+      Get.back();
+      log("Error di fn getdatakomisibulanan : $e");
+      Get.snackbar("Download Failed", "Gagal menyiapkan file komisi GRO");
     }
   }
 
@@ -224,204 +265,266 @@ class _laporankomisiState extends State<laporankomisi>
                 selectedtabindex == 1
                     ? Container(
                       width: 1100.w,
-                      height: 45.w,
+                      height: 100.w,
                       margin: EdgeInsets.only(top: 50.w),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Column(
                         children: [
-                          Container(
-                            margin: EdgeInsets.only(top: 0.w),
-                            height: 50,
-                            alignment: Alignment.topCenter,
-                            child: Text(
-                              'Bulan : ',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'Poppins',
-                                height: 1,
-                                fontSize: 20.w,
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                margin: EdgeInsets.only(top: 0.w),
+                                height: 50,
+                                alignment: Alignment.topCenter,
+                                child: Text(
+                                  'Bulan : ',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'Poppins',
+                                    height: 1,
+                                    fontSize: 20.w,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                          Obx(
-                            () => Container(
-                              margin: EdgeInsets.only(top: 0.w),
-                              width: 140.w,
-                              height: 55.w,
-                              child: DropdownButtonFormField<String>(
-                                decoration: InputDecoration(
-                                  contentPadding: EdgeInsets.only(
-                                    top: 0.w,
-                                    bottom: 0.w,
-                                    left: 10.w,
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color: Colors.blue,
-                                      width: 2,
-                                    ),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color: Colors.red,
-                                      width: 2,
-                                    ),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  filled: true,
-                                  fillColor: Colors.grey[200],
-                                ),
-                                value: selectedvalue.value,
-                                style: TextStyle(
-                                  fontSize: 15.w,
-                                  color: Colors.black,
-                                ),
-                                items:
-                                    <String>[
-                                      '1',
-                                      '2',
-                                      '3',
-                                      '4',
-                                      '5',
-                                      '6',
-                                      '7',
-                                      '8',
-                                      '9',
-                                      '10',
-                                      '11',
-                                      '12',
-                                    ].map((String value) {
-                                      return DropdownMenuItem<String>(
-                                        value: value,
-                                        child: Text(
-                                          value == '1'
-                                              ? 'Januari'
-                                              : value == '2'
-                                              ? 'Februari'
-                                              : value == '3'
-                                              ? 'Maret'
-                                              : value == '4'
-                                              ? 'April'
-                                              : value == '5'
-                                              ? 'Mei'
-                                              : value == '6'
-                                              ? 'Juni'
-                                              : value == '7'
-                                              ? 'Juli'
-                                              : value == '8'
-                                              ? 'Agustus'
-                                              : value == '9'
-                                              ? 'September'
-                                              : value == '10'
-                                              ? 'Oktober'
-                                              : value == '11'
-                                              ? 'September'
-                                              : 'Desember',
+                              Obx(
+                                () => Container(
+                                  margin: EdgeInsets.only(top: 0.w),
+                                  width: 140.w,
+                                  height: 55.w,
+                                  child: DropdownButtonFormField<String>(
+                                    decoration: InputDecoration(
+                                      contentPadding: EdgeInsets.only(
+                                        top: 0.w,
+                                        bottom: 0.w,
+                                        left: 10.w,
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Colors.blue,
+                                          width: 2,
                                         ),
-                                      );
-                                    }).toList(),
-                                onChanged: (String? newValue) {
-                                  selectedvalue.value = newValue!;
-                                  pilihanbulan = int.parse(newValue);
-                                  print(pilihanbulan);
-                                },
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 20),
-                          Container(
-                            margin: EdgeInsets.only(top: 0.w),
-                            height: 50,
-                            alignment: Alignment.topCenter,
-                            child: Text(
-                              'Tahun : ',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'Poppins',
-                                height: 1,
-                                fontSize: 20.w,
-                              ),
-                            ),
-                          ),
-                          Obx(
-                            () => Container(
-                              margin: EdgeInsets.only(top: 0.w),
-                              width: 140.w,
-                              height: 55.w,
-                              child: DropdownButtonFormField<String>(
-                                decoration: InputDecoration(
-                                  contentPadding: EdgeInsets.only(
-                                    top: 0.w,
-                                    bottom: 0.w,
-                                    left: 10.w,
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color: Colors.blue,
-                                      width: 2,
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Colors.red,
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      filled: true,
+                                      fillColor: Colors.grey[200],
                                     ),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color: Colors.red,
-                                      width: 2,
+                                    value: selectedvalue.value,
+                                    style: TextStyle(
+                                      fontSize: 15.w,
+                                      color: Colors.black,
                                     ),
-                                    borderRadius: BorderRadius.circular(10),
+                                    items:
+                                        <String>[
+                                          '1',
+                                          '2',
+                                          '3',
+                                          '4',
+                                          '5',
+                                          '6',
+                                          '7',
+                                          '8',
+                                          '9',
+                                          '10',
+                                          '11',
+                                          '12',
+                                        ].map((String value) {
+                                          return DropdownMenuItem<String>(
+                                            value: value,
+                                            child: Text(
+                                              value == '1'
+                                                  ? 'Januari'
+                                                  : value == '2'
+                                                  ? 'Februari'
+                                                  : value == '3'
+                                                  ? 'Maret'
+                                                  : value == '4'
+                                                  ? 'April'
+                                                  : value == '5'
+                                                  ? 'Mei'
+                                                  : value == '6'
+                                                  ? 'Juni'
+                                                  : value == '7'
+                                                  ? 'Juli'
+                                                  : value == '8'
+                                                  ? 'Agustus'
+                                                  : value == '9'
+                                                  ? 'September'
+                                                  : value == '10'
+                                                  ? 'Oktober'
+                                                  : value == '11'
+                                                  ? 'September'
+                                                  : 'Desember',
+                                            ),
+                                          );
+                                        }).toList(),
+                                    onChanged: (String? newValue) {
+                                      selectedvalue.value = newValue!;
+                                      pilihanbulan = int.parse(newValue);
+                                      print(pilihanbulan);
+                                    },
                                   ),
-                                  filled: true,
-                                  fillColor: Colors.grey[200],
                                 ),
-                                value: selectedyearvalue.value,
-                                style: TextStyle(
-                                  fontSize: 15.w,
-                                  color: Colors.black,
-                                ),
-                                items:
-                                    List.generate(
-                                      DateTime.now().year - 2000 + 1,
-                                      (index) => 2000 + index,
-                                    ).map((int year) {
-                                      return DropdownMenuItem<String>(
-                                        value: year.toString(),
-                                        child: Text(year.toString()),
-                                      );
-                                    }).toList(),
-                                onChanged: (String? newValue) {
-                                  selectedyearvalue.value = newValue!;
-                                  pilihantahun = int.parse(newValue);
-                                  print(pilihantahun);
-                                },
                               ),
-                            ),
+                              SizedBox(width: 20),
+                              Container(
+                                margin: EdgeInsets.only(top: 0.w),
+                                height: 50,
+                                alignment: Alignment.topCenter,
+                                child: Text(
+                                  'Tahun : ',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'Poppins',
+                                    height: 1,
+                                    fontSize: 20.w,
+                                  ),
+                                ),
+                              ),
+                              Obx(
+                                () => Container(
+                                  margin: EdgeInsets.only(top: 0.w),
+                                  width: 140.w,
+                                  height: 55.w,
+                                  child: DropdownButtonFormField<String>(
+                                    decoration: InputDecoration(
+                                      contentPadding: EdgeInsets.only(
+                                        top: 0.w,
+                                        bottom: 0.w,
+                                        left: 10.w,
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Colors.blue,
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Colors.red,
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      filled: true,
+                                      fillColor: Colors.grey[200],
+                                    ),
+                                    value: selectedyearvalue.value,
+                                    style: TextStyle(
+                                      fontSize: 15.w,
+                                      color: Colors.black,
+                                    ),
+                                    items:
+                                        List.generate(
+                                          DateTime.now().year - 2000 + 1,
+                                          (index) => 2000 + index,
+                                        ).map((int year) {
+                                          return DropdownMenuItem<String>(
+                                            value: year.toString(),
+                                            child: Text(year.toString()),
+                                          );
+                                        }).toList(),
+                                    onChanged: (String? newValue) {
+                                      selectedyearvalue.value = newValue!;
+                                      pilihantahun = int.parse(newValue);
+                                      print(pilihantahun);
+                                    },
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 20),
+                              Container(
+                                margin: EdgeInsets.only(top: 0.w),
+                                width: 160.w,
+                                height: 35.w,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    getdatakomisi(pilihanbulan, pilihantahun);
+                                    log(selectedtabindex.toString());
+                                  },
+                                  child: Text(
+                                    'Cek Komisi',
+                                    style: TextStyle(
+                                      fontSize: 20.w,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Color(0xFFFCEFCB),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                          SizedBox(width: 20),
-                          Container(
-                            margin: EdgeInsets.only(top: 0.w),
-                            width: 160.w,
-                            height: 35.w,
-                            child: ElevatedButton(
-                              onPressed: () {
-                                getdatakomisi(pilihanbulan, pilihantahun);
-                                exportkomisibulanan(pilihanbulan, pilihantahun);
-                                log(selectedtabindex.toString());
-                              },
-                              child: Text(
-                                'Cek Komisi',
-                                style: TextStyle(
-                                  fontSize: 20.w,
-                                  color: Colors.black,
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                margin: EdgeInsets.only(top: 0.w),
+                                width: 175.w,
+                                height: 35.w,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    exportkomisibulanan(
+                                      pilihanbulan,
+                                      pilihantahun,
+                                    );
+                                  },
+                                  child: Text(
+                                    'Cetak Komisi Terapis',
+                                    style: TextStyle(
+                                      fontSize: 15.w,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Color(0xFFFCEFCB),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
                                 ),
                               ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Color(0xFFFCEFCB),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                              SizedBox(width: 10),
+                              Container(
+                                margin: EdgeInsets.only(top: 0.w),
+                                width: 175.w,
+                                height: 35.w,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    exportkomisigrobulanan(
+                                      pilihanbulan,
+                                      pilihantahun,
+                                    );
+                                  },
+                                  child: Text(
+                                    'Cetak Komisi Gro',
+                                    style: TextStyle(
+                                      fontSize: 15.w,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Color(0xFFFCEFCB),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
+                            ],
                           ),
                         ],
                       ),
