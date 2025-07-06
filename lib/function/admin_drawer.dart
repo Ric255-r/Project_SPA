@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:Project_SPA/admin/list_member.dart';
+import 'package:Project_SPA/admin/listterapis.dart';
 import 'package:Project_SPA/admin/pajak.dart';
 import 'package:Project_SPA/resepsionis/list_transaksi.dart';
 // import 'package:Project_SPA/admin/list_transaksi.dart';
@@ -145,14 +146,18 @@ class _AdminDrawerState extends State<AdminDrawer> {
                             ),
                           ),
                           accountEmail: Text(
-                            capitalize(jabatan.value),
+                            capitalize(
+                              (jabatan.value == null || jabatan.value.isEmpty)
+                                  ? _firstHakAkses
+                                  : jabatan.value,
+                            ),
                             style: TextStyle(
                               color: Colors.black,
                               fontFamily: 'Poppins',
                               fontSize: 20,
                             ),
                           ),
-                          currentAccountPictureSize: Size.square(50),
+                          currentAccountPictureSize: Size.square(60),
                           currentAccountPicture: CircleAvatar(
                             backgroundColor: Colors.amberAccent,
                             child: Text(
@@ -364,6 +369,18 @@ class _AdminDrawerState extends State<AdminDrawer> {
                             ),
                             onTap: () {
                               Get.to(() => ListMember());
+                            },
+                          ),
+                        ),
+                        Material(
+                          color: Colors.white,
+                          child: ListTile(
+                            title: const Text(
+                              'List Terapis',
+                              style: TextStyle(fontFamily: 'Poppins'),
+                            ),
+                            onTap: () {
+                              Get.to(() => ListTerapis());
                             },
                           ),
                         ),

@@ -152,292 +152,131 @@ class _LaporanOBState extends State<LaporanOB> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(''),
-        toolbarHeight: 30,
-        centerTitle: true,
-        backgroundColor: Color(0XFFFFE0B2),
-      ),
-      body: Container(
-        decoration: BoxDecoration(color: Color(0XFFFFE0B2)),
-        width: Get.width,
-        height: Get.height,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Padding(
-                padding: EdgeInsets.only(top: 20),
-                child: Text(
-                  'Laporan OB',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              Container(
-                margin: EdgeInsets.only(left: 730),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 250,
-                      height: 40,
-                      child: TextField(
-                        controller: textcari,
-                        onChanged: (query) {
-                          if (_debounce != null) {
-                            _debounce!.cancel();
-                          }
-                          _debounce = Timer(Duration(milliseconds: 1000), () {
-                            // Adjust debounce delay here
-                            setState(() {
-                              filteredList =
-                                  dataList.where((item) {
-                                    return item['created_at']
-                                        .toString()
-                                        .toLowerCase()
-                                        .contains(query.toLowerCase());
-                                  }).toList();
-                            });
-                          });
-                        },
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(),
-                          labelText: 'Input Tanggal',
-                        ),
+    final bool isMobile = MediaQuery.of(context).size.shortestSide < 600;
+    return isMobile
+        ? WidgetLaporanObMobile()
+        : Scaffold(
+          appBar: AppBar(
+            title: Text(''),
+            toolbarHeight: 30,
+            centerTitle: true,
+            backgroundColor: Color(0XFFFFE0B2),
+          ),
+          body: Container(
+            decoration: BoxDecoration(color: Color(0XFFFFE0B2)),
+            width: Get.width,
+            height: Get.height,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(top: 20),
+                    child: Text(
+                      'Laporan OB',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 10),
-              Container(
-                width: 900,
-                height: 470,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.all(Radius.circular(20)),
-                  color: Colors.white,
-                ),
-                child: FutureBuilder<List<Map<String, dynamic>>>(
-                  future: fetchData(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(
-                        child: CircularProgressIndicator(),
-                      ); // Loading state
-                    } else if (snapshot.hasError) {
-                      return Center(
-                        child: Text("Error: ${snapshot.error}"),
-                      ); // Error state
-                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return Center(
-                        child: Text("No data available"),
-                      ); // No data state
-                    }
-
-                    return ListView.builder(
-                      padding: EdgeInsets.zero,
-                      itemCount: filteredList.length,
-                      itemBuilder: (context, index) {
-                        final item = filteredList[index];
-                        return Container(
-                          margin: EdgeInsets.all(10),
-                          height: 148,
-                          decoration: BoxDecoration(
-                            border: Border.all(width: 1),
-                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                  ),
+                  Container(
+                    margin: EdgeInsets.only(left: 730),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 250,
+                          height: 40,
+                          child: TextField(
+                            controller: textcari,
+                            onChanged: (query) {
+                              if (_debounce != null) {
+                                _debounce!.cancel();
+                              }
+                              _debounce = Timer(
+                                Duration(milliseconds: 1000),
+                                () {
+                                  // Adjust debounce delay here
+                                  setState(() {
+                                    filteredList =
+                                        dataList.where((item) {
+                                          return item['created_at']
+                                              .toString()
+                                              .toLowerCase()
+                                              .contains(query.toLowerCase());
+                                        }).toList();
+                                  });
+                                },
+                              );
+                            },
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(),
+                              labelText: 'Input Tanggal',
+                            ),
                           ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                        width: 180,
-                                        margin: EdgeInsets.only(
-                                          left: 20,
-                                          top: 5,
-                                          bottom: 0,
-                                          right: 5,
-                                        ),
-                                        child: Text(
-                                          'Kode OB ',
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                            fontFamily: 'Poppins',
-                                          ),
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 5),
-                                        child: Container(
-                                          width: 130,
-                                          child: Text(
-                                            item['id_karyawan'] ?? "Unknown",
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontFamily: 'Poppins',
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                        width: 180,
-                                        margin: EdgeInsets.only(
-                                          left: 20,
-                                          top: 3,
-                                          bottom: 0,
-                                          right: 5,
-                                        ),
-                                        child: Text(
-                                          'Nama Ruang ',
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                            fontFamily: 'Poppins',
-                                          ),
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 3),
-                                        child: Container(
-                                          width: 130,
-                                          child: Text(
-                                            item['nama_ruangan'] ?? "Unknown",
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontFamily: 'Poppins',
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                        width: 180,
-                                        margin: EdgeInsets.only(
-                                          left: 20,
-                                          top: 5,
-                                          bottom: 5,
-                                          right: 5,
-                                        ),
-                                        child: Text(
-                                          'Tanggal Laporan ',
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                            fontFamily: 'Poppins',
-                                          ),
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 5),
-                                        child: Container(
-                                          width: 130,
-                                          child: Text(
-                                            item['formatted_date'] ?? "Unknown",
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontFamily: 'Poppins',
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                        width: 180,
-                                        margin: EdgeInsets.only(
-                                          left: 20,
-                                          top: 5,
-                                          bottom: 5,
-                                          right: 5,
-                                        ),
-                                        child: Text(
-                                          'Status Laporan ',
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                            fontFamily: 'Poppins',
-                                          ),
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 5),
-                                        child: Row(
-                                          children: [
-                                            Icon(
-                                              item['is_solved'] == 1
-                                                  ? Icons.check_circle
-                                                  : Icons.cancel,
-                                              color:
-                                                  item['is_solved'] == 1
-                                                      ? Colors.green
-                                                      : Colors.red,
-                                              size: 24,
-                                            ),
-                                            SizedBox(width: 5),
-                                            Text(
-                                              item['is_solved'] == 1
-                                                  ? 'Terselesaikan'
-                                                  : 'Belum Selesai',
-                                              style: TextStyle(
-                                                fontSize: 18,
-                                                fontFamily: 'Poppins',
-                                                color:
-                                                    item['is_solved'] == 1
-                                                        ? Colors.green
-                                                        : Colors.red,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Container(
+                    width: 900,
+                    height: 470,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(20)),
+                      color: Colors.white,
+                    ),
+                    child: FutureBuilder<List<Map<String, dynamic>>>(
+                      future: fetchData(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return Center(
+                            child: CircularProgressIndicator(),
+                          ); // Loading state
+                        } else if (snapshot.hasError) {
+                          return Center(
+                            child: Text("Error: ${snapshot.error}"),
+                          ); // Error state
+                        } else if (!snapshot.hasData ||
+                            snapshot.data!.isEmpty) {
+                          return Center(
+                            child: Text("No data available"),
+                          ); // No data state
+                        }
+
+                        return ListView.builder(
+                          padding: EdgeInsets.zero,
+                          itemCount: filteredList.length,
+                          itemBuilder: (context, index) {
+                            final item = filteredList[index];
+                            return Container(
+                              margin: EdgeInsets.all(10),
+                              height: 148,
+                              decoration: BoxDecoration(
+                                border: Border.all(width: 1),
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(10),
+                                ),
                               ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                              child: Row(
                                 mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Row(
+                                  Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     mainAxisAlignment: MainAxisAlignment.start,
                                     children: [
-                                      Column(
+                                      Row(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
                                         children: [
                                           Container(
-                                            width: 130,
-
+                                            width: 180,
                                             margin: EdgeInsets.only(
                                               left: 20,
                                               top: 5,
@@ -445,7 +284,7 @@ class _LaporanOBState extends State<LaporanOB> {
                                               right: 5,
                                             ),
                                             child: Text(
-                                              'Keterangan ',
+                                              'Kode OB ',
                                               style: TextStyle(
                                                 fontSize: 20,
                                                 fontFamily: 'Poppins',
@@ -455,27 +294,14 @@ class _LaporanOBState extends State<LaporanOB> {
                                           Padding(
                                             padding: const EdgeInsets.only(
                                               top: 5,
-                                              left: 20,
                                             ),
                                             child: Container(
-                                              width: 370,
-                                              height: 100,
-                                              color: Colors.grey[50],
-                                              child: TextFormField(
-                                                initialValue:
-                                                    item['laporan'] ??
+                                              width: 130,
+                                              child: Text(
+                                                item['id_karyawan'] ??
                                                     "Unknown",
-                                                keyboardType:
-                                                    TextInputType.multiline,
-                                                maxLines: 6,
-                                                decoration: InputDecoration(
-                                                  border: OutlineInputBorder(),
-                                                  contentPadding:
-                                                      EdgeInsets.all(8),
-                                                ),
-                                                readOnly: true,
                                                 style: TextStyle(
-                                                  fontSize: 12,
+                                                  fontSize: 20,
                                                   fontFamily: 'Poppins',
                                                 ),
                                               ),
@@ -483,152 +309,370 @@ class _LaporanOBState extends State<LaporanOB> {
                                           ),
                                         ],
                                       ),
-
                                       Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
                                         children: [
-                                          Column(
-                                            children: [
-                                              Container(
-                                                margin: EdgeInsets.only(
-                                                  top: 28,
-                                                  left: 4,
-                                                ),
-                                                width: 117,
-                                                height: 50,
-                                                child: ElevatedButton(
-                                                  onPressed: () {
-                                                    dialogDetail(context, item);
-                                                  },
-                                                  child: Text('Detail'),
+                                          Container(
+                                            width: 180,
+                                            margin: EdgeInsets.only(
+                                              left: 20,
+                                              top: 3,
+                                              bottom: 0,
+                                              right: 5,
+                                            ),
+                                            child: Text(
+                                              'Nama Ruang ',
+                                              style: TextStyle(
+                                                fontSize: 20,
+                                                fontFamily: 'Poppins',
+                                              ),
+                                            ),
+                                          ),
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              top: 3,
+                                            ),
+                                            child: Container(
+                                              width: 130,
+                                              child: Text(
+                                                item['nama_ruangan'] ??
+                                                    "Unknown",
+                                                style: TextStyle(
+                                                  fontSize: 20,
+                                                  fontFamily: 'Poppins',
                                                 ),
                                               ),
-                                              Container(
-                                                margin: EdgeInsets.only(
-                                                  top: 10,
-                                                  left: 4,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        children: [
+                                          Container(
+                                            width: 180,
+                                            margin: EdgeInsets.only(
+                                              left: 20,
+                                              top: 5,
+                                              bottom: 5,
+                                              right: 5,
+                                            ),
+                                            child: Text(
+                                              'Tanggal Laporan ',
+                                              style: TextStyle(
+                                                fontSize: 20,
+                                                fontFamily: 'Poppins',
+                                              ),
+                                            ),
+                                          ),
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              top: 5,
+                                            ),
+                                            child: Container(
+                                              width: 130,
+                                              child: Text(
+                                                item['formatted_date'] ??
+                                                    "Unknown",
+                                                style: TextStyle(
+                                                  fontSize: 20,
+                                                  fontFamily: 'Poppins',
                                                 ),
-                                                width: 117,
-                                                height: 50,
-                                                child: ElevatedButton(
-                                                  onPressed: () async {
-                                                    final idLaporan =
-                                                        item['id_laporan'];
-                                                    final currentStatus =
-                                                        item['is_solved'];
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        children: [
+                                          Container(
+                                            width: 180,
+                                            margin: EdgeInsets.only(
+                                              left: 20,
+                                              top: 5,
+                                              bottom: 5,
+                                              right: 5,
+                                            ),
+                                            child: Text(
+                                              'Status Laporan ',
+                                              style: TextStyle(
+                                                fontSize: 20,
+                                                fontFamily: 'Poppins',
+                                              ),
+                                            ),
+                                          ),
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              top: 5,
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  item['is_solved'] == 1
+                                                      ? Icons.check_circle
+                                                      : Icons.cancel,
+                                                  color:
+                                                      item['is_solved'] == 1
+                                                          ? Colors.green
+                                                          : Colors.red,
+                                                  size: 24,
+                                                ),
+                                                SizedBox(width: 5),
+                                                Text(
+                                                  item['is_solved'] == 1
+                                                      ? 'Terselesaikan'
+                                                      : 'Belum Selesai',
+                                                  style: TextStyle(
+                                                    fontSize: 18,
+                                                    fontFamily: 'Poppins',
+                                                    color:
+                                                        item['is_solved'] == 1
+                                                            ? Colors.green
+                                                            : Colors.red,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        children: [
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Container(
+                                                width: 130,
 
-                                                    try {
-                                                      final response =
-                                                          await Dio().put(
-                                                            '${myIpAddr()}/laporan/updatelaporanob/$idLaporan',
-                                                          );
-
-                                                      if (response.statusCode ==
-                                                          200) {
-                                                        CherryToast.success(
-                                                          title: Text(
-                                                            'Berhasil',
-                                                          ),
-                                                          description: Text(
-                                                            currentStatus == 1
-                                                                ? 'Status laporan diubah ke ❌ Belum Selesai'
-                                                                : 'Status laporan diubah ke ✅ Selesai',
-                                                          ),
-                                                        ).show(context);
-
-                                                        setState(() {
-                                                          item['is_solved'] =
-                                                              currentStatus == 1
-                                                                  ? 0
-                                                                  : 1;
-                                                        });
-                                                      }
-                                                    } catch (e) {
-                                                      if (e is DioException) {
-                                                        log(
-                                                          "Error Update ${e.response!.data}",
-                                                        );
-                                                      }
-                                                      CherryToast.error(
-                                                        title: Text('Gagal'),
-                                                        description: Text(
-                                                          'Gagal mengubah status laporan',
-                                                        ),
-                                                      ).show(context);
-                                                    }
-                                                  },
-                                                  child: Text('Edit Status'),
+                                                margin: EdgeInsets.only(
+                                                  left: 20,
+                                                  top: 5,
+                                                  bottom: 0,
+                                                  right: 5,
+                                                ),
+                                                child: Text(
+                                                  'Keterangan ',
+                                                  style: TextStyle(
+                                                    fontSize: 20,
+                                                    fontFamily: 'Poppins',
+                                                  ),
+                                                ),
+                                              ),
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                  top: 5,
+                                                  left: 20,
+                                                ),
+                                                child: Container(
+                                                  width: 370,
+                                                  height: 100,
+                                                  color: Colors.grey[50],
+                                                  child: TextFormField(
+                                                    initialValue:
+                                                        item['laporan'] ??
+                                                        "Unknown",
+                                                    keyboardType:
+                                                        TextInputType.multiline,
+                                                    maxLines: 6,
+                                                    decoration: InputDecoration(
+                                                      border:
+                                                          OutlineInputBorder(),
+                                                      contentPadding:
+                                                          EdgeInsets.all(8),
+                                                    ),
+                                                    readOnly: true,
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      fontFamily: 'Poppins',
+                                                    ),
+                                                  ),
                                                 ),
                                               ),
                                             ],
                                           ),
-                                          // Container(
-                                          //   margin: EdgeInsets.only(left: 20),
-                                          //   width: 100,
-                                          //   child: ElevatedButton(
-                                          //     onPressed: () {
-                                          //       Get.dialog(
-                                          //         AlertDialog(
-                                          //           title: Text('Confirm'),
-                                          //           content: Text(
-                                          //             'Yakin menghapus data?',
-                                          //           ),
-                                          //           actions: [
-                                          //             TextButton(
-                                          //               onPressed: () {
-                                          //                 Get.back();
-                                          //               },
-                                          //               child: Text('Cancel'),
-                                          //             ),
-                                          //             TextButton(
-                                          //               onPressed: () async {
-                                          //                 final response =
-                                          //                     await dio.delete(
-                                          //                       '${myIpAddr()}/LaporanOB/delete_pekerja/${item['id_karyawan']}',
-                                          //                       data: {},
-                                          //                     );
-                                          //                 if (response
-                                          //                         .statusCode ==
-                                          //                     200) {
-                                          //                   await refreshData();
-                                          //                   dropdownJK = null;
-                                          //                   textcari.clear();
-                                          //                   CherryToast.success(
-                                          //                     title: Text(
-                                          //                       'Data berhasil dihapus',
-                                          //                     ),
-                                          //                   ).show(context);
-                                          //                   Get.back();
-                                          //                 }
-                                          //               },
-                                          //               child: Text('Confirm'),
-                                          //             ),
-                                          //           ],
-                                          //         ),
-                                          //         barrierDismissible: false,
-                                          //       );
-                                          //     },
-                                          //     child: Text('Delete'),
-                                          //   ),
-                                          // ),
+
+                                          Row(
+                                            children: [
+                                              Column(
+                                                children: [
+                                                  Container(
+                                                    margin: EdgeInsets.only(
+                                                      top: 28,
+                                                      left: 4,
+                                                    ),
+                                                    width: 117,
+                                                    height: 50,
+                                                    child: ElevatedButton(
+                                                      onPressed: () {
+                                                        dialogDetail(
+                                                          context,
+                                                          item,
+                                                        );
+                                                      },
+                                                      child: Text('Detail'),
+                                                    ),
+                                                  ),
+                                                  Container(
+                                                    margin: EdgeInsets.only(
+                                                      top: 10,
+                                                      left: 4,
+                                                    ),
+                                                    width: 117,
+                                                    height: 50,
+                                                    child: ElevatedButton(
+                                                      onPressed: () async {
+                                                        final idLaporan =
+                                                            item['id_laporan'];
+                                                        final currentStatus =
+                                                            item['is_solved'];
+
+                                                        try {
+                                                          final response =
+                                                              await Dio().put(
+                                                                '${myIpAddr()}/laporan/updatelaporanob/$idLaporan',
+                                                              );
+
+                                                          if (response
+                                                                  .statusCode ==
+                                                              200) {
+                                                            CherryToast.success(
+                                                              title: Text(
+                                                                'Berhasil',
+                                                              ),
+                                                              description: Text(
+                                                                currentStatus ==
+                                                                        1
+                                                                    ? 'Status laporan diubah ke ❌ Belum Selesai'
+                                                                    : 'Status laporan diubah ke ✅ Selesai',
+                                                              ),
+                                                            ).show(context);
+
+                                                            setState(() {
+                                                              item['is_solved'] =
+                                                                  currentStatus ==
+                                                                          1
+                                                                      ? 0
+                                                                      : 1;
+                                                            });
+                                                          }
+                                                        } catch (e) {
+                                                          if (e
+                                                              is DioException) {
+                                                            log(
+                                                              "Error Update ${e.response!.data}",
+                                                            );
+                                                          }
+                                                          CherryToast.error(
+                                                            title: Text(
+                                                              'Gagal',
+                                                            ),
+                                                            description: Text(
+                                                              'Gagal mengubah status laporan',
+                                                            ),
+                                                          ).show(context);
+                                                        }
+                                                      },
+                                                      child: Text(
+                                                        'Edit Status',
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              // Container(
+                                              //   margin: EdgeInsets.only(left: 20),
+                                              //   width: 100,
+                                              //   child: ElevatedButton(
+                                              //     onPressed: () {
+                                              //       Get.dialog(
+                                              //         AlertDialog(
+                                              //           title: Text('Confirm'),
+                                              //           content: Text(
+                                              //             'Yakin menghapus data?',
+                                              //           ),
+                                              //           actions: [
+                                              //             TextButton(
+                                              //               onPressed: () {
+                                              //                 Get.back();
+                                              //               },
+                                              //               child: Text('Cancel'),
+                                              //             ),
+                                              //             TextButton(
+                                              //               onPressed: () async {
+                                              //                 final response =
+                                              //                     await dio.delete(
+                                              //                       '${myIpAddr()}/LaporanOB/delete_pekerja/${item['id_karyawan']}',
+                                              //                       data: {},
+                                              //                     );
+                                              //                 if (response
+                                              //                         .statusCode ==
+                                              //                     200) {
+                                              //                   await refreshData();
+                                              //                   dropdownJK = null;
+                                              //                   textcari.clear();
+                                              //                   CherryToast.success(
+                                              //                     title: Text(
+                                              //                       'Data berhasil dihapus',
+                                              //                     ),
+                                              //                   ).show(context);
+                                              //                   Get.back();
+                                              //                 }
+                                              //               },
+                                              //               child: Text('Confirm'),
+                                              //             ),
+                                              //           ],
+                                              //         ),
+                                              //         barrierDismissible: false,
+                                              //       );
+                                              //     },
+                                              //     child: Text('Delete'),
+                                              //   ),
+                                              // ),
+                                            ],
+                                          ),
                                         ],
                                       ),
                                     ],
                                   ),
                                 ],
                               ),
-                            ],
-                          ),
+                            );
+                          },
                         );
                       },
-                    );
-                  },
-                ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
-      drawer: AdminDrawer(),
-    );
+          drawer: AdminDrawer(),
+        );
+  }
+
+  Widget WidgetLaporanObMobile() {
+    return Text('Ini Mobile');
   }
 }

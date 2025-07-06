@@ -285,7 +285,7 @@ class _RegisPaketState extends State<RegisPaket> {
               "harga_fnb": int.parse(hargaFnb),
               "stok_fnb": int.parse(stokFnb),
               "id_kategori": idKategori,
-              "status_fnb": "Available",
+              "status_fnb": "available",
             },
           );
           log("Data sukses tersimpan");
