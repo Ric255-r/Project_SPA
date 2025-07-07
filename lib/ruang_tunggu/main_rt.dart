@@ -10,13 +10,13 @@ import 'dart:developer';
 import 'package:get_storage/get_storage.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 
 var dio = Dio();
 
 class ControllerPanggilanKerja extends GetxController {
   late IOWebSocketChannel channel;
-  RxList<Map<String, dynamic>> datapanggilankerja =
-      <Map<String, dynamic>>[].obs;
+  RxList<Map<String, dynamic>> datapanggilankerja = <Map<String, dynamic>>[].obs;
 
   var refreshtrigger = false.obs;
   Timer? notifytimer;
@@ -35,6 +35,7 @@ class ControllerPanggilanKerja extends GetxController {
   void onInit() {
     super.onInit();
     connectWebSocket();
+    _loadSoundMall();
   }
 
   @override
@@ -45,6 +46,62 @@ class ControllerPanggilanKerja extends GetxController {
     notifytimer?.cancel();
     channel.sink.close();
     super.onClose();
+  }
+
+  final FlutterTts flutterTts = FlutterTts();
+
+  Future<void> _loadSoundMall() async {
+    try {
+      await playeraudio.setAsset('assets/audio/conveniencestore.mp3');
+      await playeraudio.setVolume(1.0);
+    } catch (e) {
+      debugPrint("Error loading sound: $e");
+    }
+  }
+
+  String _convertNamaRuangan(String value) {
+    String ditchedRoom = value.replaceAll("Room ", "");
+    final numericValue = int.tryParse(ditchedRoom);
+
+    // return integer jika sukses, else return string biasa
+    return "Room ${numericValue ?? value}";
+  }
+
+  Future _speak(String namaTerapis, String namaRuangan) async {
+    log('Starting _speak');
+    try {
+      for (var i = 0; i < 2; i++) {
+        await Future.delayed(Duration(milliseconds: 500));
+        if (playeraudio.playing) {
+          await playeraudio.stop();
+        }
+
+        await playeraudio.seek(Duration.zero);
+        await playeraudio.play();
+      }
+
+      await Future.delayed(Duration(seconds: 1));
+      await playeraudio.stop();
+
+      log('Configuring TTS...');
+      await flutterTts.setLanguage("id-ID");
+      await flutterTts.setSpeechRate(0.5);
+      await flutterTts.setVolume(1.0);
+      log('Speaking...');
+      await flutterTts.awaitSpeakCompletion(true);
+
+      log('Speaking first message...');
+      await flutterTts.speak("Panggilan Kepada $namaTerapis, Harap Menuju ${_convertNamaRuangan(namaRuangan)}");
+      await Future.delayed(Duration(seconds: 1));
+
+      log('Speaking reminder...');
+      await flutterTts.speak("Sekali Lagi, Panggilan Kepada $namaTerapis, Harap Menuju  ${_convertNamaRuangan(namaRuangan)}");
+
+      log('TTS finished');
+      log('TTS spoken');
+    } catch (e) {
+      log('Error in _speak: $e');
+    }
   }
 
   void connectWebSocket() {
@@ -66,14 +123,14 @@ class ControllerPanggilanKerja extends GetxController {
             log('received websocket message : $message');
             updateDataFromWebSocket(message);
             if (activescreen.value == 'ruang_tunggu') {
-              playeraudio.stop();
-              try {
-                playeraudio.setAsset('assets/audio/f1sport.mp3').then((_) {
-                  playeraudio.play();
-                });
-              } catch (e) {
-                log('player playing audio : $e');
-              }
+              // playeraudio.stop();
+              // try {
+              //   playeraudio.setAsset('assets/audio/conveniencestore.mp3').then((_) {
+              //     playeraudio.play();
+              //   });
+              // } catch (e) {
+              //   log('player playing audio : $e');
+              // }
               showtoast.value = true;
             }
           });
@@ -124,10 +181,7 @@ class ControllerPanggilanKerja extends GetxController {
       _heartbeatws!.cancel();
     }
     _heartbeatws = Timer.periodic(const Duration(seconds: 30), (timer) {
-      if (channel != null &&
-          channel.sink != null &&
-          channel.stream != null &&
-          channel.closeCode == null) {
+      if (channel != null && channel.sink != null && channel.stream != null && channel.closeCode == null) {
         final pingmsg = jsonEncode({"type": "ping"});
         channel.sink.add(pingmsg);
         log('send heartbeat to ws spv');
@@ -144,9 +198,7 @@ class ControllerPanggilanKerja extends GetxController {
     List<Map<String, dynamic>> newdata = parseWebSocketData(message);
     log('parsed data:$newdata');
     for (var item in newdata) {
-      var existingindex = datapanggilankerja.indexWhere(
-        (existing) => existing['id_panggilan'] == item['id_panggilan'],
-      );
+      var existingindex = datapanggilankerja.indexWhere((existing) => existing['id_panggilan'] == item['id_panggilan']);
       if (existingindex == -1) {
         datapanggilankerja.add(item);
       } else {
@@ -166,20 +218,20 @@ class ControllerPanggilanKerja extends GetxController {
     try {
       var decodedata = jsonDecode(message);
       if (decodedata is List) {
+        log("Isi decodedata $decodedata");
+
+        // Ambil Index Terakhir utk data terbaru
+        _speak(decodedata[decodedata.length - 1]['nama_terapis'], decodedata[decodedata.length - 1]['ruangan']);
+
         return decodedata.map((item) {
-          return {
-            "ruangan": item['ruangan'],
-            "nama_terapis": item['nama_terapis'],
-            "id_panggilan": item['id_panggilan'],
-            "timestamp": item['timestamp'],
-          };
+          return {"ruangan": item['ruangan'], "nama_terapis": item['nama_terapis'], "id_panggilan": item['id_panggilan'], "timestamp": item['timestamp']};
         }).toList();
       } else {
-        print('websocket data is not a list : $decodedata');
+        log('websocket data is not a list : $decodedata');
         return [];
       }
     } catch (e) {
-      print('Error parsing websocket data : $e');
+      log('Error parsing websocket data : $e');
       return [];
     }
   }
@@ -189,17 +241,11 @@ class ControllerPanggilanKerja extends GetxController {
       var response = await dio.get('${myIpAddr()}/spv/getdatapanggilankerja');
       List<Map<String, dynamic>> fetcheddata =
           (response.data as List).map((item) {
-            return {
-              "ruangan": item['ruangan'],
-              "nama_terapis": item['nama_terapis'],
-              "id_panggilan": item['id_panggilan'],
-            };
+            return {"ruangan": item['ruangan'], "nama_terapis": item['nama_terapis'], "id_panggilan": item['id_panggilan']};
           }).toList();
 
       for (var item in fetcheddata) {
-        var existingindex = datapanggilankerja.indexWhere(
-          (existing) => existing['id_panggilan'] == item['id_panggilan'],
-        );
+        var existingindex = datapanggilankerja.indexWhere((existing) => existing['id_panggilan'] == item['id_panggilan']);
         if (existingindex == -1) {
           datapanggilankerja.add(item);
         } else {
@@ -214,10 +260,7 @@ class ControllerPanggilanKerja extends GetxController {
 
   Future<void> deletepanggilankerja(id_panggilan) async {
     try {
-      var response = await dio.delete(
-        '${myIpAddr()}/spv/deletepanggilankerja',
-        data: {"id_panggilan": id_panggilan},
-      );
+      var response = await dio.delete('${myIpAddr()}/spv/deletepanggilankerja', data: {"id_panggilan": id_panggilan});
     } catch (e) {
       log("Error di fn deletepanggilankerja : $e");
     }
@@ -244,18 +287,13 @@ class MainRt extends StatefulWidget {
 class _MainRtState extends State<MainRt> {
   ScrollController _scrollControllerLV = ScrollController();
 
-  final ControllerPanggilanKerja controllerPanggilanKerja =
-      Get.find<ControllerPanggilanKerja>();
+  final ControllerPanggilanKerja controllerPanggilanKerja = Get.find<ControllerPanggilanKerja>();
 
-  RxList<Map<String, dynamic>> datapanggilankerja =
-      <Map<String, dynamic>>[].obs;
+  RxList<Map<String, dynamic>> datapanggilankerja = <Map<String, dynamic>>[].obs;
 
   Future<void> deletepanggilankerja(id_panggilan) async {
     try {
-      var response = await dio.delete(
-        '${myIpAddr()}/spv/deletepanggilankerja',
-        data: {"id_panggilan": id_panggilan},
-      );
+      var response = await dio.delete('${myIpAddr()}/spv/deletepanggilankerja', data: {"id_panggilan": id_panggilan});
     } catch (e) {
       log("Error di fn deletepanggilankerja : $e");
     }
@@ -270,8 +308,7 @@ class _MainRtState extends State<MainRt> {
 
   @override
   void dispose() {
-    Get.find<ControllerPanggilanKerja>().activescreen.value =
-        'not_ruang_tunggu';
+    Get.find<ControllerPanggilanKerja>().activescreen.value = 'not_ruang_tunggu';
     Get.delete<ControllerPanggilanKerja>(force: true);
     super.dispose();
   }
@@ -284,13 +321,7 @@ class _MainRtState extends State<MainRt> {
         title: Center(
           child: Padding(
             padding: const EdgeInsets.only(right: 50),
-            child: Text(
-              "PANGGILAN KERJA",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Poppins',
-              ),
-            ),
+            child: Text("PANGGILAN KERJA", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
           ),
         ),
       ),
@@ -305,10 +336,7 @@ class _MainRtState extends State<MainRt> {
               height: Get.height - 150,
               width: Get.width - 100,
               margin: const EdgeInsets.only(left: 40, right: 40),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                color: Colors.white,
-              ),
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(20), color: Colors.white),
               child: Scrollbar(
                 thickness: 15,
                 radius: Radius.circular(20),
@@ -326,55 +354,23 @@ class _MainRtState extends State<MainRt> {
                         return Column(
                           children: [
                             SizedBox(height: 70),
-                            Text(
-                              item['nama_terapis'],
-                              style: TextStyle(
-                                fontSize: 100,
-                                height: 1,
-                                fontFamily: 'Poppins',
-                              ),
-                            ),
-                            Text(
-                              item['ruangan'],
-                              style: TextStyle(
-                                fontSize: 110,
-                                height: 1,
-                                fontFamily: 'Poppins',
-                              ),
-                            ),
+                            Text(item['nama_terapis'], style: TextStyle(fontSize: 100, height: 1, fontFamily: 'Poppins')),
+                            Text(item['ruangan'], style: TextStyle(fontSize: 110, height: 1, fontFamily: 'Poppins')),
                             SizedBox(height: 40),
                             ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color.fromARGB(
-                                  255,
-                                  168,
-                                  232,
-                                  170,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
+                                backgroundColor: const Color.fromARGB(255, 168, 232, 170),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 minimumSize: Size(100, 100),
                               ),
                               onPressed: () {
                                 log(item['id_panggilan'].toString());
-                                controller.datapanggilankerja.removeWhere(
-                                  (element) =>
-                                      element['id_panggilan'] ==
-                                      item['id_panggilan'],
-                                );
+                                controller.datapanggilankerja.removeWhere((element) => element['id_panggilan'] == item['id_panggilan']);
                                 deletepanggilankerja(item['id_panggilan']);
                                 controller.datapanggilankerja.refresh();
                               },
                               child: Column(
-                                children: [
-                                  Icon(Icons.check, size: 50),
-                                  SizedBox(height: 10),
-                                  Text(
-                                    "Confirm",
-                                    style: TextStyle(fontFamily: 'Poppins'),
-                                  ),
-                                ],
+                                children: [Icon(Icons.check, size: 50), SizedBox(height: 10), Text("Confirm", style: TextStyle(fontFamily: 'Poppins'))],
                               ),
                             ),
                             SizedBox(height: 80),
@@ -390,17 +386,12 @@ class _MainRtState extends State<MainRt> {
             Container(
               margin: const EdgeInsets.only(top: 20, right: 50),
               alignment: Alignment.centerRight,
-              child: Text(
-                "PLATINUM",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
-              ),
+              child: Text("PLATINUM", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30)),
             ),
             Obx(() {
               if (Get.find<ControllerPanggilanKerja>().showtoast.value) {
                 Future.delayed(Duration.zero, () {
-                  CherryToast.success(
-                    title: Text('Panggilan Kerja Masuk'),
-                  ).show(context);
+                  CherryToast.success(title: Text('Panggilan Kerja Masuk')).show(context);
                   Get.find<ControllerPanggilanKerja>().showtoast.value = false;
                 });
               }
