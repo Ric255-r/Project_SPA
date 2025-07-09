@@ -81,6 +81,11 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
     dropdownHappyHour.value = null;
     print('Received idMember: ${widget.idMember}');
     itemTapCounts.clear();
+
+    // Listen kalo ad perubahan pada discSetelahPromo
+    ever(discSetelahPromo, (disc) {
+      getHargaAfterDisc();
+    });
   }
 
   List<Map<String, dynamic>> dataJual = []; // Like React state, passing props
@@ -837,11 +842,13 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                   IconButton(
                                     icon: Icon(Icons.delete, size: 18),
                                     onPressed: () {
-                                      setState(() {
-                                        dropdownHappyHour.value = null;
-                                        discSetelahPromo.value = 0;
-                                        getHargaAfterDisc();
-                                      });
+                                      // setState(() {
+                                      //   dropdownHappyHour.value = null;
+                                      //   discSetelahPromo.value = 0;
+                                      //   getHargaAfterDisc();
+                                      // });
+                                      dropdownHappyHour.value = null;
+                                      discSetelahPromo.value = 0;
                                     },
                                   ),
                                 ],
