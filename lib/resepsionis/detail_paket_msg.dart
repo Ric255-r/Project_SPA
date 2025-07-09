@@ -45,7 +45,8 @@ class DetailPaketMassage extends StatefulWidget {
 }
 
 List<Map<String, dynamic>> _listHappyHour = [];
-String? dropdownHappyHour;
+// String? dropdownHappyHour;
+RxnString dropdownHappyHour = RxnString(null);
 List<String> jenisPembayaran = ["awal", "akhir"];
 Map<String, int> selecteditemindex = {};
 
@@ -60,7 +61,9 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
   String? noHp;
   String? status;
   String? idMember;
-  var discSetelahPromo = 0;
+  // var discSetelahPromo = 0;
+  RxInt discSetelahPromo = 0.obs;
+
   void _handleScannedData(String val0, String val1, String val2, String val3) {
     setState(() {
       idMember = val3;
@@ -75,7 +78,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
     // TODO: implement initState
     super.initState();
     getDataHappyHour();
-    dropdownHappyHour = null;
+    dropdownHappyHour.value = null;
     print('Received idMember: ${widget.idMember}');
     itemTapCounts.clear();
   }
@@ -117,7 +120,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
     //     listDisc.map((percentStr) {
     //       return double.parse(percentStr.replaceAll('%', '')) / 100;
     //     }).toList();
-    double doubleDisc = discSetelahPromo / 100;
+    double doubleDisc = discSetelahPromo.value / 100;
 
     double jlhPotongan = totalBefore * doubleDisc;
     double totalStlhDisc = totalBefore - jlhPotongan;
@@ -791,37 +794,43 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                     alignment: Alignment.centerLeft,
                                     child: SizedBox(
                                       width: 300,
-                                      child: DropdownButton<String>(
-                                        value: dropdownHappyHour,
-                                        isExpanded: true,
-                                        icon: const Icon(Icons.arrow_drop_down),
-                                        elevation: 16,
-                                        style: const TextStyle(color: Colors.deepPurple),
-                                        underline: SizedBox(),
-                                        padding: EdgeInsets.symmetric(horizontal: 10),
-                                        onChanged: (String? value) async {
-                                          var selectedPromo = _listHappyHour.firstWhere(
-                                            (item) => item['nama_promo'] == value,
-                                            orElse: () => {"kode_promo": "", "nama_promo": "", "disc": 0},
-                                          );
-                                          setState(() {
-                                            dropdownHappyHour = value;
-                                            discSetelahPromo = selectedPromo['disc'];
-                                          });
-                                        },
-                                        items:
-                                            _listHappyHour.map<DropdownMenuItem<String>>((item) {
-                                              return DropdownMenuItem<String>(
-                                                value: item['nama_promo'], // Use ID as value
-                                                child: Align(
-                                                  alignment: Alignment.centerLeft,
-                                                  child: Text(
-                                                    item['nama_promo'].toString(), // Display category name
-                                                    style: const TextStyle(fontSize: 16, fontFamily: 'Poppins'),
+                                      child: Obx(
+                                        () => DropdownButton<String>(
+                                          value: dropdownHappyHour.value,
+                                          isExpanded: true,
+                                          icon: const Icon(Icons.arrow_drop_down),
+                                          elevation: 16,
+                                          style: const TextStyle(color: Colors.deepPurple),
+                                          underline: SizedBox(),
+                                          padding: EdgeInsets.symmetric(horizontal: 10),
+                                          onChanged: (String? value) async {
+                                            var selectedPromo = _listHappyHour.firstWhere(
+                                              (item) => item['nama_promo'] == value,
+                                              orElse: () => {"kode_promo": "", "nama_promo": "", "disc": 0},
+                                            );
+
+                                            discSetelahPromo.value = int.tryParse(selectedPromo['disc'].toString()) ?? 0;
+                                            dropdownHappyHour.value = value;
+
+                                            // setState(() {
+                                            //   dropdownHappyHour = value;
+                                            //   discSetelahPromo = selectedPromo['disc'];
+                                            // });
+                                          },
+                                          items:
+                                              _listHappyHour.map<DropdownMenuItem<String>>((item) {
+                                                return DropdownMenuItem<String>(
+                                                  value: item['nama_promo'], // Use ID as value
+                                                  child: Align(
+                                                    alignment: Alignment.centerLeft,
+                                                    child: Text(
+                                                      item['nama_promo'].toString(), // Display category name
+                                                      style: const TextStyle(fontSize: 16, fontFamily: 'Poppins'),
+                                                    ),
                                                   ),
-                                                ),
-                                              );
-                                            }).toList(),
+                                                );
+                                              }).toList(),
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -829,8 +838,8 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                     icon: Icon(Icons.delete, size: 18),
                                     onPressed: () {
                                       setState(() {
-                                        dropdownHappyHour = null;
-                                        discSetelahPromo = 0;
+                                        dropdownHappyHour.value = null;
+                                        discSetelahPromo.value = 0;
                                         getHargaAfterDisc();
                                       });
                                     },
