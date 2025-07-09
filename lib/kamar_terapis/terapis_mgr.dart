@@ -53,42 +53,42 @@ class KamarTerapisMgr {
 
       var response = await Dio().get(
         '${myIpAddr()}/kamar_terapis/latest_trans?id_trans=$idTrans',
-        options: Options(
-          headers: {
-            "Authorization": "bearer " + prefs!,
-          },
-        ),
+        options: Options(headers: {"Authorization": "bearer " + prefs!}),
       );
 
       List<dynamic> responsePaket = response.data['data_paket'];
       List<dynamic> responseProduk = response.data['data_produk'];
 
       dataPaket!.clear();
-      dataPaket!.addAll(responsePaket.map((item) {
-        return {
-          "id_paket": item['id_paket'],
-          "nama_paket_msg": item['nama_paket_msg'],
-          "total_durasi": item['total_durasi'],
-          "deskripsi_paket": item['deskripsi_paket'],
-          "id_transaksi": item['id_transaksi'],
-          "tgl_transaksi": item['tgl_transaksi'],
-          "status_detail": item['status_detail'],
-          "is_addon": item['is_addon']
-        };
-      }).toList());
+      dataPaket!.addAll(
+        responsePaket.map((item) {
+          return {
+            "id_paket": item['id_paket'],
+            "nama_paket_msg": item['nama_paket_msg'],
+            "total_durasi": item['total_durasi'],
+            "deskripsi_paket": item['deskripsi_paket'],
+            "id_transaksi": item['id_transaksi'],
+            "tgl_transaksi": item['tgl_transaksi'],
+            "status_detail": item['status_detail'],
+            "is_addon": item['is_addon'],
+          };
+        }).toList(),
+      );
 
       dataProduk!.clear();
-      dataProduk!.addAll(responseProduk.map((item) {
-        return {
-          "id_produk": item['id_produk'],
-          "nama_produk": item['nama_produk'],
-          "total_durasi": item['total_durasi'],
-          "id_transaksi": item['id_transaksi'],
-          "tgl_transaksi": item['tgl_transaksi'],
-          "status_detail": item['status_detail'],
-          "is_addon": item['is_addon']
-        };
-      }).toList());
+      dataProduk!.addAll(
+        responseProduk.map((item) {
+          return {
+            "id_produk": item['id_produk'],
+            "nama_produk": item['nama_produk'],
+            "total_durasi": item['total_durasi'],
+            "id_transaksi": item['id_transaksi'],
+            "tgl_transaksi": item['tgl_transaksi'],
+            "status_detail": item['status_detail'],
+            "is_addon": item['is_addon'],
+          };
+        }).toList(),
+      );
 
       // log("Isi Response Datanya adalah ${dataPaket}");
       // log("Isi Response Datanya adalah ${dataProduk}");
@@ -101,36 +101,32 @@ class KamarTerapisMgr {
     }
   }
 
-  Future<void> updateFood(String idTrans) async {
+  Future<bool> updateFood(String idTrans) async {
     try {
       final prefs = await getTokenSharedPref();
 
-      var response = await Dio().get(
-        '${myIpAddr()}/fnb/selected_food?id_trans=$idTrans',
-        options: Options(
-          headers: {
-            "Authorization": "bearer " + prefs!,
-          },
-        ),
-      );
+      var response = await Dio().get('${myIpAddr()}/fnb/selected_food?id_trans=$idTrans', options: Options(headers: {"Authorization": "bearer " + prefs!}));
 
       List<dynamic> responseData = response.data;
 
-      dataFood.clear();
-      dataFood.addAll(responseData);
+      if (response.statusCode == 200) {
+        dataFood.clear();
+        dataFood.addAll(responseData);
+        return true;
+      }
+
+      return false;
     } catch (e) {
       if (e is DioException) {
         log("Error Dio ${e.response!.data}");
       }
 
       log("Error lain $e");
+      return false;
     }
   }
 
-  Future<bool> setSelesai({
-    bool cepatSelesai = false,
-    String alasan = "",
-  }) async {
+  Future<bool> setSelesai({bool cepatSelesai = false, String alasan = ""}) async {
     try {
       var url = '${myIpAddr()}/kamar_terapis/selesai';
 
@@ -138,12 +134,7 @@ class KamarTerapisMgr {
         url = '${myIpAddr()}/kamar_terapis/selesai?selesai_awal=$alasan';
       }
 
-      var response = await Dio().put(
-        url,
-        data: {
-          "id_transaksi": idTransaksi,
-        },
-      );
+      var response = await Dio().put(url, data: {"id_transaksi": idTransaksi});
 
       if (response.statusCode == 200) {
         resetLimitChange();

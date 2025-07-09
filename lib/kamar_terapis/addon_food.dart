@@ -67,11 +67,19 @@ class FoodAddOnController extends GetxController {
       var response = await dio.post('${myIpAddr()}/fnb/store_addon', data: {"id_transaksi": data['idTransaksi'], "detail_trans": selectedDataMenu});
 
       if (response.statusCode == 200) {
-        _kamarTerapisMgr.updateFood(data['idTransaksi']);
-        await Future.delayed(Duration(milliseconds: 300));
+        // ini ak pake future delayed awalny, ga pake await kamarterapis.
+        // _kamarTerapisMgr.updateFood(data['idTransaksi']);
+        // await Future.delayed(Duration(milliseconds: 300));
 
-        selectedDataMenu.clear();
-        Get.offAll(() => TerapisBekerja());
+        // IMPORTANT: Await the updateFood function to complete
+        bool isUpdated = await _kamarTerapisMgr.updateFood(data['idTransaksi']);
+
+        if (isUpdated) {
+          selectedDataMenu.clear();
+          Get.offAll(() => TerapisBekerja());
+        } else {
+          CherryToast.error(title: Text('Error'), description: Text('Terjadi Kesalahan di _postData')).show(Get.context!);
+        }
       }
     } catch (e) {
       log("Error di fn Post Data $e");
