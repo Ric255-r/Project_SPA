@@ -84,7 +84,8 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
     // Listen kalo ad perubahan pada discSetelahPromo
     ever(discSetelahPromo, (disc) {
-      getHargaAfterDisc();
+      log("Value discSetelahPromo Berubah Ke $disc");
+      updateUIWithDiscount();
     });
   }
 
