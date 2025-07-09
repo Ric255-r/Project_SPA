@@ -73,7 +73,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
   @override
   void initState() {
     // TODO: implement initState
-    super.initState();  
+    super.initState();
     getDataHappyHour();
     dropdownHappyHour = null;
     print('Received idMember: ${widget.idMember}');
@@ -964,6 +964,16 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                       _storeTrans().then((_) {
                                         statusloker = statusloker == 0 ? 1 : 0;
                                         updatedataloker(statusloker, inputlocker);
+
+                                        idtransaksi = controllerPekerja.getnotrans.value;
+                                        namaruangan = controllerPekerja.getroom.value;
+                                        idterapis = controllerPekerja.getidterapis.value;
+                                        namaterapis = controllerPekerja.getnamaterapis.value;
+
+                                        if (controllerPekerja.statusshowing.value != 'pressed') {
+                                          daftapanggilankerja(namaruangan, namaterapis);
+                                        }
+                                        daftarruangtunggu(idtransaksi, namaruangan, idterapis, namaterapis);
                                         Get.offAll(() => MainResepsionis());
                                       });
                                     },

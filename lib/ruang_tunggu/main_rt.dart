@@ -8,6 +8,7 @@ import 'package:dio/dio.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 import 'dart:developer';
 import 'package:get_storage/get_storage.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -193,6 +194,8 @@ class ControllerPanggilanKerja extends GetxController {
     });
   }
 
+  RxInt newestItemIndex = RxInt(-1);
+
   void updateDataFromWebSocket(dynamic message) {
     log('raw socketdata : $message');
     List<Map<String, dynamic>> newdata = parseWebSocketData(message);
@@ -201,6 +204,8 @@ class ControllerPanggilanKerja extends GetxController {
       var existingindex = datapanggilankerja.indexWhere((existing) => existing['id_panggilan'] == item['id_panggilan']);
       if (existingindex == -1) {
         datapanggilankerja.add(item);
+        // NgeScroll Ke Index Terakhir
+        newestItemIndex.value = datapanggilankerja.length - 1;
       } else {
         var existingitem = datapanggilankerja[existingindex];
         if (existingitem['timestamp'] != item['timestamp']) {
@@ -285,7 +290,8 @@ class MainRt extends StatefulWidget {
 }
 
 class _MainRtState extends State<MainRt> {
-  ScrollController _scrollControllerLV = ScrollController();
+  final ItemScrollController itemSctr = ItemScrollController();
+  // ScrollController _scrollControllerLV = ScrollController();
 
   final ControllerPanggilanKerja controllerPanggilanKerja = Get.find<ControllerPanggilanKerja>();
 
@@ -303,7 +309,20 @@ class _MainRtState extends State<MainRt> {
   void initState() {
     super.initState();
     controllerPanggilanKerja.refreshDataPanggilanKerja();
-    Get.find<ControllerPanggilanKerja>().activescreen.value = 'ruang_tunggu';
+    controllerPanggilanKerja.activescreen.value = 'ruang_tunggu';
+
+    // Listen to changes in newestItemIndex
+    // Used ever() from GetX to listen to changes in newestItemIndex
+    // Now we only scroll when the index is valid (>= 0 and < list length)
+    ever(controllerPanggilanKerja.newestItemIndex, (index) {
+      if (index >= 0 && index < controllerPanggilanKerja.datapanggilankerja.length) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (itemSctr.isAttached) {
+            itemSctr.scrollTo(index: index, duration: Duration(milliseconds: 500), curve: Curves.easeOut);
+          }
+        });
+      }
+    });
   }
 
   @override
@@ -337,17 +356,32 @@ class _MainRtState extends State<MainRt> {
               width: Get.width - 100,
               margin: const EdgeInsets.only(left: 40, right: 40),
               decoration: BoxDecoration(borderRadius: BorderRadius.circular(20), color: Colors.white),
-              child: Scrollbar(
-                thickness: 15,
-                radius: Radius.circular(20),
-                thumbVisibility: true,
-                controller: _scrollControllerLV,
+              // Ak Ganti Scrollbar & ListView jadi ScrollConfiguration & ScrollablePositionedList
+              child: ScrollConfiguration(
+                behavior: _ScrollbarBehavior(),
+
+                // thickness: 15,
+                // radius: Radius.circular(20),
+                // thumbVisibility: true,
+                // controller: _scrollControllerLV,
                 child: Padding(
-                  padding: const EdgeInsets.only(left: 40, right: 40),
+                  padding: const EdgeInsets.only(left: 20),
                   child: Obx(() {
                     final controller = Get.find<ControllerPanggilanKerja>();
-                    return ListView.builder(
-                      controller: _scrollControllerLV,
+
+                    if (controller.datapanggilankerja.isEmpty) {
+                      return Center(
+                        child: Text(
+                          "(∪.∪ )...zzz\nBelum Ada Panggilan",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
+                        ),
+                      );
+                    }
+
+                    return ScrollablePositionedList.builder(
+                      itemScrollController: itemSctr,
+                      // controller: _scrollControllerLV,
                       itemCount: controller.datapanggilankerja.length,
                       itemBuilder: (context, index) {
                         var item = controller.datapanggilankerja[index];
@@ -367,7 +401,8 @@ class _MainRtState extends State<MainRt> {
                                 log(item['id_panggilan'].toString());
                                 controller.datapanggilankerja.removeWhere((element) => element['id_panggilan'] == item['id_panggilan']);
                                 deletepanggilankerja(item['id_panggilan']);
-                                controller.datapanggilankerja.refresh();
+                                // Redudant. ak Comment. krn RemoveWhere udh auto refresh list Rx
+                                // controller.datapanggilankerja.refresh();
                               },
                               child: Column(
                                 children: [Icon(Icons.check, size: 50), SizedBox(height: 10), Text("Confirm", style: TextStyle(fontFamily: 'Poppins'))],
@@ -401,5 +436,12 @@ class _MainRtState extends State<MainRt> {
         ),
       ),
     );
+  }
+}
+
+class _ScrollbarBehavior extends ScrollBehavior {
+  @override
+  Widget buildScrollbar(BuildContext context, Widget child, ScrollableDetails details) {
+    return Scrollbar(controller: details.controller, thickness: 15, radius: Radius.circular(20), thumbVisibility: true, child: child);
   }
 }
