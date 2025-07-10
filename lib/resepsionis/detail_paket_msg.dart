@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_final_fields
+
 import 'dart:developer';
 import 'dart:ffi';
 
@@ -183,8 +185,8 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
   void updateUIWithDiscount() {
     final result = getHargaAfterDisc();
     setState(() {
-      _dialogTxtTotalFormatted.text = formatCurrency.format(result["stlh_disc"]!);
-      _dialogTxtTotalOri = result["stlh_disc"]!;
+      _dialogTxtTotalFormatted.text = formatCurrency.format((result["stlh_disc"]! / 1000).round() * 1000);
+      _dialogTxtTotalOri = (result["stlh_disc"]! / 1000).round() * 1000;
     });
   }
 
@@ -908,7 +910,9 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                             Expanded(child: Text("")),
                             Expanded(child: Text("")),
                             Expanded(child: Text("Total", style: TextStyle(fontFamily: 'Poppins'))),
-                            Expanded(child: Text(formatCurrency.format(discountData['stlh_disc']), style: TextStyle(fontFamily: 'Poppins'))),
+                            Expanded(
+                              child: Text(formatCurrency.format((discountData['stlh_disc']! / 1000).round() * 1000), style: TextStyle(fontFamily: 'Poppins')),
+                            ),
                           ],
                         ),
                       ],

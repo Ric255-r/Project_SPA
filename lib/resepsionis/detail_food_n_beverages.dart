@@ -127,8 +127,8 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
   void updateUIWithDiscount() {
     final result = getHargaAfterDisc();
     setState(() {
-      _dialogTxtTotalFormatted.text = formatCurrency.format(result["stlh_disc"]!);
-      _dialogTxtTotalOri = result["stlh_disc"]!;
+      _dialogTxtTotalFormatted.text = formatCurrency.format((result["stlh_disc"]! / 1000).round() * 1000);
+      _dialogTxtTotalOri = (result["stlh_disc"]! / 1000).round() * 1000;
     });
   }
 
