@@ -212,7 +212,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
   TextEditingController _noRek = TextEditingController();
   TextEditingController _namaBank = TextEditingController();
 
-  String varJenisPembayaran = jenisPembayaran.first;
+  RxString varJenisPembayaran = jenisPembayaran.first.obs;
 
   String? _selectedBank;
   final List<String> _bankList = ['BCA', 'BNI', 'BRI', 'Mandiri'];
@@ -225,14 +225,15 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
         "id_transaksi": widget.idTrans,
         "total_harga": rincian['sblm_disc'],
         "disc": rincian['desimal_persen'],
-        "grand_total": rincian['stlh_disc'],
+        // grandtotal disini blm termasuk pembulatan. ak bulatin d bwh
+        // "grand_total": rincian['stlh_disc'],
         // "gtotal_stlh_pajak": hrgStlhPjk.value,
         // "jumlah_bayar": _parsedTotalBayar,
         "detail_trans": dataJual,
         "id_member": widget.idMember ?? "",
       };
 
-      if (varJenisPembayaran == "awal") {
+      if (varJenisPembayaran.value == "awal") {
         // false = awal
         data['jenis_pembayaran'] = false;
         data['status'] = "paid";
@@ -267,6 +268,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
         data['status'] = "unpaid";
       }
 
+      data['grand_total'] = (rincian['stlh_disc']! / 1000).round() * 1000;
       data['pajak'] = desimalPjk.value;
       data["gtotal_stlh_pajak"] = hrgStlhPjk.value;
 
@@ -930,74 +932,117 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                     Text("Jenis Pembayaran", style: TextStyle(fontFamily: 'Poppins')),
                                     SizedBox(
                                       width: 170,
-                                      child: DropdownButton<String>(
-                                        value: varJenisPembayaran,
-                                        isExpanded: true,
-                                        elevation: 18,
-                                        style: const TextStyle(color: Colors.deepPurple),
-                                        onChanged: (String? value) {
-                                          // dipanggil kalo user select item
-                                          setState(() {
-                                            varJenisPembayaran = value!;
-                                          });
-
-                                          print("Jenis Pembayaran skrg $varJenisPembayaran");
-                                        },
-                                        icon: Icon(Icons.arrow_drop_down_circle),
-                                        items:
-                                            jenisPembayaran.map<DropdownMenuItem<String>>((String value) {
-                                              return DropdownMenuItem(
-                                                value: value,
-                                                child: Align(
-                                                  alignment: Alignment.centerLeft,
-                                                  child: AutoSizeText("Pembayaran di" + value, minFontSize: 15, style: TextStyle(fontFamily: 'Poppins')),
-                                                ),
-                                              );
-                                            }).toList(),
+                                      child: Obx(
+                                        () => DropdownButton<String>(
+                                          value: varJenisPembayaran.value,
+                                          isExpanded: true,
+                                          elevation: 18,
+                                          style: const TextStyle(color: Colors.deepPurple),
+                                          onChanged: (String? value) {
+                                            // dipanggil kalo user select item
+                                            // setState(() {
+                                            //   varJenisPembayaran.value = value!;
+                                            // });
+                                            varJenisPembayaran.value = value!;
+                                            log("Jenis Pembayaran skrg ${varJenisPembayaran.value}");
+                                          },
+                                          icon: Icon(Icons.arrow_drop_down_circle),
+                                          items:
+                                              jenisPembayaran.map<DropdownMenuItem<String>>((String value) {
+                                                return DropdownMenuItem(
+                                                  value: value,
+                                                  child: Align(
+                                                    alignment: Alignment.centerLeft,
+                                                    child: AutoSizeText("Pembayaran di $value", minFontSize: 15, style: TextStyle(fontFamily: 'Poppins')),
+                                                  ),
+                                                );
+                                              }).toList(),
+                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
                             ),
-                            if (varJenisPembayaran == "awal")
-                              Expanded(
-                                child: Align(
-                                  alignment: Alignment.centerRight,
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      _showDialogConfirmPayment(context);
-                                    },
-                                    child: Text("Konfirmasi Pembayaran", style: TextStyle(fontFamily: 'Poppins')),
+                            Obx(() {
+                              if (varJenisPembayaran.value == "awal") {
+                                return Expanded(
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: ElevatedButton(
+                                      onPressed: () {
+                                        _showDialogConfirmPayment(context);
+                                      },
+                                      child: Text("Konfirmasi Pembayaran", style: TextStyle(fontFamily: 'Poppins')),
+                                    ),
                                   ),
-                                ),
-                              ),
-                            if (varJenisPembayaran == "akhir")
-                              Expanded(
-                                child: Align(
-                                  alignment: Alignment.centerRight,
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      _storeTrans().then((_) {
-                                        statusloker = statusloker == 0 ? 1 : 0;
-                                        updatedataloker(statusloker, inputlocker);
+                                );
+                              } else {
+                                return Expanded(
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: ElevatedButton(
+                                      onPressed: () {
+                                        _storeTrans().then((_) {
+                                          statusloker = statusloker == 0 ? 1 : 0;
+                                          updatedataloker(statusloker, inputlocker);
 
-                                        idtransaksi = controllerPekerja.getnotrans.value;
-                                        namaruangan = controllerPekerja.getroom.value;
-                                        idterapis = controllerPekerja.getidterapis.value;
-                                        namaterapis = controllerPekerja.getnamaterapis.value;
+                                          idtransaksi = controllerPekerja.getnotrans.value;
+                                          namaruangan = controllerPekerja.getroom.value;
+                                          idterapis = controllerPekerja.getidterapis.value;
+                                          namaterapis = controllerPekerja.getnamaterapis.value;
 
-                                        if (controllerPekerja.statusshowing.value != 'pressed') {
-                                          daftapanggilankerja(namaruangan, namaterapis);
-                                        }
-                                        daftarruangtunggu(idtransaksi, namaruangan, idterapis, namaterapis);
-                                        Get.offAll(() => MainResepsionis());
-                                      });
-                                    },
-                                    child: Text("Simpan Transaksi", style: TextStyle(fontFamily: 'Poppins')),
+                                          if (controllerPekerja.statusshowing.value != 'pressed') {
+                                            daftapanggilankerja(namaruangan, namaterapis);
+                                          }
+                                          daftarruangtunggu(idtransaksi, namaruangan, idterapis, namaterapis);
+                                          Get.offAll(() => MainResepsionis());
+                                        });
+                                      },
+                                      child: Text("Simpan Transaksi", style: TextStyle(fontFamily: 'Poppins')),
+                                    ),
                                   ),
-                                ),
-                              ),
+                                );
+                              }
+                            }),
+                            // if (varJenisPembayaran == "awal")
+                            //   Expanded(
+                            //     child: Align(
+                            //       alignment: Alignment.centerRight,
+                            //       child: ElevatedButton(
+                            //         onPressed: () {
+                            //           _showDialogConfirmPayment(context);
+                            //         },
+                            //         child: Text("Konfirmasi Pembayaran", style: TextStyle(fontFamily: 'Poppins')),
+                            //       ),
+                            //     ),
+                            //   ),
+                            // if (varJenisPembayaran == "akhir")
+                            //   Expanded(
+                            //     child: Align(
+                            //       alignment: Alignment.centerRight,
+                            //       child: ElevatedButton(
+                            //         onPressed: () {
+                            //           _storeTrans().then((_) {
+                            //             statusloker = statusloker == 0 ? 1 : 0;
+                            //             updatedataloker(statusloker, inputlocker);
+
+                            //             idtransaksi = controllerPekerja.getnotrans.value;
+                            //             namaruangan = controllerPekerja.getroom.value;
+                            //             idterapis = controllerPekerja.getidterapis.value;
+                            //             namaterapis = controllerPekerja.getnamaterapis.value;
+
+                            //             if (controllerPekerja.statusshowing.value != 'pressed') {
+                            //               daftapanggilankerja(namaruangan, namaterapis);
+                            //             }
+                            //             daftarruangtunggu(idtransaksi, namaruangan, idterapis, namaterapis);
+                            //             Get.offAll(() => MainResepsionis());
+                            //           });
+                            //         },
+                            //         child: Text("Simpan Transaksi", style: TextStyle(fontFamily: 'Poppins')),
+                            //       ),
+                            //     ),
+                            //   ),
                           ],
                         ),
                       ],
