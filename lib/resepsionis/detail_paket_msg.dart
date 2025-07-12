@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_final_fields
+
 import 'dart:developer';
 import 'dart:ffi';
 
@@ -45,7 +47,8 @@ class DetailPaketMassage extends StatefulWidget {
 }
 
 List<Map<String, dynamic>> _listHappyHour = [];
-String? dropdownHappyHour;
+// String? dropdownHappyHour;
+RxnString dropdownHappyHour = RxnString(null);
 List<String> jenisPembayaran = ["awal", "akhir"];
 Map<String, int> selecteditemindex = {};
 
@@ -60,7 +63,9 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
   String? noHp;
   String? status;
   String? idMember;
-  var discSetelahPromo = 0;
+  // var discSetelahPromo = 0;
+  RxInt discSetelahPromo = 0.obs;
+
   void _handleScannedData(String val0, String val1, String val2, String val3) {
     setState(() {
       idMember = val3;
@@ -75,9 +80,15 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
     // TODO: implement initState
     super.initState();
     getDataHappyHour();
-    dropdownHappyHour = null;
+    dropdownHappyHour.value = null;
     print('Received idMember: ${widget.idMember}');
     itemTapCounts.clear();
+
+    // Listen kalo ad perubahan pada discSetelahPromo
+    ever(discSetelahPromo, (disc) {
+      log("Value discSetelahPromo Berubah Ke $disc");
+      updateUIWithDiscount();
+    });
   }
 
   List<Map<String, dynamic>> dataJual = []; // Like React state, passing props
@@ -117,7 +128,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
     //     listDisc.map((percentStr) {
     //       return double.parse(percentStr.replaceAll('%', '')) / 100;
     //     }).toList();
-    double doubleDisc = discSetelahPromo / 100;
+    double doubleDisc = discSetelahPromo.value / 100;
 
     double jlhPotongan = totalBefore * doubleDisc;
     double totalStlhDisc = totalBefore - jlhPotongan;
@@ -174,8 +185,8 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
   void updateUIWithDiscount() {
     final result = getHargaAfterDisc();
     setState(() {
-      _dialogTxtTotalFormatted.text = formatCurrency.format(result["stlh_disc"]!);
-      _dialogTxtTotalOri = result["stlh_disc"]!;
+      _dialogTxtTotalFormatted.text = formatCurrency.format((result["stlh_disc"]! / 1000).round() * 1000);
+      _dialogTxtTotalOri = (result["stlh_disc"]! / 1000).round() * 1000;
     });
   }
 
@@ -203,7 +214,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
   TextEditingController _noRek = TextEditingController();
   TextEditingController _namaBank = TextEditingController();
 
-  String varJenisPembayaran = jenisPembayaran.first;
+  RxString varJenisPembayaran = jenisPembayaran.first.obs;
 
   String? _selectedBank;
   final List<String> _bankList = ['BCA', 'BNI', 'BRI', 'Mandiri'];
@@ -216,14 +227,15 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
         "id_transaksi": widget.idTrans,
         "total_harga": rincian['sblm_disc'],
         "disc": rincian['desimal_persen'],
-        "grand_total": rincian['stlh_disc'],
+        // grandtotal disini blm termasuk pembulatan. ak bulatin d bwh
+        // "grand_total": rincian['stlh_disc'],
         // "gtotal_stlh_pajak": hrgStlhPjk.value,
         // "jumlah_bayar": _parsedTotalBayar,
         "detail_trans": dataJual,
         "id_member": widget.idMember ?? "",
       };
 
-      if (varJenisPembayaran == "awal") {
+      if (varJenisPembayaran.value == "awal") {
         // false = awal
         data['jenis_pembayaran'] = false;
         data['status'] = "paid";
@@ -258,6 +270,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
         data['status'] = "unpaid";
       }
 
+      data['grand_total'] = (rincian['stlh_disc']! / 1000).round() * 1000;
       data['pajak'] = desimalPjk.value;
       data["gtotal_stlh_pajak"] = hrgStlhPjk.value;
 
@@ -791,48 +804,56 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                     alignment: Alignment.centerLeft,
                                     child: SizedBox(
                                       width: 300,
-                                      child: DropdownButton<String>(
-                                        value: dropdownHappyHour,
-                                        isExpanded: true,
-                                        icon: const Icon(Icons.arrow_drop_down),
-                                        elevation: 16,
-                                        style: const TextStyle(color: Colors.deepPurple),
-                                        underline: SizedBox(),
-                                        padding: EdgeInsets.symmetric(horizontal: 10),
-                                        onChanged: (String? value) async {
-                                          var selectedPromo = _listHappyHour.firstWhere(
-                                            (item) => item['nama_promo'] == value,
-                                            orElse: () => {"kode_promo": "", "nama_promo": "", "disc": 0},
-                                          );
-                                          setState(() {
-                                            dropdownHappyHour = value;
-                                            discSetelahPromo = selectedPromo['disc'];
-                                          });
-                                        },
-                                        items:
-                                            _listHappyHour.map<DropdownMenuItem<String>>((item) {
-                                              return DropdownMenuItem<String>(
-                                                value: item['nama_promo'], // Use ID as value
-                                                child: Align(
-                                                  alignment: Alignment.centerLeft,
-                                                  child: Text(
-                                                    item['nama_promo'].toString(), // Display category name
-                                                    style: const TextStyle(fontSize: 16, fontFamily: 'Poppins'),
+                                      child: Obx(
+                                        () => DropdownButton<String>(
+                                          value: dropdownHappyHour.value,
+                                          isExpanded: true,
+                                          icon: const Icon(Icons.arrow_drop_down),
+                                          elevation: 16,
+                                          style: const TextStyle(color: Colors.deepPurple),
+                                          underline: SizedBox(),
+                                          padding: EdgeInsets.symmetric(horizontal: 10),
+                                          onChanged: (String? value) async {
+                                            var selectedPromo = _listHappyHour.firstWhere(
+                                              (item) => item['nama_promo'] == value,
+                                              orElse: () => {"kode_promo": "", "nama_promo": "", "disc": 0},
+                                            );
+
+                                            discSetelahPromo.value = int.tryParse(selectedPromo['disc'].toString()) ?? 0;
+                                            dropdownHappyHour.value = value;
+
+                                            // setState(() {
+                                            //   dropdownHappyHour = value;
+                                            //   discSetelahPromo = selectedPromo['disc'];
+                                            // });
+                                          },
+                                          items:
+                                              _listHappyHour.map<DropdownMenuItem<String>>((item) {
+                                                return DropdownMenuItem<String>(
+                                                  value: item['nama_promo'], // Use ID as value
+                                                  child: Align(
+                                                    alignment: Alignment.centerLeft,
+                                                    child: Text(
+                                                      item['nama_promo'].toString(), // Display category name
+                                                      style: const TextStyle(fontSize: 16, fontFamily: 'Poppins'),
+                                                    ),
                                                   ),
-                                                ),
-                                              );
-                                            }).toList(),
+                                                );
+                                              }).toList(),
+                                        ),
                                       ),
                                     ),
                                   ),
                                   IconButton(
                                     icon: Icon(Icons.delete, size: 18),
                                     onPressed: () {
-                                      setState(() {
-                                        dropdownHappyHour = null;
-                                        discSetelahPromo = 0;
-                                        getHargaAfterDisc();
-                                      });
+                                      // setState(() {
+                                      //   dropdownHappyHour.value = null;
+                                      //   discSetelahPromo.value = 0;
+                                      //   getHargaAfterDisc();
+                                      // });
+                                      dropdownHappyHour.value = null;
+                                      discSetelahPromo.value = 0;
                                     },
                                   ),
                                 ],
@@ -889,7 +910,9 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                             Expanded(child: Text("")),
                             Expanded(child: Text("")),
                             Expanded(child: Text("Total", style: TextStyle(fontFamily: 'Poppins'))),
-                            Expanded(child: Text(formatCurrency.format(discountData['stlh_disc']), style: TextStyle(fontFamily: 'Poppins'))),
+                            Expanded(
+                              child: Text(formatCurrency.format((discountData['stlh_disc']! / 1000).round() * 1000), style: TextStyle(fontFamily: 'Poppins')),
+                            ),
                           ],
                         ),
                       ],
@@ -913,74 +936,117 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                     Text("Jenis Pembayaran", style: TextStyle(fontFamily: 'Poppins')),
                                     SizedBox(
                                       width: 170,
-                                      child: DropdownButton<String>(
-                                        value: varJenisPembayaran,
-                                        isExpanded: true,
-                                        elevation: 18,
-                                        style: const TextStyle(color: Colors.deepPurple),
-                                        onChanged: (String? value) {
-                                          // dipanggil kalo user select item
-                                          setState(() {
-                                            varJenisPembayaran = value!;
-                                          });
-
-                                          print("Jenis Pembayaran skrg $varJenisPembayaran");
-                                        },
-                                        icon: Icon(Icons.arrow_drop_down_circle),
-                                        items:
-                                            jenisPembayaran.map<DropdownMenuItem<String>>((String value) {
-                                              return DropdownMenuItem(
-                                                value: value,
-                                                child: Align(
-                                                  alignment: Alignment.centerLeft,
-                                                  child: AutoSizeText("Pembayaran di" + value, minFontSize: 15, style: TextStyle(fontFamily: 'Poppins')),
-                                                ),
-                                              );
-                                            }).toList(),
+                                      child: Obx(
+                                        () => DropdownButton<String>(
+                                          value: varJenisPembayaran.value,
+                                          isExpanded: true,
+                                          elevation: 18,
+                                          style: const TextStyle(color: Colors.deepPurple),
+                                          onChanged: (String? value) {
+                                            // dipanggil kalo user select item
+                                            // setState(() {
+                                            //   varJenisPembayaran.value = value!;
+                                            // });
+                                            varJenisPembayaran.value = value!;
+                                            log("Jenis Pembayaran skrg ${varJenisPembayaran.value}");
+                                          },
+                                          icon: Icon(Icons.arrow_drop_down_circle),
+                                          items:
+                                              jenisPembayaran.map<DropdownMenuItem<String>>((String value) {
+                                                return DropdownMenuItem(
+                                                  value: value,
+                                                  child: Align(
+                                                    alignment: Alignment.centerLeft,
+                                                    child: AutoSizeText("Pembayaran di $value", minFontSize: 15, style: TextStyle(fontFamily: 'Poppins')),
+                                                  ),
+                                                );
+                                              }).toList(),
+                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
                             ),
-                            if (varJenisPembayaran == "awal")
-                              Expanded(
-                                child: Align(
-                                  alignment: Alignment.centerRight,
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      _showDialogConfirmPayment(context);
-                                    },
-                                    child: Text("Konfirmasi Pembayaran", style: TextStyle(fontFamily: 'Poppins')),
+                            Obx(() {
+                              if (varJenisPembayaran.value == "awal") {
+                                return Expanded(
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: ElevatedButton(
+                                      onPressed: () {
+                                        _showDialogConfirmPayment(context);
+                                      },
+                                      child: Text("Konfirmasi Pembayaran", style: TextStyle(fontFamily: 'Poppins')),
+                                    ),
                                   ),
-                                ),
-                              ),
-                            if (varJenisPembayaran == "akhir")
-                              Expanded(
-                                child: Align(
-                                  alignment: Alignment.centerRight,
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      _storeTrans().then((_) {
-                                        statusloker = statusloker == 0 ? 1 : 0;
-                                        updatedataloker(statusloker, inputlocker);
+                                );
+                              } else {
+                                return Expanded(
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: ElevatedButton(
+                                      onPressed: () {
+                                        _storeTrans().then((_) {
+                                          statusloker = statusloker == 0 ? 1 : 0;
+                                          updatedataloker(statusloker, inputlocker);
 
-                                        idtransaksi = controllerPekerja.getnotrans.value;
-                                        namaruangan = controllerPekerja.getroom.value;
-                                        idterapis = controllerPekerja.getidterapis.value;
-                                        namaterapis = controllerPekerja.getnamaterapis.value;
+                                          idtransaksi = controllerPekerja.getnotrans.value;
+                                          namaruangan = controllerPekerja.getroom.value;
+                                          idterapis = controllerPekerja.getidterapis.value;
+                                          namaterapis = controllerPekerja.getnamaterapis.value;
 
-                                        if (controllerPekerja.statusshowing.value != 'pressed') {
-                                          daftapanggilankerja(namaruangan, namaterapis);
-                                        }
-                                        daftarruangtunggu(idtransaksi, namaruangan, idterapis, namaterapis);
-                                        Get.offAll(() => MainResepsionis());
-                                      });
-                                    },
-                                    child: Text("Simpan Transaksi", style: TextStyle(fontFamily: 'Poppins')),
+                                          if (controllerPekerja.statusshowing.value != 'pressed') {
+                                            daftapanggilankerja(namaruangan, namaterapis);
+                                          }
+                                          daftarruangtunggu(idtransaksi, namaruangan, idterapis, namaterapis);
+                                          Get.offAll(() => MainResepsionis());
+                                        });
+                                      },
+                                      child: Text("Simpan Transaksi", style: TextStyle(fontFamily: 'Poppins')),
+                                    ),
                                   ),
-                                ),
-                              ),
+                                );
+                              }
+                            }),
+                            // if (varJenisPembayaran == "awal")
+                            //   Expanded(
+                            //     child: Align(
+                            //       alignment: Alignment.centerRight,
+                            //       child: ElevatedButton(
+                            //         onPressed: () {
+                            //           _showDialogConfirmPayment(context);
+                            //         },
+                            //         child: Text("Konfirmasi Pembayaran", style: TextStyle(fontFamily: 'Poppins')),
+                            //       ),
+                            //     ),
+                            //   ),
+                            // if (varJenisPembayaran == "akhir")
+                            //   Expanded(
+                            //     child: Align(
+                            //       alignment: Alignment.centerRight,
+                            //       child: ElevatedButton(
+                            //         onPressed: () {
+                            //           _storeTrans().then((_) {
+                            //             statusloker = statusloker == 0 ? 1 : 0;
+                            //             updatedataloker(statusloker, inputlocker);
+
+                            //             idtransaksi = controllerPekerja.getnotrans.value;
+                            //             namaruangan = controllerPekerja.getroom.value;
+                            //             idterapis = controllerPekerja.getidterapis.value;
+                            //             namaterapis = controllerPekerja.getnamaterapis.value;
+
+                            //             if (controllerPekerja.statusshowing.value != 'pressed') {
+                            //               daftapanggilankerja(namaruangan, namaterapis);
+                            //             }
+                            //             daftarruangtunggu(idtransaksi, namaruangan, idterapis, namaterapis);
+                            //             Get.offAll(() => MainResepsionis());
+                            //           });
+                            //         },
+                            //         child: Text("Simpan Transaksi", style: TextStyle(fontFamily: 'Poppins')),
+                            //       ),
+                            //     ),
+                            //   ),
                           ],
                         ),
                       ],

@@ -1,6 +1,7 @@
 // ignore_for_file: unnecessary_import, prefer_interpolation_to_compose_strings
 
 import 'dart:async';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/services.dart';
 import 'package:Project_SPA/owner/download_splash.dart';
 import 'package:flutter/material.dart';
@@ -267,7 +268,7 @@ class IsiOwnerPage extends StatelessWidget {
                             margin: const EdgeInsets.only(left: 10, right: 10),
                             padding: const EdgeInsets.only(left: 15),
                             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
-                            height: 90.w, // 90.w dari desain 660dp
+                            // height: 90.w, // 90.w dari desain 660dp
                             width: double.infinity,
                             child: Obx(() {
                               // ambil data bulan saat ini
@@ -314,7 +315,17 @@ class IsiOwnerPage extends StatelessWidget {
                                   SizedBox(height: 10),
                                   Text(formattedSales, style: TextStyle(fontFamily: 'Poppins', fontSize: 8.w)),
                                   SizedBox(height: 10),
-                                  Text(statusText, style: TextStyle(fontFamily: 'Poppins', fontSize: 10.w)),
+                                  AutoSizeText(
+                                    statusText,
+                                    style: TextStyle(fontFamily: 'Poppins', fontSize: 10.sp),
+                                    // Force the text to stay on a single line.
+                                    maxLines: 1,
+                                    // Optional: Set a minimum font size to maintain readability.
+                                    minFontSize: 8,
+                                    // Optional: What to do if the text still overflows at its minimum size.
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  SizedBox(height: 10),
                                 ],
                               );
                             }),
@@ -325,7 +336,7 @@ class IsiOwnerPage extends StatelessWidget {
                             margin: const EdgeInsets.only(left: 10, right: 10),
                             padding: const EdgeInsets.only(left: 15),
                             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
-                            height: 90.w, // 90.w dari desain 660dp
+                            // height: 90.w, // 90.w dari desain 660dp
                             width: double.infinity,
                             child: Obx(() {
                               // get current month data, asumsi data udh disortir berdasarkan bln
@@ -373,7 +384,17 @@ class IsiOwnerPage extends StatelessWidget {
                                   SizedBox(height: 10),
                                   Text(formattedSales, style: TextStyle(fontFamily: 'Poppins', fontSize: 8.w)),
                                   SizedBox(height: 10),
-                                  Text(statusText, style: TextStyle(fontFamily: 'Poppins', fontSize: 10.w)),
+                                  AutoSizeText(
+                                    statusText,
+                                    style: TextStyle(fontFamily: 'Poppins', fontSize: 10.sp),
+                                    // Force the text to stay on a single line.
+                                    maxLines: 1,
+                                    // Optional: Set a minimum font size to maintain readability.
+                                    minFontSize: 8,
+                                    // Optional: What to do if the text still overflows at its minimum size.
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  SizedBox(height: 10),
                                 ],
                               );
                             }),
@@ -384,7 +405,7 @@ class IsiOwnerPage extends StatelessWidget {
                             margin: const EdgeInsets.only(left: 10, right: 10),
                             padding: const EdgeInsets.only(left: 15),
                             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
-                            height: 90.w, // 90.w dari desain 660dp
+                            // height: 90.w, // 90.w dari desain 660dp
                             width: double.infinity,
                             child: Obx(() {
                               // ambil data bulan saat ini
@@ -431,7 +452,17 @@ class IsiOwnerPage extends StatelessWidget {
                                   SizedBox(height: 10),
                                   Text(formattedSales, style: TextStyle(fontFamily: 'Poppins', fontSize: 8.w)),
                                   SizedBox(height: 10),
-                                  Text(statusText, style: TextStyle(fontFamily: 'Poppins', fontSize: 10.w)),
+                                  AutoSizeText(
+                                    statusText,
+                                    style: TextStyle(fontFamily: 'Poppins', fontSize: 10.sp),
+                                    // Force the text to stay on a single line.
+                                    maxLines: 1,
+                                    // Optional: Set a minimum font size to maintain readability.
+                                    minFontSize: 8,
+                                    // Optional: What to do if the text still overflows at its minimum size.
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  SizedBox(height: 10),
                                 ],
                               );
                             }),

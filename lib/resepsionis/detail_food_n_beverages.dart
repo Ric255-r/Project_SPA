@@ -38,15 +38,12 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
   // Function to update `dataJual` (like React's `setState`)
   void addToDataJual(Map<String, dynamic> newItem) {
     setState(() {
-      final existsIndex = dataJual.indexWhere(
-        (item) => item['id_fnb'] == newItem['id_fnb'],
-      );
+      final existsIndex = dataJual.indexWhere((item) => item['id_fnb'] == newItem['id_fnb']);
 
       if (existsIndex != -1) {
         // Jika ad, update value
         dataJual[existsIndex]['jlh'] += 1;
-        dataJual[existsIndex]['harga_total'] =
-            dataJual[existsIndex]['harga_fnb'] * dataJual[existsIndex]['jlh'];
+        dataJual[existsIndex]['harga_total'] = dataJual[existsIndex]['harga_fnb'] * dataJual[existsIndex]['jlh'];
       } else {
         // Jika g ad, tambah item baru
         dataJual.add({...newItem, 'harga_total': newItem['harga_fnb']});
@@ -58,11 +55,7 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
   }
   // End Passing Props dataJual
 
-  final formatCurrency = new NumberFormat.currency(
-    locale: "id_ID",
-    decimalDigits: 0,
-    symbol: 'Rp. ',
-  );
+  final formatCurrency = new NumberFormat.currency(locale: "id_ID", decimalDigits: 0, symbol: 'Rp. ');
 
   // Fungsi Manipulasi Harga
   TextEditingController _dialogTxtTotalFormatted = TextEditingController();
@@ -93,15 +86,9 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
     String formattedKembali = formatCurrency.format(kembalian);
 
     // Update controller tanpa trigger infinite loop
-    _totalBayarController.value = TextEditingValue(
-      text: formatted,
-      selection: TextSelection.collapsed(offset: formatted.length),
-    );
+    _totalBayarController.value = TextEditingValue(text: formatted, selection: TextSelection.collapsed(offset: formatted.length));
 
-    _kembalianController.value = TextEditingValue(
-      text: formattedKembali,
-      selection: TextSelection.collapsed(offset: formattedKembali.length),
-    );
+    _kembalianController.value = TextEditingValue(text: formattedKembali, selection: TextSelection.collapsed(offset: formattedKembali.length));
   }
 
   double getHargaBeforeDisc() {
@@ -133,22 +120,15 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
     //   _dialogTxtTotalOri = totalStlhDisc;
     // });
 
-    return {
-      "potongan": jlhPotongan,
-      "sblm_disc": totalBefore,
-      "stlh_disc": totalStlhDisc,
-      "desimal_persen": doubleDisc[selectedDisc],
-    };
+    return {"potongan": jlhPotongan, "sblm_disc": totalBefore, "stlh_disc": totalStlhDisc, "desimal_persen": doubleDisc[selectedDisc]};
   }
 
   // Utk Update pas pilih dropdown disc
   void updateUIWithDiscount() {
     final result = getHargaAfterDisc();
     setState(() {
-      _dialogTxtTotalFormatted.text = formatCurrency.format(
-        result["stlh_disc"]!,
-      );
-      _dialogTxtTotalOri = result["stlh_disc"]!;
+      _dialogTxtTotalFormatted.text = formatCurrency.format((result["stlh_disc"]! / 1000).round() * 1000);
+      _dialogTxtTotalOri = (result["stlh_disc"]! / 1000).round() * 1000;
     });
   }
 
@@ -193,8 +173,7 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
       List<dynamic> data = response.data;
       if (data.isNotEmpty) {
         var firstRecord = data[0];
-        double pjk =
-            double.tryParse(firstRecord['pajak_fnb'].toString()) ?? 0.0;
+        double pjk = double.tryParse(firstRecord['pajak_fnb'].toString()) ?? 0.0;
 
         desimalPjk.value = pjk;
       } else {
@@ -217,11 +196,7 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
 
     Get.dialog(
       AlertDialog(
-        title: Text(
-          "Pembayaran",
-          textAlign: TextAlign.center,
-          style: TextStyle(fontFamily: 'Poppins'),
-        ),
+        title: Text("Pembayaran", textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Poppins')),
         content: SingleChildScrollView(
           child: SizedBox(
             width: Get.width,
@@ -230,89 +205,39 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
               children: [
                 Row(
                   children: [
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 20),
-                        child: Text(
-                          "Harga: ",
-                          style: TextStyle(fontFamily: 'Poppins'),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 3,
-                      child: TextField(
-                        controller: _dialogTxtTotalFormatted,
-                        readOnly: true,
-                      ),
-                    ),
+                    Expanded(child: Padding(padding: const EdgeInsets.only(top: 20), child: Text("Harga: ", style: TextStyle(fontFamily: 'Poppins')))),
+                    Expanded(flex: 3, child: TextField(controller: _dialogTxtTotalFormatted, readOnly: true)),
                   ],
                 ),
                 Row(
                   children: [
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 5),
-                        child: Text(
-                          "Pajak: ",
-                          style: TextStyle(fontFamily: 'Poppins'),
-                        ),
-                      ),
-                    ),
+                    Expanded(child: Padding(padding: const EdgeInsets.only(top: 5), child: Text("Pajak: ", style: TextStyle(fontFamily: 'Poppins')))),
                     Obx(
-                      () => Expanded(
-                        flex: 3,
-                        child: TextField(
-                          controller: TextEditingController(
-                            text: "${(desimalPjk.value * 100).toInt()}%",
-                          ),
-                          readOnly: true,
-                        ),
-                      ),
+                      () =>
+                          Expanded(flex: 3, child: TextField(controller: TextEditingController(text: "${(desimalPjk.value * 100).toInt()}%"), readOnly: true)),
                     ),
                   ],
                 ),
                 Row(
                   children: [
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 5),
-                        child: Text(
-                          "Total Harga: ",
-                          style: TextStyle(fontFamily: 'Poppins'),
-                        ),
-                      ),
-                    ),
+                    Expanded(child: Padding(padding: const EdgeInsets.only(top: 5), child: Text("Total Harga: ", style: TextStyle(fontFamily: 'Poppins')))),
                     Obx(() {
                       double nominalPjk = _dialogTxtTotalOri * desimalPjk.value;
                       double txtPjkBlmRound = _dialogTxtTotalOri + nominalPjk;
 
                       // Bulatkan ke ribuan terdekat
-                      _dialogTxtTotalStlhPjk.value =
-                          (txtPjkBlmRound / 1000).round() * 1000;
+                      _dialogTxtTotalStlhPjk.value = (txtPjkBlmRound / 1000).round() * 1000;
 
                       return Expanded(
                         flex: 3,
-                        child: TextField(
-                          controller: TextEditingController(
-                            text: formatCurrency.format(
-                              _dialogTxtTotalStlhPjk.value,
-                            ),
-                          ),
-                          readOnly: true,
-                        ),
+                        child: TextField(controller: TextEditingController(text: formatCurrency.format(_dialogTxtTotalStlhPjk.value)), readOnly: true),
                       );
                     }),
                   ],
                 ),
                 Row(
                   children: [
-                    Expanded(
-                      child: Text(
-                        "Metode Pembayaran: ",
-                        style: TextStyle(fontFamily: 'Poppins'),
-                      ),
-                    ),
+                    Expanded(child: Text("Metode Pembayaran: ", style: TextStyle(fontFamily: 'Poppins'))),
                     Expanded(
                       flex: 3,
                       child: Obx(
@@ -359,13 +284,8 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
                           },
                           icon: SizedBox.shrink(),
                           items:
-                              metodeByr.map<DropdownMenuItem<String>>((
-                                String value,
-                              ) {
-                                return DropdownMenuItem(
-                                  value: value,
-                                  child: AutoSizeText(value, minFontSize: 20),
-                                );
+                              metodeByr.map<DropdownMenuItem<String>>((String value) {
+                                return DropdownMenuItem(value: value, child: AutoSizeText(value, minFontSize: 20));
                               }).toList(),
                         ),
                       ),
@@ -377,27 +297,11 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
                     return Column(
                       children: [
                         SizedBox(height: 30),
-                        Row(
-                          children: [
-                            Text(
-                              "Rincian Biaya",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'Poppins',
-                              ),
-                            ),
-                          ],
-                        ),
+                        Row(children: [Text("Rincian Biaya", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'))]),
                         Row(
                           children: [
                             Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 20),
-                                child: Text(
-                                  "Total Bayar: ",
-                                  style: TextStyle(fontFamily: 'Poppins'),
-                                ),
-                              ),
+                              child: Padding(padding: const EdgeInsets.only(top: 20), child: Text("Total Bayar: ", style: TextStyle(fontFamily: 'Poppins'))),
                             ),
                             Expanded(
                               flex: 3,
@@ -415,21 +319,9 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
                         Row(
                           children: [
                             Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 20),
-                                child: Text(
-                                  "Kembalian: ",
-                                  style: TextStyle(fontFamily: 'Poppins'),
-                                ),
-                              ),
+                              child: Padding(padding: const EdgeInsets.only(top: 20), child: Text("Kembalian: ", style: TextStyle(fontFamily: 'Poppins'))),
                             ),
-                            Expanded(
-                              flex: 3,
-                              child: TextField(
-                                controller: _kembalianController,
-                                readOnly: true,
-                              ),
-                            ),
+                            Expanded(flex: 3, child: TextField(controller: _kembalianController, readOnly: true)),
                           ],
                         ),
                       ],
@@ -438,53 +330,22 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
                   return Column(
                     children: [
                       SizedBox(height: 30),
+                      Row(children: [Text("Informasi Bank Pemilik", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'))]),
                       Row(
                         children: [
-                          Text(
-                            "Informasi Bank Pemilik",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'Poppins',
-                            ),
-                          ),
+                          Expanded(child: Text("Nama Akun: ", style: TextStyle(fontFamily: 'Poppins'))),
+                          Expanded(flex: 3, child: TextField(controller: _namaAkun)),
                         ],
                       ),
                       Row(
                         children: [
-                          Expanded(
-                            child: Text(
-                              "Nama Akun: ",
-                              style: TextStyle(fontFamily: 'Poppins'),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 3,
-                            child: TextField(controller: _namaAkun),
-                          ),
+                          Expanded(child: Text("Nomor Rekening: ", style: TextStyle(fontFamily: 'Poppins'))),
+                          Expanded(flex: 3, child: TextField(controller: _noRek)),
                         ],
                       ),
                       Row(
                         children: [
-                          Expanded(
-                            child: Text(
-                              "Nomor Rekening: ",
-                              style: TextStyle(fontFamily: 'Poppins'),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 3,
-                            child: TextField(controller: _noRek),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              "Nama Bank: ",
-                              style: TextStyle(fontFamily: 'Poppins'),
-                            ),
-                          ),
+                          Expanded(child: Text("Nama Bank: ", style: TextStyle(fontFamily: 'Poppins'))),
                           Expanded(
                             flex: 3,
                             child: DropdownButtonFormField<String>(
@@ -496,18 +357,9 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
                               },
                               items:
                                   _bankList.map((String bank) {
-                                    return DropdownMenuItem<String>(
-                                      value: bank,
-                                      child: Text(bank),
-                                    );
+                                    return DropdownMenuItem<String>(value: bank, child: Text(bank));
                                   }).toList(),
-                              decoration: InputDecoration(
-                                border: OutlineInputBorder(),
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 12,
-                                ),
-                              ),
+                              decoration: InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12)),
                             ),
                           ),
                         ],
@@ -523,23 +375,14 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
           TextButton(
             onPressed: () {
               if (isCash.value) {
-                if (_totalBayarController.text == "" ||
-                    _totalBayarController.text.isEmpty ||
-                    _totalBayarController.text == "0") {
+                if (_totalBayarController.text == "" || _totalBayarController.text.isEmpty || _totalBayarController.text == "0") {
                   return;
                 }
               }
 
               if (kembalian < 0) {
                 CherryToast.error(
-                  title: Text(
-                    "Jumlah Bayar Kurang",
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Poppins',
-                    ),
-                  ),
+                  title: Text("Jumlah Bayar Kurang", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
                   animationDuration: const Duration(milliseconds: 1500),
                   autoDismiss: true,
                 ).show(context);
@@ -549,10 +392,7 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
                 });
               }
             },
-            child: Text(
-              "Proses Pembayaran",
-              style: TextStyle(fontFamily: 'Poppins'),
-            ),
+            child: Text("Proses Pembayaran", style: TextStyle(fontFamily: 'Poppins')),
           ),
         ],
       ),
@@ -580,7 +420,7 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
         "id_transaksi": widget.idTrans,
         "total_harga": rincian['sblm_disc'],
         "disc": rincian['desimal_persen'],
-        "grand_total": rincian['stlh_disc'],
+        // "grand_total": rincian['stlh_disc'],
         "detail_trans": dataJual,
       };
 
@@ -615,27 +455,17 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
         data['status'] = "unpaid";
       }
 
+      data['grand_total'] = (rincian['stlh_disc']! / 1000).round() * 1000;
       data['pajak'] = desimalPjk.value;
       data['gtotal_stlh_pajak'] = hrgStlhPjk.value;
 
-      var response = await dio.post(
-        '${myIpAddr()}/fnb/store',
-        options: Options(headers: {"Authorization": "Bearer " + token!}),
-        data: data,
-      );
+      var response = await dio.post('${myIpAddr()}/fnb/store', options: Options(headers: {"Authorization": "Bearer " + token!}), data: data);
 
       log("Isi data jual $dataJual");
       log("Sukses SImpan $response");
 
       CherryToast.success(
-        title: Text(
-          "Transaksi Sukses!",
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'Poppins',
-          ),
-        ),
+        title: Text("Transaksi Sukses!", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
         animationDuration: const Duration(milliseconds: 2000),
         autoDismiss: true,
       ).show(context);
@@ -679,12 +509,7 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
                           padding: const EdgeInsets.only(top: 25),
                           child: Text(
                             "Food & Beverages",
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 30,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'Poppins',
-                            ),
+                            style: TextStyle(color: Colors.black, fontSize: 30, fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
                           ),
                         ),
                       ),
@@ -696,127 +521,49 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
               Column(
                 children: [
                   // Child Widget, Ini Utk Terima Fungsi addToDataJual
-                  SizedBox(
-                    height: heightIsiData,
-                    child: IsiFoodNBeverages(
-                      onAddItem: addToDataJual,
-                      onHeightLength: adjustHeightData,
-                    ),
-                  ),
+                  SizedBox(height: heightIsiData, child: IsiFoodNBeverages(onAddItem: addToDataJual, onHeightLength: adjustHeightData)),
                   Container(
                     margin: const EdgeInsets.only(top: 20),
                     padding: const EdgeInsets.only(left: 10, top: 15),
                     height: Get.height - 250,
                     width: Get.width - 200,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
                     child: Column(
                       children: [
                         Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            Expanded(
-                              flex: 1,
-                              child: AutoSizeText(
-                                "ID Transaksi",
-                                minFontSize: 16,
-                                style: TextStyle(fontFamily: 'Poppins'),
-                              ),
-                            ),
-                            Flexible(
-                              child: AutoSizeText(
-                                " : ",
-                                minFontSize: 16,
-                                style: TextStyle(fontFamily: 'Poppins'),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 6,
-                              child: AutoSizeText(
-                                widget.idTrans,
-                                minFontSize: 16,
-                                style: TextStyle(fontFamily: 'Poppins'),
-                              ),
-                            ),
+                            Expanded(flex: 1, child: AutoSizeText("ID Transaksi", minFontSize: 16, style: TextStyle(fontFamily: 'Poppins'))),
+                            Flexible(child: AutoSizeText(" : ", minFontSize: 16, style: TextStyle(fontFamily: 'Poppins'))),
+                            Expanded(flex: 6, child: AutoSizeText(widget.idTrans, minFontSize: 16, style: TextStyle(fontFamily: 'Poppins'))),
                           ],
                         ),
                         SizedBox(height: 10),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            Expanded(
-                              flex: 1,
-                              child: AutoSizeText(
-                                "Resepsionis",
-                                minFontSize: 16,
-                                style: TextStyle(fontFamily: 'Poppins'),
-                              ),
-                            ),
-                            Flexible(
-                              child: AutoSizeText(
-                                " : ",
-                                minFontSize: 16,
-                                style: TextStyle(fontFamily: 'Poppins'),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 6,
-                              child: AutoSizeText(
-                                storage.read('nama_karyawan'),
-                                minFontSize: 16,
-                                style: TextStyle(fontFamily: 'Poppins'),
-                              ),
-                            ),
+                            Expanded(flex: 1, child: AutoSizeText("Resepsionis", minFontSize: 16, style: TextStyle(fontFamily: 'Poppins'))),
+                            Flexible(child: AutoSizeText(" : ", minFontSize: 16, style: TextStyle(fontFamily: 'Poppins'))),
+                            Expanded(flex: 6, child: AutoSizeText(storage.read('nama_karyawan'), minFontSize: 16, style: TextStyle(fontFamily: 'Poppins'))),
                           ],
                         ),
                         SizedBox(height: 10),
                         Center(
                           child: Row(
                             children: [
+                              Expanded(child: Text("Nama Item", style: TextStyle(fontFamily: 'Poppins'))),
                               Expanded(
-                                child: Text(
-                                  "Nama Item",
-                                  style: TextStyle(fontFamily: 'Poppins'),
-                                ),
+                                child: Padding(padding: const EdgeInsets.only(left: 18), child: Text("Jumlah", style: TextStyle(fontFamily: 'Poppins'))),
                               ),
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.only(left: 18),
-                                  child: Text(
-                                    "Jumlah",
-                                    style: TextStyle(fontFamily: 'Poppins'),
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Text(
-                                  "Satuan",
-                                  style: TextStyle(fontFamily: 'Poppins'),
-                                ),
-                              ),
-                              Expanded(
-                                child: Text(
-                                  "Harga",
-                                  style: TextStyle(fontFamily: 'Poppins'),
-                                ),
-                              ),
-                              Expanded(
-                                child: Text(
-                                  "Total",
-                                  style: TextStyle(fontFamily: 'Poppins'),
-                                ),
-                              ),
+                              Expanded(child: Text("Satuan", style: TextStyle(fontFamily: 'Poppins'))),
+                              Expanded(child: Text("Harga", style: TextStyle(fontFamily: 'Poppins'))),
+                              Expanded(child: Text("Total", style: TextStyle(fontFamily: 'Poppins'))),
                               Flexible(child: Text("")),
                             ],
                           ),
                         ),
                         // Ini Juga Child Component. Derajatnya
-                        DataTransaksiFood(
-                          dataJual: dataJual,
-                          onChangeHrg: updateUIWithDiscount,
-                        ),
+                        DataTransaksiFood(dataJual: dataJual, onChangeHrg: updateUIWithDiscount),
                         Divider(),
                         SizedBox(height: 10),
                         Row(
@@ -824,18 +571,8 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
                             Expanded(child: Text("")),
                             Expanded(child: Text("")),
                             Expanded(child: Text("")),
-                            Expanded(
-                              child: Text(
-                                "Jumlah",
-                                style: TextStyle(fontFamily: 'Poppins'),
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                "${formatCurrency.format(getHargaBeforeDisc())}",
-                                style: TextStyle(fontFamily: 'Poppins'),
-                              ),
-                            ),
+                            Expanded(child: Text("Jumlah", style: TextStyle(fontFamily: 'Poppins'))),
+                            Expanded(child: Text("${formatCurrency.format(getHargaBeforeDisc())}", style: TextStyle(fontFamily: 'Poppins'))),
                           ],
                         ),
                         Row(
@@ -843,18 +580,8 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
                             Expanded(child: Text("")),
                             Expanded(child: Text("")),
                             Expanded(child: Text("")),
-                            Expanded(
-                              child: Text(
-                                "Total",
-                                style: TextStyle(fontFamily: 'Poppins'),
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                "${formatCurrency.format(getHargaAfterDisc()['stlh_disc'])}",
-                                style: TextStyle(fontFamily: 'Poppins'),
-                              ),
-                            ),
+                            Expanded(child: Text("Total", style: TextStyle(fontFamily: 'Poppins'))),
+                            Expanded(child: Text("${formatCurrency.format(getHargaAfterDisc()['stlh_disc'])}", style: TextStyle(fontFamily: 'Poppins'))),
                           ],
                         ),
                       ],
@@ -875,53 +602,33 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      "Jenis Pembayaran",
-                                      style: TextStyle(fontFamily: 'Poppins'),
-                                    ),
+                                    Text("Jenis Pembayaran", style: TextStyle(fontFamily: 'Poppins')),
                                     SizedBox(
                                       width: 170,
                                       child: DropdownButton<String>(
                                         value: varJenisPembayaran,
                                         isExpanded: true,
                                         elevation: 18,
-                                        style: const TextStyle(
-                                          color: Colors.deepPurple,
-                                        ),
+                                        style: const TextStyle(color: Colors.deepPurple),
                                         onChanged: (String? value) {
                                           // dipanggil kalo user select item
                                           setState(() {
                                             varJenisPembayaran = value!;
                                           });
 
-                                          print(
-                                            "Jenis Pembayaran skrg $varJenisPembayaran",
-                                          );
+                                          print("Jenis Pembayaran skrg $varJenisPembayaran");
                                         },
-                                        icon: Icon(
-                                          Icons.arrow_drop_down_circle,
-                                        ),
+                                        icon: Icon(Icons.arrow_drop_down_circle),
                                         items:
-                                            jenisPembayaran
-                                                .map<DropdownMenuItem<String>>((
-                                                  String value,
-                                                ) {
-                                                  return DropdownMenuItem(
-                                                    value: value,
-                                                    child: Align(
-                                                      alignment:
-                                                          Alignment.centerLeft,
-                                                      child: AutoSizeText(
-                                                        "Pembayaran di" + value,
-                                                        minFontSize: 15,
-                                                        style: TextStyle(
-                                                          fontFamily: 'Poppins',
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  );
-                                                })
-                                                .toList(),
+                                            jenisPembayaran.map<DropdownMenuItem<String>>((String value) {
+                                              return DropdownMenuItem(
+                                                value: value,
+                                                child: Align(
+                                                  alignment: Alignment.centerLeft,
+                                                  child: AutoSizeText("Pembayaran di" + value, minFontSize: 15, style: TextStyle(fontFamily: 'Poppins')),
+                                                ),
+                                              );
+                                            }).toList(),
                                       ),
                                     ),
                                   ],
@@ -936,10 +643,7 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
                                     onPressed: () {
                                       _showDialogConfirmPayment(context);
                                     },
-                                    child: Text(
-                                      "Konfirmasi Pembayaran",
-                                      style: TextStyle(fontFamily: 'Poppins'),
-                                    ),
+                                    child: Text("Konfirmasi Pembayaran", style: TextStyle(fontFamily: 'Poppins')),
                                   ),
                                 ),
                               ),
@@ -953,10 +657,7 @@ class _DetailFoodNBeveragesState extends State<DetailFoodNBeverages> {
                                         Get.offAll(() => MainResepsionis());
                                       });
                                     },
-                                    child: Text(
-                                      "Simpan Transaksi",
-                                      style: TextStyle(fontFamily: 'Poppins'),
-                                    ),
+                                    child: Text("Simpan Transaksi", style: TextStyle(fontFamily: 'Poppins')),
                                   ),
                                 ),
                               ),
@@ -980,11 +681,7 @@ class IsiFoodNBeverages extends StatefulWidget {
   // onHeightLength mainkan function tinggi data.
   final Function(int) onHeightLength;
 
-  const IsiFoodNBeverages({
-    super.key,
-    required this.onAddItem,
-    required this.onHeightLength,
-  });
+  const IsiFoodNBeverages({super.key, required this.onAddItem, required this.onHeightLength});
 
   @override
   State<IsiFoodNBeverages> createState() => _IsiFoodNBeveragesState();
@@ -1000,10 +697,7 @@ class _IsiFoodNBeveragesState extends State<IsiFoodNBeverages> {
     try {
       var token = await getTokenSharedPref();
 
-      var response = await dio.get(
-        '${myIpAddr()}/fnb/menu',
-        options: Options(headers: {"Authorization": "Bearer " + token!}),
-      );
+      var response = await dio.get('${myIpAddr()}/fnb/menu', options: Options(headers: {"Authorization": "Bearer " + token!}));
 
       setState(() {
         dataMenu =
@@ -1147,43 +841,28 @@ class _IsiFoodNBeveragesState extends State<IsiFoodNBeverages> {
                         onTapUp: (_) async {
                           await _playClickSound();
 
-                          await Future.delayed(
-                            const Duration(milliseconds: 100),
-                          ); // Give time for press animation
+                          await Future.delayed(const Duration(milliseconds: 100)); // Give time for press animation
                           setState(() => isPressed = false);
 
-                          for (var fnb in datafnb.where(
-                            (p) => p['nama_fnb'] == item['nama_fnb'],
-                          )) {
-                            sisastok =
-                                int.tryParse(fnb['stok_fnb'].toString()) ?? 0;
+                          for (var fnb in datafnb.where((p) => p['nama_fnb'] == item['nama_fnb'])) {
+                            sisastok = int.tryParse(fnb['stok_fnb'].toString()) ?? 0;
                           }
 
                           String itemname = item['nama_fnb'];
 
                           retrieveindex = itemname;
-                          if (retrieveindex != null &&
-                              itemTapCounts.containsKey(retrieveindex)) {
-                            itemTapCounts[retrieveindex!] =
-                                itemTapCounts[retrieveindex]! + 1;
+                          if (retrieveindex != null && itemTapCounts.containsKey(retrieveindex)) {
+                            itemTapCounts[retrieveindex!] = itemTapCounts[retrieveindex]! + 1;
                           } else if (retrieveindex != null) {
                             itemTapCounts[retrieveindex!] = 1;
                           }
                           log('counter : $itemTapCounts');
 
                           if (sisastok == 0) {
-                            CherryToast.error(
-                              title: Text('Error'),
-                              description: Text('Stok sudah kosong'),
-                            ).show(context);
+                            CherryToast.error(title: Text('Error'), description: Text('Stok sudah kosong')).show(context);
                           } else if (retrieveindex != null) {
                             if (itemTapCounts[retrieveindex]! > sisastok) {
-                              CherryToast.error(
-                                title: Text('Error'),
-                                description: Text(
-                                  'Penggunaan item melebihi stok',
-                                ),
-                              ).show(context);
+                              CherryToast.error(title: Text('Error'), description: Text('Penggunaan item melebihi stok')).show(context);
                             } else {
                               widget.onAddItem({
                                 "id_fnb": item['id_fnb'],
@@ -1204,32 +883,13 @@ class _IsiFoodNBeveragesState extends State<IsiFoodNBeverages> {
                           curve: Curves.easeOut,
                           scale: isPressed ? 0.85 : 1.0,
                           child: Container(
-                            decoration: BoxDecoration(
-                              color: const Color.fromARGB(255, 64, 97, 55),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
+                            decoration: BoxDecoration(color: const Color.fromARGB(255, 64, 97, 55), borderRadius: BorderRadius.circular(20)),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(
-                                  Icons.fastfood,
-                                  size: 50,
-                                  color: Colors.white,
-                                ),
-                                Text(
-                                  item['nama_fnb'],
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                Text(
-                                  "Rp. ${item['harga_fnb']}",
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                  ),
-                                ),
+                                const Icon(Icons.fastfood, size: 50, color: Colors.white),
+                                Text(item['nama_fnb'], style: const TextStyle(color: Colors.white, fontSize: 16)),
+                                Text("Rp. ${item['harga_fnb']}", style: const TextStyle(color: Colors.white, fontSize: 16)),
                               ],
                             ),
                           ),
@@ -1251,22 +911,14 @@ class DataTransaksiFood extends StatefulWidget {
   final List dataJual;
   final Function onChangeHrg;
 
-  const DataTransaksiFood({
-    super.key,
-    required this.dataJual,
-    required this.onChangeHrg,
-  });
+  const DataTransaksiFood({super.key, required this.dataJual, required this.onChangeHrg});
 
   @override
   State<DataTransaksiFood> createState() => _DataTransaksiFoodState();
 }
 
 class _DataTransaksiFoodState extends State<DataTransaksiFood> {
-  final formatCurrency = new NumberFormat.currency(
-    locale: "id_ID",
-    decimalDigits: 0,
-    symbol: 'Rp. ',
-  );
+  final formatCurrency = new NumberFormat.currency(locale: "id_ID", decimalDigits: 0, symbol: 'Rp. ');
 
   @override
   Widget build(BuildContext context) {
@@ -1279,12 +931,7 @@ class _DataTransaksiFoodState extends State<DataTransaksiFood> {
           int sisastok = 0;
           return Row(
             children: [
-              Expanded(
-                child: AutoSizeText(
-                  widget.dataJual[index]['nama_fnb'],
-                  minFontSize: 15,
-                ),
-              ),
+              Expanded(child: AutoSizeText(widget.dataJual[index]['nama_fnb'], minFontSize: 15)),
               Expanded(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
@@ -1293,33 +940,23 @@ class _DataTransaksiFoodState extends State<DataTransaksiFood> {
                       icon: Icon(Icons.remove, size: 18),
                       onPressed: () {
                         setState(() {
-                          for (var produk in datafnb.where(
-                            (p) =>
-                                p['nama_fnb'] ==
-                                widget.dataJual[index]['nama_fnb'],
-                          )) {
-                            sisastok =
-                                int.tryParse(produk['stok_fnb'].toString()) ??
-                                0;
+                          for (var produk in datafnb.where((p) => p['nama_fnb'] == widget.dataJual[index]['nama_fnb'])) {
+                            sisastok = int.tryParse(produk['stok_fnb'].toString()) ?? 0;
                           }
                           String itemname = widget.dataJual[index]['nama_fnb'];
                           retrieveindex = itemname;
 
-                          if (retrieveindex != null &&
-                              itemTapCounts.containsKey(retrieveindex)) {
-                            if (retrieveindex != null &&
-                                itemTapCounts[retrieveindex]! <= 1) {
+                          if (retrieveindex != null && itemTapCounts.containsKey(retrieveindex)) {
+                            if (retrieveindex != null && itemTapCounts[retrieveindex]! <= 1) {
                               itemTapCounts[retrieveindex!] = 1;
-                            } else if (retrieveindex != null &&
-                                itemTapCounts[retrieveindex]! >= sisastok) {
+                            } else if (retrieveindex != null && itemTapCounts[retrieveindex]! >= sisastok) {
                               if (sisastok == 1) {
                                 itemTapCounts[retrieveindex!] = 1;
                               } else {
                                 itemTapCounts[retrieveindex!] = sisastok - 1;
                               }
                             } else if (retrieveindex != null) {
-                              itemTapCounts[retrieveindex!] =
-                                  itemTapCounts[retrieveindex]! - 1;
+                              itemTapCounts[retrieveindex!] = itemTapCounts[retrieveindex]! - 1;
                             }
                           } else if (retrieveindex != null) {
                             itemTapCounts[retrieveindex!] = 1;
@@ -1329,9 +966,7 @@ class _DataTransaksiFoodState extends State<DataTransaksiFood> {
                           if (widget.dataJual[index]['jlh'] > 1) {
                             widget.dataJual[index]['jlh']--;
                             // Update Harga Total Juga
-                            widget.dataJual[index]['harga_total'] =
-                                widget.dataJual[index]['harga_fnb'] *
-                                widget.dataJual[index]['jlh'];
+                            widget.dataJual[index]['harga_total'] = widget.dataJual[index]['harga_fnb'] * widget.dataJual[index]['jlh'];
                           }
                         });
 
@@ -1339,55 +974,31 @@ class _DataTransaksiFoodState extends State<DataTransaksiFood> {
                         widget.onChangeHrg();
                       },
                     ),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: AutoSizeText(
-                        "${widget.dataJual[index]['jlh']}",
-                        minFontSize: 15,
-                      ),
-                    ),
+                    Container(padding: EdgeInsets.symmetric(horizontal: 8), child: AutoSizeText("${widget.dataJual[index]['jlh']}", minFontSize: 15)),
                     IconButton(
                       icon: Icon(Icons.add, size: 18),
                       onPressed: () {
                         setState(() {
-                          for (var produk in datafnb.where(
-                            (p) =>
-                                p['nama_fnb'] ==
-                                widget.dataJual[index]['nama_fnb'],
-                          )) {
-                            sisastok =
-                                int.tryParse(produk['stok_fnb'].toString()) ??
-                                0;
+                          for (var produk in datafnb.where((p) => p['nama_fnb'] == widget.dataJual[index]['nama_fnb'])) {
+                            sisastok = int.tryParse(produk['stok_fnb'].toString()) ?? 0;
                           }
                           String itemname = widget.dataJual[index]['nama_fnb'];
                           retrieveindex = itemname;
-                          if (retrieveindex != null &&
-                              itemTapCounts.containsKey(retrieveindex)) {
-                            itemTapCounts[retrieveindex!] =
-                                itemTapCounts[retrieveindex]! + 1;
+                          if (retrieveindex != null && itemTapCounts.containsKey(retrieveindex)) {
+                            itemTapCounts[retrieveindex!] = itemTapCounts[retrieveindex]! + 1;
                           } else if (retrieveindex != null) {
                             itemTapCounts[retrieveindex!] = 1;
                           }
                           log('counter : $itemTapCounts');
                           if (sisastok == 0) {
-                            CherryToast.error(
-                              title: Text('Error'),
-                              description: Text('Stok sudah kosong'),
-                            ).show(context);
+                            CherryToast.error(title: Text('Error'), description: Text('Stok sudah kosong')).show(context);
                           } else if (retrieveindex != null) {
                             if (itemTapCounts[retrieveindex]! > sisastok) {
-                              CherryToast.error(
-                                title: Text('Error'),
-                                description: Text(
-                                  'Penggunaan item melebihi stok',
-                                ),
-                              ).show(context);
+                              CherryToast.error(title: Text('Error'), description: Text('Penggunaan item melebihi stok')).show(context);
                             } else {
                               widget.dataJual[index]['jlh']++;
                               // Update Harga Total Juga
-                              widget.dataJual[index]['harga_total'] =
-                                  widget.dataJual[index]['harga_fnb'] *
-                                  widget.dataJual[index]['jlh'];
+                              widget.dataJual[index]['harga_total'] = widget.dataJual[index]['harga_fnb'] * widget.dataJual[index]['jlh'];
                             }
                           }
                         });
@@ -1398,24 +1009,9 @@ class _DataTransaksiFoodState extends State<DataTransaksiFood> {
                   ],
                 ),
               ),
-              Expanded(
-                child: AutoSizeText(
-                  widget.dataJual[index]['satuan'],
-                  minFontSize: 15,
-                ),
-              ),
-              Expanded(
-                child: AutoSizeText(
-                  "${formatCurrency.format(widget.dataJual[index]['harga_fnb'])}",
-                  minFontSize: 15,
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  "${formatCurrency.format(widget.dataJual[index]['harga_total'])}",
-                  style: TextStyle(fontFamily: 'Poppins'),
-                ),
-              ),
+              Expanded(child: AutoSizeText(widget.dataJual[index]['satuan'], minFontSize: 15)),
+              Expanded(child: AutoSizeText("${formatCurrency.format(widget.dataJual[index]['harga_fnb'])}", minFontSize: 15)),
+              Expanded(child: Text("${formatCurrency.format(widget.dataJual[index]['harga_total'])}", style: TextStyle(fontFamily: 'Poppins'))),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.only(right: 40),
@@ -1426,18 +1022,11 @@ class _DataTransaksiFoodState extends State<DataTransaksiFood> {
                         icon: Icon(Icons.delete, size: 18),
                         onPressed: () {
                           setState(() {
-                            for (var produk in datafnb.where(
-                              (p) =>
-                                  p['nama_fnb'] ==
-                                  widget.dataJual[index]['nama_fnb'],
-                            )) {
-                              sisastok =
-                                  int.tryParse(produk['stok_fnb'].toString()) ??
-                                  0;
+                            for (var produk in datafnb.where((p) => p['nama_fnb'] == widget.dataJual[index]['nama_fnb'])) {
+                              sisastok = int.tryParse(produk['stok_fnb'].toString()) ?? 0;
                             }
                             if (retrieveindex != null) {
-                              String itemname =
-                                  widget.dataJual[index]['nama_fnb'];
+                              String itemname = widget.dataJual[index]['nama_fnb'];
                               retrieveindex = itemname;
                               itemTapCounts[retrieveindex!] = 0;
                             }
