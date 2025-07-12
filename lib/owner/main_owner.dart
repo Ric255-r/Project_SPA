@@ -506,7 +506,7 @@ class IsiOwnerPage extends StatelessWidget {
                             margin: const EdgeInsets.only(left: 10, right: 10),
                             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
                             padding: const EdgeInsets.only(top: 20),
-                            height: 215.w,
+                            height: 300.w,
                             child: InteractiveViewer(
                               minScale: 0.5,
                               maxScale: 4.0,
@@ -518,8 +518,6 @@ class IsiOwnerPage extends StatelessWidget {
                                     if (c.pieChartData.isEmpty) {
                                       return CircularProgressIndicator();
                                     }
-
-                                    // Replace SizedBox with Expanded here
                                     return Expanded(child: DynamicPieChart(chartData: c.pieChartData));
                                   }),
                                 ],
@@ -673,80 +671,93 @@ class DynamicPieChart extends StatefulWidget {
 }
 
 class _DynamicPieChartState extends State<DynamicPieChart> {
-  // index piechart yg sedang d sentuh (getX). default valuenya -1;
   RxInt touchedIndex = RxInt(-1);
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(4.0),
-      // pake obx utk update reactive
-      child: Transform.scale(
-        scale: 0.8.w,
-        child: Obx(
-          () => PieChart(
-            PieChartData(
-              pieTouchData: PieTouchData(
-                touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                  // handler klo piechart disentuh
-                  if (!event.isInterestedForInteractions || pieTouchResponse == null || pieTouchResponse.touchedSection == null) {
-                    touchedIndex.value = -1; // reset klo g ad sentuh
-                    return;
-                  }
-
-                  // simpan index yg disentuh
-                  touchedIndex.value = pieTouchResponse.touchedSection!.touchedSectionIndex;
-                },
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Padding(
+          padding: EdgeInsets.fromLTRB(4.0, 4.0, 4.0, 40.w),
+          child: Container(
+            margin: EdgeInsets.only(top: 40.w),
+            width: 100.w,
+            height: 100.w,
+            child: Transform.scale(
+              scale: 0.8.w,
+              child: Obx(
+                () => PieChart(
+                  PieChartData(
+                    pieTouchData: PieTouchData(
+                      touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                        if (!event.isInterestedForInteractions || pieTouchResponse == null || pieTouchResponse.touchedSection == null) {
+                          touchedIndex.value = -1;
+                          return;
+                        }
+                        touchedIndex.value = pieTouchResponse.touchedSection!.touchedSectionIndex;
+                      },
+                    ),
+                    borderData: FlBorderData(show: false),
+                    sectionsSpace: 2,
+                    centerSpaceRadius: 40,
+                    sections: showingSection(),
+                  ),
+                ),
               ),
-              borderData: FlBorderData(show: false), //sembunyikan border
-              sectionsSpace: 2, // jarak antar bagian
-              centerSpaceRadius: 40, // bulat tengah. 0 utk pie penuh
-              sections: showingSection(), // bagan chart
             ),
           ),
         ),
-      ),
+        // Custom Legend
+        Wrap(
+          spacing: 16,
+          runSpacing: 8,
+          children: List.generate(widget.chartData.length, (i) {
+            final data = widget.chartData[i];
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(width: 16, height: 16, decoration: BoxDecoration(color: data.color, shape: BoxShape.circle)),
+                SizedBox(width: 8),
+                Text('${data.label} (${data.value.toStringAsFixed(1)}%)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.black)),
+              ],
+            );
+          }),
+        ),
+      ],
     );
   }
 
   List<PieChartSectionData> showingSection() {
     final itemCount = widget.chartData.length;
-
     if (itemCount == 0) {
-      return [PieChartSectionData(color: Colors.grey, value: 100, title: 'No Data', radius: 50)];
+      return [PieChartSectionData(color: Colors.grey, value: 100, title: '', radius: 50)];
     }
-
+    final total = widget.chartData.fold<double>(0, (sum, item) => sum + item.value);
     return List.generate(itemCount, (i) {
       final isTouched = i == touchedIndex.value;
       final data = widget.chartData[i];
-      final fontSize = isTouched ? 18.0 : 14.0;
+      final fontSize = isTouched ? 24.0.w : 20.0.w;
       final radius = isTouched ? 60.0 : 50.0;
-
-      // Special handling for single item
+      final percent = total > 0 ? (data.value / total * 100) : 0;
       if (itemCount == 1) {
         return PieChartSectionData(
           color: data.color,
-          value: 100, // Force 100% for single item
-          title: '${data.label}\n(All Sales)',
+          value: 100,
+          title: '${percent.toStringAsFixed(1)}%',
           radius: radius,
           titleStyle: TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold, color: Colors.black),
-          badgeWidget: data.icon != null ? Icon(data.icon, size: isTouched ? 28 : 22) : null,
+          badgeWidget: null,
         );
       }
-
-      String teksLabel = data.label;
-      // if (teksLabel.length > 18) {
-      //   teksLabel = teksLabel.substring(0, 18) + "\n" + teksLabel.substring(18);
-      // }
-
-      // Handling for 2-4 items
       return PieChartSectionData(
         color: data.color,
         value: data.value,
-        title: itemCount <= 4 ? '$teksLabel\n${data.value.toStringAsFixed(0)}%' : '', // Hide labels if more than 4 items
+        title: '${percent.toStringAsFixed(1)}%',
+
         radius: radius,
         titleStyle: TextStyle(fontSize: fontSize.w - 7.w, fontWeight: FontWeight.bold, color: Colors.black, height: 1.2),
-        badgeWidget: itemCount <= 4 && data.icon != null ? Icon(data.icon, size: isTouched ? 24 : 18) : null,
+        badgeWidget: null,
         badgePositionPercentageOffset: 1.1,
       );
     });

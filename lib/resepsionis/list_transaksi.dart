@@ -45,6 +45,7 @@ class ListTransaksiController extends GetxController {
   Timer? _debounce;
   Timer? _refreshTimer;
   ScrollController _scrollTglController = ScrollController();
+  ScrollController singleChildController = ScrollController();
 
   RxList<DateTime?> rangeDatePickerOmset = <DateTime?>[].obs;
 
@@ -2111,626 +2112,655 @@ class ListTransaksi extends StatelessWidget {
           body: Container(
             decoration: BoxDecoration(color: Color(0XFFFFE0B2)),
             width: double.infinity,
-            padding: EdgeInsets.symmetric(horizontal: 15.0.w),
             height: MediaQuery.of(context).size.height,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(top: 20),
-                    child: Text('List Transaksi', style: TextStyle(fontFamily: 'Poppins', fontSize: 20.w, fontWeight: FontWeight.bold)),
-                  ),
-                  SizedBox(
-                    // margin: EdgeInsets.only(left: 730),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Container(
-                          width: 200.w,
-                          margin: const EdgeInsets.only(right: 30),
-                          height: 40,
-                          child: TextField(
-                            controller: c.textcari,
-                            onChanged: c.onSearchChange,
-                            decoration: InputDecoration(border: OutlineInputBorder(), labelText: 'Input Kode Transaksi'),
-                          ),
-                        ),
-                      ],
+            child: Scrollbar(
+              thumbVisibility: true,
+              thickness: 5.0.w,
+              radius: Radius.circular(10),
+              controller: c.singleChildController,
+              child: SingleChildScrollView(
+                controller: c.singleChildController,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(top: 20),
+                      child: Text('List Transaksi', style: TextStyle(fontFamily: 'Poppins', fontSize: 20.w, fontWeight: FontWeight.bold)),
                     ),
-                  ),
-                  SizedBox(height: 10),
-                  Obx(() {
-                    if (c._hakAkses.value == "owner") {
-                      return Container(
-                        alignment: Alignment.centerLeft,
-                        margin: const EdgeInsets.only(bottom: 5, left: 30, right: 30),
-                        width: MediaQuery.of(context).size.width,
-                        child: Row(
-                          children: [
-                            Text("Pilih Jangka Waktu: "),
-                            SizedBox(width: 10),
-                            ElevatedButton(
-                              onPressed: () {
-                                c.showDialogTgl();
-                              },
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
-                                minimumSize: Size.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ),
-                              child: Text("Pilih", style: TextStyle(height: 1)),
+                    SizedBox(
+                      // margin: EdgeInsets.only(left: 730),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Container(
+                            width: 200.w,
+                            margin: EdgeInsets.only(right: 50.w),
+                            height: 40,
+                            child: TextField(
+                              controller: c.textcari,
+                              onChanged: c.onSearchChange,
+                              decoration: InputDecoration(border: OutlineInputBorder(), labelText: 'Input Kode Transaksi'),
                             ),
-                            SizedBox(width: 20),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    Obx(() {
+                      if (c._hakAkses.value == "owner") {
+                        return Container(
+                          alignment: Alignment.centerLeft,
+                          margin: EdgeInsets.only(top: 5, bottom: 5, left: 50.w, right: 50.w),
+                          width: MediaQuery.of(context).size.width,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Text("Pilih Jangka Waktu: "),
 
-                            Obx(() {
-                              String teks = "";
-                              List<dynamic> rangeDate = c.rangeDatePickerOmset;
-                              if (rangeDate.isNotEmpty) {
-                                String startDate = rangeDate[0].toString().split(" ")[0];
-                                teks += "Tanggal Mulai: ${c.formatDate(startDate, format: "dd-MM-yyyy")} ";
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      c.showDialogTgl();
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+                                      minimumSize: Size.zero,
+                                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                    ),
+                                    child: Text("Pilih", style: TextStyle(height: 1)),
+                                  ),
+                                ],
+                              ),
 
-                                if (rangeDate.length == 2) {
-                                  String endDate = rangeDate[1].toString().split(" ")[0];
-                                  teks += "| Tanggal Akhir: ${c.formatDate(endDate, format: "dd-MM-yyyy")}";
-                                }
-                              }
-
-                              return Text(teks);
-                            }),
-
-                            SizedBox(width: 20),
-                            Expanded(
-                              child: Container(
+                              Container(
+                                constraints: BoxConstraints(minWidth: 0, maxWidth: double.infinity),
+                                margin: EdgeInsets.only(top: 10.w),
                                 alignment: Alignment.centerRight,
-                                margin: const EdgeInsets.only(left: 10, right: 10),
-                                height: 40.w,
-                                width: double.infinity,
-                                child: InkWell(
-                                  onTap: c.downloadExcel,
-                                  child: Text(
-                                    "Cetak Laporan",
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins', height: 0.5.w, fontSize: 11.w),
+                                child: Align(
+                                  alignment: Alignment.centerRight,
+                                  child: InkWell(
+                                    onTap: c.downloadExcel,
+                                    child: Text(
+                                      "Cetak Laporan",
+                                      style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins', height: 0.5.w, fontSize: 11.w),
+                                      textAlign: TextAlign.right,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
+                            ],
+                          ),
+                        );
+                      }
 
-                    return SizedBox.shrink();
-                  }),
+                      return SizedBox.shrink();
+                    }),
 
-                  Container(
-                    width: double.infinity,
-                    margin: const EdgeInsets.only(left: 30, right: 30),
-                    height: 360.w,
-                    decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(20)), color: Colors.white),
-                    child: Container(
-                      margin: EdgeInsets.all(10),
-                      decoration: BoxDecoration(border: Border.all(width: 1), borderRadius: BorderRadius.all(Radius.circular(10))),
+                    Obx(() {
+                      String teks = "";
+                      List<dynamic> rangeDate = c.rangeDatePickerOmset;
+                      if (rangeDate.isNotEmpty) {
+                        String startDate = rangeDate[0].toString().split(" ")[0];
+                        teks += "Tanggal Mulai: ${c.formatDate(startDate, format: "dd-MM-yyyy")} ";
+                        if (rangeDate.length == 2) {
+                          String endDate = rangeDate[1].toString().split(" ")[0];
+                          teks += "| Tanggal Akhir: ${c.formatDate(endDate, format: "dd-MM-yyyy")}";
+                        }
+                      } else {
+                        return SizedBox.shrink();
+                      }
+                      return Container(margin: EdgeInsets.only(bottom: 5, left: 50.w, right: 50.w), alignment: Alignment.centerLeft, child: Text(teks));
+                    }),
+
+                    Container(
+                      width: double.infinity,
+                      margin: EdgeInsets.only(left: 50.w, right: 50.w, top: 10),
+                      height: 360.w,
+                      decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(20)), color: Colors.white),
                       child: Container(
-                        width: 400,
-                        child: Obx(() {
-                          if (c._isNotFound.value || c.filteredList.isEmpty) {
-                            return const Center(child: Text("Tidak Ada Transaksi"));
-                          }
+                        margin: EdgeInsets.all(10),
+                        decoration: BoxDecoration(border: Border.all(width: 1), borderRadius: BorderRadius.all(Radius.circular(10))),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: Obx(() {
+                            if (c._isNotFound.value || c.filteredList.isEmpty) {
+                              return const Center(child: Text("Tidak Ada Transaksi"));
+                            }
 
-                          return ListView.builder(
-                            itemCount: c.filteredList.length,
-                            itemBuilder: (context, index) {
-                              var item = c.filteredList[index];
-                              // Calculate totals
-                              // double produkTotal = item['isi_detail_produk']
-                              //     .fold(0.0, (sum, produk) {
-                              //   return sum + (produk['harga_total'] ?? 0.0);
-                              // });
-                              // double paketTotal =
-                              //     item['isi_detail_paket'].fold(0.0, (sum, paket) {
-                              //   return sum + (paket['harga_total'] ?? 0.0);
-                              // });
+                            return ListView.builder(
+                              itemCount: c.filteredList.length,
+                              itemBuilder: (context, index) {
+                                var item = c.filteredList[index];
+                                // Calculate totals
+                                // double produkTotal = item['isi_detail_produk']
+                                //     .fold(0.0, (sum, produk) {
+                                //   return sum + (produk['harga_total'] ?? 0.0);
+                                // });
+                                // double paketTotal =
+                                //     item['isi_detail_paket'].fold(0.0, (sum, paket) {
+                                //   return sum + (paket['harga_total'] ?? 0.0);
+                                // });
 
-                              return Column(
-                                children: [
-                                  Container(
-                                    width: double.infinity,
-                                    padding: EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      border: Border.all(color: Colors.grey.shade300),
-                                      borderRadius: BorderRadius.circular(8),
-                                      boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.1), spreadRadius: 2, blurRadius: 4, offset: Offset(0, 2))],
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        // Header row
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Flexible(
-                                              child: Builder(
-                                                builder: (context) {
-                                                  var teks = "${item['id_transaksi']}";
+                                return Column(
+                                  children: [
+                                    Container(
+                                      width: double.infinity,
+                                      padding: EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        border: Border.all(color: Colors.grey.shade300),
+                                        borderRadius: BorderRadius.circular(8),
+                                        boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.1), spreadRadius: 2, blurRadius: 4, offset: Offset(0, 2))],
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          // Header row
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Flexible(
+                                                child: Builder(
+                                                  builder: (context) {
+                                                    var teks = "${item['id_transaksi']}";
 
-                                                  if (item['no_loker'] != -1) {
-                                                    teks += " - Loker: ${item['no_loker']}";
-                                                  }
-
-                                                  if (item['is_cancel'] == 1) {
-                                                    teks += " - DIBATALKAN -";
-                                                  }
-
-                                                  if (item['jenis_transaksi'] == "fnb" && item['nama_tamu'] == "") {
-                                                    return Row(
-                                                      children: [
-                                                        Text(
-                                                          teks,
-                                                          style: TextStyle(
-                                                            fontFamily: 'Poppins',
-                                                            fontSize: 10.w,
-                                                            fontWeight: FontWeight.bold,
-                                                            color: item['is_cancel'] == 1 ? Colors.red : Colors.black,
-                                                          ),
-                                                        ),
-                                                        SizedBox(width: 10.w),
-                                                        ElevatedButton(
-                                                          onPressed: () {
-                                                            c.showDialogFnb(item['id_transaksi']);
-                                                          },
-                                                          style: ElevatedButton.styleFrom(
-                                                            padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
-                                                            minimumSize: Size.zero,
-                                                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                                          ),
-                                                          child: Text("- Input Id Transaksi Tambahan -", style: TextStyle(height: 1)),
-                                                        ),
-                                                      ],
-                                                    );
-                                                  } else {
-                                                    teks += item['nama_tamu'] == "" ? "" : " / ${item['nama_tamu']}";
-                                                  }
-
-                                                  // teks += " (${item['metode_pembayaran']})";
-
-                                                  return Text(
-                                                    teks,
-                                                    style: TextStyle(
-                                                      fontFamily: 'Poppins',
-                                                      fontSize: 10.w,
-                                                      fontWeight: FontWeight.bold,
-                                                      color: item['is_cancel'] == 1 ? Colors.red : Colors.black,
-                                                    ),
-                                                  );
-                                                },
-                                              ),
-                                            ),
-                                            Expanded(
-                                              // Use a single FutureBuilder to fetch the data once.
-                                              // cara ori ku pindahkan paling bawah
-                                              child: FutureBuilder(
-                                                future: c.getDetailTrans(item['id_transaksi']),
-                                                builder: (context, snapshot) {
-                                                  // Handle the loading state
-                                                  if (snapshot.connectionState == ConnectionState.waiting) {
-                                                    return Row(
-                                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                      children: [
-                                                        // Use SizedBox to maintain space while loading
-                                                        SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)),
-                                                        SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)),
-                                                      ],
-                                                    );
-                                                  }
-
-                                                  // Handle the error state
-                                                  if (snapshot.hasError) {
-                                                    return Center(child: Text('Error: ${snapshot.error}', style: TextStyle(color: Colors.red)));
-                                                  }
-
-                                                  // Handle the state where data is successfully loaded
-                                                  if (snapshot.hasData) {
-                                                    final dataOri = snapshot.data!;
-                                                    List<dynamic> dataAddOn = dataOri['all_addon'];
-                                                    int totalAddOnAll = 0;
-
-                                                    // Calculate the total for all add-ons with tax, performed only once.
-                                                    if (item['total_addon'] != 0) {
-                                                      for (var addon in dataAddOn) {
-                                                        double pajak = addon['type'] == 'fnb' ? c.pajakFnb.value : c.pajakMsg.value;
-                                                        double nominalPjk = addon['harga_total'] * pajak;
-                                                        double addOnSblmBulat = addon['harga_total'] + nominalPjk;
-                                                        totalAddOnAll += (addOnSblmBulat / 1000).round() * 1000;
-                                                      }
+                                                    if (item['no_loker'] != -1) {
+                                                      teks += " - Loker: ${item['no_loker']}";
                                                     }
 
-                                                    // Build the Row with the calculated data.
-                                                    return Row(
-                                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                      children: [
-                                                        // First child: Conditionally display the "Unpaid" status.
-                                                        if (item['status'] == "unpaid" ||
-                                                            item['status'] == 'done-unpaid' ||
-                                                            item['status'] == 'done-unpaid-addon' ||
-                                                            item['total_addon'] != 0) ...[
-                                                          Builder(
-                                                            builder: (context) {
-                                                              String teks;
-                                                              int totalDanAddon = item['gtotal_stlh_pajak'] + totalAddOnAll;
-                                                              int jlhBayar = item['jumlah_bayar'] - item['jumlah_kembalian'];
+                                                    if (item['is_cancel'] == 1) {
+                                                      teks += " - DIBATALKAN -";
+                                                    }
 
-                                                              if (item['status'] == "done-unpaid" || item['status'] == "unpaid") {
-                                                                teks = "Belum Lunas: ${c.currencyFormatter.format(totalDanAddon - jlhBayar)}";
-                                                              } else {
-                                                                teks = "Belum Lunas: ${c.currencyFormatter.format(totalAddOnAll)}";
-                                                              }
-
-                                                              return Text(
-                                                                teks,
-                                                                style: TextStyle(
-                                                                  fontFamily: 'Poppins',
-                                                                  fontSize: 10.w,
-                                                                  fontWeight: FontWeight.bold,
-                                                                  color: Colors.red.shade700,
-                                                                ),
-                                                              );
+                                                    if (item['jenis_transaksi'] == "fnb" && item['nama_tamu'] == "") {
+                                                      return Row(
+                                                        children: [
+                                                          Text(
+                                                            teks,
+                                                            style: TextStyle(
+                                                              fontFamily: 'Poppins',
+                                                              fontSize: 10.w,
+                                                              fontWeight: FontWeight.bold,
+                                                              color: item['is_cancel'] == 1 ? Colors.red : Colors.black,
+                                                            ),
+                                                          ),
+                                                          SizedBox(width: 10.w),
+                                                          ElevatedButton(
+                                                            onPressed: () {
+                                                              c.showDialogFnb(item['id_transaksi']);
                                                             },
+                                                            style: ElevatedButton.styleFrom(
+                                                              padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+                                                              minimumSize: Size.zero,
+                                                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                                            ),
+                                                            child: Text("- Input Id Transaksi Tambahan -", style: TextStyle(height: 1)),
                                                           ),
-                                                        ] else ...[
-                                                          // Render an empty Text to maintain space if the condition is false.
-                                                          Text(""),
                                                         ],
+                                                      );
+                                                    } else {
+                                                      teks += item['nama_tamu'] == "" ? "" : " / ${item['nama_tamu']}";
+                                                    }
 
-                                                        // Second child: Always display the final total.
-                                                        Text(
-                                                          'Total: ${c.currencyFormatter.format(item['gtotal_stlh_pajak'] + totalAddOnAll)}',
-                                                          style: TextStyle(
-                                                            fontFamily: 'Poppins',
-                                                            fontSize: 10.w,
-                                                            fontWeight: FontWeight.bold,
-                                                            color: item['is_cancel'] == 1 ? Colors.red : Colors.blue.shade700,
-                                                          ),
-                                                        ),
-                                                      ],
+                                                    // teks += " (${item['metode_pembayaran']})";
+
+                                                    return Text(
+                                                      teks,
+                                                      style: TextStyle(
+                                                        fontFamily: 'Poppins',
+                                                        fontSize: 10.w,
+                                                        fontWeight: FontWeight.bold,
+                                                        color: item['is_cancel'] == 1 ? Colors.red : Colors.black,
+                                                      ),
                                                     );
-                                                  }
-
-                                                  // Handle the case where there is no data
-                                                  return const Center(child: Text("No data available"));
-                                                },
+                                                  },
+                                                ),
                                               ),
-                                            ),
-                                          ],
-                                        ),
+                                              Expanded(
+                                                // Use a single FutureBuilder to fetch the data once.
+                                                // cara ori ku pindahkan paling bawah
+                                                child: FutureBuilder(
+                                                  future: c.getDetailTrans(item['id_transaksi']),
+                                                  builder: (context, snapshot) {
+                                                    // Handle the loading state
+                                                    if (snapshot.connectionState == ConnectionState.waiting) {
+                                                      return Row(
+                                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                        children: [
+                                                          // Use SizedBox to maintain space while loading
+                                                          SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)),
+                                                          SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)),
+                                                        ],
+                                                      );
+                                                    }
 
-                                        SizedBox(height: 12),
+                                                    // Handle the error state
+                                                    if (snapshot.hasError) {
+                                                      return Center(child: Text('Error: ${snapshot.error}', style: TextStyle(color: Colors.red)));
+                                                    }
 
-                                        // Details section - left aligned
-                                        Wrap(
-                                          spacing: 4.w,
-                                          runSpacing: 4.w,
-                                          crossAxisAlignment: WrapCrossAlignment.center,
-                                          children: [
-                                            RichText(
-                                              text: TextSpan(
-                                                style: TextStyle(fontFamily: 'Poppins', fontSize: 9.w, color: Colors.grey.shade800),
-                                                children: [
-                                                  TextSpan(text: 'Disc: ', style: TextStyle(fontWeight: FontWeight.bold)),
-                                                  TextSpan(text: '${(item['disc'] * 100).toInt()}%'),
-                                                ],
+                                                    // Handle the state where data is successfully loaded
+                                                    if (snapshot.hasData) {
+                                                      final dataOri = snapshot.data!;
+                                                      List<dynamic> dataAddOn = dataOri['all_addon'];
+                                                      int totalAddOnAll = 0;
+
+                                                      // Calculate the total for all add-ons with tax, performed only once.
+                                                      if (item['total_addon'] != 0) {
+                                                        for (var addon in dataAddOn) {
+                                                          double pajak = addon['type'] == 'fnb' ? c.pajakFnb.value : c.pajakMsg.value;
+                                                          double nominalPjk = addon['harga_total'] * pajak;
+                                                          double addOnSblmBulat = addon['harga_total'] + nominalPjk;
+                                                          totalAddOnAll += (addOnSblmBulat / 1000).round() * 1000;
+                                                        }
+                                                      }
+
+                                                      // Build the Row with the calculated data.
+                                                      return Row(
+                                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                        children: [
+                                                          // First child: Conditionally display the "Unpaid" status.
+                                                          if (item['status'] == "unpaid" ||
+                                                              item['status'] == 'done-unpaid' ||
+                                                              item['status'] == 'done-unpaid-addon' ||
+                                                              item['total_addon'] != 0) ...[
+                                                            Builder(
+                                                              builder: (context) {
+                                                                String teks;
+                                                                int totalDanAddon = item['gtotal_stlh_pajak'] + totalAddOnAll;
+                                                                int jlhBayar = item['jumlah_bayar'] - item['jumlah_kembalian'];
+
+                                                                if (item['status'] == "done-unpaid" || item['status'] == "unpaid") {
+                                                                  teks = "Belum Lunas: ${c.currencyFormatter.format(totalDanAddon - jlhBayar)}";
+                                                                } else {
+                                                                  teks = "Belum Lunas: ${c.currencyFormatter.format(totalAddOnAll)}";
+                                                                }
+
+                                                                return Text(
+                                                                  teks,
+                                                                  style: TextStyle(
+                                                                    fontFamily: 'Poppins',
+                                                                    fontSize: 10.w,
+                                                                    fontWeight: FontWeight.bold,
+                                                                    color: Colors.red.shade700,
+                                                                  ),
+                                                                );
+                                                              },
+                                                            ),
+                                                          ] else ...[
+                                                            // Render an empty Text to maintain space if the condition is false.
+                                                            Text(""),
+                                                          ],
+
+                                                          // Second child: Always display the final total.
+                                                          Text(
+                                                            'Total: ${c.currencyFormatter.format(item['gtotal_stlh_pajak'] + totalAddOnAll)}',
+                                                            style: TextStyle(
+                                                              fontFamily: 'Poppins',
+                                                              fontSize: 10.w,
+                                                              fontWeight: FontWeight.bold,
+                                                              color: item['is_cancel'] == 1 ? Colors.red : Colors.blue.shade700,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      );
+                                                    }
+
+                                                    // Handle the case where there is no data
+                                                    return const Center(child: Text("No data available"));
+                                                  },
+                                                ),
                                               ),
-                                            ),
-                                            Container(height: 16, width: 1, color: Colors.grey.shade400, margin: EdgeInsets.symmetric(horizontal: 4)),
-                                            RichText(
-                                              text: TextSpan(
-                                                style: TextStyle(fontFamily: 'Poppins', fontSize: 9.w, color: Colors.grey.shade800),
-                                                children: [
-                                                  TextSpan(text: 'Jenis Transaksi: ', style: TextStyle(fontWeight: FontWeight.bold)),
-                                                  TextSpan(text: c.capitalize(item['jenis_transaksi'])),
-                                                ],
+                                            ],
+                                          ),
+
+                                          SizedBox(height: 12),
+
+                                          // Details section - left aligned
+                                          Wrap(
+                                            spacing: 4.w,
+                                            runSpacing: 4.w,
+                                            crossAxisAlignment: WrapCrossAlignment.center,
+                                            children: [
+                                              RichText(
+                                                text: TextSpan(
+                                                  style: TextStyle(fontFamily: 'Poppins', fontSize: 9.w, color: Colors.grey.shade800),
+                                                  children: [
+                                                    TextSpan(text: 'Disc: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                                                    TextSpan(text: '${(item['disc'] * 100).toInt()}%'),
+                                                  ],
+                                                ),
                                               ),
-                                            ),
-                                            Container(height: 16, width: 1, color: Colors.grey.shade400, margin: EdgeInsets.symmetric(horizontal: 4)),
-                                            RichText(
-                                              text: TextSpan(
-                                                style: TextStyle(fontFamily: 'Poppins', fontSize: 9.w, color: Colors.grey.shade800),
-                                                children: [
-                                                  TextSpan(text: 'Kamar: ', style: TextStyle(fontWeight: FontWeight.bold)),
-                                                  TextSpan(text: item['nama_ruangan']),
-                                                ],
+                                              Container(height: 16, width: 1, color: Colors.grey.shade400, margin: EdgeInsets.symmetric(horizontal: 4)),
+                                              RichText(
+                                                text: TextSpan(
+                                                  style: TextStyle(fontFamily: 'Poppins', fontSize: 9.w, color: Colors.grey.shade800),
+                                                  children: [
+                                                    TextSpan(text: 'Jenis Transaksi: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                                                    TextSpan(text: c.capitalize(item['jenis_transaksi'])),
+                                                  ],
+                                                ),
                                               ),
-                                            ),
-                                            Container(height: 16, width: 1, color: Colors.grey.shade400, margin: EdgeInsets.symmetric(horizontal: 4)),
-                                            RichText(
-                                              text: TextSpan(
-                                                style: TextStyle(fontFamily: 'Poppins', fontSize: 9.w, color: Colors.grey.shade800),
-                                                children: [
-                                                  TextSpan(text: 'Jenis Tamu: ', style: TextStyle(fontWeight: FontWeight.bold)),
-                                                  TextSpan(text: item['jenis_tamu']),
-                                                ],
+                                              Container(height: 16, width: 1, color: Colors.grey.shade400, margin: EdgeInsets.symmetric(horizontal: 4)),
+                                              RichText(
+                                                text: TextSpan(
+                                                  style: TextStyle(fontFamily: 'Poppins', fontSize: 9.w, color: Colors.grey.shade800),
+                                                  children: [
+                                                    TextSpan(text: 'Kamar: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                                                    TextSpan(text: item['nama_ruangan']),
+                                                  ],
+                                                ),
                                               ),
-                                            ),
-                                            Container(height: 16, width: 1, color: Colors.grey.shade400, margin: EdgeInsets.symmetric(horizontal: 4)),
-                                            RichText(
-                                              text: TextSpan(
-                                                style: TextStyle(fontFamily: 'Poppins', fontSize: 9.w, color: Colors.grey.shade800),
-                                                children: [
-                                                  TextSpan(text: 'Status: ', style: TextStyle(fontWeight: FontWeight.bold)),
-                                                  TextSpan(
-                                                    text: c.capitalize(
-                                                      item['status'] == 'unpaid' ||
-                                                              item['status'] == "done-unpaid" ||
-                                                              item['status'] == "done-unpaid-addon" ||
-                                                              (item['total_addon'] != 0 && item['status'] == "paid")
-                                                          ? "Belum Lunas"
-                                                          : "Lunas",
-                                                    ),
-                                                  ),
-                                                ],
+                                              Container(height: 16, width: 1, color: Colors.grey.shade400, margin: EdgeInsets.symmetric(horizontal: 4)),
+                                              RichText(
+                                                text: TextSpan(
+                                                  style: TextStyle(fontFamily: 'Poppins', fontSize: 9.w, color: Colors.grey.shade800),
+                                                  children: [
+                                                    TextSpan(text: 'Jenis Tamu: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                                                    TextSpan(text: item['jenis_tamu']),
+                                                  ],
+                                                ),
                                               ),
-                                            ),
-                                          ],
-                                        ),
-
-                                        SizedBox(height: 12),
-
-                                        Row(
-                                          // mainAxisAlignment: MainAxisAlignment.end,
-                                          children: [
-                                            Expanded(
-                                              child: Builder(
-                                                builder: (context) {
-                                                  var created_at = item['created_at'].toString().split("T");
-                                                  var tgl = created_at[0].toString().split("-");
-                                                  var jam = created_at[1];
-                                                  var tglIndo = "${tgl[2]}-${tgl[1]}-${tgl[0]}";
-
-                                                  return Text("Dibuat Pada: $tglIndo - $jam", style: TextStyle(fontFamily: 'Poppins', fontSize: 9.w));
-                                                },
-                                              ),
-                                            ),
-                                            Expanded(
-                                              child: Row(
-                                                mainAxisAlignment: MainAxisAlignment.end,
-                                                children: [
-                                                  Visibility(
-                                                    visible: item['is_cancel'] == 0,
-                                                    child: IconButton(
-                                                      onPressed: () {
-                                                        showCancelTransactionDialog(context, (password) async {
-                                                          // Do validation with the password
-                                                          print("Password entered: $password");
-                                                          // You can now validate password and cancel transaction here
-                                                          try {
-                                                            await c.cancelTransaksi(item['id_transaksi'], password, Get.context);
-                                                          } catch (e) {
-                                                            log("Error di Button ShowCancelTransaction $e");
-                                                          }
-                                                        });
-                                                      },
-                                                      icon: Icon(Icons.cancel),
-                                                    ),
-                                                  ),
-                                                  SizedBox(width: 10),
-                                                  ElevatedButton(
-                                                    onPressed: () {
-                                                      log("isi item adalah $item");
-                                                      c.dialogDetail(item['id_transaksi'], item['disc'], item['jenis_pembayaran'], item['is_cancel']);
-                                                      // Add your button action here
-                                                    },
-                                                    style: ElevatedButton.styleFrom(
-                                                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.w),
-                                                      backgroundColor: Colors.blue.shade600,
-                                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                                    ),
-                                                    child: Text(
-                                                      'Details',
-                                                      style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w500, color: Colors.white, fontSize: 8.w),
-                                                    ),
-                                                  ),
-                                                  SizedBox(width: 10),
-
-                                                  ElevatedButton(
-                                                    onPressed: () {
-                                                      Get.to(() => Rating(idTransaksi: item['id_transaksi']));
-                                                    },
-                                                    style: ElevatedButton.styleFrom(
-                                                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.w),
-                                                      backgroundColor: Colors.blue.shade600,
-                                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                                    ),
-                                                    child: Text(
-                                                      'Rating',
-                                                      style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w500, color: Colors.white, fontSize: 8.w),
-                                                    ),
-                                                  ),
-                                                  SizedBox(width: 10),
-                                                  if ((item['total_addon'] != 0 && item['status'] == "paid") ||
-                                                      item['status'] == 'unpaid' ||
-                                                      item['status'] == 'done-unpaid' ||
-                                                      item['status'] == 'done-unpaid-addon') ...[
-                                                    ElevatedButton(
-                                                      onPressed: () {
-                                                        // c.dialogDetail(
-                                                        //     item['id_transaksi']);
-                                                        // Add your button action here
-                                                        log("Isi Item adalah $item");
-                                                        // int totalAddOnOri = item['total_addon'];
-                                                        // var totalAddOnAll = 0;
-                                                        // if (item['total_addon'] != 0) {
-                                                        //   double desimalPjk = item['pajak'];
-                                                        //   double nominalPjk = totalAddOnOri * desimalPjk;
-                                                        //   // Pembulatan 1000
-                                                        //   double addOnSblmBulat = totalAddOnOri + nominalPjk;
-                                                        //   totalAddOnAll = (addOnSblmBulat / 1000).round() * 1000;
-                                                        // }
-
-                                                        c.dialogPelunasan(
-                                                          item['id_transaksi'],
-                                                          item['gtotal_stlh_pajak'],
-                                                          item['jumlah_bayar'],
-                                                          item['jumlah_kembalian'],
-                                                          item['status'],
-                                                        );
-                                                      },
-                                                      style: ElevatedButton.styleFrom(
-                                                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.w),
-                                                        backgroundColor: Colors.blue.shade600,
-                                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                                      ),
-                                                      child: Text(
-                                                        'Pelunasan',
-                                                        style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w500, color: Colors.white),
-                                                      ),
-                                                    ),
-                                                  ] else ...[
-                                                    ElevatedButton(
-                                                      onPressed: () async {
-                                                        // c.dialogDetail(
-                                                        //     item['id_transaksi']);
-                                                        // Add your button action here
-                                                        log("Isi Item adalah $item");
-                                                        // c.dialogPelunasan(
-                                                        //   item['id_transaksi'],
-                                                        //   item['grand_total'],
-                                                        //   item['total_addon'],
-                                                        //   item['jumlah_bayar'],
-                                                        //   item['jumlah_kembalian'],
-                                                        //   item['status'],
-                                                        // );
-                                                        // Get.to(
-                                                        //   () => StrukTrans(
-                                                        //     idTrans: item['id_transaksi'],
-                                                        //     disc: item['disc'],
-                                                        //     jenisPembayaran: item['jenis_pembayaran'],
-                                                        //     dataTransaksi: () async => await c.getDetailTrans(item['id_transaksi']),
-                                                        //   ),
-                                                        // );
-                                                        // new
-                                                        // var data = await c.getDetailTrans(item['id_transaksi']);
-                                                        // c.printStruk(data, item['id_transaksi']);
-
-                                                        var data = await c.getDetailTrans(item['id_transaksi']);
-
-                                                        await c._processPrintViaLAN(data, item);
-                                                      },
-                                                      style: ElevatedButton.styleFrom(
-                                                        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.w),
-                                                        backgroundColor: Colors.blue.shade600,
-                                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                                      ),
-                                                      child: Text(
-                                                        'Cetak Struk',
-                                                        style: TextStyle(
-                                                          fontFamily: 'Poppins',
-                                                          fontWeight: FontWeight.w500,
-                                                          color: Colors.white,
-                                                          fontSize: 8.w,
-                                                        ),
+                                              Container(height: 16, width: 1, color: Colors.grey.shade400, margin: EdgeInsets.symmetric(horizontal: 4)),
+                                              RichText(
+                                                text: TextSpan(
+                                                  style: TextStyle(fontFamily: 'Poppins', fontSize: 9.w, color: Colors.grey.shade800),
+                                                  children: [
+                                                    TextSpan(text: 'Status: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                                                    TextSpan(
+                                                      text: c.capitalize(
+                                                        item['status'] == 'unpaid' ||
+                                                                item['status'] == "done-unpaid" ||
+                                                                item['status'] == "done-unpaid-addon" ||
+                                                                (item['total_addon'] != 0 && item['status'] == "paid")
+                                                            ? "Belum Lunas"
+                                                            : "Lunas",
                                                       ),
                                                     ),
                                                   ],
-                                                ],
+                                                ),
                                               ),
+                                            ],
+                                          ),
+
+                                          SizedBox(height: 12),
+
+                                          Container(
+                                            width: double.infinity,
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Flexible(
+                                                  child: Builder(
+                                                    builder: (context) {
+                                                      var createdAt = item['created_at'].toString().split("T");
+                                                      var tgl = createdAt[0].toString().split("-");
+                                                      var jam = createdAt[1];
+                                                      var tglIndo = "${tgl[2]}-${tgl[1]}-${tgl[0]}";
+
+                                                      return Text(
+                                                        "Dibuat Pada: $tglIndo - $jam",
+                                                        style: TextStyle(fontFamily: 'Poppins', fontSize: 8.w, wordSpacing: 0),
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  flex: 2,
+                                                  child: Align(
+                                                    child: Row(
+                                                      mainAxisAlignment: MainAxisAlignment.end,
+                                                      children: [
+                                                        Visibility(
+                                                          visible: item['is_cancel'] == 0,
+                                                          child: IconButton(
+                                                            onPressed: () {
+                                                              showCancelTransactionDialog(context, (password) async {
+                                                                // Do validation with the password
+                                                                print("Password entered: $password");
+                                                                // You can now validate password and cancel transaction here
+                                                                try {
+                                                                  await c.cancelTransaksi(item['id_transaksi'], password, Get.context);
+                                                                } catch (e) {
+                                                                  log("Error di Button ShowCancelTransaction $e");
+                                                                }
+                                                              });
+                                                            },
+                                                            icon: Icon(Icons.cancel),
+                                                          ),
+                                                        ),
+                                                        SizedBox(width: 10),
+                                                        ElevatedButton(
+                                                          onPressed: () {
+                                                            log("isi item adalah $item");
+                                                            c.dialogDetail(item['id_transaksi'], item['disc'], item['jenis_pembayaran'], item['is_cancel']);
+                                                            // Add your button action here
+                                                          },
+                                                          style: ElevatedButton.styleFrom(
+                                                            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.w),
+                                                            backgroundColor: Colors.blue.shade600,
+                                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                                          ),
+                                                          child: Text(
+                                                            'Details',
+                                                            style: TextStyle(
+                                                              fontFamily: 'Poppins',
+                                                              fontWeight: FontWeight.w500,
+                                                              color: Colors.white,
+                                                              fontSize: 8.w,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        SizedBox(width: 10),
+
+                                                        ElevatedButton(
+                                                          onPressed: () {
+                                                            Get.to(() => Rating(idTransaksi: item['id_transaksi']));
+                                                          },
+                                                          style: ElevatedButton.styleFrom(
+                                                            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.w),
+                                                            backgroundColor: Colors.blue.shade600,
+                                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                                          ),
+                                                          child: Text(
+                                                            'Rating',
+                                                            style: TextStyle(
+                                                              fontFamily: 'Poppins',
+                                                              fontWeight: FontWeight.w500,
+                                                              color: Colors.white,
+                                                              fontSize: 8.w,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        SizedBox(width: 10),
+                                                        if ((item['total_addon'] != 0 && item['status'] == "paid") ||
+                                                            item['status'] == 'unpaid' ||
+                                                            item['status'] == 'done-unpaid' ||
+                                                            item['status'] == 'done-unpaid-addon') ...[
+                                                          ElevatedButton(
+                                                            onPressed: () {
+                                                              // c.dialogDetail(
+                                                              //     item['id_transaksi']);
+                                                              // Add your button action here
+                                                              log("Isi Item adalah $item");
+                                                              // int totalAddOnOri = item['total_addon'];
+                                                              // var totalAddOnAll = 0;
+                                                              // if (item['total_addon'] != 0) {
+                                                              //   double desimalPjk = item['pajak'];
+                                                              //   double nominalPjk = totalAddOnOri * desimalPjk;
+                                                              //   // Pembulatan 1000
+                                                              //   double addOnSblmBulat = totalAddOnOri + nominalPjk;
+                                                              //   totalAddOnAll = (addOnSblmBulat / 1000).round() * 1000;
+                                                              // }
+
+                                                              c.dialogPelunasan(
+                                                                item['id_transaksi'],
+                                                                item['gtotal_stlh_pajak'],
+                                                                item['jumlah_bayar'],
+                                                                item['jumlah_kembalian'],
+                                                                item['status'],
+                                                              );
+                                                            },
+                                                            style: ElevatedButton.styleFrom(
+                                                              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.w),
+                                                              backgroundColor: Colors.blue.shade600,
+                                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                                            ),
+                                                            child: Text(
+                                                              'Pelunasan',
+                                                              style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w500, color: Colors.white),
+                                                            ),
+                                                          ),
+                                                        ] else ...[
+                                                          ElevatedButton(
+                                                            onPressed: () async {
+                                                              // c.dialogDetail(
+                                                              //     item['id_transaksi']);
+                                                              // Add your button action here
+                                                              log("Isi Item adalah $item");
+                                                              // c.dialogPelunasan(
+                                                              //   item['id_transaksi'],
+                                                              //   item['grand_total'],
+                                                              //   item['total_addon'],
+                                                              //   item['jumlah_bayar'],
+                                                              //   item['jumlah_kembalian'],
+                                                              //   item['status'],
+                                                              // );
+                                                              // Get.to(
+                                                              //   () => StrukTrans(
+                                                              //     idTrans: item['id_transaksi'],
+                                                              //     disc: item['disc'],
+                                                              //     jenisPembayaran: item['jenis_pembayaran'],
+                                                              //     dataTransaksi: () async => await c.getDetailTrans(item['id_transaksi']),
+                                                              //   ),
+                                                              // );
+                                                              // new
+                                                              // var data = await c.getDetailTrans(item['id_transaksi']);
+                                                              // c.printStruk(data, item['id_transaksi']);
+
+                                                              var data = await c.getDetailTrans(item['id_transaksi']);
+
+                                                              await c._processPrintViaLAN(data, item);
+                                                            },
+                                                            style: ElevatedButton.styleFrom(
+                                                              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.w),
+                                                              backgroundColor: Colors.blue.shade600,
+                                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                                            ),
+                                                            child: Text(
+                                                              'Cetak Struk',
+                                                              style: TextStyle(
+                                                                fontFamily: 'Poppins',
+                                                                fontWeight: FontWeight.w500,
+                                                                color: Colors.white,
+                                                                fontSize: 8.w,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                          ],
-                                        ),
-                                      ],
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                  SizedBox(height: 12),
-                                ],
-                              );
-                            },
-                          );
-                        }),
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(height: 10),
-
-                  Container(
-                    width: double.infinity,
-                    margin: const EdgeInsets.symmetric(horizontal: 30),
-                    child: Row(
-                      children: [
-                        // Label
-                        Expanded(
-                          flex: 1, // Give more space to the label
-                          child: Obx(() {
-                            String teksHarian = "Harian";
-                            if (c.rangeDatePickerOmset.isNotEmpty) {
-                              teksHarian = "Keseluruhan";
-                            }
-
-                            return Text("Omset $teksHarian", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 8.w));
+                                    SizedBox(height: 12),
+                                  ],
+                                );
+                              },
+                            );
                           }),
                         ),
-
-                        // Cash
-                        Expanded(
-                          child: InkWell(
-                            onTap: () => c.showDialogOmset("cash"),
-                            child: Obx(
-                              () => Text(
-                                "Cash: ${c.currencyFormatter.format(c.omsetCash.value)}",
-                                textAlign: TextAlign.end,
-                                style: TextStyle(color: Colors.green[700], fontWeight: FontWeight.w900, fontSize: 8.w),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        // Debit
-                        Expanded(
-                          child: InkWell(
-                            onTap: () => c.showDialogOmset("debit"),
-                            child: Obx(
-                              () => Text(
-                                "Debit: ${c.currencyFormatter.format(c.omsetDebit.value)}",
-                                textAlign: TextAlign.end,
-                                style: TextStyle(color: Colors.blue[700], fontWeight: FontWeight.w900, fontSize: 8.w),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        // Kredit
-                        Expanded(
-                          child: InkWell(
-                            onTap: () => c.showDialogOmset("kredit"),
-                            child: Obx(
-                              () => Text(
-                                "Kredit: ${c.currencyFormatter.format(c.omsetKredit.value)}",
-                                textAlign: TextAlign.end,
-                                style: TextStyle(color: const Color.fromARGB(255, 54, 109, 2), fontWeight: FontWeight.w900, fontSize: 8.w),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        // Qris
-                        Expanded(
-                          child: InkWell(
-                            onTap: () => c.showDialogOmset("qris"),
-                            child: Obx(
-                              () => Text(
-                                "Qris: ${c.currencyFormatter.format(c.omsetQris.value)}",
-                                textAlign: TextAlign.end,
-                                style: TextStyle(color: Colors.purple[700], fontWeight: FontWeight.w900, fontSize: 8.w),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
 
-                  SizedBox(height: 40),
-                ],
+                    SizedBox(height: 10),
+
+                    Container(
+                      width: double.infinity,
+                      margin: EdgeInsets.symmetric(horizontal: 50.w),
+                      child: Row(
+                        children: [
+                          // Label
+                          Expanded(
+                            flex: 1, // Give more space to the label
+                            child: Obx(() {
+                              String teksHarian = "Harian";
+                              if (c.rangeDatePickerOmset.isNotEmpty) {
+                                teksHarian = "Keseluruhan";
+                              }
+
+                              return Text("Omset $teksHarian", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 8.w));
+                            }),
+                          ),
+
+                          // Cash
+                          Expanded(
+                            child: InkWell(
+                              onTap: () => c.showDialogOmset("cash"),
+                              child: Obx(
+                                () => Text(
+                                  "Cash: ${c.currencyFormatter.format(c.omsetCash.value)}",
+                                  textAlign: TextAlign.end,
+                                  style: TextStyle(color: Colors.green[700], fontWeight: FontWeight.w900, fontSize: 8.w),
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          // Debit
+                          Expanded(
+                            child: InkWell(
+                              onTap: () => c.showDialogOmset("debit"),
+                              child: Obx(
+                                () => Text(
+                                  "Debit: ${c.currencyFormatter.format(c.omsetDebit.value)}",
+                                  textAlign: TextAlign.end,
+                                  style: TextStyle(color: Colors.blue[700], fontWeight: FontWeight.w900, fontSize: 8.w),
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          // Kredit
+                          Expanded(
+                            child: InkWell(
+                              onTap: () => c.showDialogOmset("kredit"),
+                              child: Obx(
+                                () => Text(
+                                  "Kredit: ${c.currencyFormatter.format(c.omsetKredit.value)}",
+                                  textAlign: TextAlign.end,
+                                  style: TextStyle(color: const Color.fromARGB(255, 54, 109, 2), fontWeight: FontWeight.w900, fontSize: 8.w),
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          // Qris
+                          Expanded(
+                            child: InkWell(
+                              onTap: () => c.showDialogOmset("qris"),
+                              child: Obx(
+                                () => Text(
+                                  "Qris: ${c.currencyFormatter.format(c.omsetQris.value)}",
+                                  textAlign: TextAlign.end,
+                                  style: TextStyle(color: Colors.purple[700], fontWeight: FontWeight.w900, fontSize: 8.w),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: 65),
+                  ],
+                ),
               ),
             ),
           ),

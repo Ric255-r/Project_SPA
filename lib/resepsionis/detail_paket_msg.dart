@@ -568,12 +568,14 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                   onPressed: () {
                     // if(_kembalianController.text)
                     if (isCash) {
-                      if (_totalBayarController.text == "" || _totalBayarController.text == "0" || _totalBayarController.text.isEmpty) {
+                      if (_totalBayarController.text == "" ||
+                          _totalBayarController.text.isEmpty ||
+                          int.tryParse(_totalBayarController.text.replaceAll("Rp. ", ""))! <= 0) {
                         return;
                       }
                     }
 
-                    if (kembalian < 0) {
+                    if (kembalian < 0 || _kembalianController.text == "" || int.tryParse(_kembalianController.text.replaceAll("Rp. ", ""))! < 0) {
                       CherryToast.error(
                         title: Text("Jumlah Bayar Kurang", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
                         animationDuration: const Duration(milliseconds: 1500),
