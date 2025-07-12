@@ -147,6 +147,8 @@ class KamarTerapisMgr {
 
       if (response.statusCode == 200) {
         resetLimitChange();
+
+        
         return true;
       }
 
