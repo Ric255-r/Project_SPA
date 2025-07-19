@@ -917,6 +917,8 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                             ),
                           ],
                         ),
+
+                        SizedBox(height: 10),
                       ],
                     ),
                   ),

@@ -2147,7 +2147,7 @@ class ListTransaksi extends StatelessWidget {
                     ),
                     SizedBox(height: 10),
                     Obx(() {
-                      if (c._hakAkses.value == "owner") {
+                      if (c._hakAkses.value == "owner" || c._hakAkses.value == "admin") {
                         return Container(
                           alignment: Alignment.centerLeft,
                           margin: EdgeInsets.only(top: 5, bottom: 5, left: 50.w, right: 50.w),
