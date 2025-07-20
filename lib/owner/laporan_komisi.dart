@@ -49,6 +49,10 @@ class _laporankomisiState extends State<laporankomisi>
   int pilihantahun = 1;
   late TabController _tabController;
   int selectedtabindex = 1;
+  RxInt total = 0.obs;
+  RxInt totalharian = 0.obs;
+  RxInt totaltahunan = 0.obs;
+  int sum = 0;
 
   var dio = Dio();
 
@@ -72,6 +76,7 @@ class _laporankomisiState extends State<laporankomisi>
         datakomisi.assignAll(fetcheddata);
         datakomisi.refresh();
       });
+      hitungtotal();
     } catch (e) {
       log("Error di fn getdatakomisi : $e");
     }
@@ -100,7 +105,7 @@ class _laporankomisiState extends State<laporankomisi>
       log('file downloaded to $filepath');
     } catch (e) {
       Get.back();
-      log("Error di fn getdatakomisibulanan : $e");
+      log("Error di fn export komisi bulanan : $e");
       Get.snackbar("Download Failed", "Gagal menyiapkan file komisi terapis");
     }
   }
@@ -129,7 +134,7 @@ class _laporankomisiState extends State<laporankomisi>
       log('file downloaded to $filepath');
     } catch (e) {
       Get.back();
-      log("Error di fn getdatakomisibulanan : $e");
+      log("Error di fn export komisi gro bulanan : $e");
       Get.snackbar("Download Failed", "Gagal menyiapkan file komisi GRO");
     }
   }
@@ -154,8 +159,65 @@ class _laporankomisiState extends State<laporankomisi>
         datakomisitahunan.assignAll(fetcheddata);
         datakomisitahunan.refresh();
       });
+      hitungtotaltahunan();
     } catch (e) {
       log("Error di fn getdatakomisi : $e");
+    }
+  }
+
+  Future<void> exportkomisitahunan(tahun) async {
+    try {
+      print('ini jalan');
+      Get.dialog(const DownloadSplash(), barrierDismissible: false);
+      final dir = await getDownloadsDirectory();
+      final filepath = '${dir!.path}/data komisi Tahun $tahun.pdf';
+      String url = '${myIpAddr()}/main_owner/export_excel_komisi_tahunan';
+      var response = await dio.download(
+        url,
+        filepath,
+        queryParameters: {'year': tahun},
+        options: Options(
+          responseType: ResponseType.bytes,
+          headers: {'Accept': 'application/pdf'},
+        ),
+      );
+
+      Get.back();
+
+      await OpenFile.open(filepath);
+      log('file downloaded to $filepath');
+    } catch (e) {
+      Get.back();
+      log("Error di fn exportkomisitahunan : $e");
+      Get.snackbar("Download Failed", "Gagal menyiapkan file komisi terapis");
+    }
+  }
+
+  Future<void> exportkomisigrotahunan(tahun) async {
+    try {
+      print('ini jalan');
+      Get.dialog(const DownloadSplash(), barrierDismissible: false);
+      final dir = await getDownloadsDirectory();
+      final filepath = '${dir!.path}/data komisi terapis Tahun $tahun.pdf';
+      String url = '${myIpAddr()}/main_owner/export_excel_komisi_tahunan_gro';
+      var response = await dio.download(
+        url,
+        filepath,
+        queryParameters: {'year': tahun},
+        options: Options(
+          responseType: ResponseType.bytes,
+          headers: {'Accept': 'application/pdf'},
+        ),
+      );
+
+      Get.back();
+
+      await OpenFile.open(filepath);
+      log('file downloaded to $filepath');
+    } catch (e) {
+      Get.back();
+      log("Error di fn exportkomisigrotahunan : $e");
+      Get.snackbar("Download Failed", "Gagal menyiapkan file komisi GRO");
     }
   }
 
@@ -179,8 +241,67 @@ class _laporankomisiState extends State<laporankomisi>
         datakomisiharian.assignAll(fetcheddata);
         datakomisiharian.refresh();
       });
+      hitungtotalharian();
     } catch (e) {
       log("Error di fn getdatakomisi : $e");
+    }
+  }
+
+  Future<void> exportkomisiharian(strdate, enddate) async {
+    try {
+      print('ini jalan');
+      Get.dialog(const DownloadSplash(), barrierDismissible: false);
+      final dir = await getDownloadsDirectory();
+      final filepath =
+          '${dir!.path}/data komisi tanggal $strdate - tanggal $enddate.pdf';
+      String url = '${myIpAddr()}/main_owner/export_excel_komisi_harian';
+      var response = await dio.download(
+        url,
+        filepath,
+        queryParameters: {'strdate': strdate, 'enddate': enddate},
+        options: Options(
+          responseType: ResponseType.bytes,
+          headers: {'Accept': 'application/pdf'},
+        ),
+      );
+
+      Get.back();
+
+      await OpenFile.open(filepath);
+      log('file downloaded to $filepath');
+    } catch (e) {
+      Get.back();
+      log("Error di fn exportdatakomisiharian : $e");
+      Get.snackbar("Download Failed", "Gagal menyiapkan file komisi terapis");
+    }
+  }
+
+  Future<void> exportkomisigroharian(strdate, endddate) async {
+    try {
+      print('ini jalan');
+      Get.dialog(const DownloadSplash(), barrierDismissible: false);
+      final dir = await getDownloadsDirectory();
+      final filepath =
+          '${dir!.path}/data komisi terapis Tanggal $strdate tahun $endddate.pdf';
+      String url = '${myIpAddr()}/main_owner/export_excel_komisi_harian_gro';
+      var response = await dio.download(
+        url,
+        filepath,
+        queryParameters: {'strdate': strdate, 'enddate': endddate},
+        options: Options(
+          responseType: ResponseType.bytes,
+          headers: {'Accept': 'application/pdf'},
+        ),
+      );
+
+      Get.back();
+
+      await OpenFile.open(filepath);
+      log('file downloaded to $filepath');
+    } catch (e) {
+      Get.back();
+      log("Error di fn exportkomisigroharian : $e");
+      Get.snackbar("Download Failed", "Gagal menyiapkan file komisi GRO");
     }
   }
 
@@ -190,6 +311,33 @@ class _laporankomisiState extends State<laporankomisi>
     }
 
     return DateTime(dateTime.year, dateTime.month, dateTime.day);
+  }
+
+  void hitungtotal() {
+    sum = 0;
+    for (var item in datakomisi) {
+      sum += int.tryParse(item['total_komisi'].toString())!;
+    }
+    total.value = sum;
+    log(sum.toString());
+  }
+
+  void hitungtotalharian() {
+    sum = 0;
+    for (var item in datakomisiharian) {
+      sum += int.tryParse(item['total_komisi'].toString())!;
+    }
+    totalharian.value = sum;
+    log(sum.toString());
+  }
+
+  void hitungtotaltahunan() {
+    sum = 0;
+    for (var item in datakomisitahunan) {
+      sum += int.tryParse(item['total_komisi'].toString())!;
+    }
+    totaltahunan.value = sum;
+    log(sum.toString());
   }
 
   @override
@@ -250,7 +398,7 @@ class _laporankomisiState extends State<laporankomisi>
                   fontWeight: FontWeight.bold,
                   fontFamily: 'Poppins',
                   height: 1,
-                  fontSize: 30.w,
+                  fontSize: 20.w,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -443,7 +591,7 @@ class _laporankomisiState extends State<laporankomisi>
                               SizedBox(width: 20),
                               Container(
                                 margin: EdgeInsets.only(top: 0.w),
-                                width: 160.w,
+                                width: 140.w,
                                 height: 35.w,
                                 child: ElevatedButton(
                                   onPressed: () {
@@ -453,7 +601,7 @@ class _laporankomisiState extends State<laporankomisi>
                                   child: Text(
                                     'Cek Komisi',
                                     style: TextStyle(
-                                      fontSize: 20.w,
+                                      fontSize: 13.w,
                                       color: Colors.black,
                                     ),
                                   ),
@@ -473,7 +621,7 @@ class _laporankomisiState extends State<laporankomisi>
                             children: [
                               Container(
                                 margin: EdgeInsets.only(top: 0.w),
-                                width: 175.w,
+                                width: 220.w,
                                 height: 35.w,
                                 child: ElevatedButton(
                                   onPressed: () {
@@ -500,7 +648,7 @@ class _laporankomisiState extends State<laporankomisi>
                               SizedBox(width: 10),
                               Container(
                                 margin: EdgeInsets.only(top: 0.w),
-                                width: 175.w,
+                                width: 220.w,
                                 height: 35.w,
                                 child: ElevatedButton(
                                   onPressed: () {
@@ -532,137 +680,202 @@ class _laporankomisiState extends State<laporankomisi>
                     : selectedtabindex == 0
                     ? Container(
                       margin: EdgeInsets.only(top: 50.w),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      child: Column(
                         children: [
-                          ElevatedButton(
-                            onPressed: () async {
-                              final results = await showDialog(
-                                context: context,
-                                builder: (context) {
-                                  List<DateTime?> tempdate = List.from(
-                                    _rangedatepickervalue,
-                                  );
-                                  return Dialog(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(15),
-                                    ),
-                                    child: SingleChildScrollView(
-                                      child: Padding(
-                                        padding: EdgeInsets.symmetric(
-                                          vertical: 16.w,
-                                          horizontal: 16.w,
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              ElevatedButton(
+                                onPressed: () async {
+                                  final results = await showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      List<DateTime?> tempdate = List.from(
+                                        _rangedatepickervalue,
+                                      );
+                                      return Dialog(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            15,
+                                          ),
                                         ),
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const Text(
-                                              'Silahkan pilih rentang tanggal',
+                                        child: SingleChildScrollView(
+                                          child: Padding(
+                                            padding: EdgeInsets.symmetric(
+                                              vertical: 16.w,
+                                              horizontal: 16.w,
                                             ),
-                                            SizedBox(height: 15.w),
-                                            CalendarDatePicker2(
-                                              config: CalendarDatePicker2Config(
-                                                calendarType:
-                                                    CalendarDatePicker2Type
-                                                        .range,
-                                                selectedDayHighlightColor:
-                                                    Colors.deepPurple,
-                                                dayTextStyle: TextStyle(
-                                                  fontSize: 15.w,
-                                                ),
-                                              ),
-                                              value: tempdate,
-                                              onValueChanged: (dates) {
-                                                tempdate =
-                                                    dates
-                                                        .map(
-                                                          (d) =>
-                                                              _getdateonly(d),
-                                                        )
-                                                        .toList();
-                                              },
-                                            ),
-                                            SizedBox(height: 15.w),
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.end,
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
                                               children: [
-                                                TextButton(
-                                                  child: const Text('Cancel'),
-                                                  onPressed:
-                                                      () =>
-                                                          Navigator.of(
-                                                            context,
-                                                          ).pop(),
+                                                const Text(
+                                                  'Silahkan pilih rentang tanggal',
                                                 ),
-                                                const SizedBox(width: 8),
-                                                TextButton(
-                                                  child: const Text('OK'),
-                                                  onPressed:
-                                                      () => Navigator.of(
-                                                        context,
-                                                      ).pop(tempdate),
+                                                SizedBox(height: 15.w),
+                                                CalendarDatePicker2(
+                                                  config: CalendarDatePicker2Config(
+                                                    calendarType:
+                                                        CalendarDatePicker2Type
+                                                            .range,
+                                                    selectedDayHighlightColor:
+                                                        Colors.deepPurple,
+                                                    dayTextStyle: TextStyle(
+                                                      fontSize: 15.w,
+                                                    ),
+                                                  ),
+                                                  value: tempdate,
+                                                  onValueChanged: (dates) {
+                                                    tempdate =
+                                                        dates
+                                                            .map(
+                                                              (d) =>
+                                                                  _getdateonly(
+                                                                    d,
+                                                                  ),
+                                                            )
+                                                            .toList();
+                                                  },
+                                                ),
+                                                SizedBox(height: 15.w),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.end,
+                                                  children: [
+                                                    TextButton(
+                                                      child: const Text(
+                                                        'Cancel',
+                                                      ),
+                                                      onPressed:
+                                                          () =>
+                                                              Navigator.of(
+                                                                context,
+                                                              ).pop(),
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                    TextButton(
+                                                      child: const Text('OK'),
+                                                      onPressed:
+                                                          () => Navigator.of(
+                                                            context,
+                                                          ).pop(tempdate),
+                                                    ),
+                                                  ],
                                                 ),
                                               ],
                                             ),
-                                          ],
+                                          ),
                                         ),
-                                      ),
-                                    ),
-                                  );
+                                      );
+                                    },
+                                  ).then((results) {
+                                    if (results != null) {
+                                      final List<DateTime?> cleanedResults =
+                                          (results as List)
+                                              .map(
+                                                (date) =>
+                                                    _getdateonly(date)
+                                                        as DateTime?,
+                                              )
+                                              .toList();
+
+                                      _rangedatepickervalue.assignAll(
+                                        cleanedResults,
+                                      );
+
+                                      startdate =
+                                          _rangedatepickervalue[0]
+                                              ?.toIso8601String()
+                                              .split('T')
+                                              .first ??
+                                          '';
+                                      enddate =
+                                          _rangedatepickervalue.length > 1
+                                              ? _rangedatepickervalue[1]
+                                                      ?.toIso8601String()
+                                                      .split('T')
+                                                      .first ??
+                                                  ''
+                                              : startdate;
+
+                                      getdatakomisiharian(startdate, enddate);
+
+                                      print(
+                                        'ini adalah isi data harian $datakomisiharian',
+                                      );
+                                    }
+                                  });
                                 },
-                              ).then((results) {
-                                if (results != null) {
-                                  final List<DateTime?> cleanedResults =
-                                      (results as List)
-                                          .map(
-                                            (date) =>
-                                                _getdateonly(date) as DateTime?,
-                                          )
-                                          .toList();
-
-                                  _rangedatepickervalue.assignAll(
-                                    cleanedResults,
-                                  );
-
-                                  startdate =
-                                      _rangedatepickervalue[0]
-                                          ?.toIso8601String()
-                                          .split('T')
-                                          .first ??
-                                      '';
-                                  enddate =
-                                      _rangedatepickervalue.length > 1
-                                          ? _rangedatepickervalue[1]
-                                                  ?.toIso8601String()
-                                                  .split('T')
-                                                  .first ??
-                                              ''
-                                          : startdate;
-
-                                  getdatakomisiharian(startdate, enddate);
-
-                                  print(
-                                    'ini adalah isi data harian $datakomisiharian',
-                                  );
-                                }
-                              });
-                            },
-                            child: Text(
-                              'Pilih Tanggal',
-                              style: TextStyle(fontSize: 20.w),
-                            ),
-                          ),
-                          SizedBox(width: 20),
-                          Obx(
-                            () => Container(
-                              child: Text(
-                                _rangedatepickervalue.isEmpty
-                                    ? 'Pilihan tanggal : - '
-                                    : 'Pilihan tanggal : ${startdate} - ${enddate}',
-                                style: TextStyle(fontSize: 20.w),
+                                child: Text(
+                                  'Pilih Tanggal',
+                                  style: TextStyle(fontSize: 15.w),
+                                ),
                               ),
-                            ),
+                              SizedBox(width: 20),
+                              Obx(
+                                () => Container(
+                                  child: Text(
+                                    _rangedatepickervalue.isEmpty
+                                        ? 'Pilihan tanggal : - '
+                                        : 'Pilihan tanggal : ${startdate} - ${enddate}',
+                                    style: TextStyle(fontSize: 15.w),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 15.w),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                margin: EdgeInsets.only(top: 0.w),
+                                width: 220.w,
+                                height: 35.w,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    exportkomisiharian(startdate, enddate);
+                                  },
+                                  child: Text(
+                                    'Cetak Komisi Terapis',
+                                    style: TextStyle(
+                                      fontSize: 15.w,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Color(0xFFFCEFCB),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 10),
+                              Container(
+                                margin: EdgeInsets.only(top: 0.w),
+                                width: 220.w,
+                                height: 35.w,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    exportkomisigroharian(startdate, enddate);
+                                  },
+                                  child: Text(
+                                    'Cetak Komisi Gro',
+                                    style: TextStyle(
+                                      fontSize: 15.w,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Color(0xFFFCEFCB),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -670,101 +883,158 @@ class _laporankomisiState extends State<laporankomisi>
                     : Container(
                       margin: EdgeInsets.only(top: 50.w),
                       width: 1100.w,
-                      height: 45.w,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Column(
                         children: [
-                          Container(
-                            margin: EdgeInsets.only(top: 0.w),
-                            height: 50,
-                            alignment: Alignment.topCenter,
-                            child: Text(
-                              'Tahun : ',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'Poppins',
-                                height: 1,
-                                fontSize: 20.w,
-                              ),
-                            ),
-                          ),
-                          Obx(
-                            () => Container(
-                              margin: EdgeInsets.only(top: 0.w),
-                              width: 140.w,
-                              height: 55.w,
-                              child: DropdownButtonFormField<String>(
-                                decoration: InputDecoration(
-                                  contentPadding: EdgeInsets.only(
-                                    top: 0.w,
-                                    bottom: 0.w,
-                                    left: 10.w,
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                margin: EdgeInsets.only(top: 0.w),
+                                height: 50,
+                                alignment: Alignment.topCenter,
+                                child: Text(
+                                  'Tahun : ',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'Poppins',
+                                    height: 1,
+                                    fontSize: 20.w,
                                   ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color: Colors.blue,
-                                      width: 2.w,
+                                ),
+                              ),
+                              Obx(
+                                () => Container(
+                                  margin: EdgeInsets.only(top: 0.w),
+                                  width: 140.w,
+                                  height: 55.w,
+                                  child: DropdownButtonFormField<String>(
+                                    decoration: InputDecoration(
+                                      contentPadding: EdgeInsets.only(
+                                        top: 0.w,
+                                        bottom: 0.w,
+                                        left: 10.w,
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Colors.blue,
+                                          width: 2.w,
+                                        ),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Colors.red,
+                                          width: 2.w,
+                                        ),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      filled: true,
+                                      fillColor: Colors.grey[200],
                                     ),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color: Colors.red,
-                                      width: 2.w,
+                                    value: selectedyearvalue.value,
+                                    style: TextStyle(
+                                      fontSize: 15.w,
+                                      color: Colors.black,
                                     ),
-                                    borderRadius: BorderRadius.circular(10),
+                                    items:
+                                        List.generate(
+                                          DateTime.now().year - 2000 + 1,
+                                          (index) => 2000 + index,
+                                        ).map((int year) {
+                                          return DropdownMenuItem<String>(
+                                            value: year.toString(),
+                                            child: Text(year.toString()),
+                                          );
+                                        }).toList(),
+                                    onChanged: (String? newValue) {
+                                      selectedyearvalue.value = newValue!;
+                                      pilihantahun = int.parse(newValue);
+                                      print(pilihantahun);
+                                    },
                                   ),
-                                  filled: true,
-                                  fillColor: Colors.grey[200],
                                 ),
-                                value: selectedyearvalue.value,
-                                style: TextStyle(
-                                  fontSize: 15.w,
-                                  color: Colors.black,
-                                ),
-                                items:
-                                    List.generate(
-                                      DateTime.now().year - 2000 + 1,
-                                      (index) => 2000 + index,
-                                    ).map((int year) {
-                                      return DropdownMenuItem<String>(
-                                        value: year.toString(),
-                                        child: Text(year.toString()),
-                                      );
-                                    }).toList(),
-                                onChanged: (String? newValue) {
-                                  selectedyearvalue.value = newValue!;
-                                  pilihantahun = int.parse(newValue);
-                                  print(pilihantahun);
-                                },
                               ),
-                            ),
+                              SizedBox(width: 20),
+                              Container(
+                                margin: EdgeInsets.only(top: 0.w),
+                                width: 160.w,
+                                height: 35.w,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    getdatakomisitahunan(pilihantahun);
+                                    log(datakomisitahunan.toString());
+                                  },
+                                  child: Text(
+                                    'Cek Komisi',
+                                    style: TextStyle(
+                                      fontSize: 15.w,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Color(0xFFFCEFCB),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                          SizedBox(width: 20),
-                          Container(
-                            margin: EdgeInsets.only(top: 0.w),
-                            width: 160.w,
-                            height: 35.w,
-                            child: ElevatedButton(
-                              onPressed: () {
-                                getdatakomisitahunan(pilihantahun);
-                                log(datakomisitahunan.toString());
-                              },
-                              child: Text(
-                                'Cek Komisi',
-                                style: TextStyle(
-                                  fontSize: 20.w,
-                                  color: Colors.black,
+                          SizedBox(height: 10.w),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                margin: EdgeInsets.only(top: 0.w),
+                                width: 220.w,
+                                height: 35.w,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    exportkomisitahunan(pilihantahun);
+                                  },
+                                  child: Text(
+                                    'Cetak Komisi Terapis',
+                                    style: TextStyle(
+                                      fontSize: 15.w,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Color(0xFFFCEFCB),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
                                 ),
                               ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Color(0xFFFCEFCB),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                              SizedBox(width: 10),
+                              Container(
+                                margin: EdgeInsets.only(top: 0.w),
+                                width: 220.w,
+                                height: 35.w,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    exportkomisigrotahunan(pilihantahun);
+                                  },
+                                  child: Text(
+                                    'Cetak Komisi Gro',
+                                    style: TextStyle(
+                                      fontSize: 15.w,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Color(0xFFFCEFCB),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
+                            ],
                           ),
                         ],
                       ),
@@ -783,7 +1053,7 @@ class _laporankomisiState extends State<laporankomisi>
                               topRight: Radius.circular(10),
                             ),
                           ),
-                          width: Get.width - 200,
+                          width: Get.width - 100,
                           height: 50.w,
                           child: TabBar(
                             controller: _tabController,
@@ -795,14 +1065,8 @@ class _laporankomisiState extends State<laporankomisi>
                           ),
                         ),
                         Container(
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.only(
-                              bottomLeft: Radius.circular(10),
-                              bottomRight: Radius.circular(10),
-                            ),
-                          ),
-                          width: Get.width - 200,
+                          decoration: BoxDecoration(color: Colors.grey[200]),
+                          width: Get.width - 100,
                           height: 350.w,
                           child: TabBarView(
                             controller: _tabController,
@@ -917,6 +1181,9 @@ class _laporankomisiState extends State<laporankomisi>
                                     itemCount: datakomisi.length,
                                     itemBuilder: (context, index) {
                                       var item = datakomisi[index];
+                                      sum += int.parse(
+                                        item['total_komisi'].toString(),
+                                      );
                                       return Container(
                                         child: Column(
                                           mainAxisAlignment:
@@ -1088,6 +1355,50 @@ class _laporankomisiState extends State<laporankomisi>
                                       );
                                     },
                                   ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: EdgeInsets.only(left: 10, right: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            border: Border.all(width: 1),
+                          ),
+                          width: Get.width - 100,
+                          height: 30.w,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Center(
+                                child: Container(
+                                  child: Text(
+                                    'Total Komisi : ',
+                                    style: TextStyle(fontSize: 25),
+                                  ),
+                                ),
+                              ),
+                              Obx(
+                                () => Expanded(
+                                  child:
+                                      selectedtabindex == 1
+                                          ? Text(
+                                            '${formatnominal.format(total.value)}',
+                                            style: TextStyle(fontSize: 25),
+                                            textAlign: TextAlign.right,
+                                          )
+                                          : selectedtabindex == 0
+                                          ? Text(
+                                            '${formatnominal.format(totalharian.value)}',
+                                            style: TextStyle(fontSize: 25),
+                                            textAlign: TextAlign.right,
+                                          )
+                                          : Text(
+                                            '${formatnominal.format(totaltahunan.value)}',
+                                            style: TextStyle(fontSize: 25),
+                                            textAlign: TextAlign.right,
+                                          ),
+                                ),
+                              ),
                             ],
                           ),
                         ),
