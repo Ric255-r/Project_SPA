@@ -2150,7 +2150,11 @@ class ListTransaksiController extends GetxController {
                                     builder: (context) {
                                       var nominalDisc = paketTotal * disc;
                                       var paketStlhDisc =
-                                          paketTotal - nominalDisc;
+                                          (((paketTotal - nominalDisc) + 999) ~/
+                                              1000) *
+                                          1000;
+
+                                      print('isinya adalah $paketStlhDisc');
 
                                       return Text(
                                         currencyFormatter.format(paketStlhDisc),
