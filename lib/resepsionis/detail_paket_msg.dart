@@ -1651,7 +1651,10 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                                 .value = '';
                                           }
 
-                                          Get.offAll(() => MainResepsionis());
+                                          if (loadupdatetransaksi.value ==
+                                              'sukses') {
+                                            Get.offAll(() => MainResepsionis());
+                                          }
                                         });
                                       },
                                       child: Text(
