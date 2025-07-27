@@ -75,6 +75,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
   String? idMember;
   // var discSetelahPromo = 0;
   RxInt discSetelahPromo = 0.obs;
+  RxString loadupdatetransaksi = 'belum'.obs;
 
   void _handleScannedData(String val0, String val1, String val2, String val3) {
     setState(() {
@@ -258,6 +259,17 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
   Future<void> _storeTrans() async {
     try {
+      loadupdatetransaksi.value = 'belum';
+      Get.dialog(
+        AlertDialog(
+          title: Center(child: Text('Loading')),
+          content: Container(
+            width: 100,
+            height: 100,
+            child: Center(child: CircularProgressIndicator()),
+          ),
+        ),
+      );
       var rincian = getHargaAfterDisc();
       var token = await getTokenSharedPref();
       var data = {
@@ -316,6 +328,9 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
         options: Options(headers: {"Authorization": "Bearer " + token!}),
         data: data,
       );
+
+      loadupdatetransaksi.value = 'sukses';
+
       CherryToast.success(
         title: Text(
           "Transaksi Sukses!",
@@ -328,6 +343,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
         animationDuration: const Duration(milliseconds: 2000),
         autoDismiss: true,
       ).show(context);
+
       log("Isi data jual $dataJual");
       log("Sukses SImpan $response");
     } catch (e) {
@@ -443,6 +459,20 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
         throw Exception("Error Get Pajak Dio ${e.response?.data}");
       }
       throw Exception("Error Get Pajak $e");
+    }
+  }
+
+  void panggilsemuaterapis() async {
+    daftapanggilankerja(namaruangan, namaterapis);
+
+    if (namaterapis2 != '') {
+      await Future.delayed(const Duration(seconds: 20));
+      daftapanggilankerja(namaruangan, namaterapis2);
+    }
+
+    if (namaterapis3 != '') {
+      await Future.delayed(const Duration(seconds: 20));
+      daftapanggilankerja(namaruangan, namaterapis3);
     }
   }
 
@@ -728,40 +758,42 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                 ),
                               ],
                             ),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    "Nama Bank: ",
-                                    style: TextStyle(fontFamily: 'Poppins'),
+                            Obx(
+                              () => Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      "Nama Bank: ",
+                                      style: TextStyle(fontFamily: 'Poppins'),
+                                    ),
                                   ),
-                                ),
-                                Expanded(
-                                  flex: 3,
-                                  child: DropdownButtonFormField<String>(
-                                    value: _selectedBank,
-                                    onChanged: (String? Value) {
-                                      setState(() {
-                                        _selectedBank = Value!;
-                                      });
-                                    },
-                                    items:
-                                        _bankList.map((String bank) {
-                                          return DropdownMenuItem<String>(
-                                            value: bank,
-                                            child: Text(bank),
-                                          );
-                                        }).toList(),
-                                    decoration: InputDecoration(
-                                      border: OutlineInputBorder(),
-                                      contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 12,
+                                  Expanded(
+                                    flex: 3,
+                                    child: DropdownButtonFormField<String>(
+                                      value: _selectedBank,
+                                      onChanged: (String? Value) {
+                                        setState(() {
+                                          _selectedBank = Value!;
+                                        });
+                                      },
+                                      items:
+                                          _bankList.map((String bank) {
+                                            return DropdownMenuItem<String>(
+                                              value: bank,
+                                              child: Text(bank),
+                                            );
+                                          }).toList(),
+                                      decoration: InputDecoration(
+                                        border: OutlineInputBorder(),
+                                        contentPadding: EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 12,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -819,6 +851,8 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                         namaterapis = controllerPekerja.getnamaterapis.value;
                         idterapis2 = controllerPekerja.getidterapis2.value;
                         idterapis3 = controllerPekerja.getidterapis3.value;
+                        namaterapis2 = controllerPekerja.getnamaterapis2.value;
+                        namaterapis3 = controllerPekerja.getnamaterapis3.value;
 
                         if (idterapis3 == '') {
                           idterapis3 = 'noterapis';
@@ -830,7 +864,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
                         if (controllerPekerja.statusshowing.value !=
                             'pressed') {
-                          daftapanggilankerja(namaruangan, namaterapis);
+                          panggilsemuaterapis();
                         }
                         daftarruangtunggu(
                           idtransaksi,
@@ -839,8 +873,23 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                           namaterapis,
                         );
 
-                        print(idterapis2);
-                        print(idterapis3);
+                        if (idterapis2 != 'noterapis') {
+                          daftarruangtunggu(
+                            idtransaksi,
+                            namaruangan,
+                            idterapis2,
+                            namaterapis2,
+                          );
+                        }
+
+                        if (idterapis3 != 'noterapis') {
+                          daftarruangtunggu(
+                            idtransaksi,
+                            namaruangan,
+                            idterapis3,
+                            namaterapis3,
+                          );
+                        }
 
                         if (idterapis2 != 'noterapis' ||
                             idterapis3 != 'noterapis') {
@@ -850,8 +899,13 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                         controllerPekerja.getidterapis.value = '';
                         controllerPekerja.getidterapis2.value = '';
                         controllerPekerja.getidterapis3.value = '';
+                        controllerPekerja.getnamaterapis.value = '';
+                        controllerPekerja.getnamaterapis2.value = '';
+                        controllerPekerja.getnamaterapis3.value = '';
 
-                        Get.offAll(() => MainResepsionis());
+                        if (loadupdatetransaksi.value == 'sukses') {
+                          Get.offAll(() => MainResepsionis());
+                        }
                       });
                     }
                   },
@@ -1508,26 +1562,95 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                               controllerPekerja
                                                   .getidterapis
                                                   .value;
+                                          idterapis2 =
+                                              controllerPekerja
+                                                  .getidterapis2
+                                                  .value;
+                                          idterapis3 =
+                                              controllerPekerja
+                                                  .getidterapis3
+                                                  .value;
                                           namaterapis =
                                               controllerPekerja
                                                   .getnamaterapis
                                                   .value;
+                                          namaterapis2 =
+                                              controllerPekerja
+                                                  .getnamaterapis2
+                                                  .value;
+                                          namaterapis3 =
+                                              controllerPekerja
+                                                  .getnamaterapis3
+                                                  .value;
+
+                                          if (idterapis3 == '') {
+                                            idterapis3 = 'noterapis';
+                                          }
+
+                                          if (idterapis2 == '') {
+                                            idterapis2 = 'noterapis';
+                                          }
 
                                           if (controllerPekerja
                                                   .statusshowing
                                                   .value !=
                                               'pressed') {
-                                            daftapanggilankerja(
-                                              namaruangan,
-                                              namaterapis,
-                                            );
+                                            panggilsemuaterapis();
                                           }
+
                                           daftarruangtunggu(
                                             idtransaksi,
                                             namaruangan,
                                             idterapis,
                                             namaterapis,
                                           );
+
+                                          if (idterapis2 != 'noterapis') {
+                                            daftarruangtunggu(
+                                              idtransaksi,
+                                              namaruangan,
+                                              idterapis2,
+                                              namaterapis2,
+                                            );
+                                          }
+
+                                          if (idterapis3 != 'noterapis') {
+                                            daftarruangtunggu(
+                                              idtransaksi,
+                                              namaruangan,
+                                              idterapis3,
+                                              namaterapis3,
+                                            );
+
+                                            if (idterapis2 != 'noterapis' ||
+                                                idterapis3 != 'noterapis') {
+                                              postterapis2(
+                                                idtransaksi,
+                                                idterapis2,
+                                                idterapis3,
+                                              );
+                                            }
+
+                                            controllerPekerja
+                                                .getidterapis
+                                                .value = '';
+                                            controllerPekerja
+                                                .getidterapis2
+                                                .value = '';
+                                            controllerPekerja
+                                                .getidterapis3
+                                                .value = '';
+                                            controllerPekerja
+                                                .getnamaterapis
+                                                .value = '';
+                                            controllerPekerja
+                                                .getnamaterapis2
+                                                .value = '';
+                                            controllerPekerja
+                                                .getnamaterapis3
+                                                .value = '';
+                                          }
+
                                           Get.offAll(() => MainResepsionis());
                                         });
                                       },

@@ -24,9 +24,12 @@ class TerapisConfirmController extends GetxController {
   RxList<dynamic> _dataPaket = [].obs;
   RxList<dynamic> _dataProduk = [].obs;
   RxList<dynamic> _dataFood = [].obs;
+  RxList<dynamic> dataterapistambahan = [].obs;
   RxString _idTransaksi = "".obs;
   RxString _idTerapis = "".obs;
   RxString _namaTerapis = "".obs;
+  RxString _namaTerapis2 = "".obs;
+  RxString _namaTerapis3 = "".obs;
   RxString _namaRuangan = "".obs;
   RxString _kodeRuangan = "".obs;
   RxString _idDetailTransaksi = "".obs;
@@ -38,19 +41,27 @@ class TerapisConfirmController extends GetxController {
     try {
       final prefs = await getTokenSharedPref();
 
-      var response = await dio.get('${myIpAddr()}/kamar_terapis/latest_trans', options: Options(headers: {"Authorization": "Bearer " + prefs!}));
+      var response = await dio.get(
+        '${myIpAddr()}/kamar_terapis/latest_trans',
+        options: Options(headers: {"Authorization": "Bearer " + prefs!}),
+      );
 
       List<dynamic> responsePaket = response.data['data_paket'];
       List<dynamic> responseProduk = response.data['data_produk'];
 
       _dataPaket.assignAll(
         responsePaket.map((item) {
-          if (_idTransaksi.value == "") _idTransaksi.value = item['id_transaksi'];
-          if (_namaTerapis.value == "") _namaTerapis.value = item['nama_karyawan'];
-          if (_namaRuangan.value == "") _namaRuangan.value = item['nama_ruangan'];
+          if (_idTransaksi.value == "")
+            _idTransaksi.value = item['id_transaksi'];
+          if (_namaTerapis.value == "")
+            _namaTerapis.value = item['nama_karyawan'];
+          if (_namaRuangan.value == "")
+            _namaRuangan.value = item['nama_ruangan'];
           if (_idTerapis.value == "") _idTerapis.value = item['id_terapis'];
-          if (_kodeRuangan.value == "") _kodeRuangan.value = item['kode_ruangan'];
-          if (_idDetailTransaksi.value == "") _idDetailTransaksi.value = item['id_detail_transaksi'];
+          if (_kodeRuangan.value == "")
+            _kodeRuangan.value = item['kode_ruangan'];
+          if (_idDetailTransaksi.value == "")
+            _idDetailTransaksi.value = item['id_detail_transaksi'];
 
           _sumDurasiMenit += item['total_durasi'];
 
@@ -69,12 +80,17 @@ class TerapisConfirmController extends GetxController {
 
       _dataProduk.assignAll(
         responseProduk.map((item) {
-          if (_idTransaksi.value == "") _idTransaksi.value = item['id_transaksi'];
-          if (_namaTerapis.value == "") _namaTerapis.value = item['nama_karyawan'];
-          if (_namaRuangan.value == "") _namaRuangan.value = item['nama_ruangan'];
+          if (_idTransaksi.value == "")
+            _idTransaksi.value = item['id_transaksi'];
+          if (_namaTerapis.value == "")
+            _namaTerapis.value = item['nama_karyawan'];
+          if (_namaRuangan.value == "")
+            _namaRuangan.value = item['nama_ruangan'];
           if (_idTerapis.value == "") _idTerapis.value = item['id_terapis'];
-          if (_kodeRuangan.value == "") _kodeRuangan.value = item['kode_ruangan'];
-          if (_idDetailTransaksi.value == "") _idDetailTransaksi.value = item['id_detail_transaksi'];
+          if (_kodeRuangan.value == "")
+            _kodeRuangan.value = item['kode_ruangan'];
+          if (_idDetailTransaksi.value == "")
+            _idDetailTransaksi.value = item['id_detail_transaksi'];
 
           _sumDurasiMenit += item['total_durasi'];
 
@@ -96,9 +112,31 @@ class TerapisConfirmController extends GetxController {
       );
 
       List<dynamic> responseFood = response2.data;
-      _dataFood.assignAll(responseFood.map((e) => Map<String, dynamic>.from(e)).toList());
+      _dataFood.assignAll(
+        responseFood.map((e) => Map<String, dynamic>.from(e)).toList(),
+      );
 
       log("isi Data food ${_dataFood}");
+      log(_idTransaksi.value);
+
+      var response3 = await dio.get(
+        '${myIpAddr()}/kamar_terapis/dataterapistambahan',
+        data: {"id_transaksi": _idTransaksi.value},
+      );
+
+      List<dynamic> responseTerapis = response3.data;
+
+      dataterapistambahan.assignAll(
+        responseTerapis.map((e) => Map<String, dynamic>.from(e)).toList(),
+      );
+
+      log(dataterapistambahan[0].toString());
+      if (_idTransaksi.value != '') {
+        _namaTerapis2.value = dataterapistambahan[0]['nama_karyawan'];
+        _namaTerapis3.value = dataterapistambahan[1]['nama_karyawan'];
+      }
+
+      log('isi data terapis tambahan : $dataterapistambahan');
 
       print("_getLatestTrans Bisa");
     } catch (e) {
@@ -110,7 +148,9 @@ class TerapisConfirmController extends GetxController {
 
   Future<void> _deleteProgress() async {
     try {
-      var response = await dio.delete('${myIpAddr()}/kamar_terapis/delete_progress?id_transaksi=${_idTransaksi.value}&id_terapis=${_idTerapis.value}');
+      var response = await dio.delete(
+        '${myIpAddr()}/kamar_terapis/delete_progress?id_transaksi=${_idTransaksi.value}&id_terapis=${_idTerapis.value}',
+      );
 
       if (response.statusCode == 200) {
         log("Sukses Hapus Data");
@@ -131,7 +171,11 @@ class TerapisConfirmController extends GetxController {
 
       var response = await dio.post(
         '${myIpAddr()}/kamar_terapis/ins_datang',
-        data: {"id_transaksi": _idTransaksi.value, "id_terapis": _idTerapis.value, "jam_datang": formattedTime},
+        data: {
+          "id_transaksi": _idTransaksi.value,
+          "id_terapis": _idTerapis.value,
+          "jam_datang": formattedTime,
+        },
       );
 
       if (response.statusCode == 200) {
@@ -163,7 +207,12 @@ class TerapisConfirmController extends GetxController {
       var response = await dio.put(
         '${myIpAddr()}/kamar_terapis/update_mulai',
         options: Options(headers: {"Authorization": "Bearer " + prefs!}),
-        data: {"id_transaksi": _idTransaksi.value, "id_terapis": _idTerapis.value, "jam_mulai": formattedTime, "sum_durasi_menit": _sumDurasiMenit.value},
+        data: {
+          "id_transaksi": _idTransaksi.value,
+          "id_terapis": _idTerapis.value,
+          "jam_mulai": formattedTime,
+          "sum_durasi_menit": _sumDurasiMenit.value,
+        },
       );
 
       if (response.statusCode == 200) {
@@ -188,7 +237,10 @@ class TerapisConfirm extends StatelessWidget {
   TerapisConfirm({super.key}) {
     // Buat Trigger Controller
     // Get.put(TerapisConfirmController());
-    Get.lazyPut<TerapisConfirmController>(() => TerapisConfirmController(), fenix: false);
+    Get.lazyPut<TerapisConfirmController>(
+      () => TerapisConfirmController(),
+      fenix: false,
+    );
   }
 
   @override
@@ -207,8 +259,16 @@ class TerapisConfirm extends StatelessWidget {
               margin: EdgeInsets.only(top: 20),
               width: 150,
               height: 150,
-              decoration: BoxDecoration(border: Border.all(width: 0, color: Colors.black), borderRadius: BorderRadius.all(Radius.circular(200))),
-              child: ClipOval(child: Image(image: AssetImage('assets/spa.jpg'), fit: BoxFit.cover)),
+              decoration: BoxDecoration(
+                border: Border.all(width: 0, color: Colors.black),
+                borderRadius: BorderRadius.all(Radius.circular(200)),
+              ),
+              child: ClipOval(
+                child: Image(
+                  image: AssetImage('assets/spa.jpg'),
+                  fit: BoxFit.cover,
+                ),
+              ),
             ),
             Container(
               width: Get.width * 0.75,
@@ -217,10 +277,21 @@ class TerapisConfirm extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Obx(() => Text('Detail Pesanan : ${c._idTransaksi.value}', style: TextStyle(fontSize: 30, fontFamily: 'Poppins'))),
+                  Obx(
+                    () => Text(
+                      'Detail Pesanan : ${c._idTransaksi.value}',
+                      style: TextStyle(fontSize: 30, fontFamily: 'Poppins'),
+                    ),
+                  ),
                   Container(
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
-                    padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 5.0,
+                      horizontal: 10.0,
+                    ),
                     width: Get.width,
                     height: 160,
                     child: SingleChildScrollView(
@@ -232,24 +303,88 @@ class TerapisConfirm extends StatelessWidget {
                                 children: [
                                   Row(
                                     children: [
-                                      Expanded(flex: 2, child: Text("Id & Nama Paket", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'))),
-                                      Expanded(child: Text("Durasi (Menit)", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'))),
-                                      Expanded(child: Text("Deskripsi Paket", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'))),
-                                      Expanded(child: Text("Tgl Transaksi", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'))),
-                                      Flexible(child: Text("Is Add On", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'))),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Text(
+                                          "Id & Nama Paket",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: 'Poppins',
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Text(
+                                          "Durasi (Menit)",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: 'Poppins',
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Text(
+                                          "Deskripsi Paket",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: 'Poppins',
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Text(
+                                          "Tgl Transaksi",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: 'Poppins',
+                                          ),
+                                        ),
+                                      ),
+                                      Flexible(
+                                        child: Text(
+                                          "Is Add On",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: 'Poppins',
+                                          ),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                   for (var item in c._dataPaket)
                                     Row(
                                       children: [
-                                        Expanded(flex: 2, child: Text("${item['id_paket']} - ${item['nama_paket_msg']}")),
-                                        Expanded(child: Text("${item['total_durasi']} Menit")),
-                                        Expanded(child: Text("${item['deskripsi_paket']}")),
-                                        Expanded(child: Text("${(item['tgl_transaksi'] as String).split("T")[0]}")),
+                                        Expanded(
+                                          flex: 2,
+                                          child: Text(
+                                            "${item['id_paket']} - ${item['nama_paket_msg']}",
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Text(
+                                            "${item['total_durasi']} Menit",
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Text(
+                                            "${item['deskripsi_paket']}",
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Text(
+                                            "${(item['tgl_transaksi'] as String).split("T")[0]}",
+                                          ),
+                                        ),
                                         Flexible(
                                           child: SizedBox(
-                                            height: 24, // Fixed height matching text
-                                            child: Icon(item['is_addon'] == 1 ? Icons.check : Icons.cancel, size: 20),
+                                            height:
+                                                24, // Fixed height matching text
+                                            child: Icon(
+                                              item['is_addon'] == 1
+                                                  ? Icons.check
+                                                  : Icons.cancel,
+                                              size: 20,
+                                            ),
                                           ),
                                         ),
                                       ],
@@ -267,22 +402,72 @@ class TerapisConfirm extends StatelessWidget {
                                   SizedBox(height: 10),
                                   Row(
                                     children: [
-                                      Expanded(child: Text("Id & Nama Produk", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'))),
-                                      Expanded(child: Text("Durasi (Menit)", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'))),
-                                      Expanded(child: Text("Tanggal Transaksi", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'))),
-                                      Expanded(child: Text("Is Add On", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'))),
+                                      Expanded(
+                                        child: Text(
+                                          "Id & Nama Produk",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: 'Poppins',
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Text(
+                                          "Durasi (Menit)",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: 'Poppins',
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Text(
+                                          "Tanggal Transaksi",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: 'Poppins',
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Text(
+                                          "Is Add On",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: 'Poppins',
+                                          ),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                   for (var item in c._dataProduk)
                                     Row(
                                       children: [
-                                        Expanded(child: Text("${item['id_produk']} - ${item['nama_produk']}")),
-                                        Expanded(child: Text("${item['total_durasi']} Menit")),
-                                        Expanded(child: Text("${(item['tgl_transaksi'] as String).split("T")[0]}")),
+                                        Expanded(
+                                          child: Text(
+                                            "${item['id_produk']} - ${item['nama_produk']}",
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Text(
+                                            "${item['total_durasi']} Menit",
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Text(
+                                            "${(item['tgl_transaksi'] as String).split("T")[0]}",
+                                          ),
+                                        ),
                                         Flexible(
                                           child: SizedBox(
-                                            height: 24, // Fixed height matching text
-                                            child: Icon(item['is_addon'] == 1 ? Icons.check : Icons.cancel, size: 20),
+                                            height:
+                                                24, // Fixed height matching text
+                                            child: Icon(
+                                              item['is_addon'] == 1
+                                                  ? Icons.check
+                                                  : Icons.cancel,
+                                              size: 20,
+                                            ),
                                           ),
                                         ),
                                       ],
@@ -300,20 +485,56 @@ class TerapisConfirm extends StatelessWidget {
                                   SizedBox(height: 10),
                                   Row(
                                     children: [
-                                      Expanded(child: Text("Id & Nama Food", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'))),
-                                      Expanded(child: Text("Qty", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'))),
-                                      Expanded(child: Text("Is Add On", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'))),
+                                      Expanded(
+                                        child: Text(
+                                          "Id & Nama Food",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: 'Poppins',
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Text(
+                                          "Qty",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: 'Poppins',
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Text(
+                                          "Is Add On",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: 'Poppins',
+                                          ),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                   for (var item in c._dataFood)
                                     Row(
                                       children: [
-                                        Expanded(child: Text("${item['id_fnb']} - ${item['nama_fnb']}")),
-                                        Expanded(child: Text("${item['qty']} Pcs")),
+                                        Expanded(
+                                          child: Text(
+                                            "${item['id_fnb']} - ${item['nama_fnb']}",
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Text("${item['qty']} Pcs"),
+                                        ),
                                         Flexible(
                                           child: SizedBox(
-                                            height: 24, // Fixed height matching text
-                                            child: Icon(item['is_addon'] == 1 ? Icons.check : Icons.cancel, size: 20),
+                                            height:
+                                                24, // Fixed height matching text
+                                            child: Icon(
+                                              item['is_addon'] == 1
+                                                  ? Icons.check
+                                                  : Icons.cancel,
+                                              size: 20,
+                                            ),
                                           ),
                                         ),
                                       ],
@@ -340,10 +561,21 @@ class TerapisConfirm extends StatelessWidget {
                           // c.isButtonReadyVisible.value = false;
                           // c.isButtonStartVisible.value = true;
 
-                          if (c._dataPaket.isEmpty && c._dataProduk.isEmpty && c._dataFood.isEmpty) {
+                          if (c._dataPaket.isEmpty &&
+                              c._dataProduk.isEmpty &&
+                              c._dataFood.isEmpty) {
                             CherryToast.error(
-                              title: Text("Tidak Ada Data", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
-                              animationDuration: const Duration(milliseconds: 1500),
+                              title: Text(
+                                "Tidak Ada Data",
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Poppins',
+                                ),
+                              ),
+                              animationDuration: const Duration(
+                                milliseconds: 1500,
+                              ),
                               autoDismiss: true,
                             ).show(Get.context!); // Use Get.context!
                             return;
@@ -358,15 +590,31 @@ class TerapisConfirm extends StatelessWidget {
                           child: Align(
                             alignment: Alignment.topRight,
                             child: Container(
-                              decoration: BoxDecoration(border: Border.all(color: Colors.white), color: Colors.white, borderRadius: BorderRadius.circular(15)),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.white),
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(15),
+                              ),
                               height: 170,
                               width: 150,
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  Padding(padding: EdgeInsets.only(top: 10), child: Icon(Icons.check_rounded, size: 120)),
-                                  Padding(padding: EdgeInsets.only(top: 1), child: Text('Ready', style: TextStyle(fontSize: 20, fontFamily: 'Poppins'))),
+                                  Padding(
+                                    padding: EdgeInsets.only(top: 10),
+                                    child: Icon(Icons.check_rounded, size: 120),
+                                  ),
+                                  Padding(
+                                    padding: EdgeInsets.only(top: 1),
+                                    child: Text(
+                                      'Ready',
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontFamily: 'Poppins',
+                                      ),
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -385,11 +633,14 @@ class TerapisConfirm extends StatelessWidget {
                           child: GestureDetector(
                             onTap: () {
                               c._updateJamMulai().then((_) async {
-                                await Future.delayed(Duration(milliseconds: 500));
+                                await Future.delayed(
+                                  Duration(milliseconds: 500),
+                                );
 
                                 c._kamarTerapisMgr.setData({
                                   "idTransaksi": c._idTransaksi.value,
-                                  "idDetailTransaksi": c._idDetailTransaksi.value,
+                                  "idDetailTransaksi":
+                                      c._idDetailTransaksi.value,
                                   "kodeRuangan": c._kodeRuangan.value,
                                   "sumDurasi": c._sumDurasiMenit.value,
                                   "namaRuangan": c._namaRuangan.value,
@@ -418,7 +669,11 @@ class TerapisConfirm extends StatelessWidget {
                             },
                             child: Container(
                               margin: EdgeInsets.only(top: 15),
-                              decoration: BoxDecoration(border: Border.all(color: Colors.white), color: Colors.white, borderRadius: BorderRadius.circular(15)),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.white),
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(15),
+                              ),
                               height: 170,
                               width: 150,
                               child: Column(
@@ -426,7 +681,16 @@ class TerapisConfirm extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Icon(Icons.timer_rounded, size: 120),
-                                  Padding(padding: EdgeInsets.only(top: 1), child: Text('Start', style: TextStyle(fontSize: 20, fontFamily: 'Poppins'))),
+                                  Padding(
+                                    padding: EdgeInsets.only(top: 1),
+                                    child: Text(
+                                      'Start',
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontFamily: 'Poppins',
+                                      ),
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -444,17 +708,25 @@ class TerapisConfirm extends StatelessWidget {
                   height: 81,
                   decoration: BoxDecoration(
                     color: Color(0xFF333333).withOpacity(0.4),
-                    borderRadius: BorderRadius.only(topRight: Radius.circular(10), bottomRight: Radius.circular(10)),
+                    borderRadius: BorderRadius.only(
+                      topRight: Radius.circular(10),
+                      bottomRight: Radius.circular(10),
+                    ),
                   ),
                   child: Container(
                     padding: EdgeInsets.only(left: 20),
                     child: Row(
                       children: [
                         Container(
-                          decoration: BoxDecoration(border: Border.all(), shape: BoxShape.circle),
+                          decoration: BoxDecoration(
+                            border: Border.all(),
+                            shape: BoxShape.circle,
+                          ),
                           width: 70,
                           height: 70,
-                          child: CircleAvatar(child: Text('Y', style: TextStyle(fontSize: 25))),
+                          child: CircleAvatar(
+                            child: Text('Y', style: TextStyle(fontSize: 25)),
+                          ),
                         ),
                         Obx(
                           () => Column(
@@ -463,11 +735,23 @@ class TerapisConfirm extends StatelessWidget {
                             children: [
                               Padding(
                                 padding: EdgeInsets.only(top: 7, left: 20),
-                                child: Text('Room : ${c._namaRuangan.value}', style: TextStyle(fontSize: 25, fontFamily: 'Poppins')),
+                                child: Text(
+                                  'Room : ${c._namaRuangan.value}',
+                                  style: TextStyle(
+                                    fontSize: 25,
+                                    fontFamily: 'Poppins',
+                                  ),
+                                ),
                               ),
                               Padding(
                                 padding: EdgeInsets.only(left: 20),
-                                child: Text('Terapis : ${c._namaTerapis.value}', style: TextStyle(fontSize: 25, fontFamily: 'Poppins')),
+                                child: Text(
+                                  'Terapis : ${c._namaTerapis.value} ${c._namaTerapis2.value == '' ? '' : ','} ${c._namaTerapis2.value} ${c._namaTerapis3.value == '' ? '' : ','} ${c._namaTerapis3.value}',
+                                  style: TextStyle(
+                                    fontSize: 25,
+                                    fontFamily: 'Poppins',
+                                  ),
+                                ),
                               ),
                             ],
                           ),
@@ -492,7 +776,9 @@ class TerapisConfirm extends StatelessWidget {
                   bool? result = await Get.dialog(
                     AlertDialog(
                       title: const Text("Keluar Menu?"),
-                      content: const Text("Apakah Yakin Ingin Keluar? Progress anda Akan Dihapus"),
+                      content: const Text(
+                        "Apakah Yakin Ingin Keluar? Progress anda Akan Dihapus",
+                      ),
                       actions: [
                         ElevatedButton(
                           onPressed: () {

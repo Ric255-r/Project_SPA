@@ -144,6 +144,8 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
 
     String namaTerapis = _kamarTerapisMgr.getData()['namaTerapis'];
     _namaTerapis.value = namaTerapis;
+
+    getterapistambahan();
   }
 
   final RxInt timeSpent = RxInt(0);
@@ -334,6 +336,48 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
         _deleteWaktuTemp();
       } else {
         log("Error di fn _checkAndNavigate");
+      }
+    }
+  }
+
+  Future<void> getterapistambahan() async {
+    try {
+      String idTransaksi = _kamarTerapisMgr.getData()['idTransaksi'];
+      var response3 = await dio.get(
+        '${myIpAddr()}/kamar_terapis/dataterapistambahan',
+        data: {"id_transaksi": idTransaksi},
+      );
+
+      List<dynamic> responseTerapis = response3.data;
+
+      dataterapistambahan.assignAll(
+        responseTerapis.map((e) => Map<String, dynamic>.from(e)).toList(),
+      );
+
+      log(dataterapistambahan[0].toString());
+      if (idTransaksi != '') {
+        namaterapis2.value = dataterapistambahan[0]['nama_karyawan'];
+        namaterapis3.value = dataterapistambahan[1]['nama_karyawan'];
+      }
+    } catch (e) {
+      if (e is DioException) {
+        log("Error di getdataterapistambahan ${e.response!.data}");
+      }
+    }
+  }
+
+  Future<void> setstatusterapisttambahan() async {
+    try {
+      var response = await dio.put(
+        '${myIpAddr()}/kamar_terapis/setstatusterapistambahan',
+        data: {
+          "namaterapis2": namaterapis2.value,
+          "namaterapis3": namaterapis3.value,
+        },
+      );
+    } catch (e) {
+      if (e is DioException) {
+        log("Error di setstatusterapistambahan ${e.response}");
       }
     }
   }
@@ -572,8 +616,12 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
   RxList<Map<String, dynamic>> _listTerapis = <Map<String, dynamic>>[].obs;
   RxString _idCurrentTerapis = "".obs;
   RxString _idTargetTerapis = "".obs;
+  RxList<dynamic> dataterapistambahan = [].obs;
+  RxString namaterapis2 = ''.obs;
+  RxString namaterapis3 = ''.obs;
 
   RxString _namaTerapis = "".obs;
+
   Future<void> _getTerapis() async {
     try {
       var response = await dio.get('${myIpAddr()}/listpekerja/dataterapis');
@@ -1297,6 +1345,15 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
                                   Get.back();
                                   inputkomisi();
                                   _checkAndNavigate();
+
+                                  if (namaterapis2.value != '' ||
+                                      namaterapis3.value != '') {
+                                    setstatusterapisttambahan();
+                                    log('jalankan');
+                                  }
+
+                                  namaterapis2.value = '';
+                                  namaterapis3.value = '';
                                 },
                                 child: Text('Confirm'),
                               ),
@@ -1475,7 +1532,7 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
                                           padding: EdgeInsets.only(left: 20),
                                           child: Obx(
                                             () => Text(
-                                              'Terapis : ${_namaTerapis.value}',
+                                              'Terapis : ${_namaTerapis.value} ${namaterapis2.value == '' ? '' : ','} ${namaterapis2.value} ${namaterapis3.value == '' ? '' : ','} ${namaterapis3.value}',
                                               style: TextStyle(
                                                 fontSize: 25,
                                                 fontFamily: 'Poppins',
