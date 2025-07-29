@@ -574,10 +574,10 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                             Row(
                               children: [
                                 Expanded(child: Text("Nama Bank: ", style: TextStyle(fontFamily: 'Poppins'))),
-                                Obx(
-                                  () => Expanded(
-                                    flex: 3,
-                                    child: DropdownButtonFormField<String>(
+                                Expanded(
+                                  flex: 3,
+                                  child: Obx(
+                                    () => DropdownButtonFormField<String>(
                                       value: _selectedBank?.value,
                                       onChanged: (String? value) {
                                         _selectedBank!.value = value!;
