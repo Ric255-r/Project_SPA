@@ -631,7 +631,6 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                   _totalBayarController.clear();
                                   _kembalianController.clear();
                                   kembalian = 0;
-
                                   dropdownValue = value!;
                                 });
                               },
@@ -758,42 +757,40 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                 ),
                               ],
                             ),
-                            Obx(
-                              () => Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      "Nama Bank: ",
-                                      style: TextStyle(fontFamily: 'Poppins'),
-                                    ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    "Nama Bank: ",
+                                    style: TextStyle(fontFamily: 'Poppins'),
                                   ),
-                                  Expanded(
-                                    flex: 3,
-                                    child: DropdownButtonFormField<String>(
-                                      value: _selectedBank,
-                                      onChanged: (String? Value) {
-                                        setState(() {
-                                          _selectedBank = Value!;
-                                        });
-                                      },
-                                      items:
-                                          _bankList.map((String bank) {
-                                            return DropdownMenuItem<String>(
-                                              value: bank,
-                                              child: Text(bank),
-                                            );
-                                          }).toList(),
-                                      decoration: InputDecoration(
-                                        border: OutlineInputBorder(),
-                                        contentPadding: EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                          vertical: 12,
-                                        ),
+                                ),
+                                Expanded(
+                                  flex: 3,
+                                  child: DropdownButtonFormField<String>(
+                                    value: _selectedBank,
+                                    onChanged: (String? Value) {
+                                      setState(() {
+                                        _selectedBank = Value!;
+                                      });
+                                    },
+                                    items:
+                                        _bankList.map((String bank) {
+                                          return DropdownMenuItem<String>(
+                                            value: bank,
+                                            child: Text(bank),
+                                          );
+                                        }).toList(),
+                                    decoration: InputDecoration(
+                                      border: OutlineInputBorder(),
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 12,
                                       ),
                                     ),
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
