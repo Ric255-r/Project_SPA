@@ -221,7 +221,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
   RxString varJenisPembayaran = jenisPembayaran.first.obs;
 
-  RxString? _selectedBank;
+  RxnString _selectedBank = RxnString(null);
   final RxList<String> _bankList = ['BCA', 'BNI', 'BRI', 'Mandiri'].obs;
 
   Future<void> _storeTrans() async {
@@ -301,6 +301,9 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
         animationDuration: const Duration(milliseconds: 2000),
         autoDismiss: true,
       ).show(context);
+      if (e is DioException) {
+        log("Error fnStoreTrans Dio ${e.response!.data}");
+      }
       log("Error fn storeTrans $e");
     }
   }
@@ -578,7 +581,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                   flex: 3,
                                   child: Obx(
                                     () => DropdownButtonFormField<String>(
-                                      value: _selectedBank?.value,
+                                      value: _selectedBank!.value,
                                       onChanged: (String? value) {
                                         _selectedBank!.value = value!;
                                       },
@@ -618,7 +621,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                       }
                     }
 
-                    if (kembalian < 0 || _kembalianController.text == "" || int.tryParse(_kembalianController.text.replaceAll("Rp. ", ""))! < 0) {
+                    if (kembalian < 0) {
                       CherryToast.error(
                         title: Text("Jumlah Bayar Kurang", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
                         animationDuration: const Duration(milliseconds: 1500),
@@ -838,7 +841,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                   Container(
                     margin: const EdgeInsets.only(top: 20),
                     padding: const EdgeInsets.only(left: 10, top: 15),
-                    height: Get.height - 155,
+                    // height: Get.height - 145,
                     width: Get.width - 200,
                     decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
                     child: Column(
