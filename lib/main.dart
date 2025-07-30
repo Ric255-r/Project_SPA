@@ -295,7 +295,7 @@ class _LoginPageState extends State<LoginPage> {
           Get.to(() => MainKamarTerapis());
           break;
         case "gro":
-          Get.to(() => MainRt());
+          Get.to(() => PageKomisiPekerja());
           break;
         case "admin":
           Get.to(() => MainAdmin());

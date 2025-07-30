@@ -813,9 +813,6 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
                       String cleanedtotalbayar = cleaned.replaceAll('.', '');
 
-                      print(_totalBayarController.text);
-                      print(cleanedtotalbayar);
-
                       if (_totalBayarController.text == "" ||
                           _totalBayarController.text.isEmpty ||
                           int.tryParse(cleanedtotalbayar)! <= 0) {
