@@ -254,8 +254,8 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
   RxString varJenisPembayaran = jenisPembayaran.first.obs;
 
-  String? _selectedBank;
-  final List<String> _bankList = ['BCA', 'BNI', 'BRI', 'Mandiri'];
+  RxnString _selectedBank = RxnString(null);
+  final RxList<String> _bankList = ['BCA', 'BNI', 'BRI', 'Mandiri'].obs;
 
   Future<void> _storeTrans() async {
     try {
@@ -304,7 +304,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
           data['jumlah_bayar'] = hrgStlhPjk.value;
           data['nama_akun'] = _namaAkun.text;
           data['no_rek'] = _noRek.text;
-          data['nama_bank'] = _selectedBank;
+          data['nama_bank'] = _selectedBank!.value;
         }
       } else {
         // Panggil Ini Krn Ga lewat dialog
@@ -359,6 +359,9 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
         animationDuration: const Duration(milliseconds: 2000),
         autoDismiss: true,
       ).show(context);
+      if (e is DioException) {
+        log("Error fnStoreTrans Dio ${e.response!.data}");
+      }
       log("Error fn storeTrans $e");
     }
   }
@@ -767,25 +770,25 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                 ),
                                 Expanded(
                                   flex: 3,
-                                  child: DropdownButtonFormField<String>(
-                                    value: _selectedBank,
-                                    onChanged: (String? Value) {
-                                      setState(() {
-                                        _selectedBank = Value!;
-                                      });
-                                    },
-                                    items:
-                                        _bankList.map((String bank) {
-                                          return DropdownMenuItem<String>(
-                                            value: bank,
-                                            child: Text(bank),
-                                          );
-                                        }).toList(),
-                                    decoration: InputDecoration(
-                                      border: OutlineInputBorder(),
-                                      contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 12,
+                                  child: Obx(
+                                    () => DropdownButtonFormField<String>(
+                                      value: _selectedBank!.value,
+                                      onChanged: (String? value) {
+                                        _selectedBank!.value = value!;
+                                      },
+                                      items:
+                                          _bankList.map((String bank) {
+                                            return DropdownMenuItem<String>(
+                                              value: bank,
+                                              child: Text(bank),
+                                            );
+                                          }).toList(),
+                                      decoration: InputDecoration(
+                                        border: OutlineInputBorder(),
+                                        contentPadding: EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 12,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -810,6 +813,9 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
                       String cleanedtotalbayar = cleaned.replaceAll('.', '');
 
+                      print(_totalBayarController.text);
+                      print(cleanedtotalbayar);
+
                       if (_totalBayarController.text == "" ||
                           _totalBayarController.text.isEmpty ||
                           int.tryParse(cleanedtotalbayar)! <= 0) {
@@ -817,12 +823,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                       }
                     }
 
-                    if (kembalian < 0 ||
-                        _kembalianController.text == "" ||
-                        int.tryParse(
-                              _kembalianController.text.replaceAll("Rp. ", ""),
-                            )! <
-                            0) {
+                    if (kembalian < 0) {
                       CherryToast.error(
                         title: Text(
                           "Jumlah Bayar Kurang",
@@ -1126,7 +1127,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                   Container(
                     margin: const EdgeInsets.only(top: 20),
                     padding: const EdgeInsets.only(left: 10, top: 15),
-                    height: Get.height - 155,
+                    // height: Get.height - 145,
                     width: Get.width - 200,
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -1868,7 +1869,7 @@ class _MassageItemGridState extends State<MassageItemGrid> {
       child: SingleChildScrollView(
         controller: _scrollController,
         child: Container(
-          height: MediaQuery.of(context).size.height + 140,
+          // height: MediaQuery.of(context).size.height + 140,
           width: MediaQuery.of(context).size.width - 200,
           padding: const EdgeInsets.only(right: 10),
           child: Column(
