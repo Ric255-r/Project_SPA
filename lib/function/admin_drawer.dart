@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:Project_SPA/admin/list_member.dart';
 import 'package:Project_SPA/admin/listterapis.dart';
 import 'package:Project_SPA/admin/pajak.dart';
+import 'package:Project_SPA/admin/set_harga_vip.dart';
 import 'package:Project_SPA/resepsionis/list_transaksi.dart';
 // import 'package:Project_SPA/admin/list_transaksi.dart';
 import 'package:Project_SPA/resepsionis/list_transaksi.dart';
@@ -381,6 +382,18 @@ class _AdminDrawerState extends State<AdminDrawer> {
                             ),
                             onTap: () {
                               Get.to(() => ListTerapis());
+                            },
+                          ),
+                        ),
+                        Material(
+                          color: Colors.white,
+                          child: ListTile(
+                            title: const Text(
+                              'Set Harga VIP',
+                              style: TextStyle(fontFamily: 'Poppins'),
+                            ),
+                            onTap: () {
+                              Get.to(() => SetHargaVip());
                             },
                           ),
                         ),

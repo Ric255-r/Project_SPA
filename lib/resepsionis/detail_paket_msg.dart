@@ -65,6 +65,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
   var idterapis = "";
   var namaterapis = "";
   var namaruangan = "";
+  var namaroom = '';
   var idterapis2 = "";
   var namaterapis2 = "";
   var idterapis3 = "";
@@ -76,6 +77,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
   // var discSetelahPromo = 0;
   RxInt discSetelahPromo = 0.obs;
   RxString loadupdatetransaksi = 'belum'.obs;
+  Map<String, dynamic> hargavip = {};
 
   void _handleScannedData(String val0, String val1, String val2, String val3) {
     setState(() {
@@ -86,11 +88,34 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
     });
   }
 
+  Future<void> getstatusruangan() async {
+    try {
+      namaroom = controllerPekerja.getroom.value.substring(5);
+      print(namaroom);
+      var response = await dio.get(
+        '${myIpAddr()}/ruangan/getstatus',
+        data: {"nama_ruangan": namaroom},
+      );
+
+      final datalist = response.data as List;
+      final harga = datalist.isNotEmpty ? datalist[0]['hargavip'] ?? 0 : 0;
+
+      Map<String, dynamic> fetcheddata = {"hargavip": harga};
+      setState(() {
+        hargavip = fetcheddata;
+      });
+      print(hargavip.toString());
+    } catch (e) {
+      log("Error di fn getstatusruangan : $e");
+    }
+  }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     getDataHappyHour();
+    getstatusruangan();
     dropdownHappyHour.value = null;
     print('Received idMember: ${widget.idMember}');
     itemTapCounts.clear();
@@ -153,6 +178,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
     double jlhPotongan = totalBefore * doubleDisc;
     double totalStlhDisc = totalBefore - jlhPotongan;
+    totalStlhDisc += hargavip["hargavip"] ?? 0;
 
     // tak boleh disini. error. kupisah ke updateUIWithDiscount()
     // setState(() {
@@ -276,6 +302,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
         "id_transaksi": widget.idTrans,
         "total_harga": rincian['sblm_disc'],
         "disc": rincian['desimal_persen'],
+        "harga_vip": hargavip['hargavip'],
         // grandtotal disini blm termasuk pembulatan. ak bulatin d bwh
         // "grand_total": rincian['stlh_disc'],
         // "gtotal_stlh_pajak": hrgStlhPjk.value,
@@ -818,7 +845,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
                       if (_totalBayarController.text == "" ||
                           _totalBayarController.text.isEmpty ||
-                          int.tryParse(cleanedtotalbayar)! <= 0) {
+                          int.tryParse(cleanedtotalbayar)! < 0) {
                         return;
                       }
                     }
@@ -1417,6 +1444,27 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                             Expanded(
                               child: Text(
                                 formatCurrency.format(discountData['potongan']),
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            Expanded(child: Text("")),
+                            Expanded(child: Text("")),
+                            Expanded(child: Text("")),
+                            Expanded(
+                              child: Text(
+                                "VIP",
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                formatCurrency.format(
+                                  hargavip["hargavip"] ?? 0,
+                                ),
                                 style: TextStyle(fontFamily: 'Poppins'),
                               ),
                             ),
