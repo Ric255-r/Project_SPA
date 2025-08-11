@@ -3,11 +3,8 @@
 import 'dart:async';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/services.dart';
-import 'package:Project_SPA/owner/download_splash.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:open_file/open_file.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 import 'package:Project_SPA/function/our_drawer.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -483,7 +480,7 @@ class IsiOwnerPage extends StatelessWidget {
                             child: Column(
                               children: [
                                 SizedBox(height: 10.w),
-                                Text('Pendapatan Bulanan (dalam ribuan)', style: TextStyle(fontSize: 12.w, fontWeight: FontWeight.bold, height: 1)),
+                                Text('Pendapatan Bulanan', style: TextStyle(fontSize: 12.w, fontWeight: FontWeight.bold, height: 1)),
                                 Obx(() {
                                   if (c.monthlyData.isEmpty) {
                                     return CircularProgressIndicator();
@@ -512,13 +509,16 @@ class IsiOwnerPage extends StatelessWidget {
                               maxScale: 4.0,
                               child: Column(
                                 children: [
-                                  Text("Paket Terlaris", style: TextStyle(fontSize: 12.w, fontFamily: 'Poppins', height: 1, fontWeight: FontWeight.bold)),
+                                  Text(
+                                    "Top 4 Paket Terlaris (Dalam %)",
+                                    style: TextStyle(fontSize: 12.w, fontFamily: 'Poppins', height: 1, fontWeight: FontWeight.bold),
+                                  ),
                                   SizedBox(height: 0.8.w),
                                   Obx(() {
                                     if (c.pieChartData.isEmpty) {
                                       return CircularProgressIndicator();
                                     }
-                                    return Expanded(child: DynamicPieChart(chartData: c.pieChartData));
+                                    return Expanded(child: DynamicBarChart(chartData: c.pieChartData));
                                   }),
                                 ],
                               ),
@@ -540,23 +540,11 @@ class IsiOwnerPage extends StatelessWidget {
   }
 }
 
+// ignore: must_be_immutable
 class MonthlyRevenueChart extends StatelessWidget {
   final List<MonthlySales> salesData;
 
-  List<double> targetSales = [
-    1000000.0,
-    1000000.0,
-    1000000.0,
-    1000000.0,
-    1000000.0,
-    1000000.0,
-    1000000.0,
-    1000000.0,
-    8000000.0,
-    80000000.0,
-    1000000.0,
-    1000000.0,
-  ];
+  List<double> targetSales = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
   MonthlyRevenueChart({super.key, required this.salesData});
 
@@ -567,9 +555,9 @@ class MonthlyRevenueChart extends StatelessWidget {
 
   String formatRupiahShort(double amount) {
     if (amount >= 1000000) {
-      return 'Rp${(amount / 1000000).toStringAsFixed(1)}Jt';
+      return 'Rp${(amount / 1000000).toInt()}Jt';
     } else if (amount >= 10000) {
-      return 'Rp${(amount / 10000).toStringAsFixed(1)}Rb';
+      return 'Rp${(amount / 10000).toInt()}Rb';
     } else {
       return formatRupiah(amount);
     }
@@ -617,7 +605,7 @@ class MonthlyRevenueChart extends StatelessWidget {
 
                   return touchedSpots.map((spot) {
                     final isActual = spot.barIndex == 0; // 0: Actual, 1: Target
-                    final label = isActual ? 'Actual Sales' : 'Target Sales';
+                    final label = isActual ? 'Omset Sales' : 'Target Sales';
                     final formatted = formatRupiah(spot.y);
 
                     // (Opsional) tampilkan juga nama bulan dari sumbu X:
@@ -684,19 +672,19 @@ class MonthlyRevenueChart extends StatelessWidget {
                 belowBarData: BarAreaData(show: false),
                 dotData: FlDotData(show: true),
               ),
-              // Garis Target Sales
-              LineChartBarData(
-                spots:
-                    targetSales.asMap().entries.map((entry) {
-                      return FlSpot(entry.key.toDouble(), entry.value);
-                    }).toList(),
-                isCurved: false,
-                color: Colors.red,
-                barWidth: 2,
-                dashArray: [8, 4], // biar putus-putus, bisa dihapus kalau mau solid
-                belowBarData: BarAreaData(show: false),
-                dotData: FlDotData(show: true), // kalau target gak perlu titik
-              ),
+              // Garis Target Sales. Hidupkan Klo dia udh byr
+              // LineChartBarData(
+              //   spots:
+              //       targetSales.asMap().entries.map((entry) {
+              //         return FlSpot(entry.key.toDouble(), entry.value);
+              //       }).toList(),
+              //   isCurved: false,
+              //   color: Colors.red,
+              //   barWidth: 2,
+              //   dashArray: [8, 4], // biar putus-putus, bisa dihapus kalau mau solid
+              //   belowBarData: BarAreaData(show: false),
+              //   dotData: FlDotData(show: true), // kalau target gak perlu titik
+              // ),
             ],
           ),
         ),
@@ -714,6 +702,190 @@ class MonthlyRevenueChart extends StatelessWidget {
     if (range <= 20000000) return 2000000; // Rp 2M interval
     if (range <= 100000000) return 25000000; // Rp 20m Interval
     return 100000000; // Rp 100Jt interval for larger values
+  }
+}
+
+class DynamicBarChart extends StatefulWidget {
+  final List<ChartData> chartData;
+  const DynamicBarChart({super.key, required this.chartData});
+
+  @override
+  State<DynamicBarChart> createState() => _DynamicBarChartState();
+}
+
+class _DynamicBarChartState extends State<DynamicBarChart> {
+  final RxInt touchedIndex = (-1).obs;
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.chartData.isEmpty) {
+      return const Center(child: Text('Tidak ada data'));
+    }
+
+    final total = widget.chartData.fold<double>(0, (s, e) => s + e.value);
+    final maxVal = widget.chartData.map((e) => e.value).fold<double>(0, (a, b) => a > b ? a : b);
+    final maxY = (maxVal * 1.2).clamp(1.0, double.infinity); // headroom 20%
+    final yInterval = _calcYInterval(maxY);
+
+    // Lebar kanvas agar bisa discroll kalau item banyak
+    final double barWidth = 14.0;
+    // final double groupSpace = 18.0;
+    // final double minCanvasWidth = widget.chartData.length * (barWidth + groupSpace) + 40;
+
+    final barGroups = List.generate(widget.chartData.length, (i) {
+      final data = widget.chartData[i];
+      final isTouched = i == touchedIndex.value;
+      return BarChartGroupData(
+        x: i,
+        barsSpace: 4,
+        barRods: [
+          BarChartRodData(
+            toY: data.value,
+            color: data.color,
+            width: isTouched ? barWidth + 6 : barWidth,
+            borderSide: isTouched ? BorderSide(color: Colors.black.withOpacity(0.2), width: 1) : BorderSide.none,
+            borderRadius: BorderRadius.circular(6),
+            rodStackItems: const [], // kalau mau stacked nanti tinggal isi
+          ),
+        ],
+      );
+    });
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Kanvas chart yang bisa horizontal scroll kalau label/batang banyak
+        Padding(
+          padding: EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 16.0),
+          child: SizedBox(
+            height: 220, // atur sesuai layout kamu; bisa juga 100.w seperti sebelumnya
+            width: Get.width,
+            child: SizedBox(
+              width: double.infinity,
+              child: BarChart(
+                BarChartData(
+                  maxY: maxY,
+                  minY: 0,
+                  barGroups: barGroups,
+                  barTouchData: BarTouchData(
+                    enabled: true,
+                    handleBuiltInTouches: false,
+                    touchTooltipData: BarTouchTooltipData(
+                      tooltipRoundedRadius: 8,
+                      getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                        final data = widget.chartData[groupIndex];
+                        final pct = total > 0 ? (data.value / total * 100) : 0;
+                        return BarTooltipItem(
+                          '${data.label}\n'
+                          'Qty: ${_fmtNumber(data.value)}\n'
+                          'Share: ${pct.toStringAsFixed(1)}%',
+                          const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        );
+                      },
+                    ),
+                    touchCallback: (event, response) {
+                      if (!event.isInterestedForInteractions || response == null || response.spot == null) {
+                        touchedIndex.value = -1;
+                        return;
+                      }
+                      touchedIndex.value = response.spot!.touchedBarGroupIndex;
+                    },
+                  ),
+                  gridData: FlGridData(show: true, drawVerticalLine: false, horizontalInterval: yInterval),
+                  titlesData: FlTitlesData(
+                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 35,
+                        getTitlesWidget: (value, meta) {
+                          final idx = value.toInt();
+                          if (idx < 0 || idx >= widget.chartData.length) return const SizedBox.shrink();
+                          final label = widget.chartData[idx].label;
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 6.0),
+                            child: SizedBox(
+                              width: 120, // mainkan width disini
+                              child: Text(
+                                label,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontSize: 10),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 46,
+                        interval: yInterval,
+                        getTitlesWidget:
+                            (value, meta) =>
+                                Padding(padding: const EdgeInsets.only(right: 6.0), child: Text(_fmtNumber(value), style: const TextStyle(fontSize: 10))),
+                      ),
+                    ),
+                  ),
+
+                  borderData: FlBorderData(
+                    show: true,
+                    border: const Border(left: BorderSide(color: Colors.black12), bottom: BorderSide(color: Colors.black12)),
+                  ),
+                  alignment: BarChartAlignment.spaceAround,
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // Legend custom
+        Wrap(
+          spacing: 16,
+          runSpacing: 8,
+          children: List.generate(widget.chartData.length, (i) {
+            final d = widget.chartData[i];
+            final pct = total > 0 ? (d.value / total * 100) : 0;
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(width: 16, height: 16, decoration: BoxDecoration(color: d.color, shape: BoxShape.circle)),
+                const SizedBox(width: 8),
+                Text('${d.label} (${pct.toStringAsFixed(1)}%)', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+              ],
+            );
+          }),
+        ),
+      ],
+    );
+  }
+
+  // Interval Y yang “rapi”
+  double _calcYInterval(double maxY) {
+    if (maxY <= 10) return 2;
+    if (maxY <= 50) return 10;
+    if (maxY <= 100) return 20;
+    if (maxY <= 500) return 100;
+    if (maxY <= 1000) return 200;
+    if (maxY <= 5000) return 1000;
+    if (maxY <= 10000) return 2000;
+    return maxY / 5; // fallback 5 garis
+  }
+
+  // String _shortLabel(String s) {
+  //   if (s.length <= 10) return s;
+  //   return s.substring(0, 10) + '…';
+  // }
+
+  String _fmtNumber(num v) {
+    // Format ringkas: 1.2K / 3.4Jt, dsb
+    final d = v.toDouble();
+    if (d >= 1000000) return '${(d / 1000000).toStringAsFixed(1)}Jt';
+    if (d >= 1000) return '${(d / 1000).toStringAsFixed(1)}Rb';
+    return d.toStringAsFixed(d % 1 == 0 ? 0 : 1);
   }
 }
 
