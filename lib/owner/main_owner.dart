@@ -760,83 +760,79 @@ class _DynamicBarChartState extends State<DynamicBarChart> {
           child: SizedBox(
             height: 220, // atur sesuai layout kamu; bisa juga 100.w seperti sebelumnya
             width: Get.width,
-            child: SizedBox(
-              width: double.infinity,
-              child: BarChart(
-                BarChartData(
-                  maxY: maxY,
-                  minY: 0,
-                  barGroups: barGroups,
-                  barTouchData: BarTouchData(
-                    enabled: true,
-                    handleBuiltInTouches: false,
-                    touchTooltipData: BarTouchTooltipData(
-                      tooltipRoundedRadius: 8,
-                      getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                        final data = widget.chartData[groupIndex];
-                        final pct = total > 0 ? (data.value / total * 100) : 0;
-                        return BarTooltipItem(
-                          '${data.label}\n'
-                          'Qty: ${_fmtNumber(data.value)}\n'
-                          'Share: ${pct.toStringAsFixed(1)}%',
-                          const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            child: BarChart(
+              BarChartData(
+                maxY: maxY,
+                minY: 0,
+                barGroups: barGroups,
+                barTouchData: BarTouchData(
+                  enabled: true,
+                  handleBuiltInTouches: true,
+                  touchTooltipData: BarTouchTooltipData(
+                    tooltipRoundedRadius: 8,
+                    fitInsideHorizontally: true,
+                    fitInsideVertically: true,
+                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                      final data = widget.chartData[groupIndex];
+                      final pct = total > 0 ? (data.value / total * 100) : 0;
+                      return BarTooltipItem(
+                        '${data.label.trim().toUpperCase()}.\n'
+                        'Ratio: ${pct.toStringAsFixed(1)}%',
+                        const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10),
+                      );
+                    },
+                  ),
+                  touchCallback: (event, response) {
+                    if (!event.isInterestedForInteractions || response == null || response.spot == null) {
+                      touchedIndex.value = -1;
+                      return;
+                    }
+                    touchedIndex.value = response.spot!.touchedBarGroupIndex;
+                  },
+                ),
+                gridData: FlGridData(show: true, drawVerticalLine: false, horizontalInterval: yInterval),
+                titlesData: FlTitlesData(
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 35,
+                      getTitlesWidget: (value, meta) {
+                        final idx = value.toInt();
+                        if (idx < 0 || idx >= widget.chartData.length) return const SizedBox.shrink();
+                        final label = widget.chartData[idx].label;
+                        // log("Width dari double infinity ${Get.width}");
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 6.0),
+                          child: SizedBox(
+                            width: (Get.width - 50) / 4, // mainkan width disini
+                            child: Text(
+                              label.toUpperCase(),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(fontSize: 10),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                         );
                       },
                     ),
-                    touchCallback: (event, response) {
-                      if (!event.isInterestedForInteractions || response == null || response.spot == null) {
-                        touchedIndex.value = -1;
-                        return;
-                      }
-                      touchedIndex.value = response.spot!.touchedBarGroupIndex;
-                    },
                   ),
-                  gridData: FlGridData(show: true, drawVerticalLine: false, horizontalInterval: yInterval),
-                  titlesData: FlTitlesData(
-                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 35,
-                        getTitlesWidget: (value, meta) {
-                          final idx = value.toInt();
-                          if (idx < 0 || idx >= widget.chartData.length) return const SizedBox.shrink();
-                          final label = widget.chartData[idx].label;
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 6.0),
-                            child: SizedBox(
-                              width: 120, // mainkan width disini
-                              child: Text(
-                                label,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(fontSize: 10),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 46,
-                        interval: yInterval,
-                        getTitlesWidget:
-                            (value, meta) =>
-                                Padding(padding: const EdgeInsets.only(right: 6.0), child: Text(_fmtNumber(value), style: const TextStyle(fontSize: 10))),
-                      ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 46,
+                      interval: yInterval,
+                      getTitlesWidget:
+                          (value, meta) =>
+                              Padding(padding: const EdgeInsets.only(right: 6.0), child: Text(_fmtNumber(value), style: const TextStyle(fontSize: 10))),
                     ),
                   ),
-
-                  borderData: FlBorderData(
-                    show: true,
-                    border: const Border(left: BorderSide(color: Colors.black12), bottom: BorderSide(color: Colors.black12)),
-                  ),
-                  alignment: BarChartAlignment.spaceAround,
                 ),
+
+                borderData: FlBorderData(show: true, border: const Border(left: BorderSide(color: Colors.black12), bottom: BorderSide(color: Colors.black12))),
+                alignment: BarChartAlignment.spaceAround,
               ),
             ),
           ),
