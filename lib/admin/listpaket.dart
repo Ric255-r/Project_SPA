@@ -2505,7 +2505,8 @@ class _ListpaketState extends State<Listpaket> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isMobile = MediaQuery.of(context).size.shortestSide < 600;
+    final shortest = MediaQuery.of(context).size.shortestSide;
+    final bool isMobile = shortest < 600 || shortest > 700;
     log("isi Shortest Side ${MediaQuery.of(context).size.shortestSide}");
     // =======================================================================
 
@@ -4362,8 +4363,8 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
           return AlertDialog(
             content: SingleChildScrollView(
               child: Container(
-                width: Get.width - 100,
-                height: Get.height - 200,
+                width: Get.width * 0.9,
+                height: Get.height - 80,
                 child: ListView(
                   children: [
                     Row(
@@ -4447,7 +4448,7 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                           padding: const EdgeInsets.only(top: 20),
                           child: Container(
                             height: 400,
-                            width: 500,
+                            width: Get.width * 0.55,
                             child: Padding(
                               padding: EdgeInsets.only(left: 10),
                               child: Column(
@@ -4456,7 +4457,7 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                   SizedBox(height: 12),
                                   Container(
                                     alignment: Alignment.centerLeft,
-                                    width: 480,
+                                    width: Get.width * 0.55,
                                     height: 30,
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(10),
@@ -4480,7 +4481,7 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                   SizedBox(height: 12),
                                   Container(
                                     alignment: Alignment.centerLeft,
-                                    width: 480,
+                                    width: Get.width * 0.55,
                                     height: 30,
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(10),
@@ -4510,7 +4511,7 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                     children: [
                                       Container(
                                         alignment: Alignment.centerLeft,
-                                        width: 120,
+                                        width: Get.width * 0.1,
                                         height: 30,
                                         decoration: BoxDecoration(
                                           borderRadius: BorderRadius.circular(
@@ -4707,7 +4708,7 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                                   child: Container(
                                                     alignment:
                                                         Alignment.centerLeft,
-                                                    width: 480,
+                                                    width: Get.width * 0.55,
                                                     height: 30,
                                                     child: Row(
                                                       children: [
@@ -4776,7 +4777,7 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                                   child: Container(
                                                     alignment:
                                                         Alignment.centerLeft,
-                                                    width: 480,
+                                                    width: Get.width * 0.55,
                                                     height: 30,
                                                     child: Row(
                                                       children: [
@@ -4849,7 +4850,7 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                                   child: Container(
                                                     alignment:
                                                         Alignment.centerLeft,
-                                                    width: 480,
+                                                    width: Get.width * 0.55,
                                                     height: 30,
                                                     child: Row(
                                                       children: [
@@ -4918,7 +4919,7 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                                   child: Container(
                                                     alignment:
                                                         Alignment.centerLeft,
-                                                    width: 480,
+                                                    width: Get.width * 0.55,
                                                     height: 30,
                                                     child: Row(
                                                       children: [
@@ -4986,7 +4987,7 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                   SizedBox(height: 12),
                                   Container(
                                     alignment: Alignment.centerLeft,
-                                    width: 480,
+                                    width: Get.width * 0.55,
                                     height: 30,
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(10),
@@ -5071,8 +5072,8 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
           return AlertDialog(
             content: SingleChildScrollView(
               child: Container(
-                width: Get.width - 100,
-                height: Get.height - 200,
+                width: Get.width * 0.9,
+                height: Get.height * 0.8,
                 child: ListView(
                   children: [
                     Row(
@@ -5133,7 +5134,7 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                           child: Container(
                             margin: EdgeInsets.only(top: 20),
                             height: 230,
-                            width: 500,
+                            width: Get.width * 0.55,
                             child: Padding(
                               padding: EdgeInsets.only(left: 10),
                               child: Column(
@@ -5142,7 +5143,7 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                   SizedBox(height: 12),
                                   Container(
                                     alignment: Alignment.centerLeft,
-                                    width: 480,
+                                    width: Get.width * 0.55,
                                     height: 30,
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(10),
@@ -5166,7 +5167,7 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                   SizedBox(height: 12),
                                   Container(
                                     alignment: Alignment.centerLeft,
-                                    width: 480,
+                                    width: Get.width * 0.55,
                                     height: 30,
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(10),
@@ -5194,7 +5195,7 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                   SizedBox(height: 12),
                                   Container(
                                     alignment: Alignment.centerLeft,
-                                    width: 480,
+                                    width: Get.width * 0.55,
                                     height: 30,
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(10),
@@ -5342,8 +5343,8 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
             scrollable: true,
             content: SingleChildScrollView(
               child: Container(
-                width: Get.width - 100,
-                height: Get.height - 200,
+                width: Get.width * 0.9,
+                height: Get.height * 0.7,
                 child: ListView(
                   shrinkWrap: true,
                   children: [
@@ -5427,7 +5428,7 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                           padding: const EdgeInsets.only(top: 20),
                           child: Container(
                             height: 370,
-                            width: 500,
+                            width: Get.width * 0.55,
                             child: Padding(
                               padding: EdgeInsets.only(left: 10),
                               child: Column(
@@ -5436,7 +5437,7 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                   SizedBox(height: 12),
                                   Container(
                                     alignment: Alignment.centerLeft,
-                                    width: 480,
+                                    width: Get.width * 0.55,
                                     height: 30,
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(10),
@@ -5460,7 +5461,7 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                   SizedBox(height: 12),
                                   Container(
                                     alignment: Alignment.centerLeft,
-                                    width: 480,
+                                    width: Get.width * 0.55,
                                     height: 30,
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(10),
@@ -5490,7 +5491,7 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                     children: [
                                       Container(
                                         alignment: Alignment.centerLeft,
-                                        width: 120,
+                                        width: Get.width * 0.15,
                                         height: 30,
                                         decoration: BoxDecoration(
                                           borderRadius: BorderRadius.circular(
@@ -5672,7 +5673,7 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                                   child: Container(
                                                     alignment:
                                                         Alignment.centerLeft,
-                                                    width: 480,
+                                                    width: Get.width * 0.55,
                                                     height: 30,
                                                     child: Row(
                                                       children: [
@@ -5739,7 +5740,7 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                                   child: Container(
                                                     alignment:
                                                         Alignment.centerLeft,
-                                                    width: 480,
+                                                    width: Get.width * 0.55,
                                                     height: 30,
                                                     child: Row(
                                                       children: [
@@ -5811,7 +5812,7 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                                   child: Container(
                                                     alignment:
                                                         Alignment.centerLeft,
-                                                    width: 480,
+                                                    width: Get.width * 0.55,
                                                     height: 30,
                                                     child: Row(
                                                       children: [
@@ -5879,7 +5880,7 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                                   child: Container(
                                                     alignment:
                                                         Alignment.centerLeft,
-                                                    width: 480,
+                                                    width: Get.width * 0.55,
                                                     height: 30,
                                                     child: Row(
                                                       children: [
@@ -5947,7 +5948,7 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                   SizedBox(height: 12),
                                   Container(
                                     alignment: Alignment.centerLeft,
-                                    width: 480,
+                                    width: Get.width * 0.55,
                                     height: 45,
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(10),
@@ -6029,8 +6030,8 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
           return AlertDialog(
             content: SingleChildScrollView(
               child: Container(
-                width: Get.width - 100,
-                height: Get.height - 200,
+                width: Get.width * 0.9,
+                height: Get.height * 0.5,
                 child: ListView(
                   children: [
                     Row(
@@ -6075,7 +6076,7 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                           child: Container(
                             margin: EdgeInsets.only(top: 20),
                             height: 180,
-                            width: 500,
+                            width: Get.width * 0.55,
                             child: Padding(
                               padding: EdgeInsets.only(left: 10),
                               child: Column(
@@ -6084,7 +6085,7 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                   SizedBox(height: 12),
                                   Container(
                                     alignment: Alignment.centerLeft,
-                                    width: 480,
+                                    width: Get.width * 0.55,
                                     height: 30,
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(10),
@@ -6109,7 +6110,7 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                   SizedBox(height: 12),
                                   Container(
                                     alignment: Alignment.centerLeft,
-                                    width: 480,
+                                    width: Get.width * 0.55,
                                     height: 30,
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(10),

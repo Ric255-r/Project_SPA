@@ -401,7 +401,8 @@ class _ListMemberState extends State<ListMember> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isMobile = MediaQuery.of(context).size.shortestSide < 600;
+    final shortest = MediaQuery.of(context).size.shortestSide;
+    final bool isMobile = shortest < 600 || shortest > 700;
     log("isi Shortest Side ${MediaQuery.of(context).size.shortestSide}");
     // =======================================================================
 
@@ -850,13 +851,13 @@ class _WidgetListMemberMobileState extends State<WidgetListMemberMobile> {
                       SizedBox(width: 10),
                       Container(
                         height: 30,
-                        width: 130,
+                        width: 115,
                         child: Text(
                           "Nama Promo",
                           style: TextStyle(fontFamily: 'Poppins', fontSize: 14),
                         ),
                       ),
-                      SizedBox(width: 50),
+                      SizedBox(width: 55),
                       Container(
                         height: 50,
                         width: 100,
@@ -879,7 +880,7 @@ class _WidgetListMemberMobileState extends State<WidgetListMemberMobile> {
                       SizedBox(width: 5),
                       Container(
                         height: 50,
-                        width: 130,
+                        width: 115,
                         child: Text(
                           "Tahunan\nBerlaku Sampai",
                           style: TextStyle(fontFamily: 'Poppins', fontSize: 14),
@@ -934,7 +935,7 @@ class _WidgetListMemberMobileState extends State<WidgetListMemberMobile> {
                                             ),
                                           ),
                                           Container(
-                                            width: 230,
+                                            width: 220,
                                             child: Text(
                                               item['nama_promo'] ?? '',
                                               style: TextStyle(
@@ -972,7 +973,7 @@ class _WidgetListMemberMobileState extends State<WidgetListMemberMobile> {
                                             ),
                                           ),
                                           Container(
-                                            width: 105,
+                                            width: 95,
                                             child: Text(
                                               item['exp_kunjungan'] != null &&
                                                       item['exp_kunjungan'] !=
