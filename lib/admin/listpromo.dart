@@ -1665,7 +1665,8 @@ class _ListpromoState extends State<Listpromo> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isMobile = MediaQuery.of(context).size.shortestSide < 600;
+    final shortest = MediaQuery.of(context).size.shortestSide;
+    final bool isMobile = shortest < 600 || shortest > 700;
     log("isi Shortest Side ${MediaQuery.of(context).size.shortestSide}");
     // =======================================================================
 
@@ -3313,7 +3314,7 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                         Container(
                           margin: EdgeInsets.only(top: 50),
                           height: 200,
-                          width: 500,
+                          width: 480,
                           decoration: BoxDecoration(color: Colors.white),
                           child: Padding(
                             padding: EdgeInsets.only(left: 10),
@@ -3532,7 +3533,7 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                         Container(
                           margin: EdgeInsets.only(top: 50),
                           height: 180,
-                          width: 500,
+                          width: 480,
                           decoration: BoxDecoration(color: Colors.white),
                           child: Padding(
                             padding: EdgeInsets.only(left: 10),
@@ -3852,7 +3853,7 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                           Container(
                             margin: EdgeInsets.only(top: 60),
                             height: 300,
-                            width: 575,
+                            width: 540,
                             decoration: BoxDecoration(color: Colors.white),
                             child: Padding(
                               padding: EdgeInsets.only(left: 10),

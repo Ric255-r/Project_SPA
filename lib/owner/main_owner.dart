@@ -23,7 +23,12 @@ class ChartData {
   final String label; // labek kategori, misal makanan
   final IconData? icon; // icon opsional
 
-  ChartData({required this.color, required this.value, required this.label, this.icon});
+  ChartData({
+    required this.color,
+    required this.value,
+    required this.label,
+    this.icon,
+  });
 }
 
 // LineChart
@@ -101,22 +106,36 @@ class OwnerPageController extends GetxController {
       monthlyData.clear();
       for (var i = 0; i < lineChart.length; i++) {
         String bulan = (lineChart[i]['bulan'] as String).split("-")[1];
-        monthlyData.add(MonthlySales((monthNames[bulan] as String), (lineChart[i]['omset_jual'] as num).toDouble()));
+        monthlyData.add(
+          MonthlySales(
+            (monthNames[bulan] as String),
+            (lineChart[i]['omset_jual'] as num).toDouble(),
+          ),
+        );
       }
 
       pieChartData.clear();
       if (paketTerlaris.isNotEmpty) {
         // Calculate total sold for percentage calculation
-        double totalSold = paketTerlaris.fold(0, (sum, item) => sum + (item['jumlah_terjual'] as num).toDouble());
+        double totalSold = paketTerlaris.fold(
+          0,
+          (sum, item) => sum + (item['jumlah_terjual'] as num).toDouble(),
+        );
 
         // Define a fixed color palette for up to 4 items
-        final List<Color> colorPalette = [Colors.blue, Colors.green, Colors.orange, Colors.red];
+        final List<Color> colorPalette = [
+          Colors.blue,
+          Colors.green,
+          Colors.orange,
+          Colors.red,
+        ];
 
         for (var i = 0; i < paketTerlaris.length; i++) {
           // Use modulo to cycle through colors if more than 4 items
           final color = colorPalette[i % colorPalette.length];
 
-          double percentage = (paketTerlaris[i]['jumlah_terjual'] / totalSold) * 100;
+          double percentage =
+              (paketTerlaris[i]['jumlah_terjual'] / totalSold) * 100;
 
           pieChartData.add(
             ChartData(
@@ -161,7 +180,10 @@ class _OwnerPageState extends State<OwnerPage> {
     // TODO: implement initState
     super.initState();
     // Kunci Orientasi
-    SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
 
     // Delay UI building. biar g ancur pas login. minimal 500, klo 100 kecepatan
     Future.delayed(Duration(milliseconds: 500), () {
@@ -179,7 +201,14 @@ class _OwnerPageState extends State<OwnerPage> {
   }
 
   Widget _buildLoadingScreen() {
-    return Scaffold(backgroundColor: Color(0XFFFFE0B2), body: Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(Colors.white))));
+    return Scaffold(
+      backgroundColor: Color(0XFFFFE0B2),
+      body: Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation(Colors.white),
+        ),
+      ),
+    );
   }
 
   @override
@@ -213,8 +242,14 @@ class IsiOwnerPage extends StatelessWidget {
     const double mobileAdjustmentFactor = 1.25; // UI akan 25% lebih kecil
 
     // 3. Hitung designSize yang efektif berdasarkan tipe perangkat
-    final double effectiveDesignWidth = isMobile ? tabletDesignWidth * mobileAdjustmentFactor : tabletDesignWidth;
-    final double effectiveDesignHeight = isMobile ? tabletDesignHeight * mobileAdjustmentFactor : tabletDesignHeight;
+    final double effectiveDesignWidth =
+        isMobile
+            ? tabletDesignWidth * mobileAdjustmentFactor
+            : tabletDesignWidth;
+    final double effectiveDesignHeight =
+        isMobile
+            ? tabletDesignHeight * mobileAdjustmentFactor
+            : tabletDesignHeight;
 
     return ScreenUtilInit(
       designSize: Size(effectiveDesignWidth, effectiveDesignHeight),
@@ -231,7 +266,10 @@ class IsiOwnerPage extends StatelessWidget {
             title: Center(
               child: Padding(
                 padding: const EdgeInsets.only(right: 50),
-                child: ClipRRect(borderRadius: BorderRadius.circular(50), child: Image.asset("assets/spa.jpg", height: 60.w)),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(50),
+                  child: Image.asset("assets/spa.jpg", height: 60.w),
+                ),
               ),
             ),
           ),
@@ -243,7 +281,7 @@ class IsiOwnerPage extends StatelessWidget {
             child: SingleChildScrollView(
               child: Container(
                 width: double.infinity,
-                height: MediaQuery.of(context).size.height + 330.w,
+                height: MediaQuery.of(context).size.height + 360.w,
                 padding: const EdgeInsets.only(top: 30, left: 20, right: 20),
                 color: Color(0XFFFFE0B2),
                 child: Column(
@@ -255,7 +293,15 @@ class IsiOwnerPage extends StatelessWidget {
                             margin: const EdgeInsets.only(left: 10, right: 10),
                             height: 20.w,
                             width: double.infinity,
-                            child: Text("Dashboard", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins', height: 1, fontSize: 12.w)),
+                            child: Text(
+                              "Dashboard",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Poppins',
+                                height: 1,
+                                fontSize: 12.w,
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -267,42 +313,69 @@ class IsiOwnerPage extends StatelessWidget {
                           child: Container(
                             margin: const EdgeInsets.only(left: 10, right: 10),
                             padding: const EdgeInsets.only(left: 15),
-                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                             // height: 90.w, // 90.w dari desain 660dp
                             width: double.infinity,
                             child: Obx(() {
                               // ambil data bulan saat ini
                               var currSales = c._monthlySales.firstWhere(
-                                (item) => item['bulan'] == DateFormat('yyyy-MM').format(DateTime.now()),
+                                (item) =>
+                                    item['bulan'] ==
+                                    DateFormat(
+                                      'yyyy-MM',
+                                    ).format(DateTime.now()),
                                 orElse: () => {'omset_jual': 0.0},
                               );
 
                               // ambil bulan lalu
                               var prevSales = c._monthlySales.firstWhere(
-                                (item) => item['bulan'] == DateFormat('yyyy-MM').format(DateTime(DateTime.now().year, DateTime.now().month - 1)),
+                                (item) =>
+                                    item['bulan'] ==
+                                    DateFormat('yyyy-MM').format(
+                                      DateTime(
+                                        DateTime.now().year,
+                                        DateTime.now().month - 1,
+                                      ),
+                                    ),
                                 orElse: () => {'omset_jual': 0.0},
                               );
 
                               // kalkulasi valuenya
-                              var currSalesValue = currSales['omset_jual'] ?? 0.0;
-                              var prevSalesValue = prevSales['omset_jual'] ?? 0.0;
+                              var currSalesValue =
+                                  currSales['omset_jual'] ?? 0.0;
+                              var prevSalesValue =
+                                  prevSales['omset_jual'] ?? 0.0;
 
                               // kalkulasi peningkatan persentase
                               double peningkatanPersen = 0.0;
                               if (prevSalesValue != 0) {
-                                peningkatanPersen = ((currSalesValue - prevSalesValue) / prevSalesValue) * 100;
+                                peningkatanPersen =
+                                    ((currSalesValue - prevSalesValue) /
+                                        prevSalesValue) *
+                                    100;
                               }
 
                               // format currency
-                              final currencyFormat = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp. ', decimalDigits: 0);
+                              final currencyFormat = NumberFormat.currency(
+                                locale: 'id_ID',
+                                symbol: 'Rp. ',
+                                decimalDigits: 0,
+                              );
 
-                              final formattedSales = currencyFormat.format(currSalesValue);
+                              final formattedSales = currencyFormat.format(
+                                currSalesValue,
+                              );
 
                               String statusText;
                               if (peningkatanPersen > 0) {
-                                statusText = "Meningkat Sebesar ${peningkatanPersen.toStringAsFixed(0)}%";
+                                statusText =
+                                    "Meningkat Sebesar ${peningkatanPersen.toStringAsFixed(0)}%";
                               } else if (peningkatanPersen < 0) {
-                                statusText = "Menurun Sebesar ${peningkatanPersen.abs().toStringAsFixed(0)}% dari bulan lalu";
+                                statusText =
+                                    "Menurun Sebesar ${peningkatanPersen.abs().toStringAsFixed(0)}% dari bulan lalu";
                               } else {
                                 statusText = "Tidak Ada Perubahan";
                               }
@@ -311,13 +384,29 @@ class IsiOwnerPage extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   SizedBox(height: 20),
-                                  Text("Current Monthly Sales", style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 12.w)),
+                                  Text(
+                                    "Current Monthly Sales",
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12.w,
+                                    ),
+                                  ),
                                   SizedBox(height: 10),
-                                  Text(formattedSales, style: TextStyle(fontFamily: 'Poppins', fontSize: 8.w)),
+                                  Text(
+                                    formattedSales,
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 8.w,
+                                    ),
+                                  ),
                                   SizedBox(height: 10),
                                   AutoSizeText(
                                     statusText,
-                                    style: TextStyle(fontFamily: 'Poppins', fontSize: 10.sp),
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 10.sp,
+                                    ),
                                     // Force the text to stay on a single line.
                                     maxLines: 1,
                                     // Optional: Set a minimum font size to maintain readability.
@@ -335,43 +424,70 @@ class IsiOwnerPage extends StatelessWidget {
                           child: Container(
                             margin: const EdgeInsets.only(left: 10, right: 10),
                             padding: const EdgeInsets.only(left: 15),
-                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                             // height: 90.w, // 90.w dari desain 660dp
                             width: double.infinity,
                             child: Obx(() {
                               // get current month data, asumsi data udh disortir berdasarkan bln
                               var currentPaketMonth = c._paketSales.firstWhere(
-                                (item) => item['bulan'] == DateFormat('yyyy-MM').format(DateTime.now()),
+                                (item) =>
+                                    item['bulan'] ==
+                                    DateFormat(
+                                      'yyyy-MM',
+                                    ).format(DateTime.now()),
                                 orElse: () => {'omset_bulanan': 0.0},
                               );
 
                               // Ambil previous month
                               var previousPaketMonth = c._paketSales.firstWhere(
-                                (item) => item['bulan'] == DateFormat('yyyy-MM').format(DateTime(DateTime.now().year, DateTime.now().month - 1)),
+                                (item) =>
+                                    item['bulan'] ==
+                                    DateFormat('yyyy-MM').format(
+                                      DateTime(
+                                        DateTime.now().year,
+                                        DateTime.now().month - 1,
+                                      ),
+                                    ),
                                 orElse: () => {'omset_bulanan': 0.0},
                               );
 
                               // calculate values
-                              var currentPaket = currentPaketMonth['omset_bulanan'] ?? 0.0;
-                              var previousPaket = previousPaketMonth['omset_bulanan'] ?? 0.0;
+                              var currentPaket =
+                                  currentPaketMonth['omset_bulanan'] ?? 0.0;
+                              var previousPaket =
+                                  previousPaketMonth['omset_bulanan'] ?? 0.0;
 
                               // calculate peningkatan persentase (handle pembagian)
                               double peningkatanPersen = 0.0;
                               if (previousPaket != 0) {
-                                peningkatanPersen = ((currentPaket - previousPaket) / previousPaket) * 100;
+                                peningkatanPersen =
+                                    ((currentPaket - previousPaket) /
+                                        previousPaket) *
+                                    100;
                               }
 
                               // format currency
-                              final currencyFormat = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp. ', decimalDigits: 0);
+                              final currencyFormat = NumberFormat.currency(
+                                locale: 'id_ID',
+                                symbol: 'Rp. ',
+                                decimalDigits: 0,
+                              );
 
-                              final formattedSales = currencyFormat.format(currentPaket);
+                              final formattedSales = currencyFormat.format(
+                                currentPaket,
+                              );
 
                               // tentukan status teks
                               String statusText;
                               if (peningkatanPersen > 0) {
-                                statusText = "Meningkat Sebesar ${peningkatanPersen.toStringAsFixed(0)}%";
+                                statusText =
+                                    "Meningkat Sebesar ${peningkatanPersen.toStringAsFixed(0)}%";
                               } else if (peningkatanPersen < 0) {
-                                statusText = "Menurun Sebesar ${peningkatanPersen.abs().toStringAsFixed(0)}% dari bulan lalu";
+                                statusText =
+                                    "Menurun Sebesar ${peningkatanPersen.abs().toStringAsFixed(0)}% dari bulan lalu";
                               } else {
                                 statusText = "Tidak Ada Perubahan";
                               }
@@ -380,13 +496,29 @@ class IsiOwnerPage extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   SizedBox(height: 20),
-                                  Text("Current Paket Sales", style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 12.w)),
+                                  Text(
+                                    "Current Paket Sales",
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12.w,
+                                    ),
+                                  ),
                                   SizedBox(height: 10),
-                                  Text(formattedSales, style: TextStyle(fontFamily: 'Poppins', fontSize: 8.w)),
+                                  Text(
+                                    formattedSales,
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 8.w,
+                                    ),
+                                  ),
                                   SizedBox(height: 10),
                                   AutoSizeText(
                                     statusText,
-                                    style: TextStyle(fontFamily: 'Poppins', fontSize: 10.sp),
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 10.sp,
+                                    ),
                                     // Force the text to stay on a single line.
                                     maxLines: 1,
                                     // Optional: Set a minimum font size to maintain readability.
@@ -404,42 +536,69 @@ class IsiOwnerPage extends StatelessWidget {
                           child: Container(
                             margin: const EdgeInsets.only(left: 10, right: 10),
                             padding: const EdgeInsets.only(left: 15),
-                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                             // height: 90.w, // 90.w dari desain 660dp
                             width: double.infinity,
                             child: Obx(() {
                               // ambil data bulan saat ini
                               var currProdukMonth = c._produkSales.firstWhere(
-                                (item) => item['bulan'] == DateFormat('yyyy-MM').format(DateTime.now()),
+                                (item) =>
+                                    item['bulan'] ==
+                                    DateFormat(
+                                      'yyyy-MM',
+                                    ).format(DateTime.now()),
                                 orElse: () => {'omset_bulanan': 0.0},
                               );
 
                               // ambil bulan lalu
                               var prevProdukMonth = c._produkSales.firstWhere(
-                                (item) => item['bulan'] == DateFormat('yyyy-MM').format(DateTime(DateTime.now().year, DateTime.now().month - 1)),
+                                (item) =>
+                                    item['bulan'] ==
+                                    DateFormat('yyyy-MM').format(
+                                      DateTime(
+                                        DateTime.now().year,
+                                        DateTime.now().month - 1,
+                                      ),
+                                    ),
                                 orElse: () => {'omset_bulanan': 0.0},
                               );
 
                               // kalkulasi valuenya
-                              var currProdukValue = currProdukMonth['omset_bulanan'] ?? 0.0;
-                              var prevProdukValue = prevProdukMonth['omset_bulanan'] ?? 0.0;
+                              var currProdukValue =
+                                  currProdukMonth['omset_bulanan'] ?? 0.0;
+                              var prevProdukValue =
+                                  prevProdukMonth['omset_bulanan'] ?? 0.0;
 
                               // kalkulasi peningkatan persentase
                               double peningkatanPersen = 0.0;
                               if (prevProdukValue != 0) {
-                                peningkatanPersen = ((currProdukValue - prevProdukValue) / prevProdukValue) * 100;
+                                peningkatanPersen =
+                                    ((currProdukValue - prevProdukValue) /
+                                        prevProdukValue) *
+                                    100;
                               }
 
                               // format currency
-                              final currencyFormat = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp. ', decimalDigits: 0);
+                              final currencyFormat = NumberFormat.currency(
+                                locale: 'id_ID',
+                                symbol: 'Rp. ',
+                                decimalDigits: 0,
+                              );
 
-                              final formattedSales = currencyFormat.format(currProdukValue);
+                              final formattedSales = currencyFormat.format(
+                                currProdukValue,
+                              );
 
                               String statusText;
                               if (peningkatanPersen > 0) {
-                                statusText = "Meningkat Sebesar ${peningkatanPersen.toStringAsFixed(0)}%";
+                                statusText =
+                                    "Meningkat Sebesar ${peningkatanPersen.toStringAsFixed(0)}%";
                               } else if (peningkatanPersen < 0) {
-                                statusText = "Menurun Sebesar ${peningkatanPersen.abs().toStringAsFixed(0)}% dari bulan lalu";
+                                statusText =
+                                    "Menurun Sebesar ${peningkatanPersen.abs().toStringAsFixed(0)}% dari bulan lalu";
                               } else {
                                 statusText = "Tidak Ada Perubahan";
                               }
@@ -448,13 +607,29 @@ class IsiOwnerPage extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   SizedBox(height: 20),
-                                  Text("Current Produk Sales", style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 12.w)),
+                                  Text(
+                                    "Current Produk Sales",
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12.w,
+                                    ),
+                                  ),
                                   SizedBox(height: 10),
-                                  Text(formattedSales, style: TextStyle(fontFamily: 'Poppins', fontSize: 8.w)),
+                                  Text(
+                                    formattedSales,
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 8.w,
+                                    ),
+                                  ),
                                   SizedBox(height: 10),
                                   AutoSizeText(
                                     statusText,
-                                    style: TextStyle(fontFamily: 'Poppins', fontSize: 10.sp),
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 10.sp,
+                                    ),
                                     // Force the text to stay on a single line.
                                     maxLines: 1,
                                     // Optional: Set a minimum font size to maintain readability.
@@ -477,19 +652,35 @@ class IsiOwnerPage extends StatelessWidget {
                           flex: 2,
                           child: Container(
                             margin: const EdgeInsets.only(left: 10, right: 10),
-                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                             height: isMobile ? 280.w : 300.w,
                             width: double.infinity,
                             child: Column(
                               children: [
                                 SizedBox(height: 10.w),
-                                Text('Pendapatan Bulanan (dalam ribuan)', style: TextStyle(fontSize: 12.w, fontWeight: FontWeight.bold, height: 1)),
+                                Text(
+                                  'Pendapatan Bulanan (dalam ribuan)',
+                                  style: TextStyle(
+                                    fontSize: 12.w,
+                                    fontWeight: FontWeight.bold,
+                                    height: 1,
+                                  ),
+                                ),
                                 Obx(() {
                                   if (c.monthlyData.isEmpty) {
                                     return CircularProgressIndicator();
                                   }
 
-                                  return SizedBox(height: 250.w, width: double.infinity, child: MonthlyRevenueChart(salesData: c.monthlyData));
+                                  return SizedBox(
+                                    height: 250.w,
+                                    width: double.infinity,
+                                    child: MonthlyRevenueChart(
+                                      salesData: c.monthlyData,
+                                    ),
+                                  );
                                 }),
                               ],
                             ),
@@ -504,7 +695,10 @@ class IsiOwnerPage extends StatelessWidget {
                           flex: 1,
                           child: Container(
                             margin: const EdgeInsets.only(left: 10, right: 10),
-                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                             padding: const EdgeInsets.only(top: 20),
                             height: 300.w,
                             child: InteractiveViewer(
@@ -512,13 +706,25 @@ class IsiOwnerPage extends StatelessWidget {
                               maxScale: 4.0,
                               child: Column(
                                 children: [
-                                  Text("Paket Terlaris", style: TextStyle(fontSize: 12.w, fontFamily: 'Poppins', height: 1, fontWeight: FontWeight.bold)),
+                                  Text(
+                                    "Paket Terlaris",
+                                    style: TextStyle(
+                                      fontSize: 12.w,
+                                      fontFamily: 'Poppins',
+                                      height: 1,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                   SizedBox(height: 0.8.w),
                                   Obx(() {
                                     if (c.pieChartData.isEmpty) {
                                       return CircularProgressIndicator();
                                     }
-                                    return Expanded(child: DynamicPieChart(chartData: c.pieChartData));
+                                    return Expanded(
+                                      child: DynamicPieChart(
+                                        chartData: c.pieChartData,
+                                      ),
+                                    );
                                   }),
                                 ],
                               ),
@@ -545,7 +751,11 @@ class MonthlyRevenueChart extends StatelessWidget {
   const MonthlyRevenueChart({super.key, required this.salesData});
 
   String formatRupiah(double amount) {
-    final formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp', decimalDigits: 0);
+    final formatter = NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: 'Rp',
+      decimalDigits: 0,
+    );
     return formatter.format(amount);
   }
 
@@ -565,8 +775,12 @@ class MonthlyRevenueChart extends StatelessWidget {
       return const Center(child: Text('No data available'));
     }
 
-    final minRevenue = salesData.map((e) => e.revenue).reduce((a, b) => a < b ? a : b);
-    final maxRevenue = salesData.map((e) => e.revenue).reduce((a, b) => a > b ? a : b);
+    final minRevenue = salesData
+        .map((e) => e.revenue)
+        .reduce((a, b) => a < b ? a : b);
+    final maxRevenue = salesData
+        .map((e) => e.revenue)
+        .reduce((a, b) => a > b ? a : b);
 
     final yInterval = _calculateYInterval(minRevenue, maxRevenue);
 
@@ -587,7 +801,14 @@ class MonthlyRevenueChart extends StatelessWidget {
                   return touchedSpots.map((spot) {
                     final revenue = spot.y;
                     final formatted = formatRupiah(revenue);
-                    return LineTooltipItem(formatted, const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold));
+                    return LineTooltipItem(
+                      formatted,
+                      const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    );
                   }).toList();
                 },
               ),
@@ -595,15 +816,24 @@ class MonthlyRevenueChart extends StatelessWidget {
             gridData: FlGridData(show: true),
             titlesData: FlTitlesData(
               show: true,
-              rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              rightTitles: AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
               topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
               bottomTitles: AxisTitles(
                 sideTitles: SideTitles(
                   showTitles: true,
                   getTitlesWidget: (value, meta) {
-                    if (value.toInt() >= salesData.length) return const Text('');
+                    if (value.toInt() >= salesData.length)
+                      return const Text('');
 
-                    return Padding(padding: const EdgeInsets.only(top: 8.0), child: Text(salesData[value.toInt()].month, style: const TextStyle(fontSize: 10)));
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        salesData[value.toInt()].month,
+                        style: const TextStyle(fontSize: 10),
+                      ),
+                    );
                   },
                   reservedSize: 30,
                   interval: 1,
@@ -615,7 +845,14 @@ class MonthlyRevenueChart extends StatelessWidget {
                   getTitlesWidget: (value, meta) {
                     return Padding(
                       padding: const EdgeInsets.only(right: 4.0),
-                      child: Text(formatRupiahShort(value), style: const TextStyle(fontSize: 8, overflow: TextOverflow.visible), maxLines: 2),
+                      child: Text(
+                        formatRupiahShort(value),
+                        style: const TextStyle(
+                          fontSize: 8,
+                          overflow: TextOverflow.visible,
+                        ),
+                        maxLines: 2,
+                      ),
                     );
                   },
                   reservedSize: 60, // Increased for better spacing
@@ -691,11 +928,16 @@ class _DynamicPieChartState extends State<DynamicPieChart> {
                   PieChartData(
                     pieTouchData: PieTouchData(
                       touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                        if (!event.isInterestedForInteractions || pieTouchResponse == null || pieTouchResponse.touchedSection == null) {
+                        if (!event.isInterestedForInteractions ||
+                            pieTouchResponse == null ||
+                            pieTouchResponse.touchedSection == null) {
                           touchedIndex.value = -1;
                           return;
                         }
-                        touchedIndex.value = pieTouchResponse.touchedSection!.touchedSectionIndex;
+                        touchedIndex.value =
+                            pieTouchResponse
+                                .touchedSection!
+                                .touchedSectionIndex;
                       },
                     ),
                     borderData: FlBorderData(show: false),
@@ -717,9 +959,23 @@ class _DynamicPieChartState extends State<DynamicPieChart> {
             return Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(width: 16, height: 16, decoration: BoxDecoration(color: data.color, shape: BoxShape.circle)),
+                Container(
+                  width: 16,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    color: data.color,
+                    shape: BoxShape.circle,
+                  ),
+                ),
                 SizedBox(width: 8),
-                Text('${data.label} (${data.value.toStringAsFixed(1)}%)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.black)),
+                Text(
+                  '${data.label} (${data.value.toStringAsFixed(1)}%)',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black,
+                  ),
+                ),
               ],
             );
           }),
@@ -731,9 +987,19 @@ class _DynamicPieChartState extends State<DynamicPieChart> {
   List<PieChartSectionData> showingSection() {
     final itemCount = widget.chartData.length;
     if (itemCount == 0) {
-      return [PieChartSectionData(color: Colors.grey, value: 100, title: '', radius: 50)];
+      return [
+        PieChartSectionData(
+          color: Colors.grey,
+          value: 100,
+          title: '',
+          radius: 50,
+        ),
+      ];
     }
-    final total = widget.chartData.fold<double>(0, (sum, item) => sum + item.value);
+    final total = widget.chartData.fold<double>(
+      0,
+      (sum, item) => sum + item.value,
+    );
     return List.generate(itemCount, (i) {
       final isTouched = i == touchedIndex.value;
       final data = widget.chartData[i];
@@ -746,7 +1012,11 @@ class _DynamicPieChartState extends State<DynamicPieChart> {
           value: 100,
           title: '${percent.toStringAsFixed(1)}%',
           radius: radius,
-          titleStyle: TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold, color: Colors.black),
+          titleStyle: TextStyle(
+            fontSize: fontSize,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
           badgeWidget: null,
         );
       }
@@ -756,7 +1026,12 @@ class _DynamicPieChartState extends State<DynamicPieChart> {
         title: '${percent.toStringAsFixed(1)}%',
 
         radius: radius,
-        titleStyle: TextStyle(fontSize: fontSize.w - 7.w, fontWeight: FontWeight.bold, color: Colors.black, height: 1.2),
+        titleStyle: TextStyle(
+          fontSize: fontSize.w - 7.w,
+          fontWeight: FontWeight.bold,
+          color: Colors.black,
+          height: 1.2,
+        ),
         badgeWidget: null,
         badgePositionPercentageOffset: 1.1,
       );

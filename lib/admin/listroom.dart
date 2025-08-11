@@ -394,7 +394,8 @@ class _ListRoomState extends State<ListRoom> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isMobile = MediaQuery.of(context).size.shortestSide < 600;
+    final shortest = MediaQuery.of(context).size.shortestSide;
+    final bool isMobile = shortest < 600 || shortest > 700;
     log("isi Shortest Side ${MediaQuery.of(context).size.shortestSide}");
     // =======================================================================
 
@@ -825,8 +826,8 @@ class _WidgetListRoomMobileState extends State<WidgetListRoomMobile> {
           return AlertDialog(
             content: SingleChildScrollView(
               child: Container(
-                width: Get.width - 100,
-                height: Get.height - 200,
+                width: Get.width,
+                height: Get.height - 300,
                 child: ListView(
                   children: [
                     Row(
@@ -884,7 +885,7 @@ class _WidgetListRoomMobileState extends State<WidgetListRoomMobile> {
                         Container(
                           margin: EdgeInsets.only(top: 20),
                           height: 250,
-                          width: 500,
+                          width: 400,
                           child: Padding(
                             padding: EdgeInsets.only(left: 10),
                             child: Column(
