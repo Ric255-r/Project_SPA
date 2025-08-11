@@ -434,21 +434,30 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
     int inputlocker = LockerInput.getLocker();
 
     updateUIWithDiscount();
+    // Hitung Harga Setelah Pajak & Pembulatan
+    double nominalPjk = _dialogTxtTotalOri * desimalPjk.value;
+    double hrgPjkSblmRound = _dialogTxtTotalOri + nominalPjk;
+
+    // Pembulatan ke ribuan terdekat
+    hrgStlhPjk.value = (hrgPjkSblmRound / 1000).round() * 1000;
+    // Panggil fnTotalBayar biar bs negatif
+    _fnFormatTotalBayar("Rp. 0");
+    // End Hitung
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
         // pake statefulbuilder klo dlm dialog
-        bool _initialized = false;
+        // bool _initialized = false;
 
         return StatefulBuilder(
           builder: (context, setState) {
-            if (!_initialized) {
-              _initialized = true;
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                _fnFormatTotalBayar("Rp. 0");
-              });
-            }
+            // if (!_initialized) {
+            //   _initialized = true;
+            //   WidgetsBinding.instance.addPostFrameCallback((_) {
+            //     _fnFormatTotalBayar("Rp. 0");
+            //   });
+            // }
 
             return AlertDialog(
               title: Text("Pembayaran", textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Poppins')),
@@ -487,11 +496,6 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                           Expanded(
                             flex: 3,
                             child: Obx(() {
-                              double nominalPjk = _dialogTxtTotalOri * desimalPjk.value;
-                              double hrgPjkSblmRound = _dialogTxtTotalOri + nominalPjk;
-
-                              // Pembulatan ke ribuan terdekat
-                              hrgStlhPjk.value = (hrgPjkSblmRound / 1000).round() * 1000;
                               return TextField(controller: TextEditingController(text: formatCurrency.format(hrgStlhPjk.value)), readOnly: true);
                             }),
                           ),
@@ -1256,45 +1260,63 @@ RxList<Map<String, dynamic>> dataproduk = <Map<String, dynamic>>[].obs;
 class _MassageItemGridState extends State<MassageItemGrid> {
   String? idMember;
   ScrollController _scrollController = ScrollController();
-  List<Map<String, dynamic>> items = [];
-  List<bool> _itemTapStates = [];
+  RxList<Map<String, dynamic>> items = <Map<String, dynamic>>[].obs;
+  RxList<bool> _itemTapStates = <bool>[].obs;
   var dio = Dio();
 
   final formatCurrency = NumberFormat.currency(locale: "id_ID", decimalDigits: 0, symbol: 'Rp. ');
   final AudioPlayer _audioPlayer = AudioPlayer();
 
   // set awal loading true, kalo datanya udh kefetch maka false
-  bool isLoading = true;
+  RxBool isLoading = true.obs;
 
   Future<void> _getMenu() async {
     try {
       var response = await dio.get('${myIpAddr()}${widget.apiEndpoint}');
       // log("$response");
+      items.assignAll(
+        (response.data as List).map((item) {
+          // jadi key disini di generalisir pakai key dari tabel paket.
+          // kemudian tabel produk ni nanti menyesuaikan dengan key tabel paket.
+          // if disini jika key dari tabel produk null, maka ambil key dari tabel_paket
+          return {
+            "id_paket_msg": item['id_produk'] ?? item['id_paket_msg'],
+            "nama_paket_msg": item['nama_produk'] ?? item['nama_paket_msg'],
+            "harga_paket_msg": item['harga_produk'] ?? item['harga_paket_msg'],
+            "detail_paket": item['detail_paket'] ?? "-",
+            "durasi_awal": item['durasi'],
+            // "status": "unpaid",
+            "is_addon": false,
+          };
+        }).toList(),
+      );
 
-      setState(() {
-        items =
-            (response.data as List).map((item) {
-              // jadi key disini di generalisir pakai key dari tabel paket.
-              // kemudian tabel produk ni nanti menyesuaikan dengan key tabel paket.
-              // if disini jika key dari tabel produk null, maka ambil key dari tabel_paket
-              return {
-                "id_paket_msg": item['id_produk'] ?? item['id_paket_msg'],
-                "nama_paket_msg": item['nama_produk'] ?? item['nama_paket_msg'],
-                "harga_paket_msg": item['harga_produk'] ?? item['harga_paket_msg'],
-                "detail_paket": item['detail_paket'] ?? "-",
-                "durasi_awal": item['durasi'],
-                // "status": "unpaid",
-                "is_addon": false,
-              };
-            }).toList();
+      // setState(() {
+      //   items =
+      //       (response.data as List).map((item) {
+      //         // jadi key disini di generalisir pakai key dari tabel paket.
+      //         // kemudian tabel produk ni nanti menyesuaikan dengan key tabel paket.
+      //         // if disini jika key dari tabel produk null, maka ambil key dari tabel_paket
+      //         return {
+      //           "id_paket_msg": item['id_produk'] ?? item['id_paket_msg'],
+      //           "nama_paket_msg": item['nama_produk'] ?? item['nama_paket_msg'],
+      //           "harga_paket_msg": item['harga_produk'] ?? item['harga_paket_msg'],
+      //           "detail_paket": item['detail_paket'] ?? "-",
+      //           "durasi_awal": item['durasi'],
+      //           // "status": "unpaid",
+      //           "is_addon": false,
+      //         };
+      //       }).toList();
 
-        isLoading = false;
-      });
+      //   isLoading = false;
+      // });
     } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
+      // setState(() {
+      //   isLoading = false;
+      // });
       log("Error in ${widget.apiEndpoint}: $e");
+    } finally {
+      isLoading.value = false;
     }
   }
 
@@ -1302,7 +1324,7 @@ class _MassageItemGridState extends State<MassageItemGrid> {
   void initState() {
     super.initState();
     _getMenu().then((_) {
-      _itemTapStates = List.filled(items.length, false);
+      _itemTapStates.assignAll(List.filled(items.length, false));
       idMember = widget.idMember;
 
       _loadSound();
@@ -1355,11 +1377,12 @@ class _MassageItemGridState extends State<MassageItemGrid> {
               "nominal_komisi_gro": item['nominal_komisi_gro'],
             };
           }).toList();
-      setState(() {
-        dataproduk.clear();
-        dataproduk.assignAll(fetcheddata);
-        dataproduk.refresh();
-      });
+      // setState(() {
+      // dataproduk.clear();
+      // dataproduk.assignAll(fetcheddata);
+      // dataproduk.refresh();
+      // });
+      dataproduk.assignAll(fetcheddata);
     } catch (e) {
       log("Error di fn getdatafnb : $e");
     }
@@ -1378,109 +1401,131 @@ class _MassageItemGridState extends State<MassageItemGrid> {
           padding: const EdgeInsets.only(right: 10),
           child: Column(
             children: [
-              if (isLoading)
-                Padding(padding: const EdgeInsets.only(top: 80), child: Center(child: CircularProgressIndicator()))
-              else
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 4,
-                    crossAxisSpacing: 30,
-                    mainAxisSpacing: 25,
-                    childAspectRatio: 2 / 1.5,
-                  ),
-                  itemCount: items.length,
-                  itemBuilder: (context, index) {
-                    final item = items[index];
-                    double displayPrice = item['harga_paket_msg'].toDouble();
-                    final promoExists = widget.activePromos.any((promo) => promo['nama_promo'] == item['nama_paket_msg']);
+              Obx(() {
+                if (isLoading.value) {
+                  return Padding(padding: const EdgeInsets.only(top: 80), child: Center(child: CircularProgressIndicator()));
+                } else {
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      crossAxisSpacing: 30,
+                      mainAxisSpacing: 25,
+                      childAspectRatio: 2 / 1.5,
+                    ),
+                    itemCount: items.length,
+                    itemBuilder: (context, index) {
+                      final item = items[index];
+                      double displayPrice = item['harga_paket_msg'].toDouble();
+                      final promoExists = widget.activePromos.any((promo) => promo['nama_promo'] == item['nama_paket_msg']);
 
-                    if (promoExists) {
-                      displayPrice = 0.0; // Set display price to 0 if promo applies
-                    }
-                    int sisakunjungan = 0;
-                    int sisastok = 0;
-                    String kondisilebih = '';
-                    String tipepaket = '';
+                      if (promoExists) {
+                        displayPrice = 0.0; // Set display price to 0 if promo applies
+                      }
+                      int sisakunjungan = 0;
+                      int sisastok = 0;
+                      String kondisilebih = '';
+                      String tipepaket = '';
 
-                    return GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTapDown: (_) => setState(() => _itemTapStates[index] = true),
-                      onTapUp: (_) async {
-                        await _playClickSound();
-
-                        setState(() => _itemTapStates[index] = false);
-                        Map<String, dynamic> itemToAdd = Map.from(item);
-
-                        if (promoExists) {
-                          String itemname = item['nama_paket_msg'];
-                          // selecteditemindex[itemname] = index;
-                          // retrieveindex = selecteditemindex[itemname];
-                          retrieveindex = itemname;
-                          for (var promo in widget.activePromos.where((p) => p['nama_paket_msg'] == item['nama_paket_msg'])) {
-                            sisakunjungan = int.tryParse(promo['sisa_kunjungan'].toString()) ?? 0;
-                          }
-                          if (retrieveindex != null && itemTapCounts.containsKey(retrieveindex)) {
-                            itemTapCounts[retrieveindex!] = itemTapCounts[retrieveindex]! + 1;
-                          } else if (retrieveindex != null) {
-                            itemTapCounts[retrieveindex!] = 1;
-                          }
-
-                          log('sisa kunjungan : $sisakunjungan ');
-                          log('tapped : ${itemTapCounts[retrieveindex]}');
-
-                          if (retrieveindex != null) {
-                            if (itemTapCounts[retrieveindex]! > sisakunjungan) {
-                              kondisilebih = 'benar';
-                            } else {
-                              kondisilebih = 'salah';
-                            }
-                          }
-
-                          if (kondisilebih == 'salah') {
+                      return Obx(() {
+                        return GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTapDown: (_) {
+                            _itemTapStates[index] = true;
+                            _itemTapStates.refresh();
+                          },
+                          onTapUp: (_) async {
+                            await _playClickSound();
+                            // Lepaskan Animasi
+                            _itemTapStates[index] = false;
+                            _itemTapStates.refresh();
+                            // End Lepaskan Animasi
                             Map<String, dynamic> itemToAdd = Map.from(item);
-                            if (promoExists) {
-                              itemToAdd['harga_paket_msg'] = 0;
-                              itemToAdd['harga_total'] = 0;
-                            }
-                            widget.onAddItem({
-                              "id_paket_msg": item['id_paket_msg'],
-                              "nama_paket_msg": item['nama_paket_msg'],
-                              "detail_paket": item['detail_paket'],
-                              "jlh": 1,
-                              "satuan": widget.defaultUnit,
-                              "harga_paket_msg": item['harga_paket_msg'],
-                              "harga_total": item['harga_paket_msg'],
-                              "durasi_awal": item['durasi_awal'],
-                              // "status": "unpaid",
-                              "is_addon": false,
-                            });
-                          } else {
-                            CherryToast.error(title: Text('Error'), description: Text('melebihi pemakaian')).show(context);
-                          }
-                        } else {
-                          for (var produk in dataproduk.where((p) => p['nama_produk'] == item['nama_paket_msg'])) {
-                            sisastok = int.tryParse(produk['stok_produk'].toString()) ?? 0;
-                            tipepaket = 'produk';
-                          }
 
-                          if (tipepaket == 'produk') {
-                            String itemname = item['nama_paket_msg'];
-                            // selecteditemindex[itemname] = index;
-                            // retrieveindex = selecteditemindex[itemname];
-                            retrieveindex = itemname;
-                            if (retrieveindex != null && itemTapCounts.containsKey(retrieveindex)) {
-                              itemTapCounts[retrieveindex!] = itemTapCounts[retrieveindex]! + 1;
-                            } else if (retrieveindex != null) {
-                              itemTapCounts[retrieveindex!] = 1;
-                            }
-                            log('counter : $itemTapCounts');
-                            if (sisastok == 0) {
-                              CherryToast.error(title: Text('Error'), description: Text('Stok sudah kosong')).show(context);
-                            } else if (retrieveindex != null) {
-                              if (itemTapCounts[retrieveindex]! > sisastok) {
-                                CherryToast.error(title: Text('Error'), description: Text('Penggunaan item melebihi stok')).show(context);
+                            if (promoExists) {
+                              String itemname = item['nama_paket_msg'];
+                              // selecteditemindex[itemname] = index;
+                              // retrieveindex = selecteditemindex[itemname];
+                              retrieveindex = itemname;
+                              for (var promo in widget.activePromos.where((p) => p['nama_paket_msg'] == item['nama_paket_msg'])) {
+                                sisakunjungan = int.tryParse(promo['sisa_kunjungan'].toString()) ?? 0;
+                              }
+                              if (retrieveindex != null && itemTapCounts.containsKey(retrieveindex)) {
+                                itemTapCounts[retrieveindex!] = itemTapCounts[retrieveindex]! + 1;
+                              } else if (retrieveindex != null) {
+                                itemTapCounts[retrieveindex!] = 1;
+                              }
+
+                              log('sisa kunjungan : $sisakunjungan ');
+                              log('tapped : ${itemTapCounts[retrieveindex]}');
+
+                              if (retrieveindex != null) {
+                                if (itemTapCounts[retrieveindex]! > sisakunjungan) {
+                                  kondisilebih = 'benar';
+                                } else {
+                                  kondisilebih = 'salah';
+                                }
+                              }
+
+                              if (kondisilebih == 'salah') {
+                                Map<String, dynamic> itemToAdd = Map.from(item);
+                                if (promoExists) {
+                                  itemToAdd['harga_paket_msg'] = 0;
+                                  itemToAdd['harga_total'] = 0;
+                                }
+                                widget.onAddItem({
+                                  "id_paket_msg": item['id_paket_msg'],
+                                  "nama_paket_msg": item['nama_paket_msg'],
+                                  "detail_paket": item['detail_paket'],
+                                  "jlh": 1,
+                                  "satuan": widget.defaultUnit,
+                                  "harga_paket_msg": item['harga_paket_msg'],
+                                  "harga_total": item['harga_paket_msg'],
+                                  "durasi_awal": item['durasi_awal'],
+                                  // "status": "unpaid",
+                                  "is_addon": false,
+                                });
+                              } else {
+                                CherryToast.error(title: Text('Error'), description: Text('melebihi pemakaian')).show(context);
+                              }
+                            } else {
+                              for (var produk in dataproduk.where((p) => p['nama_produk'] == item['nama_paket_msg'])) {
+                                sisastok = int.tryParse(produk['stok_produk'].toString()) ?? 0;
+                                tipepaket = 'produk';
+                              }
+
+                              if (tipepaket == 'produk') {
+                                String itemname = item['nama_paket_msg'];
+                                // selecteditemindex[itemname] = index;
+                                // retrieveindex = selecteditemindex[itemname];
+                                retrieveindex = itemname;
+                                if (retrieveindex != null && itemTapCounts.containsKey(retrieveindex)) {
+                                  itemTapCounts[retrieveindex!] = itemTapCounts[retrieveindex]! + 1;
+                                } else if (retrieveindex != null) {
+                                  itemTapCounts[retrieveindex!] = 1;
+                                }
+                                log('counter : $itemTapCounts');
+                                if (sisastok == 0) {
+                                  CherryToast.error(title: Text('Error'), description: Text('Stok sudah kosong')).show(context);
+                                } else if (retrieveindex != null) {
+                                  if (itemTapCounts[retrieveindex]! > sisastok) {
+                                    CherryToast.error(title: Text('Error'), description: Text('Penggunaan item melebihi stok')).show(context);
+                                  } else {
+                                    widget.onAddItem({
+                                      "id_paket_msg": item['id_paket_msg'],
+                                      "nama_paket_msg": item['nama_paket_msg'],
+                                      "detail_paket": item['detail_paket'],
+                                      "jlh": 1,
+                                      "satuan": widget.defaultUnit,
+                                      "harga_paket_msg": item['harga_paket_msg'],
+                                      "harga_total": item['harga_paket_msg'],
+                                      "durasi_awal": item['durasi_awal'],
+                                      // "status": "unpaid",
+                                      "is_addon": false,
+                                    });
+                                  }
+                                }
                               } else {
                                 widget.onAddItem({
                                   "id_paket_msg": item['id_paket_msg'],
@@ -1496,40 +1541,31 @@ class _MassageItemGridState extends State<MassageItemGrid> {
                                 });
                               }
                             }
-                          } else {
-                            widget.onAddItem({
-                              "id_paket_msg": item['id_paket_msg'],
-                              "nama_paket_msg": item['nama_paket_msg'],
-                              "detail_paket": item['detail_paket'],
-                              "jlh": 1,
-                              "satuan": widget.defaultUnit,
-                              "harga_paket_msg": item['harga_paket_msg'],
-                              "harga_total": item['harga_paket_msg'],
-                              "durasi_awal": item['durasi_awal'],
-                              // "status": "unpaid",
-                              "is_addon": false,
-                            });
-                          }
-                        }
-                      },
-                      onTapCancel: () => setState(() => _itemTapStates[index] = false),
-                      child: Transform.scale(
-                        scale: _itemTapStates[index] ? 0.8 : 1.0,
-                        child: Container(
-                          decoration: BoxDecoration(color: const Color.fromARGB(255, 64, 97, 55), borderRadius: BorderRadius.circular(20)),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(widget.icon, size: 50, color: Colors.white),
-                              Text(item['nama_paket_msg'], style: const TextStyle(color: Colors.white, fontSize: 16), textAlign: TextAlign.center),
-                              Text(formatCurrency.format(displayPrice), style: const TextStyle(color: Colors.white, fontSize: 16)),
-                            ],
+                          },
+                          onTapCancel: () {
+                            _itemTapStates[index] = false;
+                            _itemTapStates.refresh();
+                          },
+                          child: Transform.scale(
+                            scale: _itemTapStates[index] ? 0.8 : 1.0,
+                            child: Container(
+                              decoration: BoxDecoration(color: const Color.fromARGB(255, 64, 97, 55), borderRadius: BorderRadius.circular(20)),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(widget.icon, size: 50, color: Colors.white),
+                                  Text(item['nama_paket_msg'], style: const TextStyle(color: Colors.white, fontSize: 16), textAlign: TextAlign.center),
+                                  Text(formatCurrency.format(displayPrice), style: const TextStyle(color: Colors.white, fontSize: 16)),
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
+                        );
+                      });
+                    },
+                  );
+                }
+              }),
             ],
           ),
         ),
