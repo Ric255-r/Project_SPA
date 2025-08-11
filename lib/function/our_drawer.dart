@@ -271,7 +271,7 @@ class _OurDrawerState extends State<OurDrawer> {
                     ListTile(
                       leading: const Icon(Icons.safety_check),
                       title: const Text(
-                        'Komisi Terapis',
+                        'Komisi',
                         style: TextStyle(fontFamily: 'Poppins'),
                       ),
                       onTap: () {
