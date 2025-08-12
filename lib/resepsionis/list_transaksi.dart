@@ -1698,7 +1698,7 @@ class ListTransaksiController extends GetxController {
         ),
         content: Container(
           height: Get.height - 100,
-          width: Get.width - 200,
+          width: Get.width - 150,
           child: SingleChildScrollView(
             child: Column(
               children: [

@@ -584,7 +584,8 @@ class _ListpekerjaState extends State<Listpekerja> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isMobile = MediaQuery.of(context).size.shortestSide < 600;
+    final shortest = MediaQuery.of(context).size.shortestSide;
+    final bool isMobile = shortest < 600 || shortest > 700;
     log("isi Shortest Side ${MediaQuery.of(context).size.shortestSide}");
     // =======================================================================
 
@@ -1321,7 +1322,7 @@ class _WidgetListPekerjaMobileState extends State<WidgetListPekerjaMobile> {
           return AlertDialog(
             content: SingleChildScrollView(
               child: Container(
-                width: Get.width - 200,
+                width: Get.width - 100,
                 height: Get.height - 200,
                 child: ListView(
                   children: [
