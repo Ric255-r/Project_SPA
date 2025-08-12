@@ -46,19 +46,12 @@ void onStartBackgroundTask(ServiceInstance service) async {
   print("Background service started!");
 
   if (service is AndroidServiceInstance) {
-    await service.setForegroundNotificationInfo(
-      title: "SPA App Service",
-      content: "Running in background",
-    );
+    await service.setForegroundNotificationInfo(title: "SPA App Service", content: "Running in background");
 
     await service.setAsForegroundService();
 
     // Keep WebSocket or other logic running
-    service.invoke('startForeground', {
-      'id': 1,
-      'title': 'WebSocket Running',
-      'content': 'Keeping WebSocket Active',
-    });
+    service.invoke('startForeground', {'id': 1, 'title': 'WebSocket Running', 'content': 'Keeping WebSocket Active'});
   }
 
   service.on("keepAlive").listen((event) {
@@ -68,22 +61,18 @@ void onStartBackgroundTask(ServiceInstance service) async {
 
 void startbackgroundservice() async {
   final service = FlutterBackgroundService();
+  final isRunning = await service.isRunning();
 
-  final androidConfiguration = AndroidConfiguration(
-    onStart: onStartBackgroundTask,
-    isForegroundMode: true,
-    autoStart: true,
-  );
+  if (isRunning) {
+    return;
+  }
 
-  final iosConfiguration = IosConfiguration(
-    onForeground: onStartBackgroundTask,
-    onBackground: (service) => false,
-  );
+  // autostart awal itu true, ak jadikan false biar nda 2x callstack di main
+  final androidConfiguration = AndroidConfiguration(onStart: onStartBackgroundTask, isForegroundMode: true, autoStart: false);
 
-  await service.configure(
-    androidConfiguration: androidConfiguration,
-    iosConfiguration: iosConfiguration,
-  );
+  final iosConfiguration = IosConfiguration(onForeground: onStartBackgroundTask, onBackground: (service) => false);
+
+  await service.configure(androidConfiguration: androidConfiguration, iosConfiguration: iosConfiguration);
   await service.startService();
 }
 
@@ -111,9 +100,7 @@ void main() async {
         channelDescription: 'Notification channel for basic tests',
         defaultColor: Color(0xFF9D50DD),
         ledColor: Colors.white,
-        importance:
-            NotificationImportance
-                .Max, // Ensure high importance untuk event Tap
+        importance: NotificationImportance.Max, // Ensure high importance untuk event Tap
       ),
     ],
     debug: true, //
@@ -208,9 +195,7 @@ class Myapp extends StatelessWidget {
             //   () => MainResepsionisController(),
             // );
             // Change from Get.create to Get.lazyPut to ensure singleton behavior:
-            Get.lazyPut<MainResepsionisController>(
-              () => MainResepsionisController(),
-            );
+            Get.lazyPut<MainResepsionisController>(() => MainResepsionisController());
           }),
         ),
         GetPage(name: '/rating', page: () => Rating()),
@@ -249,13 +234,7 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> fnLogin() async {
     log("Login WOi");
     try {
-      var response = await dio.post(
-        '${myIpAddr()}/login',
-        data: {
-          'id_karyawan': _userController.text,
-          'passwd': _passwordController.text,
-        },
-      );
+      var response = await dio.post('${myIpAddr()}/login', data: {'id_karyawan': _userController.text, 'passwd': _passwordController.text});
 
       // Convert Response data
       final Map<String, dynamic> responseData = response.data;
@@ -314,13 +293,9 @@ class _LoginPageState extends State<LoginPage> {
     } catch (e) {
       if (e is DioException) {
         if (e.response!.statusCode == 401) {
-          CherryToast.warning(
-            title: Text('Username Atau Password Tidak sesuai'),
-          ).show(context);
+          CherryToast.warning(title: Text('Username Atau Password Tidak sesuai')).show(context);
         } else if (e.response!.statusCode == 404) {
-          CherryToast.warning(
-            title: Text('User Tidak Ditemukan'),
-          ).show(context);
+          CherryToast.warning(title: Text('User Tidak Ditemukan')).show(context);
         }
       }
       log("Error : ${e}");
@@ -345,10 +320,7 @@ class _LoginPageState extends State<LoginPage> {
     // testStorage();
     super.initState();
     // Kunci Login Screen Saja
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
+    SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
   }
 
   @override
@@ -359,13 +331,7 @@ class _LoginPageState extends State<LoginPage> {
         child: Stack(
           children: [
             Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.black, Colors.yellow],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
+              decoration: BoxDecoration(gradient: LinearGradient(colors: [Colors.black, Colors.yellow], begin: Alignment.topLeft, end: Alignment.bottomRight)),
             ),
             Positioned.fill(
               child: SingleChildScrollView(
@@ -377,10 +343,7 @@ class _LoginPageState extends State<LoginPage> {
                         margin: EdgeInsets.only(top: 150),
                         width: 200,
                         height: 200,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(100),
-                          border: Border.all(width: 0, color: Colors.black),
-                        ),
+                        decoration: BoxDecoration(borderRadius: BorderRadius.circular(100), border: Border.all(width: 0, color: Colors.black)),
                         child: ClipOval(
                           child: Image.asset(
                             'assets/spa.jpg',
@@ -397,23 +360,15 @@ class _LoginPageState extends State<LoginPage> {
                         padding: EdgeInsets.only(left: 10),
                         margin: EdgeInsets.only(top: 40),
                         width: 300,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
+                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
                         child: TextField(
                           focusNode: _firstFieldFocus,
                           textInputAction: TextInputAction.next,
                           onEditingComplete: () {
-                            FocusScope.of(
-                              context,
-                            ).requestFocus(_secondFieldFocus);
+                            FocusScope.of(context).requestFocus(_secondFieldFocus);
                           },
                           controller: _userController,
-                          decoration: InputDecoration(
-                            hintText: 'Isi User ID',
-                            border: InputBorder.none,
-                          ),
+                          decoration: InputDecoration(hintText: 'Isi User ID', border: InputBorder.none),
                         ),
                       ),
                     ),
@@ -422,18 +377,12 @@ class _LoginPageState extends State<LoginPage> {
                         padding: EdgeInsets.only(left: 10),
                         margin: EdgeInsets.only(top: 20),
                         width: 300,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
+                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
                         child: TextField(
                           focusNode: _secondFieldFocus,
                           textInputAction: TextInputAction.done,
                           controller: _passwordController,
-                          decoration: InputDecoration(
-                            hintText: 'Isi Password',
-                            border: InputBorder.none,
-                          ),
+                          decoration: InputDecoration(hintText: 'Isi Password', border: InputBorder.none),
                           obscureText: true,
                         ),
                       ),
@@ -446,28 +395,14 @@ class _LoginPageState extends State<LoginPage> {
                           height: 50,
                           child: ElevatedButton(
                             onPressed: () async {
-                              if (_userController.text != "" &&
-                                  _passwordController.text != "") {
+                              if (_userController.text != "" && _passwordController.text != "") {
                                 await fnLogin();
                               } else {
-                                CherryToast.warning(
-                                  title: Text(
-                                    'Inputan Username / Password Kosong',
-                                  ),
-                                ).show(context);
+                                CherryToast.warning(title: Text('Inputan Username / Password Kosong')).show(context);
                               }
                             },
-                            child: Text(
-                              'LOGIN',
-                              style: TextStyle(
-                                fontSize: 25,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.black.withOpacity(0.5),
-                            ),
+                            child: Text('LOGIN', style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: Colors.white)),
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.black.withOpacity(0.5)),
                           ),
                         ),
                       ),

@@ -40,6 +40,17 @@ class _OurDrawerState extends State<OurDrawer> {
     super.initState();
     _profileUser();
     _getHakAkses();
+    print("Isi CurrentRoute ${Get.currentRoute}");
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    _scrollBarController.dispose();
+    if (Get.currentRoute != "/ListTransaksi") {
+      Get.delete<ListTransaksiController>();
+    }
+    super.dispose();
   }
 
   Future<void> _profileUser() async {
@@ -65,10 +76,7 @@ class _OurDrawerState extends State<OurDrawer> {
   Future<void> _getHakAkses() async {
     try {
       final prefs = await getTokenSharedPref();
-      var response = await dio.get(
-        '${myIpAddr()}/hak_akses',
-        options: Options(headers: {"Authorization": "bearer " + prefs!}),
-      );
+      var response = await dio.get('${myIpAddr()}/hak_akses', options: Options(headers: {"Authorization": "bearer " + prefs!}));
 
       setState(() {
         Map<String, dynamic> resData = response.data;
@@ -104,19 +112,10 @@ class _OurDrawerState extends State<OurDrawer> {
                 decoration: BoxDecoration(color: Color(0XFFFFE0B2)),
                 child: UserAccountsDrawerHeader(
                   decoration: BoxDecoration(color: Color(0XFFFFE0B2)),
-                  accountName: Text(
-                    namaKaryawan.value,
-                    style: TextStyle(color: Colors.black),
-                  ),
+                  accountName: Text(namaKaryawan.value, style: TextStyle(color: Colors.black)),
                   accountEmail: Text(jabatan.value),
                   currentAccountPictureSize: Size.square(50),
-                  currentAccountPicture: CircleAvatar(
-                    backgroundColor: Colors.amberAccent,
-                    child: Text(
-                      idKaryawan.value,
-                      style: TextStyle(fontSize: 12),
-                    ),
-                  ),
+                  currentAccountPicture: CircleAvatar(backgroundColor: Colors.amberAccent, child: Text(idKaryawan.value, style: TextStyle(fontSize: 12))),
                 ),
               ),
             ),
@@ -130,109 +129,75 @@ class _OurDrawerState extends State<OurDrawer> {
               child: ListView(
                 controller: _scrollBarController,
                 children: [
-                  if (_listSecondHakAkses.contains("resepsionis") ||
-                      _firstHakAkses == "resepsionis") ...[
+                  if (_listSecondHakAkses.contains("resepsionis") || _firstHakAkses == "resepsionis") ...[
                     ListTile(
                       leading: const Icon(Icons.room),
-                      title: const Text(
-                        'Menu Awal Resepsionis',
-                        style: TextStyle(fontFamily: 'Poppins'),
-                      ),
+                      title: const Text('Menu Awal Resepsionis', style: TextStyle(fontFamily: 'Poppins')),
                       onTap: () {
                         Get.to(() => MainResepsionis());
                       },
                     ),
                     ListTile(
                       leading: const Icon(Icons.list_rounded),
-                      title: const Text(
-                        'List Transaksi',
-                        style: TextStyle(fontFamily: 'Poppins'),
-                      ),
+                      title: const Text('List Transaksi', style: TextStyle(fontFamily: 'Poppins')),
                       onTap: () {
                         Get.offAll(() => ListTransaksi());
                       },
                     ),
                     ListTile(
                       leading: const Icon(Icons.person_2),
-                      title: const Text(
-                        'List Terapis',
-                        style: TextStyle(fontFamily: 'Poppins'),
-                      ),
+                      title: const Text('List Terapis', style: TextStyle(fontFamily: 'Poppins')),
                       onTap: () {
                         Get.offAll(() => TampilanTerapis());
                       },
                     ),
                   ],
 
-                  if (_listSecondHakAkses.contains("spv") ||
-                      _firstHakAkses == "spv")
+                  if (_listSecondHakAkses.contains("spv") || _firstHakAkses == "spv")
                     ListTile(
                       leading: const Icon(Icons.room),
-                      title: const Text(
-                        'Ruang Tunggu Terapis',
-                        style: TextStyle(fontFamily: 'Poppins'),
-                      ),
+                      title: const Text('Ruang Tunggu Terapis', style: TextStyle(fontFamily: 'Poppins')),
                       onTap: () {
                         Get.to(() => MainRt());
                       },
                     ),
-                  if (_listSecondHakAkses.contains("ruangan") ||
-                      _firstHakAkses == "ruangan")
+                  if (_listSecondHakAkses.contains("ruangan") || _firstHakAkses == "ruangan")
                     ListTile(
                       leading: const Icon(Icons.room_service),
-                      title: const Text(
-                        'Kamar Terapis',
-                        style: TextStyle(fontFamily: 'Poppins'),
-                      ),
+                      title: const Text('Kamar Terapis', style: TextStyle(fontFamily: 'Poppins')),
                       onTap: () {
                         Get.to(() => MainKamarTerapis());
                       },
                     ),
-                  if (_listSecondHakAkses.contains("ob") ||
-                      _firstHakAkses == "ob")
+                  if (_listSecondHakAkses.contains("ob") || _firstHakAkses == "ob")
                     ListTile(
                       leading: const Icon(Icons.room_service),
-                      title: const Text(
-                        'Menu Utama',
-                        style: TextStyle(fontFamily: 'Poppins'),
-                      ),
+                      title: const Text('Menu Utama', style: TextStyle(fontFamily: 'Poppins')),
                       onTap: () {
                         Get.to(() => Hp_Ob());
                       },
                     ),
-                  if (_listSecondHakAkses.contains("admin") ||
-                      _firstHakAkses == "admin")
+                  if (_listSecondHakAkses.contains("admin") || _firstHakAkses == "admin")
                     ListTile(
                       leading: const Icon(Icons.admin_panel_settings_rounded),
-                      title: const Text(
-                        'Admin',
-                        style: TextStyle(fontFamily: 'Poppins'),
-                      ),
+                      title: const Text('Admin', style: TextStyle(fontFamily: 'Poppins')),
                       onTap: () {
                         Get.to(() => MainAdmin());
                       },
                     ),
 
-                  if (_listSecondHakAkses.contains("kitchen") ||
-                      _firstHakAkses == "kitchen")
+                  if (_listSecondHakAkses.contains("kitchen") || _firstHakAkses == "kitchen")
                     ListTile(
                       leading: const Icon(Icons.admin_panel_settings_rounded),
-                      title: const Text(
-                        'Kitchen',
-                        style: TextStyle(fontFamily: 'Poppins'),
-                      ),
+                      title: const Text('Kitchen', style: TextStyle(fontFamily: 'Poppins')),
                       onTap: () {
                         Get.to(() => MainKitchen());
                       },
                     ),
-                  if (_listSecondHakAkses.contains("admin") ||
-                      _firstHakAkses == "admin")
+                  if (_listSecondHakAkses.contains("admin") || _firstHakAkses == "admin")
                     ListTile(
                       leading: const Icon(Icons.admin_panel_settings_rounded),
-                      title: const Text(
-                        'Komisi Pekerja',
-                        style: TextStyle(fontFamily: 'Poppins'),
-                      ),
+                      title: const Text('Komisi Pekerja', style: TextStyle(fontFamily: 'Poppins')),
                       onTap: () {
                         Get.to(() => PageKomisiPekerja());
                       },
@@ -240,40 +205,28 @@ class _OurDrawerState extends State<OurDrawer> {
                   if (_firstHakAkses == "owner") ...[
                     ListTile(
                       leading: const Icon(Icons.admin_panel_settings_rounded),
-                      title: const Text(
-                        'Owner',
-                        style: TextStyle(fontFamily: 'Poppins'),
-                      ),
+                      title: const Text('Owner', style: TextStyle(fontFamily: 'Poppins')),
                       onTap: () {
                         Get.to(() => OwnerPage());
                       },
                     ),
                     ListTile(
                       leading: const Icon(Icons.admin_panel_settings_rounded),
-                      title: const Text(
-                        'Admin',
-                        style: TextStyle(fontFamily: 'Poppins'),
-                      ),
+                      title: const Text('Admin', style: TextStyle(fontFamily: 'Poppins')),
                       onTap: () {
-                        Get.to(() => MainAdmin());
+                        Get.off(() => MainAdmin());
                       },
                     ),
                     ListTile(
                       leading: const Icon(Icons.list_rounded),
-                      title: const Text(
-                        'List Transaksi',
-                        style: TextStyle(fontFamily: 'Poppins'),
-                      ),
+                      title: const Text('List Transaksi', style: TextStyle(fontFamily: 'Poppins')),
                       onTap: () {
                         Get.offAll(() => ListTransaksi());
                       },
                     ),
                     ListTile(
                       leading: const Icon(Icons.safety_check),
-                      title: const Text(
-                        'Komisi',
-                        style: TextStyle(fontFamily: 'Poppins'),
-                      ),
+                      title: const Text('Komisi', style: TextStyle(fontFamily: 'Poppins')),
                       onTap: () {
                         Get.offAll(() => laporankomisi());
                       },
@@ -284,15 +237,10 @@ class _OurDrawerState extends State<OurDrawer> {
             ),
           ),
 
-          Expanded(
-            child: Container(),
-          ), // Pushes the Log Out ListTile to the bottom
+          Expanded(child: Container()), // Pushes the Log Out ListTile to the bottom
           ListTile(
             leading: const Icon(Icons.logout),
-            title: const Text(
-              'Log Out',
-              style: TextStyle(fontFamily: 'Poppins'),
-            ),
+            title: const Text('Log Out', style: TextStyle(fontFamily: 'Poppins')),
             onTap: () async {
               // Krna ak buat permanen, jd paksa hapus
               Get.delete<MainResepsionisController>(force: true);
