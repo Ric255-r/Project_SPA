@@ -89,10 +89,14 @@ class _ListRoomState extends State<ListRoom> {
   String? dropdownValue;
   String? dropdownStatus;
   TextEditingController textcari = TextEditingController();
+
   void isibuttoneditruangan(BuildContext context, Map<String, dynamic> item) {
     TextEditingController kodeRuangController = TextEditingController();
     TextEditingController nmRuangController = TextEditingController(
       text: item['nama_ruangan'],
+    );
+    TextEditingController hargavipcontroller = TextEditingController(
+      text: item['harga_ruangan'].toString(),
     );
     TextEditingController lantaiController = TextEditingController(
       text: item['lantai'].toString(),
@@ -107,7 +111,7 @@ class _ListRoomState extends State<ListRoom> {
             content: SingleChildScrollView(
               child: Container(
                 width: Get.width - 350,
-                height: Get.height - 350,
+                height: Get.height - 280,
                 child: ListView(
                   children: [
                     Row(
@@ -118,7 +122,7 @@ class _ListRoomState extends State<ListRoom> {
                           padding: EdgeInsets.zero,
                           child: Container(
                             margin: EdgeInsets.only(top: 80),
-                            height: 170,
+                            height: 270,
                             width: 200,
                             child: Padding(
                               padding: EdgeInsets.only(right: 10),
@@ -151,6 +155,14 @@ class _ListRoomState extends State<ListRoom> {
                                   ),
                                   SizedBox(height: 15),
                                   Text(
+                                    'Harga Kamar :',
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 18,
+                                    ),
+                                  ),
+                                  SizedBox(height: 15),
+                                  Text(
                                     'Status :',
                                     style: TextStyle(
                                       fontFamily: 'Poppins',
@@ -164,7 +176,7 @@ class _ListRoomState extends State<ListRoom> {
                         ),
                         Container(
                           margin: EdgeInsets.only(top: 80),
-                          height: 250,
+                          height: 300,
                           width: 500,
                           child: Padding(
                             padding: EdgeInsets.only(left: 10),
@@ -278,6 +290,30 @@ class _ListRoomState extends State<ListRoom> {
                                     borderRadius: BorderRadius.circular(10),
                                     color: Colors.grey[300],
                                   ),
+                                  child: TextField(
+                                    controller: hargavipcontroller,
+                                    decoration: InputDecoration(
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                        vertical: 13.5,
+                                        horizontal: 10,
+                                      ),
+                                    ),
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontFamily: 'Poppins',
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: 12),
+                                Container(
+                                  alignment: Alignment.centerLeft,
+                                  width: 480,
+                                  height: 30,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10),
+                                    color: Colors.grey[300],
+                                  ),
                                   child: DropdownButton<String>(
                                     value: dropdownStatus,
                                     isExpanded: true,
@@ -332,9 +368,14 @@ class _ListRoomState extends State<ListRoom> {
                                             data: {
                                               "nama_ruangan":
                                                   nmRuangController.text,
-                                              "lantai":
+                                              "lantai": 
                                                   int.tryParse(
                                                     lantaiController.text,
+                                                  ) ??
+                                                  0,
+                                              "harga_ruangan":
+                                                  int.tryParse(
+                                                    hargavipcontroller.text,
                                                   ) ??
                                                   0,
                                               "jenis_ruangan": dropdownValue,

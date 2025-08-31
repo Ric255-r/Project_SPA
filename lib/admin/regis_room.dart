@@ -45,6 +45,7 @@ class _RegisRoomState extends State<RegisRoom> {
   var txtJenisRuangan = TextEditingController();
   var txtKodeRuangan = TextEditingController();
   var txtPassRuangan = TextEditingController();
+  var txthargaruangan = TextEditingController();
 
   @override
   void initState() {
@@ -130,6 +131,7 @@ class _RegisRoomState extends State<RegisRoom> {
           "lantai": int.parse(txtLantaiRuangan.text),
           "jenis_ruangan": _dropdownValue!,
           "status": _dropdownStatus!,
+          "harga_ruangan": txthargaruangan.text,
           "passwd": txtPassRuangan.text,
           "hak_akses": "7",
         },
@@ -142,6 +144,7 @@ class _RegisRoomState extends State<RegisRoom> {
       txtLantaiRuangan.clear();
       txtKodeRuangan.clear();
       txtPassRuangan.clear();
+      txthargaruangan.clear();
       _dropdownValue = null; // Reset dropdown if needed
       _dropdownStatus = null;
       _getIdRoom();
@@ -192,7 +195,7 @@ class _RegisRoomState extends State<RegisRoom> {
               Padding(
                 padding: const EdgeInsets.only(top: 50),
                 child: Container(
-                  height: 270,
+                  height: 300,
                   width: 710,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
@@ -205,7 +208,7 @@ class _RegisRoomState extends State<RegisRoom> {
                           Padding(
                             padding: EdgeInsets.zero,
                             child: Container(
-                              height: 260,
+                              height: 300,
                               width: 200,
                               decoration: BoxDecoration(
                                 color: Colors.white,
@@ -267,13 +270,21 @@ class _RegisRoomState extends State<RegisRoom> {
                                         fontSize: 18,
                                       ),
                                     ),
+                                    SizedBox(height: 15),
+                                    Text(
+                                      'Harga Kamar :',
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontSize: 18,
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
                             ),
                           ),
                           Container(
-                            height: 260,
+                            height: 300,
                             width: 500,
                             decoration: BoxDecoration(
                               color: Colors.white,
@@ -465,6 +476,30 @@ class _RegisRoomState extends State<RegisRoom> {
                                     ),
                                     child: TextField(
                                       controller: txtPassRuangan,
+                                      decoration: InputDecoration(
+                                        border: InputBorder.none,
+                                        contentPadding: EdgeInsets.symmetric(
+                                          vertical: 13.5,
+                                          horizontal: 10,
+                                        ),
+                                      ),
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontFamily: 'Poppins',
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(height: 11),
+                                  Container(
+                                    alignment: Alignment.centerLeft,
+                                    width: 480,
+                                    height: 30,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      color: Colors.grey[300],
+                                    ),
+                                    child: TextField(
+                                      controller: txthargaruangan,
                                       decoration: InputDecoration(
                                         border: InputBorder.none,
                                         contentPadding: EdgeInsets.symmetric(

@@ -2340,43 +2340,43 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                 ],
                               ),
                               //  BAGIAN UNTUK MENGAKTIFKAN SELURUH FUNGSI KTV 3 TERAPIS
-                              // Row(
-                              //   children: [
-                              //     Padding(
-                              //       padding: EdgeInsets.only(top: 15),
-                              //       child: Text(
-                              //         'TRANSAKSI KTV',
-                              //         style: TextStyle(
-                              //           fontSize: 18,
-                              //           fontFamily: 'Poppins',
-                              //         ),
-                              //       ),
-                              //     ),
-                              //     Container(
-                              //       margin: EdgeInsets.only(top: 13, left: 20),
-                              //       width: 20,
-                              //       height: 20,
-                              //       child: Obx(
-                              //         () => Checkbox(
-                              //           value: ischecked.value,
-                              //           onChanged: (bool? newvalue) {
-                              //             if (ischecked.value == true) {
-                              //               txtTerapis2.clear();
-                              //               txtTerapis3.clear();
-                              //               controllerPekerja
-                              //                   .getidterapis2
-                              //                   .value = '';
-                              //               controllerPekerja
-                              //                   .getidterapis3
-                              //                   .value = '';
-                              //             }
-                              //             ischecked.value = newvalue!;
-                              //           },
-                              //         ),
-                              //       ),
-                              //     ),
-                              //   ],
-                              // ),
+                              Row(
+                                children: [
+                                  Padding(
+                                    padding: EdgeInsets.only(top: 15),
+                                    child: Text(
+                                      'TRANSAKSI KTV',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontFamily: 'Poppins',
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    margin: EdgeInsets.only(top: 13, left: 20),
+                                    width: 20,
+                                    height: 20,
+                                    child: Obx(
+                                      () => Checkbox(
+                                        value: ischecked.value,
+                                        onChanged: (bool? newvalue) {
+                                          if (ischecked.value == true) {
+                                            txtTerapis2.clear();
+                                            txtTerapis3.clear();
+                                            controllerPekerja
+                                                .getidterapis2
+                                                .value = '';
+                                            controllerPekerja
+                                                .getidterapis3
+                                                .value = '';
+                                          }
+                                          ischecked.value = newvalue!;
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ],
                           ),
                         ),

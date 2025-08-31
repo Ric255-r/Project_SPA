@@ -75,6 +75,8 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
   Timer? _apiSyncTimer;
   SharedPreferences? _prefs;
   Rx<DateTime> fixedTime = DateTime.now().obs;
+  String idterapis2 = '';
+  String idterapis3 = '';
 
   KamarTerapisMgr _kamarTerapisMgr = KamarTerapisMgr();
 
@@ -356,8 +358,30 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
 
       log(dataterapistambahan[0].toString());
       if (idTransaksi != '') {
-        namaterapis2.value = dataterapistambahan[0]['nama_karyawan'];
-        namaterapis3.value = dataterapistambahan[1]['nama_karyawan'];
+        if (dataterapistambahan.isNotEmpty) {
+          namaterapis2.value = dataterapistambahan[0]['nama_karyawan'];
+        }
+
+        if (dataterapistambahan.length > 1) {
+          namaterapis3.value = dataterapistambahan[1]['nama_karyawan'];
+        }
+      }
+
+      if (namaterapis2.value != '') {
+        var responseterapis2 = await dio.get(
+          '${myIpAddr()}/kamar_terapis/getidterapistambahan',
+          data: {"nama_karyawan": namaterapis2.value},
+        );
+
+        idterapis2 = responseterapis2.data[0]['id_karyawan'];
+      }
+
+      if (namaterapis3.value != '') {
+        var responseterapis3 = await dio.get(
+          '${myIpAddr()}/kamar_terapis/getidterapistambahan',
+          data: {"nama_karyawan": namaterapis3.value},
+        );
+        idterapis3 = responseterapis3.data[0]['id_karyawan'];
       }
     } catch (e) {
       if (e is DioException) {
@@ -596,6 +620,31 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
             "nominal_komisi": komisi,
           },
         );
+
+        log(idterapis2.toString());
+        log(idterapis3.toString());
+
+        if (idterapis2 != '') {
+          var komisiterapis2 = await dio.post(
+            '${myIpAddr()}/komisi/daftarkomisipekerja',
+            data: {
+              "id_karyawan": idterapis2,
+              "id_transaksi": idTransaksi,
+              "nominal_komisi": komisi,
+            },
+          );
+        }
+
+        if (idterapis3 != '') {
+          var komisiterapis3 = await dio.post(
+            '${myIpAddr()}/komisi/daftarkomisipekerja',
+            data: {
+              "id_karyawan": idterapis3,
+              "id_transaksi": idTransaksi,
+              "nominal_komisi": komisi,
+            },
+          );
+        }
 
         var responsee = await dio.post(
           '${myIpAddr()}/komisi/daftarkomisipekerja',
