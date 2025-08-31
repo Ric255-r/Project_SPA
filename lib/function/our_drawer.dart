@@ -40,6 +40,17 @@ class _OurDrawerState extends State<OurDrawer> {
     super.initState();
     _profileUser();
     _getHakAkses();
+    print("Isi CurrentRoute ${Get.currentRoute}");
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    _scrollBarController.dispose();
+    if (Get.currentRoute != "/ListTransaksi") {
+      Get.delete<ListTransaksiController>();
+    }
+    super.dispose();
   }
 
   Future<void> _profileUser() async {
@@ -255,7 +266,7 @@ class _OurDrawerState extends State<OurDrawer> {
                         style: TextStyle(fontFamily: 'Poppins'),
                       ),
                       onTap: () {
-                        Get.to(() => MainAdmin());
+                        Get.off(() => MainAdmin());
                       },
                     ),
                     ListTile(
@@ -287,18 +298,44 @@ class _OurDrawerState extends State<OurDrawer> {
           Expanded(
             child: Container(),
           ), // Pushes the Log Out ListTile to the bottom
-          ListTile(
-            leading: const Icon(Icons.logout),
-            title: const Text(
-              'Log Out',
-              style: TextStyle(fontFamily: 'Poppins'),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 30, left: 20),
+            child: InkWell(
+              child: SizedBox(
+                height: 40,
+                width: double.infinity,
+                child: Row(
+                  children: [
+                    const Icon(Icons.logout),
+                    SizedBox(width: 5),
+                    Text(
+                      'Log Out',
+                      style: TextStyle(fontFamily: 'Poppins', fontSize: 16),
+                    ),
+                  ],
+                ),
+              ),
+              onTap: () async {
+                // Krna ak buat permanen, jd paksa hapus
+                Get.delete<MainResepsionisController>(force: true);
+                await fnLogout();
+              },
             ),
-            onTap: () async {
-              // Krna ak buat permanen, jd paksa hapus
-              Get.delete<MainResepsionisController>(force: true);
-              await fnLogout();
-            },
           ),
+
+          // ListTile(
+          //   leading: const Icon(Icons.logout),
+          //   title: const Text(
+          //     'Log Out',
+          //     style: TextStyle(fontFamily: 'Poppins'),
+          //   ),
+          //   onTap: () async {
+          //     // Krna ak buat permanen, jd paksa hapus
+          //     Get.delete<MainResepsionisController>(force: true);
+          //     await fnLogout();
+          //   },
+          // ),
+          // SizedBox(height: 20),
         ],
       ),
     );

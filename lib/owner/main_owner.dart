@@ -56,7 +56,15 @@ class OwnerPageController extends GetxController {
     // TODO: implement onInit
     super.onInit();
     _getData();
+    _getLineChart();
+    log("${DateTime.now().month}".padLeft(2, "0"));
   }
+
+  RxnString _selectedTahun = RxnString(null);
+  RxnString _startMonth = RxnString(null);
+  RxnString _startYear = RxnString(null);
+  RxnString _endMonth = RxnString(null);
+  RxnString _endYear = RxnString(null);
 
   final monthNames = {
     "01": "Jan",
@@ -73,33 +81,186 @@ class OwnerPageController extends GetxController {
     "12": "Des",
   };
 
+  /// Hitung selisih bulan berbasis (tahun, bulan) — hari diabaikan.
+  int monthDiff(DateTime start, DateTime end) {
+    // Normalisasi ke awal bulan
+    final s = DateTime(start.year, start.month);
+    final e = DateTime(end.year, end.month);
+    return (e.year - s.year) * 12 + (e.month - s.month);
+  }
+
+  /// Validasi range maksimal 12 bulan
+  bool isRangeValid(DateTime start, DateTime end, {int maxMonths = 12}) {
+    if (end.isBefore(start)) return false; // end harus >= start
+    final diff = monthDiff(start, end); // selisih bulan
+    return diff <= maxMonths; // ≤ 12 bulan diperbolehkan
+  }
+
+  DateTime _toYm(String y, String m) => DateTime(int.parse(y), int.parse(m));
+
+  void showFilterLineChart() {
+    Get.dialog(
+      AlertDialog(
+        content: SingleChildScrollView(
+          child: Column(
+            children: [
+              Text("Pilih Periode Awal"),
+              SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      value: _startMonth.value,
+                      onChanged: (String? value) {
+                        _startMonth.value = value!;
+                      },
+                      items:
+                          monthNames.entries.map((data) {
+                            return DropdownMenuItem<String>(value: data.key, child: Text(data.value));
+                          }).toList(),
+                      decoration: InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 1)),
+                    ),
+                  ),
+                  SizedBox(width: 20),
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      value: _startYear.value,
+                      onChanged: (String? value) {
+                        _startYear.value = value!;
+                      },
+                      items:
+                          _tahunTransaksi.map((String data) {
+                            return DropdownMenuItem<String>(value: data, child: Text(data));
+                          }).toList(),
+                      decoration: InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 1)),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 20),
+
+              Text("Pilih Periode Akhir"),
+              SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      value: _endMonth.value,
+                      onChanged: (String? value) {
+                        _endMonth.value = value!;
+                      },
+                      items:
+                          monthNames.entries.map((data) {
+                            return DropdownMenuItem<String>(value: data.key, child: Text(data.value));
+                          }).toList(),
+                      decoration: InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 1)),
+                    ),
+                  ),
+                  SizedBox(width: 20),
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      value: _endYear.value,
+                      onChanged: (String? value) {
+                        _endYear.value = value!;
+                      },
+                      items:
+                          _tahunTransaksi.map((String data) {
+                            return DropdownMenuItem<String>(value: data, child: Text(data));
+                          }).toList(),
+                      decoration: InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 1)),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  // Cek Apa Sudah Pilih Semua
+                  if (_startMonth.value == null || _startYear.value == null || _endMonth.value == null || _endYear.value == null) {
+                    Get.snackbar('Perhatian', 'Pilih bulan & tahun untuk periode awal dan akhir.');
+                    return;
+                  }
+
+                  // Build DateTime dari Dropdown
+                  final start = _toYm(_startYear.value!, _startMonth.value!);
+                  final end = _toYm(_endYear.value!, _endMonth.value!);
+                  // 1️⃣ Cek tahun harus sama
+                  if (start.year != end.year) {
+                    Get.snackbar('Tidak Valid', 'Tahun awal dan tahun akhir harus sama.');
+                    return;
+                  }
+                  // Validasi Range Maks 12 bln
+                  if (!isRangeValid(start, end)) {
+                    final selisih = monthDiff(start, end);
+                    Get.snackbar('Range terlalu panjang', 'Maksimal 12 bulan (sekarang: $selisih bulan).');
+                    return; // matikan fungsi sesuai requirement
+                  }
+
+                  // Lolos Validasi? Format
+                  final startStr = '${start.year.toString().padLeft(4, '0')}-${start.month.toString().padLeft(2, '0')}';
+                  final endStr = '${end.year.toString().padLeft(4, '0')}-${end.month.toString().padLeft(2, '0')}';
+
+                  _getLineChart(startDate: startStr, endDate: endStr).then((_) => Get.back());
+
+                  log("Hasil startStr ${startStr} dan endStr ${endStr}");
+                },
+                child: Text("Filter!"),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   RxList<dynamic> _listLineChart = [].obs;
   RxList<dynamic> _monthlySales = [].obs;
   RxList<dynamic> _paketSales = [].obs;
   RxList<dynamic> _produkSales = [].obs;
   RxList<dynamic> _paketTerlaris = [].obs;
+  RxList<String> _tahunTransaksi = <String>[].obs;
 
-  Future<void> _getData() async {
+  Future<void> _getLineChart({String? startDate, String? endDate}) async {
+    print("Eksekusi GetLineChart");
     try {
-      var response = await dio.get('${myIpAddr()}/main_owner/get_laporan');
+      String url = '';
+      if (startDate != null && endDate != null) {
+        url = "${myIpAddr()}/main_owner/line_chart?start_date=$startDate&end_date=$endDate";
+      } else {
+        url = "${myIpAddr()}/main_owner/line_chart";
+      }
 
+      var response = await dio.get(url);
       Map<String, dynamic> responseData = response.data;
-      List<dynamic> lineChart = responseData['for_line_chart'];
-      List<dynamic> paketTerlaris = responseData['paket_terlaris'];
 
-      log("isi responseData $responseData");
+      List<dynamic> lineChart = responseData['for_line_chart'];
 
       _listLineChart.assignAll(lineChart);
-      _monthlySales.assignAll(responseData['monthly_sales']);
-      _paketSales.assignAll(responseData['sum_paket']);
-      _produkSales.assignAll(responseData['sum_produk']);
-      _paketTerlaris.assignAll(paketTerlaris);
 
       monthlyData.clear();
       for (var i = 0; i < lineChart.length; i++) {
         String bulan = (lineChart[i]['bulan'] as String).split("-")[1];
         monthlyData.add(MonthlySales((monthNames[bulan] as String), (lineChart[i]['omset_jual'] as num).toDouble()));
       }
+    } catch (e) {
+      log("Error di Get Line Chart ${e}");
+    }
+  }
+
+  Future<void> _getData() async {
+    try {
+      var response = await dio.get('${myIpAddr()}/main_owner/get_laporan');
+
+      Map<String, dynamic> responseData = response.data;
+      List<dynamic> paketTerlaris = responseData['paket_terlaris'];
+
+      log("isi responseData $responseData");
+
+      _monthlySales.assignAll(responseData['monthly_sales']);
+      _paketSales.assignAll(responseData['sum_paket']);
+      _produkSales.assignAll(responseData['sum_produk']);
+      _paketTerlaris.assignAll(paketTerlaris);
+      _tahunTransaksi.assignAll((responseData['tahun_transaksi'] as List).map((el) => el.toString()));
 
       pieChartData.clear();
       if (paketTerlaris.isNotEmpty) {
@@ -172,6 +333,8 @@ class _OwnerPageState extends State<OwnerPage> {
 
   @override
   void dispose() {
+    // Reset Kembali
+    Get.find<OwnerPageController>()._getLineChart();
     super.dispose();
   }
 
@@ -480,7 +643,58 @@ class IsiOwnerPage extends StatelessWidget {
                             child: Column(
                               children: [
                                 SizedBox(height: 10.w),
-                                Text('Pendapatan Bulanan', style: TextStyle(fontSize: 12.w, fontWeight: FontWeight.bold, height: 1)),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(left: 100),
+                                        child: Text(
+                                          'Pendapatan Bulanan',
+                                          style: TextStyle(fontSize: 12.w, fontWeight: FontWeight.bold, height: 1),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ),
+                                    // Padding(
+                                    //   padding: const EdgeInsets.only(right: 15),
+                                    //   child: SizedBox(
+                                    //     height: 20.w, // samain dengan fontSize Text kiri
+                                    //     width: 60.w,
+                                    //     child: Obx(
+                                    //       () => DropdownButtonFormField<String>(
+                                    //         value: c._selectedTahun.value,
+                                    //         onChanged: (String? value) {
+                                    //           c._selectedTahun.value = value!;
+                                    //         },
+                                    //         items:
+                                    //             c._tahunTransaksi.map((String data) {
+                                    //               return DropdownMenuItem<String>(value: data, child: Text(data));
+                                    //             }).toList(),
+                                    //         decoration: InputDecoration(
+                                    //           border: OutlineInputBorder(),
+                                    //           contentPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                                    //         ),
+                                    //       ),
+                                    //     ),
+                                    //   ),
+                                    // ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(right: 15),
+                                      child: SizedBox(
+                                        height: 20.w, // samain dengan fontSize Text kiri
+                                        width: 80.w,
+                                        child: ElevatedButton(
+                                          onPressed: () {
+                                            c.showFilterLineChart();
+                                          },
+                                          child: Text("Filter"),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                                 Obx(() {
                                   if (c.monthlyData.isEmpty) {
                                     return CircularProgressIndicator();
@@ -544,7 +758,20 @@ class IsiOwnerPage extends StatelessWidget {
 class MonthlyRevenueChart extends StatelessWidget {
   final List<MonthlySales> salesData;
 
-  List<double> targetSales = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  List<double> targetSales = [
+    100000000,
+    100000000,
+    100000000,
+    100000000,
+    100000000,
+    100000000,
+    100000000,
+    100000000,
+    100000000,
+    100000000,
+    100000000,
+    100000000,
+  ];
 
   MonthlyRevenueChart({super.key, required this.salesData});
 
