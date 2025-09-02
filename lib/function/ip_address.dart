@@ -1,3 +1,3 @@
 String myIpAddr() {
-  return "http://192.168.31.183:5500/api";
+  return "http://100.90.36.28:5500/api";
 }
