@@ -70,6 +70,7 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
   final RxInt detik = RxInt(0);
   final RxBool _istimerunning = RxBool(false);
   final RxBool _triggerAddOnWktSlesai = RxBool(false);
+  final RxBool _isFinished = false.obs;
 
   Timer? _timer;
   Timer? _apiSyncTimer;
@@ -1143,27 +1144,42 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
                             title: Text('Confirm'),
                             content: Text('Selesaikan pelayanan?'),
                             actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Get.back();
-                                },
-                                child: Text('Cancel'),
+                              Obx(
+                                () => TextButton(
+                                  onPressed: () {
+                                    if (_isFinished.value) return;
+                                    Get.back();
+                                  },
+                                  child: _isFinished.value ? CircularProgressIndicator() : Text('Cancel'),
+                                ),
                               ),
-                              TextButton(
-                                onPressed: () async {
-                                  Get.back();
-                                  inputkomisi();
-                                  await _checkAndNavigate();
+                              Obx(
+                                () => TextButton(
+                                  onPressed: () async {
+                                    // Jika Sedang Proses, Do Nothing
+                                    if (_isFinished.value) return;
 
-                                  if (namaterapis2.value != '' || namaterapis3.value != '') {
-                                    setstatusterapisttambahan();
-                                    log('jalankan');
-                                  }
+                                    _isFinished.value = true;
 
-                                  namaterapis2.value = '';
-                                  namaterapis3.value = '';
-                                },
-                                child: Text('Confirm'),
+                                    try {
+                                      Get.back();
+                                      await inputkomisi();
+                                      await _checkAndNavigate();
+
+                                      if (namaterapis2.value != '' || namaterapis3.value != '') {
+                                        setstatusterapisttambahan();
+                                        log('jalankan');
+                                      }
+
+                                      namaterapis2.value = '';
+                                      namaterapis3.value = '';
+                                    } finally {
+                                      // Balikin Lg Ke Value awal, biar sukses atau gagal
+                                      _isFinished.value = false;
+                                    }
+                                  },
+                                  child: _isFinished.value ? CircularProgressIndicator() : Text('Confirm'),
+                                ),
                               ),
                             ],
                           ),
