@@ -200,15 +200,16 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
           _playNotif();
         }
       } else {
+        // BLOK ELSE DIHAPUS, JADI TIMER HANYA MENGHITUNG MUNDUR DAN TIDAK MELAKUKAN APA-APA SAAT MENCAPAI 0
         // _timer?.cancel();
         // _istimerunning.value = false;
         // _apiSyncTimer?.cancel();
 
         // // panggil api utk delete waktu sementara disini.
         // _deleteWaktuTemp();
-        if (durasi!.value == 0) {
-          _checkAndNavigate();
-        }
+        // if (durasi!.value == 0) {
+        //   _checkAndNavigate();
+        // }
       }
     });
   }
@@ -1167,7 +1168,7 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
                                       await _checkAndNavigate();
 
                                       if (namaterapis2.value != '' || namaterapis3.value != '') {
-                                        setstatusterapisttambahan();
+                                        await setstatusterapisttambahan();
                                         log('jalankan');
                                       }
 
