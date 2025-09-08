@@ -316,26 +316,51 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
     }
   }
 
+  // Future<void> _checkAndNavigate() async {
+  //   if (durasi?.value != null && durasi!.value > 600) {
+  //     Get.offAll(() => CustEndSblmWaktunya());
+  //     _timer?.cancel();
+  //     _apiSyncTimer?.cancel();
+  //     _istimerunning.value = false;
+  //   } else {
+  //     bool result = await _kamarTerapisMgr.setSelesai();
+  //     if (result) {
+  //       // Get.offAll(() => TerapisConfirm());
+  //       _timer?.cancel();
+  //       _istimerunning.value = false;
+  //       _apiSyncTimer?.cancel();
+
+  //       // panggil api utk delete waktu sementara disini.
+  //       // _deleteWaktuTemp();
+  //     } else {
+  //       log("Error di fn _checkAndNavigate");
+  //     }
+  //   }
+  // }
+
   Future<void> _checkAndNavigate() async {
+    // 1) Stop semua aktivitas periodik dulu supaya tidak overlap
+    _timer?.cancel();
+    _apiSyncTimer?.cancel();
+    _istimerunning.value = false;
+
+    // 2) Jika selesai sebelum waktunya (> 600 dtk sisa), langsung navigasi
     if (durasi?.value != null && durasi!.value > 600) {
       Get.offAll(() => CustEndSblmWaktunya());
-      _timer?.cancel();
-      _apiSyncTimer?.cancel();
-      _istimerunning.value = false;
-    } else {
-      bool result = await _kamarTerapisMgr.setSelesai();
-      if (result) {
-        // Get.offAll(() => TerapisConfirm());
-        _timer?.cancel();
-        _istimerunning.value = false;
-        _apiSyncTimer?.cancel();
-
-        // panggil api utk delete waktu sementara disini.
-        // _deleteWaktuTemp();
-      } else {
-        log("Error di fn _checkAndNavigate");
-      }
+      return;
     }
+
+    // 3) Jika waktunya sudah mepet/0, barulah setSelesai
+    final ok = await _kamarTerapisMgr.setSelesai();
+
+    if (ok) {
+      // (opsional) navigasi/feedback sukses di sini
+      Get.offAll(() => MainKamarTerapis());
+      return;
+    }
+
+    // 4) Gagal? Lempar error supaya handler di tombol bisa re-enable state
+    throw Exception('setSelesai gagal');
   }
 
   Future<void> getterapistambahan() async {
@@ -1165,7 +1190,6 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
                                     try {
                                       Get.back();
                                       await inputkomisi();
-                                      await _checkAndNavigate();
 
                                       if (namaterapis2.value != '' || namaterapis3.value != '') {
                                         await setstatusterapisttambahan();
@@ -1174,6 +1198,8 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
 
                                       namaterapis2.value = '';
                                       namaterapis3.value = '';
+
+                                      await _checkAndNavigate();
                                     } finally {
                                       // Balikin Lg Ke Value awal, biar sukses atau gagal
                                       _isFinished.value = false;
