@@ -1615,6 +1615,8 @@ class ListTransaksiController extends GetxController {
 
   Future<void> getterapistambahan(idtrans) async {
     try {
+      namaterapis2.value = '';
+      namaterapis3.value = '';
       var response3 = await dio.get(
         '${myIpAddr()}/kamar_terapis/dataterapistambahan',
         data: {"id_transaksi": idtrans},
@@ -1626,7 +1628,6 @@ class ListTransaksiController extends GetxController {
         responseTerapis.map((e) => Map<String, dynamic>.from(e)).toList(),
       );
 
-      log(dataterapistambahan[0].toString());
       if (idtrans != '') {
         if (dataterapistambahan.isNotEmpty) {
           namaterapis2.value = dataterapistambahan[0]['nama_karyawan'];
@@ -1641,7 +1642,6 @@ class ListTransaksiController extends GetxController {
           namaterapis3.value = '';
           idterapis3 = '';
         }
-        log('isi terapis tambahan  : $dataterapistambahan');
 
         if (namaterapis2.value != '') {
           var responseterapis2 = await dio.get(
@@ -1748,9 +1748,9 @@ class ListTransaksiController extends GetxController {
       _combinedAddOn.add(data);
     }
 
-    await getterapistambahan(idTrans);
-
     print(_combinedAddOn);
+
+    await getterapistambahan(idTrans);
 
     Get.dialog(
       AlertDialog(

@@ -345,6 +345,8 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
   Future<void> getterapistambahan() async {
     try {
       String idTransaksi = _kamarTerapisMgr.getData()['idTransaksi'];
+      namaterapis2.value = '';
+      namaterapis3.value = '';
       var response3 = await dio.get(
         '${myIpAddr()}/kamar_terapis/dataterapistambahan',
         data: {"id_transaksi": idTransaksi},
@@ -1583,7 +1585,7 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
                                             () => Text(
                                               'Terapis : ${_namaTerapis.value} ${namaterapis2.value == '' ? '' : ','} ${namaterapis2.value} ${namaterapis3.value == '' ? '' : ','} ${namaterapis3.value}',
                                               style: TextStyle(
-                                                fontSize: 25,
+                                                fontSize: 20,
                                                 fontFamily: 'Poppins',
                                               ),
                                             ),

@@ -119,6 +119,8 @@ class TerapisConfirmController extends GetxController {
       log("isi Data food ${_dataFood}");
       log(_idTransaksi.value);
 
+      _namaTerapis2.value = '';
+      _namaTerapis3.value = '';
       var response3 = await dio.get(
         '${myIpAddr()}/kamar_terapis/dataterapistambahan',
         data: {"id_transaksi": _idTransaksi.value},
@@ -748,7 +750,7 @@ class TerapisConfirm extends StatelessWidget {
                                 child: Text(
                                   'Terapis : ${c._namaTerapis.value} ${c._namaTerapis2.value == '' ? '' : ','} ${c._namaTerapis2.value} ${c._namaTerapis3.value == '' ? '' : ','} ${c._namaTerapis3.value}',
                                   style: TextStyle(
-                                    fontSize: 25,
+                                    fontSize: 20,
                                     fontFamily: 'Poppins',
                                   ),
                                 ),
