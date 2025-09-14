@@ -1,6 +1,7 @@
 // ignore_for_file: unnecessary_import, prefer_interpolation_to_compose_strings
 
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
@@ -47,6 +48,8 @@ class OwnerPageController extends GetxController {
 
   // Data Contoh Buat Revenue LineChart
   RxList<MonthlySales> monthlyData = <MonthlySales>[].obs;
+  RxList<MonthlySales> monthlyDataTarget = <MonthlySales>[].obs;
+  // End Revenue LineChart
   RxList<ChartData> pieChartData = <ChartData>[].obs;
 
   var dio = Dio();
@@ -57,6 +60,7 @@ class OwnerPageController extends GetxController {
     super.onInit();
     _getData();
     _getLineChart();
+    _getDataTarget();
     log("${DateTime.now().month}".padLeft(2, "0"));
   }
 
@@ -65,6 +69,11 @@ class OwnerPageController extends GetxController {
   RxnString _startYear = RxnString(null);
   RxnString _endMonth = RxnString(null);
   RxnString _endYear = RxnString(null);
+  RxnString _startMonthTargetOmset = RxnString(null);
+  RxnString _startYearTargetOmset = RxnString(null);
+  RxnString _endMonthTargetOmset = RxnString(null);
+  RxnString _endYearTargetOmset = RxnString(null);
+  int _nominalTargetOmset = 0;
 
   final monthNames = {
     "01": "Jan",
@@ -118,7 +127,10 @@ class OwnerPageController extends GetxController {
                           monthNames.entries.map((data) {
                             return DropdownMenuItem<String>(value: data.key, child: Text(data.value));
                           }).toList(),
-                      decoration: InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 1)),
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                      ),
                     ),
                   ),
                   SizedBox(width: 20),
@@ -132,7 +144,10 @@ class OwnerPageController extends GetxController {
                           _tahunTransaksi.map((String data) {
                             return DropdownMenuItem<String>(value: data, child: Text(data));
                           }).toList(),
-                      decoration: InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 1)),
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                      ),
                     ),
                   ),
                 ],
@@ -153,7 +168,10 @@ class OwnerPageController extends GetxController {
                           monthNames.entries.map((data) {
                             return DropdownMenuItem<String>(value: data.key, child: Text(data.value));
                           }).toList(),
-                      decoration: InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 1)),
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                      ),
                     ),
                   ),
                   SizedBox(width: 20),
@@ -167,7 +185,10 @@ class OwnerPageController extends GetxController {
                           _tahunTransaksi.map((String data) {
                             return DropdownMenuItem<String>(value: data, child: Text(data));
                           }).toList(),
-                      decoration: InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 1)),
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                      ),
                     ),
                   ),
                 ],
@@ -176,7 +197,10 @@ class OwnerPageController extends GetxController {
               ElevatedButton(
                 onPressed: () {
                   // Cek Apa Sudah Pilih Semua
-                  if (_startMonth.value == null || _startYear.value == null || _endMonth.value == null || _endYear.value == null) {
+                  if (_startMonth.value == null ||
+                      _startYear.value == null ||
+                      _endMonth.value == null ||
+                      _endYear.value == null) {
                     Get.snackbar('Perhatian', 'Pilih bulan & tahun untuk periode awal dan akhir.');
                     return;
                   }
@@ -192,13 +216,19 @@ class OwnerPageController extends GetxController {
                   // Validasi Range Maks 12 bln
                   if (!isRangeValid(start, end)) {
                     final selisih = monthDiff(start, end);
-                    Get.snackbar('Range terlalu panjang', 'Maksimal 12 bulan (sekarang: $selisih bulan).');
+                    if (selisih < 0) {
+                      Get.snackbar('Periode Bulan Terbalik', ' (sekarang: Selisih $selisih bulan).');
+                    } else {
+                      Get.snackbar('Range terlalu panjang', 'Maksimal 12 bulan (sekarang: $selisih bulan).');
+                    }
                     return; // matikan fungsi sesuai requirement
                   }
 
                   // Lolos Validasi? Format
-                  final startStr = '${start.year.toString().padLeft(4, '0')}-${start.month.toString().padLeft(2, '0')}';
-                  final endStr = '${end.year.toString().padLeft(4, '0')}-${end.month.toString().padLeft(2, '0')}';
+                  final startStr =
+                      '${start.year.toString().padLeft(4, '0')}-${start.month.toString().padLeft(2, '0')}';
+                  final endStr =
+                      '${end.year.toString().padLeft(4, '0')}-${end.month.toString().padLeft(2, '0')}';
 
                   _getLineChart(startDate: startStr, endDate: endStr).then((_) => Get.back());
 
@@ -213,12 +243,220 @@ class OwnerPageController extends GetxController {
     );
   }
 
-  RxList<dynamic> _listLineChart = [].obs;
+  void showDialogTargetSales({String modeDialog = "filter"}) {
+    // Dialog di Target Sales
+    Get.dialog(
+      AlertDialog(
+        content: SingleChildScrollView(
+          child: Column(
+            children: [
+              const Text("Pilih Periode Awal"),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      value: _startMonthTargetOmset.value,
+                      onChanged: (String? value) {
+                        _startMonthTargetOmset.value = value!;
+                      },
+                      items:
+                          monthNames.entries.map((data) {
+                            return DropdownMenuItem<String>(value: data.key, child: Text(data.value));
+                          }).toList(),
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 20),
+                  // Ini Untuk Dropdown Tahun. Jika Filter,
+                  // ambil tahun yg ada di table target_sales
+                  if (modeDialog == "filter") ...[
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: _startYearTargetOmset.value,
+                        onChanged: (String? value) {
+                          _startYearTargetOmset.value = value!;
+                        },
+                        items:
+                            tahunTransaksiTarget.map<DropdownMenuItem<String>>((data) {
+                              return DropdownMenuItem<String>(value: data, child: Text(data));
+                            }).toList(),
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                        ),
+                      ),
+                    ),
+                  ] else ...[
+                    Expanded(
+                      child: Obx(
+                        () => DropdownButtonFormField<int>(
+                          value:
+                              _startYearTargetOmset.value != null
+                                  ? int.tryParse(_startYearTargetOmset.value!)
+                                  : null,
+                          onChanged: (int? value) {
+                            _startYearTargetOmset.value = value.toString();
+                          },
+                          items:
+                              listYear.map((int year) {
+                                return DropdownMenuItem<int>(value: year, child: Text(year.toString()));
+                              }).toList(),
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              if (modeDialog == "filter") ...[
+                Text("Pilih Periode Akhir"),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: _endMonthTargetOmset.value,
+                        onChanged: (String? value) {
+                          _endMonthTargetOmset.value = value!;
+                        },
+                        items:
+                            monthNames.entries.map((data) {
+                              return DropdownMenuItem<String>(value: data.key, child: Text(data.value));
+                            }).toList(),
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: _endYearTargetOmset.value,
+                        onChanged: (String? value) {
+                          _endYearTargetOmset.value = value!;
+                        },
+                        items:
+                            tahunTransaksiTarget.map((String data) {
+                              return DropdownMenuItem<String>(value: data, child: Text(data));
+                            }).toList(),
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    // Cek Apa Sudah Pilih Semua
+                    if (_startMonthTargetOmset.value == null ||
+                        _startYearTargetOmset.value == null ||
+                        _endMonthTargetOmset.value == null ||
+                        _endYearTargetOmset.value == null) {
+                      Get.snackbar('Perhatian', 'Pilih bulan & tahun untuk periode awal dan akhir.');
+                      return;
+                    }
+
+                    // Build DateTime dari Dropdown
+                    final start = _toYm(_startYearTargetOmset.value!, _startMonthTargetOmset.value!);
+                    final end = _toYm(_endYearTargetOmset.value!, _endMonthTargetOmset.value!);
+                    // 1️⃣ Cek tahun harus sama
+                    if (start.year != end.year) {
+                      Get.snackbar('Tidak Valid', 'Tahun awal dan tahun akhir harus sama.');
+                      return;
+                    }
+                    // Validasi Range Maks 12 bln
+                    if (!isRangeValid(start, end)) {
+                      final selisih = monthDiff(start, end);
+                      if (selisih < 0) {
+                        Get.snackbar('Periode Bulan Terbalik', ' (sekarang: Selisih $selisih bulan).');
+                      } else {
+                        Get.snackbar(
+                          'Range terlalu panjang',
+                          'Maksimal 12 bulan (sekarang: $selisih bulan).',
+                        );
+                      }
+                      return; // matikan fungsi sesuai requirement
+                    }
+
+                    // Lolos Validasi? Format
+                    final startStr =
+                        '${start.year.toString().padLeft(4, '0')}-${start.month.toString().padLeft(2, '0')}';
+                    final endStr =
+                        '${end.year.toString().padLeft(4, '0')}-${end.month.toString().padLeft(2, '0')}';
+
+                    // Panggil Method
+                    // _getLineChart(startDate: startStr, endDate: endStr).then((_) => Get.back());
+                    _getDataTarget(
+                      startMonth: start.month,
+                      endMonth: end.month,
+                      startYear: start.year,
+                      endYear: end.year,
+                    ).then((_) => Get.back());
+
+                    log("Hasil startStr $startStr dan endStr $endStr");
+                  },
+                  child: Text("Filter!"),
+                ),
+              ] else ...[
+                const Text("Input Target Sales"),
+                const SizedBox(height: 20),
+
+                TextField(
+                  keyboardType: TextInputType.number,
+
+                  inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly], //
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: "Rp. ",
+                    contentPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                  ),
+                  onChanged: (value) {
+                    _nominalTargetOmset = int.tryParse(value) ?? 0;
+                    log("Isi Nominal target Omset $_nominalTargetOmset");
+                  },
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    _storeDataTarget();
+                  },
+                  child: Text("Simpan Perubahan"),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    ).then((_) {
+      _startMonthTargetOmset.value = null;
+      _startYearTargetOmset.value = null;
+      _endMonthTargetOmset.value = null;
+      _endYearTargetOmset.value = null;
+      _nominalTargetOmset = 0;
+    });
+  }
+
   RxList<dynamic> _monthlySales = [].obs;
   RxList<dynamic> _paketSales = [].obs;
   RxList<dynamic> _produkSales = [].obs;
   RxList<dynamic> _paketTerlaris = [].obs;
   RxList<String> _tahunTransaksi = <String>[].obs;
+  RxList<dynamic> dataTargetOmset = [].obs;
+  RxList<String> tahunTransaksiTarget = <String>[].obs;
+  RxList<int> listYear = List<int>.generate(100, (index) => 2020 + index).obs;
 
   Future<void> _getLineChart({String? startDate, String? endDate}) async {
     print("Eksekusi GetLineChart");
@@ -234,13 +472,26 @@ class OwnerPageController extends GetxController {
       Map<String, dynamic> responseData = response.data;
 
       List<dynamic> lineChart = responseData['for_line_chart'];
+      List<dynamic> targetLineChart = responseData['line_chart_target'];
 
-      _listLineChart.assignAll(lineChart);
+      log("Isi Data GetLineChart $responseData");
 
       monthlyData.clear();
+      monthlyDataTarget.clear();
       for (var i = 0; i < lineChart.length; i++) {
+        // Ini Buat For Line Chart,
         String bulan = (lineChart[i]['bulan'] as String).split("-")[1];
-        monthlyData.add(MonthlySales((monthNames[bulan] as String), (lineChart[i]['omset_jual'] as num).toDouble()));
+        monthlyData.add(
+          MonthlySales((monthNames[bulan] as String), (lineChart[i]['omset_jual'] as num).toDouble()),
+        );
+        // krn Length datany sama, masukin aje ke for loop ini
+        String bulanTarget = (targetLineChart[i]['periode'] as String).split("-")[1];
+        monthlyDataTarget.add(
+          MonthlySales(
+            (monthNames[bulanTarget] as String),
+            (targetLineChart[i]['target_omset'] as num).toDouble(),
+          ),
+        );
       }
     } catch (e) {
       log("Error di Get Line Chart ${e}");
@@ -265,7 +516,10 @@ class OwnerPageController extends GetxController {
       pieChartData.clear();
       if (paketTerlaris.isNotEmpty) {
         // Calculate total sold for percentage calculation
-        double totalSold = paketTerlaris.fold(0, (sum, item) => sum + (item['jumlah_terjual'] as num).toDouble());
+        double totalSold = paketTerlaris.fold(
+          0,
+          (sum, item) => sum + (item['jumlah_terjual'] as num).toDouble(),
+        );
 
         // Define a fixed color palette for up to 4 items
         final List<Color> colorPalette = [Colors.blue, Colors.green, Colors.orange, Colors.red];
@@ -290,6 +544,70 @@ class OwnerPageController extends GetxController {
       if (e is DioException) {
         log("Errr di ${e.response!.data}");
       }
+    }
+  }
+
+  RxInt targetOmsetBulanIni = 0.obs;
+  Future<void> _getDataTarget({int? startMonth, int? endMonth, int? startYear, int? endYear}) async {
+    try {
+      DateTime now = DateTime.now(); // Get the current date and time
+      int currentYear = now.year; // Extract the year
+      startYear ??= currentYear; // if null get currentYear
+      String yearParams = "?start_year=$startYear";
+
+      if (endYear != null) {
+        yearParams += "&end_year=$endYear";
+      }
+
+      var url = '${myIpAddr()}/main_owner/get_target_sales$yearParams';
+
+      if (startMonth != null && endMonth != null) {
+        url += "&start_month=$startMonth&end_month=$endMonth";
+        log("Execute getDataTarget filter");
+      }
+
+      var response = await dio.get(url);
+      Map<String, dynamic> responseData = response.data;
+      dataTargetOmset.assignAll(responseData['get_sales_target']);
+      tahunTransaksiTarget.assignAll(
+        (responseData['tahun_target'] as List).map((el) => el['year'].toString()),
+      );
+
+      targetOmsetBulanIni.value = (responseData['current_month_target_sales'] as int);
+    } catch (e) {
+      if (e is DioException) {
+        log("Error di getDataTarget dio ${e.response!.data}");
+      }
+
+      log("Error di getDataTarget dio $e");
+    }
+  }
+
+  Future<void> _storeDataTarget() async {
+    try {
+      var response = await dio.post(
+        '${myIpAddr()}/main_owner/upsert_target_sales',
+        data: {
+          "month_number": _startMonthTargetOmset.value,
+          "year": _startYearTargetOmset.value,
+          "target_omset": _nominalTargetOmset,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        Get.back();
+        Get.snackbar("Success", "Data Target Berhasil Disimpan");
+
+        _getDataTarget();
+        _getLineChart();
+        targetOmsetBulanIni.refresh();
+      }
+    } catch (e) {
+      if (e is DioException) {
+        log("Error di storeDataTarget dio ${e.response!.data}");
+      }
+
+      log("Error di storeDataTarget $e");
     }
   }
 
@@ -319,7 +637,10 @@ class _OwnerPageState extends State<OwnerPage> {
     // TODO: implement initState
     super.initState();
     // Kunci Orientasi
-    SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
 
     // Delay UI building. biar g ancur pas login. minimal 500, klo 100 kecepatan
     Future.delayed(Duration(milliseconds: 500), () {
@@ -339,7 +660,10 @@ class _OwnerPageState extends State<OwnerPage> {
   }
 
   Widget _buildLoadingScreen() {
-    return Scaffold(backgroundColor: Color(0XFFFFE0B2), body: Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(Colors.white))));
+    return Scaffold(
+      backgroundColor: Color(0XFFFFE0B2),
+      body: Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(Colors.white))),
+    );
   }
 
   @override
@@ -373,8 +697,20 @@ class IsiOwnerPage extends StatelessWidget {
     const double mobileAdjustmentFactor = 1.25; // UI akan 25% lebih kecil
 
     // 3. Hitung designSize yang efektif berdasarkan tipe perangkat
-    final double effectiveDesignWidth = isMobile ? tabletDesignWidth * mobileAdjustmentFactor : tabletDesignWidth;
-    final double effectiveDesignHeight = isMobile ? tabletDesignHeight * mobileAdjustmentFactor : tabletDesignHeight;
+    final double effectiveDesignWidth =
+        isMobile ? tabletDesignWidth * mobileAdjustmentFactor : tabletDesignWidth;
+    final double effectiveDesignHeight =
+        isMobile ? tabletDesignHeight * mobileAdjustmentFactor : tabletDesignHeight;
+
+    int currSalesMethod() {
+      // ambil data sales bulan saat ini
+      var currSales = c._monthlySales.firstWhere(
+        (item) => item['bulan'] == DateFormat('yyyy-MM').format(DateTime.now()),
+        orElse: () => {'omset_jual': 0},
+      );
+
+      return currSales['omset_jual'] ?? 0;
+    }
 
     return ScreenUtilInit(
       designSize: Size(effectiveDesignWidth, effectiveDesignHeight),
@@ -391,7 +727,10 @@ class IsiOwnerPage extends StatelessWidget {
             title: Center(
               child: Padding(
                 padding: const EdgeInsets.only(right: 50),
-                child: ClipRRect(borderRadius: BorderRadius.circular(50), child: Image.asset("assets/spa.jpg", height: 60.w)),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(50),
+                  child: Image.asset("assets/spa.jpg", height: 60.w),
+                ),
               ),
             ),
           ),
@@ -403,7 +742,6 @@ class IsiOwnerPage extends StatelessWidget {
             child: SingleChildScrollView(
               child: Container(
                 width: double.infinity,
-                height: MediaQuery.of(context).size.height + 360.w,
                 padding: const EdgeInsets.only(top: 30, left: 20, right: 20),
                 color: Color(0XFFFFE0B2),
                 child: Column(
@@ -415,7 +753,15 @@ class IsiOwnerPage extends StatelessWidget {
                             margin: const EdgeInsets.only(left: 10, right: 10),
                             height: 20.w,
                             width: double.infinity,
-                            child: Text("Dashboard", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins', height: 1, fontSize: 12.w)),
+                            child: Text(
+                              "Dashboard",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Poppins',
+                                height: 1,
+                                fontSize: 12.w,
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -427,34 +773,40 @@ class IsiOwnerPage extends StatelessWidget {
                           child: Container(
                             margin: const EdgeInsets.only(left: 10, right: 10),
                             padding: const EdgeInsets.only(left: 15),
-                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                             // height: 90.w, // 90.w dari desain 660dp
                             width: double.infinity,
                             child: Obx(() {
-                              // ambil data bulan saat ini
-                              var currSales = c._monthlySales.firstWhere(
-                                (item) => item['bulan'] == DateFormat('yyyy-MM').format(DateTime.now()),
-                                orElse: () => {'omset_jual': 0.0},
-                              );
-
                               // ambil bulan lalu
                               var prevSales = c._monthlySales.firstWhere(
-                                (item) => item['bulan'] == DateFormat('yyyy-MM').format(DateTime(DateTime.now().year, DateTime.now().month - 1)),
-                                orElse: () => {'omset_jual': 0.0},
+                                (item) =>
+                                    item['bulan'] ==
+                                    DateFormat(
+                                      'yyyy-MM',
+                                    ).format(DateTime(DateTime.now().year, DateTime.now().month - 1)),
+                                orElse: () => {'omset_jual': 0},
                               );
 
                               // kalkulasi valuenya
-                              var currSalesValue = currSales['omset_jual'] ?? 0.0;
-                              var prevSalesValue = prevSales['omset_jual'] ?? 0.0;
+                              var currSalesValue = currSalesMethod();
+                              var prevSalesValue = prevSales['omset_jual'] ?? 0;
 
                               // kalkulasi peningkatan persentase
                               double peningkatanPersen = 0.0;
                               if (prevSalesValue != 0) {
-                                peningkatanPersen = ((currSalesValue - prevSalesValue) / prevSalesValue) * 100;
+                                peningkatanPersen =
+                                    ((currSalesValue - prevSalesValue) / prevSalesValue) * 100;
                               }
 
                               // format currency
-                              final currencyFormat = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp. ', decimalDigits: 0);
+                              final currencyFormat = NumberFormat.currency(
+                                locale: 'id_ID',
+                                symbol: 'Rp. ',
+                                decimalDigits: 0,
+                              );
 
                               final formattedSales = currencyFormat.format(currSalesValue);
 
@@ -462,7 +814,8 @@ class IsiOwnerPage extends StatelessWidget {
                               if (peningkatanPersen > 0) {
                                 statusText = "Meningkat Sebesar ${peningkatanPersen.toStringAsFixed(0)}%";
                               } else if (peningkatanPersen < 0) {
-                                statusText = "Menurun Sebesar ${peningkatanPersen.abs().toStringAsFixed(0)}% dari bulan lalu";
+                                statusText =
+                                    "Menurun Sebesar ${peningkatanPersen.abs().toStringAsFixed(0)}% dari bulan lalu";
                               } else {
                                 statusText = "Tidak Ada Perubahan";
                               }
@@ -471,9 +824,19 @@ class IsiOwnerPage extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   SizedBox(height: 20),
-                                  Text("Current Monthly Sales", style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 12.w)),
+                                  Text(
+                                    "Current Total Monthly Sales",
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 11.w,
+                                    ),
+                                  ),
                                   SizedBox(height: 10),
-                                  Text(formattedSales, style: TextStyle(fontFamily: 'Poppins', fontSize: 8.w)),
+                                  Text(
+                                    formattedSales,
+                                    style: TextStyle(fontFamily: 'Poppins', fontSize: 8.w),
+                                  ),
                                   SizedBox(height: 10),
                                   AutoSizeText(
                                     statusText,
@@ -495,7 +858,10 @@ class IsiOwnerPage extends StatelessWidget {
                           child: Container(
                             margin: const EdgeInsets.only(left: 10, right: 10),
                             padding: const EdgeInsets.only(left: 15),
-                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                             // height: 90.w, // 90.w dari desain 660dp
                             width: double.infinity,
                             child: Obx(() {
@@ -507,7 +873,11 @@ class IsiOwnerPage extends StatelessWidget {
 
                               // Ambil previous month
                               var previousPaketMonth = c._paketSales.firstWhere(
-                                (item) => item['bulan'] == DateFormat('yyyy-MM').format(DateTime(DateTime.now().year, DateTime.now().month - 1)),
+                                (item) =>
+                                    item['bulan'] ==
+                                    DateFormat(
+                                      'yyyy-MM',
+                                    ).format(DateTime(DateTime.now().year, DateTime.now().month - 1)),
                                 orElse: () => {'omset_bulanan': 0.0},
                               );
 
@@ -522,7 +892,11 @@ class IsiOwnerPage extends StatelessWidget {
                               }
 
                               // format currency
-                              final currencyFormat = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp. ', decimalDigits: 0);
+                              final currencyFormat = NumberFormat.currency(
+                                locale: 'id_ID',
+                                symbol: 'Rp. ',
+                                decimalDigits: 0,
+                              );
 
                               final formattedSales = currencyFormat.format(currentPaket);
 
@@ -531,7 +905,8 @@ class IsiOwnerPage extends StatelessWidget {
                               if (peningkatanPersen > 0) {
                                 statusText = "Meningkat Sebesar ${peningkatanPersen.toStringAsFixed(0)}%";
                               } else if (peningkatanPersen < 0) {
-                                statusText = "Menurun Sebesar ${peningkatanPersen.abs().toStringAsFixed(0)}% dari bulan lalu";
+                                statusText =
+                                    "Menurun Sebesar ${peningkatanPersen.abs().toStringAsFixed(0)}% dari bulan lalu";
                               } else {
                                 statusText = "Tidak Ada Perubahan";
                               }
@@ -540,9 +915,19 @@ class IsiOwnerPage extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   SizedBox(height: 20),
-                                  Text("Current Paket Sales", style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 12.w)),
+                                  Text(
+                                    "Current Paket Sales",
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12.w,
+                                    ),
+                                  ),
                                   SizedBox(height: 10),
-                                  Text(formattedSales, style: TextStyle(fontFamily: 'Poppins', fontSize: 8.w)),
+                                  Text(
+                                    formattedSales,
+                                    style: TextStyle(fontFamily: 'Poppins', fontSize: 8.w),
+                                  ),
                                   SizedBox(height: 10),
                                   AutoSizeText(
                                     statusText,
@@ -564,7 +949,10 @@ class IsiOwnerPage extends StatelessWidget {
                           child: Container(
                             margin: const EdgeInsets.only(left: 10, right: 10),
                             padding: const EdgeInsets.only(left: 15),
-                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                             // height: 90.w, // 90.w dari desain 660dp
                             width: double.infinity,
                             child: Obx(() {
@@ -576,7 +964,11 @@ class IsiOwnerPage extends StatelessWidget {
 
                               // ambil bulan lalu
                               var prevProdukMonth = c._produkSales.firstWhere(
-                                (item) => item['bulan'] == DateFormat('yyyy-MM').format(DateTime(DateTime.now().year, DateTime.now().month - 1)),
+                                (item) =>
+                                    item['bulan'] ==
+                                    DateFormat(
+                                      'yyyy-MM',
+                                    ).format(DateTime(DateTime.now().year, DateTime.now().month - 1)),
                                 orElse: () => {'omset_bulanan': 0.0},
                               );
 
@@ -587,11 +979,16 @@ class IsiOwnerPage extends StatelessWidget {
                               // kalkulasi peningkatan persentase
                               double peningkatanPersen = 0.0;
                               if (prevProdukValue != 0) {
-                                peningkatanPersen = ((currProdukValue - prevProdukValue) / prevProdukValue) * 100;
+                                peningkatanPersen =
+                                    ((currProdukValue - prevProdukValue) / prevProdukValue) * 100;
                               }
 
                               // format currency
-                              final currencyFormat = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp. ', decimalDigits: 0);
+                              final currencyFormat = NumberFormat.currency(
+                                locale: 'id_ID',
+                                symbol: 'Rp. ',
+                                decimalDigits: 0,
+                              );
 
                               final formattedSales = currencyFormat.format(currProdukValue);
 
@@ -599,7 +996,8 @@ class IsiOwnerPage extends StatelessWidget {
                               if (peningkatanPersen > 0) {
                                 statusText = "Meningkat Sebesar ${peningkatanPersen.toStringAsFixed(0)}%";
                               } else if (peningkatanPersen < 0) {
-                                statusText = "Menurun Sebesar ${peningkatanPersen.abs().toStringAsFixed(0)}% dari bulan lalu";
+                                statusText =
+                                    "Menurun Sebesar ${peningkatanPersen.abs().toStringAsFixed(0)}% dari bulan lalu";
                               } else {
                                 statusText = "Tidak Ada Perubahan";
                               }
@@ -608,9 +1006,19 @@ class IsiOwnerPage extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   SizedBox(height: 20),
-                                  Text("Current Produk Sales", style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 12.w)),
+                                  Text(
+                                    "Current Produk Sales",
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12.w,
+                                    ),
+                                  ),
                                   SizedBox(height: 10),
-                                  Text(formattedSales, style: TextStyle(fontFamily: 'Poppins', fontSize: 8.w)),
+                                  Text(
+                                    formattedSales,
+                                    style: TextStyle(fontFamily: 'Poppins', fontSize: 8.w),
+                                  ),
                                   SizedBox(height: 10),
                                   AutoSizeText(
                                     statusText,
@@ -631,13 +1039,163 @@ class IsiOwnerPage extends StatelessWidget {
                       ],
                     ),
                     SizedBox(height: 12.w),
+                    Container(
+                      margin: const EdgeInsets.only(left: 10, right: 10),
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      height: 300,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // header: title centered + button di kanan
+                          SizedBox(height: 4),
+                          Row(
+                            children: [
+                              // Centered title
+                              SizedBox(width: 210),
+                              const Expanded(
+                                child: Text(
+                                  'Target Sales',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, height: 1),
+                                ),
+                              ),
+                              SizedBox(
+                                height: 25,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    c.showDialogTargetSales();
+                                  },
+                                  child: const Text('Filter'),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              SizedBox(
+                                height: 25,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    c.showDialogTargetSales(modeDialog: "upsert");
+                                  },
+                                  child: const Text('Edit Target Sales'),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          Obx(() {
+                            final list = c.dataTargetOmset; // RxList (dynamic)
+
+                            if (list.isEmpty) return const Text('Tidak ada data');
+
+                            return GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(), // biar ikut parent scroll
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 6, // 6 kolom = "tiap baris 6 item"
+                                crossAxisSpacing: 0, // sama seperti Row tanpa gap horizontal
+                                mainAxisSpacing: 12, // jarak antar "baris" = 12
+                                mainAxisExtent: 80, // tinggi tile; sesuaikan (≈ badge + gap + text)
+                              ),
+                              itemCount: list.length,
+                              itemBuilder: (context, i) {
+                                final item = list[i]; // Map/dynamic
+
+                                return Align(
+                                  alignment: Alignment.topCenter, // konten nempel di atas
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min, // tinggi mengikuti konten
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFF3F4F6),
+                                          borderRadius: BorderRadius.circular(999),
+                                        ),
+                                        child: Text(
+                                          '${item['month_name']}',
+                                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      AutoSizeText(
+                                        formatRupiah(double.tryParse("${item['target_omset']}") ?? 0.0),
+                                        style: const TextStyle(fontWeight: FontWeight.w700, height: 1.1),
+                                        maxFontSize: 20,
+                                        minFontSize: 6,
+                                        maxLines: 1,
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            );
+                          }),
+
+                          const Spacer(),
+
+                          // garis tipis biar rapi (opsional)
+                          const Divider(height: 1),
+
+                          const SizedBox(height: 8),
+
+                          // baris info singkat (opsional, boleh kamu isi dinamis)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Omset Bulan Ini (${c.monthNames["${DateTime.now().month}".padLeft(2, "0")]} - ${DateTime.now().year})',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Obx(
+                                () => Text(
+                                  formatRupiah(double.tryParse("${currSalesMethod()}") ?? 0.0),
+                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Target bulan ini (${c.monthNames["${DateTime.now().month}".padLeft(2, "0")]} - ${DateTime.now().year})',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Obx(
+                                () => Text(
+                                  formatRupiah(double.tryParse("${c.targetOmsetBulanIni.value}") ?? 0.0),
+                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 12.w),
+
                     Row(
                       children: [
                         Expanded(
                           flex: 2,
                           child: Container(
                             margin: const EdgeInsets.only(left: 10, right: 10),
-                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                             height: isMobile ? 280.w : 300.w,
                             width: double.infinity,
                             child: Column(
@@ -652,7 +1210,11 @@ class IsiOwnerPage extends StatelessWidget {
                                         padding: const EdgeInsets.only(left: 100),
                                         child: Text(
                                           'Pendapatan Bulanan',
-                                          style: TextStyle(fontSize: 12.w, fontWeight: FontWeight.bold, height: 1),
+                                          style: TextStyle(
+                                            fontSize: 12.w,
+                                            fontWeight: FontWeight.bold,
+                                            height: 1,
+                                          ),
                                           textAlign: TextAlign.center,
                                         ),
                                       ),
@@ -700,7 +1262,14 @@ class IsiOwnerPage extends StatelessWidget {
                                     return CircularProgressIndicator();
                                   }
 
-                                  return SizedBox(height: 250.w, width: double.infinity, child: MonthlyRevenueChart(salesData: c.monthlyData));
+                                  return SizedBox(
+                                    height: 250.w,
+                                    width: double.infinity,
+                                    child: MonthlyRevenueChart(
+                                      salesData: c.monthlyData,
+                                      targetSalesData: c.monthlyDataTarget,
+                                    ),
+                                  );
                                 }),
                               ],
                             ),
@@ -708,6 +1277,7 @@ class IsiOwnerPage extends StatelessWidget {
                         ),
                       ],
                     ),
+
                     SizedBox(height: 10.w),
                     Row(
                       children: [
@@ -715,7 +1285,10 @@ class IsiOwnerPage extends StatelessWidget {
                           flex: 1,
                           child: Container(
                             margin: const EdgeInsets.only(left: 10, right: 10),
-                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                             padding: const EdgeInsets.only(top: 20),
                             height: 300.w,
                             child: InteractiveViewer(
@@ -725,7 +1298,12 @@ class IsiOwnerPage extends StatelessWidget {
                                 children: [
                                   Text(
                                     "Top 4 Paket Terlaris (Dalam %)",
-                                    style: TextStyle(fontSize: 12.w, fontFamily: 'Poppins', height: 1, fontWeight: FontWeight.bold),
+                                    style: TextStyle(
+                                      fontSize: 12.w,
+                                      fontFamily: 'Poppins',
+                                      height: 1,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                   SizedBox(height: 0.8.w),
                                   Obx(() {
@@ -754,31 +1332,31 @@ class IsiOwnerPage extends StatelessWidget {
   }
 }
 
-// ignore: must_be_immutable
+String formatRupiah(double amount) {
+  final formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp', decimalDigits: 0);
+  return formatter.format(amount);
+}
+
 class MonthlyRevenueChart extends StatelessWidget {
   final List<MonthlySales> salesData;
+  final List<MonthlySales> targetSalesData;
 
-  List<double> targetSales = [
-    100000000,
-    100000000,
-    100000000,
-    100000000,
-    100000000,
-    100000000,
-    100000000,
-    100000000,
-    100000000,
-    100000000,
-    100000000,
-    100000000,
-  ];
+  // List<double> targetSales = [
+  //   100000000,
+  //   100000000,
+  //   100000000,
+  //   100000000,
+  //   100000000,
+  //   100000000,
+  //   100000000,
+  //   100000000,
+  //   100000000,
+  //   100000000,
+  //   100000000,
+  //   100000000,
+  // ];
 
-  MonthlyRevenueChart({super.key, required this.salesData});
-
-  String formatRupiah(double amount) {
-    final formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp', decimalDigits: 0);
-    return formatter.format(amount);
-  }
+  const MonthlyRevenueChart({super.key, required this.salesData, required this.targetSalesData});
 
   String formatRupiahShort(double amount) {
     if (amount >= 1000000) {
@@ -795,12 +1373,18 @@ class MonthlyRevenueChart extends StatelessWidget {
     if (salesData.isEmpty) {
       return const Center(child: Text('No data available'));
     }
-
+    // salesData = Chart Omset, targetSalesData = chart Target Omset/Sales
     final minRevenueActual = salesData.map((e) => e.revenue).reduce((a, b) => a < b ? a : b);
     final maxRevenueActual = salesData.map((e) => e.revenue).reduce((a, b) => a > b ? a : b);
 
-    final minTarget = targetSales.isEmpty ? minRevenueActual : targetSales.reduce((a, b) => a < b ? a : b);
-    final maxTarget = targetSales.isEmpty ? maxRevenueActual : targetSales.reduce((a, b) => a > b ? a : b);
+    final minTarget =
+        targetSalesData.isEmpty
+            ? minRevenueActual
+            : targetSalesData.map((e) => e.revenue).reduce((a, b) => a < b ? a : b);
+    final maxTarget =
+        targetSalesData.isEmpty
+            ? maxRevenueActual
+            : targetSalesData.map((e) => e.revenue).reduce((a, b) => a > b ? a : b);
 
     final minAll = minRevenueActual < minTarget ? minRevenueActual : minTarget;
     final maxAll = maxRevenueActual > maxTarget ? maxRevenueActual : maxTarget;
@@ -821,30 +1405,59 @@ class MonthlyRevenueChart extends StatelessWidget {
               touchTooltipData: LineTouchTooltipData(
                 // tooltipBgColor: Colors.black87,
                 tooltipRoundedRadius: 8,
+                tooltipPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                tooltipMargin: 12,
                 fitInsideHorizontally: true,
                 fitInsideVertically: true,
-                getTooltipItems: (List<LineBarSpot> touchedSpots) {
-                  // return touchedSpots.map((spot) {
-                  //   final revenue = spot.y;
-                  //   final formatted = formatRupiah(revenue);
-                  //   return LineTooltipItem(formatted, const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold));
-                  // }).toList();
+                // tooltipBorder tersedia di versi terbaru fl_chart; kalau error, hapus saja.
+                tooltipBorder: const BorderSide(color: Colors.white24, width: 1),
 
-                  return touchedSpots.map((spot) {
-                    final isActual = spot.barIndex == 0; // 0: Actual, 1: Target
+                // tooltipRoundedRadius: 8,
+                // fitInsideHorizontally: true,
+                // fitInsideVertically: true,
+                getTooltipItems: (List<LineBarSpot> touchedSpots) {
+                  if (touchedSpots.isEmpty) return [];
+
+                  // Petakan spot berdasarkan barIndex agar mudah diambil terurut
+                  final Map<int, LineBarSpot> byIndex = {for (final s in touchedSpots) s.barIndex: s};
+
+                  // Ambil X yang disentuh (anggap semua series share X yang sama)
+                  final int x = touchedSpots.first.x.toInt();
+
+                  // Ambil nilai omset (0) & target (1) jika ada
+                  final double? actualY = byIndex[0]?.y;
+                  final double? targetY = byIndex[1]?.y;
+
+                  // Apakah omset sudah mencapai/melebihi target di titik ini?
+                  final bool achieved = (actualY != null && targetY != null && actualY >= targetY);
+
+                  // Nama bulan (opsional)
+                  String? month;
+                  if (x >= 0 && x < salesData.length) {
+                    month = salesData[x].month;
+                  }
+
+                  // Tentukan urutan tetap: Omset(0) dulu, lalu Target(1) jika ada
+                  final List<int> orderedIndexes = [0, 1].where((i) => byIndex.containsKey(i)).toList();
+
+                  return orderedIndexes.map((i) {
+                    final spot = byIndex[i]!;
+                    final isActual = i == 0;
                     final label = isActual ? 'Omset Sales' : 'Target Sales';
+                    final check = (isActual && achieved) ? ' ✅' : '';
                     final formatted = formatRupiah(spot.y);
 
-                    // (Opsional) tampilkan juga nama bulan dari sumbu X:
-                    String? month;
-                    final x = spot.x.toInt();
-                    if (x >= 0 && x < salesData.length) {
-                      month = salesData[x].month;
-                    }
+                    final text =
+                        month != null ? '$label$check\n$month: $formatted' : '$label$check: $formatted';
 
-                    final text = month != null ? '$label\n$month: $formatted' : '$label: $formatted';
-
-                    return LineTooltipItem(text, TextStyle(color: isActual ? Colors.white : Colors.amberAccent, fontSize: 12, fontWeight: FontWeight.bold));
+                    return LineTooltipItem(
+                      text,
+                      TextStyle(
+                        color: isActual ? const Color.fromARGB(255, 36, 186, 255) : Colors.amberAccent,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    );
                   }).toList();
                 },
               ),
@@ -860,7 +1473,10 @@ class MonthlyRevenueChart extends StatelessWidget {
                   getTitlesWidget: (value, meta) {
                     if (value.toInt() >= salesData.length) return const Text('');
 
-                    return Padding(padding: const EdgeInsets.only(top: 8.0), child: Text(salesData[value.toInt()].month, style: const TextStyle(fontSize: 10)));
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(salesData[value.toInt()].month, style: const TextStyle(fontSize: 10)),
+                    );
                   },
                   reservedSize: 30,
                   interval: 1,
@@ -872,7 +1488,11 @@ class MonthlyRevenueChart extends StatelessWidget {
                   getTitlesWidget: (value, meta) {
                     return Padding(
                       padding: const EdgeInsets.only(right: 4.0),
-                      child: Text(formatRupiahShort(value), style: const TextStyle(fontSize: 8, overflow: TextOverflow.visible), maxLines: 2),
+                      child: Text(
+                        formatRupiahShort(value),
+                        style: const TextStyle(fontSize: 8, overflow: TextOverflow.visible),
+                        maxLines: 2,
+                      ),
                     );
                   },
                   reservedSize: 60, // Increased for better spacing
@@ -900,18 +1520,18 @@ class MonthlyRevenueChart extends StatelessWidget {
                 dotData: FlDotData(show: true),
               ),
               // Garis Target Sales. Hidupkan Klo dia udh byr
-              // LineChartBarData(
-              //   spots:
-              //       targetSales.asMap().entries.map((entry) {
-              //         return FlSpot(entry.key.toDouble(), entry.value);
-              //       }).toList(),
-              //   isCurved: false,
-              //   color: Colors.red,
-              //   barWidth: 2,
-              //   dashArray: [8, 4], // biar putus-putus, bisa dihapus kalau mau solid
-              //   belowBarData: BarAreaData(show: false),
-              //   dotData: FlDotData(show: true), // kalau target gak perlu titik
-              // ),
+              LineChartBarData(
+                spots:
+                    targetSalesData.asMap().entries.map((entry) {
+                      return FlSpot(entry.key.toDouble(), entry.value.revenue);
+                    }).toList(),
+                isCurved: false,
+                color: const Color.fromARGB(255, 213, 171, 46),
+                barWidth: 2,
+                dashArray: [8, 4], // biar putus-putus, bisa dihapus kalau mau solid
+                belowBarData: BarAreaData(show: false),
+                dotData: FlDotData(show: true), // kalau target gak perlu titik
+              ),
             ],
           ),
         ),
@@ -970,7 +1590,8 @@ class _DynamicBarChartState extends State<DynamicBarChart> {
             toY: data.value,
             color: data.color,
             width: isTouched ? barWidth + 6 : barWidth,
-            borderSide: isTouched ? BorderSide(color: Colors.black.withOpacity(0.2), width: 1) : BorderSide.none,
+            borderSide:
+                isTouched ? BorderSide(color: Colors.black.withOpacity(0.2), width: 1) : BorderSide.none,
             borderRadius: BorderRadius.circular(6),
             rodStackItems: const [], // kalau mau stacked nanti tinggal isi
           ),
@@ -1052,13 +1673,21 @@ class _DynamicBarChartState extends State<DynamicBarChart> {
                       reservedSize: 46,
                       interval: yInterval,
                       getTitlesWidget:
-                          (value, meta) =>
-                              Padding(padding: const EdgeInsets.only(right: 6.0), child: Text(_fmtNumber(value), style: const TextStyle(fontSize: 10))),
+                          (value, meta) => Padding(
+                            padding: const EdgeInsets.only(right: 6.0),
+                            child: Text(_fmtNumber(value), style: const TextStyle(fontSize: 10)),
+                          ),
                     ),
                   ),
                 ),
 
-                borderData: FlBorderData(show: true, border: const Border(left: BorderSide(color: Colors.black12), bottom: BorderSide(color: Colors.black12))),
+                borderData: FlBorderData(
+                  show: true,
+                  border: const Border(
+                    left: BorderSide(color: Colors.black12),
+                    bottom: BorderSide(color: Colors.black12),
+                  ),
+                ),
                 alignment: BarChartAlignment.spaceAround,
               ),
             ),
@@ -1075,9 +1704,16 @@ class _DynamicBarChartState extends State<DynamicBarChart> {
             return Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(width: 16, height: 16, decoration: BoxDecoration(color: d.color, shape: BoxShape.circle)),
+                Container(
+                  width: 16,
+                  height: 16,
+                  decoration: BoxDecoration(color: d.color, shape: BoxShape.circle),
+                ),
                 const SizedBox(width: 8),
-                Text('${d.label} (${pct.toStringAsFixed(1)}%)', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+                Text(
+                  '${d.label} (${pct.toStringAsFixed(1)}%)',
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                ),
               ],
             );
           }),
@@ -1143,7 +1779,9 @@ class _DynamicPieChartState extends State<DynamicPieChart> {
                   PieChartData(
                     pieTouchData: PieTouchData(
                       touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                        if (!event.isInterestedForInteractions || pieTouchResponse == null || pieTouchResponse.touchedSection == null) {
+                        if (!event.isInterestedForInteractions ||
+                            pieTouchResponse == null ||
+                            pieTouchResponse.touchedSection == null) {
                           touchedIndex.value = -1;
                           return;
                         }
@@ -1169,9 +1807,16 @@ class _DynamicPieChartState extends State<DynamicPieChart> {
             return Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(width: 16, height: 16, decoration: BoxDecoration(color: data.color, shape: BoxShape.circle)),
+                Container(
+                  width: 16,
+                  height: 16,
+                  decoration: BoxDecoration(color: data.color, shape: BoxShape.circle),
+                ),
                 SizedBox(width: 8),
-                Text('${data.label} (${data.value.toStringAsFixed(1)}%)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.black)),
+                Text(
+                  '${data.label} (${data.value.toStringAsFixed(1)}%)',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.black),
+                ),
               ],
             );
           }),
@@ -1208,7 +1853,12 @@ class _DynamicPieChartState extends State<DynamicPieChart> {
         title: '${percent.toStringAsFixed(1)}%',
 
         radius: radius,
-        titleStyle: TextStyle(fontSize: fontSize.w - 7.w, fontWeight: FontWeight.bold, color: Colors.black, height: 1.2),
+        titleStyle: TextStyle(
+          fontSize: fontSize.w - 7.w,
+          fontWeight: FontWeight.bold,
+          color: Colors.black,
+          height: 1.2,
+        ),
         badgeWidget: null,
         badgePositionPercentageOffset: 1.1,
       );
