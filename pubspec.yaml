@@ -64,6 +64,7 @@ dependencies:
   flutter_screenutil: ^5.9.3
   flutter_tts: ^4.2.3
   scrollable_positioned_list: ^0.3.8
+  dropdown_search: ^5.0.6
 
   # image_gallery_saver: ^2.0.3
   # The following adds the Cupertino Icons font to your application.
@@ -99,7 +100,7 @@ flutter:
     - assets/audio/f1sport.mp3
     - assets/audio/bass_sound.mp3
     - assets/audio/conveniencestore.mp3
-    
+
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
