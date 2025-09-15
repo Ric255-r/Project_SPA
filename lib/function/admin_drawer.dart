@@ -337,18 +337,18 @@ class _AdminDrawerState extends State<AdminDrawer> {
                             },
                           ),
                         ),
-                        Material(
-                          color: Colors.white,
-                          child: ListTile(
-                            title: const Text(
-                              'List Barang',
-                              style: TextStyle(fontFamily: 'Poppins'),
-                            ),
-                            onTap: () {
-                              Get.to(() => ListBarang());
-                            },
-                          ),
-                        ),
+                        // Material(
+                        //   color: Colors.white,
+                        //   child: ListTile(
+                        //     title: const Text(
+                        //       'List Barang',
+                        //       style: TextStyle(fontFamily: 'Poppins'),
+                        //     ),
+                        //     onTap: () {
+                        //       Get.to(() => ListBarang());
+                        //     },
+                        //   ),
+                        // ),
                         Material(
                           color: Colors.white,
                           child: ListTile(
@@ -409,18 +409,18 @@ class _AdminDrawerState extends State<AdminDrawer> {
                             },
                           ),
                         ),
-                        Material(
-                          color: Colors.white,
-                          child: ListTile(
-                            title: const Text(
-                              'List Supplier',
-                              style: TextStyle(fontFamily: 'Poppins'),
-                            ),
-                            onTap: () {
-                              Get.to(() => ListSupplierPage());
-                            },
-                          ),
-                        ),
+                        // Material(
+                        //   color: Colors.white,
+                        //   child: ListTile(
+                        //     title: const Text(
+                        //       'List Supplier',
+                        //       style: TextStyle(fontFamily: 'Poppins'),
+                        //     ),
+                        //     onTap: () {
+                        //       Get.to(() => ListSupplierPage());
+                        //     },
+                        //   ),
+                        // ),
                       ],
                     ),
                   ),
@@ -499,43 +499,43 @@ class _AdminDrawerState extends State<AdminDrawer> {
                     ),
                   ),
                 ),
-                Container(
-                  padding: EdgeInsets.zero,
-                  margin: EdgeInsets.zero,
-                  child: Theme(
-                    data: ThemeData().copyWith(
-                      dividerColor: Colors.transparent,
-                      expansionTileTheme: ExpansionTileThemeData(
-                        backgroundColor: Color(0XFFFFE0B2),
-                        collapsedBackgroundColor: Color(0XFFFFE0B2),
-                        tilePadding: EdgeInsets.zero,
-                      ),
-                    ),
-                    child: ExpansionTile(
-                      title: Padding(
-                        padding: const EdgeInsets.only(left: 20),
-                        child: Text(
-                          'Pembelian',
-                          style: TextStyle(fontSize: 30, fontFamily: 'Poppins'),
-                        ),
-                      ),
-                      children: [
-                        Material(
-                          color: Colors.white,
-                          child: ListTile(
-                            title: const Text(
-                              'Pesanan Pembelian',
-                              style: TextStyle(fontFamily: 'Poppins'),
-                            ),
-                            onTap: () {
-                              Get.to(() => PesananPembelian());
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                // Container(
+                //   padding: EdgeInsets.zero,
+                //   margin: EdgeInsets.zero,
+                //   child: Theme(
+                //     data: ThemeData().copyWith(
+                //       dividerColor: Colors.transparent,
+                //       expansionTileTheme: ExpansionTileThemeData(
+                //         backgroundColor: Color(0XFFFFE0B2),
+                //         collapsedBackgroundColor: Color(0XFFFFE0B2),
+                //         tilePadding: EdgeInsets.zero,
+                //       ),
+                //     ),
+                //     child: ExpansionTile(
+                //       title: Padding(
+                //         padding: const EdgeInsets.only(left: 20),
+                //         child: Text(
+                //           'Pembelian',
+                //           style: TextStyle(fontSize: 30, fontFamily: 'Poppins'),
+                //         ),
+                //       ),
+                //       children: [
+                //         Material(
+                //           color: Colors.white,
+                //           child: ListTile(
+                //             title: const Text(
+                //               'Pesanan Pembelian',
+                //               style: TextStyle(fontFamily: 'Poppins'),
+                //             ),
+                //             onTap: () {
+                //               Get.to(() => PesananPembelian());
+                //             },
+                //           ),
+                //         ),
+                //       ],
+                //     ),
+                //   ),
+                // ),
                 if (_firstHakAkses == "owner") ...[
                   ListTile(
                     leading: const Icon(Icons.admin_panel_settings_rounded),
