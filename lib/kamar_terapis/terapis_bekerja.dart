@@ -14,7 +14,7 @@ import 'package:Project_SPA/kamar_terapis/cust_end_sblm_waktunya.dart';
 import 'package:Project_SPA/kamar_terapis/main_kamar_terapis.dart';
 import 'package:Project_SPA/kamar_terapis/terapis_confirm.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:get/get.dart' hide Response;
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:Project_SPA/kamar_terapis/terapis_mgr.dart';
 import 'package:just_audio/just_audio.dart';
@@ -462,7 +462,20 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
   //   }
   // }
 
+  RxBool progressinputkomisi = false.obs;
+
   Future<void> inputkomisi() async {
+    progressinputkomisi.value = false;
+    Get.dialog(
+      AlertDialog(
+        title: Center(child: Text('Proccessing...')),
+        content: Container(
+          width: 500,
+          height: 350,
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      ),
+    );
     String idTransaksi = _kamarTerapisMgr.getData()['idTransaksi'];
     String namaTerapis = _kamarTerapisMgr.getData()['namaTerapis'];
     List<dynamic>? datapaket = _kamarTerapisMgr.getData()['dataPaket'];
@@ -471,6 +484,8 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
     double komisigro = 0;
     Set<String> processedTransaction = {};
     Set<String> processedTransactionProduk = {};
+    Response response2;
+    Response response2produk;
     log(dataproduk.toString());
     List<String> namapaketlist =
         datapaket!.map((item) => item['nama_paket_msg'].toString()).toList();
@@ -481,21 +496,54 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
     List<String> idproduklist =
         dataproduk!.map((item) => item['id_produk'].toString()).toList();
 
+    List<String> idpaketlist =
+        datapaket!.map((item) => item['id_paket'].toString()).toList();
+
     if (namapaketlist.length > 0) {
       for (int i = 0; i < namapaketlist.length; i++) {
         await Future.delayed(Duration(seconds: 1));
 
-        var response2 = await dio.get(
-          '${myIpAddr()}/komisi/getkomisipaket',
-          data: {"nama_paket": namapaketlist[i]},
+        var isi_agency_karyawan = await dio.get(
+          '${myIpAddr()}/komisi/getagencykaryawan',
+          data: {"nama_karyawan": namaTerapis},
         );
 
-        if (response2.data.isEmpty) {
+        var agency_karyawan = isi_agency_karyawan.data[0]['agency'];
+
+        if (agency_karyawan == 'No Agency') {
           response2 = await dio.get(
-            '${myIpAddr()}/komisi/getkomisiextend',
+            '${myIpAddr()}/komisi/getkomisipaket',
             data: {"nama_paket": namapaketlist[i]},
           );
+
+          if (response2.data.isEmpty) {
+            response2 = await dio.get(
+              '${myIpAddr()}/komisi/getkomisiextend',
+              data: {"nama_paket": namapaketlist[i]},
+            );
+          }
+        } else {
+          log(agency_karyawan);
+          response2 = await dio.get(
+            '${myIpAddr()}/komisi/getkomisiagency',
+            data: {
+              "id_paket_msg": idpaketlist[i],
+              "nama_agency": agency_karyawan,
+            },
+          );
+
+          if (response2.data.isEmpty) {
+            response2 = await dio.get(
+              '${myIpAddr()}/komisi/getkomisiextendagency',
+              data: {
+                "id_paket_msg": idpaketlist[i],
+                "nama_agency": agency_karyawan,
+              },
+            );
+          }
         }
+
+        log('isi data : ${response2.data}');
 
         var datanominalkomisi = response2.data[0]['nominal_komisi'];
 
@@ -571,16 +619,36 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
 
     if (namaproduklist.length > 0) {
       for (int i = 0; i < namaproduklist.length; i++) {
-        var response2 = await dio.get(
-          '${myIpAddr()}/komisi/getkomisiproduk',
-          data: {"nama_produk": namaproduklist[i]},
+        var isi_agency_karyawan = await dio.get(
+          '${myIpAddr()}/komisi/getagencykaryawan',
+          data: {"nama_karyawan": namaTerapis},
         );
-        var datanominalkomisiproduk = response2.data[0]['nominal_komisi'];
-        var datatipekomisiproduk = response2.data[0]['tipe_komisi'];
+
+        var agency_karyawan = isi_agency_karyawan.data[0]['agency'];
+
+        if (agency_karyawan == 'No Agency') {
+          response2produk = await dio.get(
+            '${myIpAddr()}/komisi/getkomisiproduk',
+            data: {"nama_produk": namaproduklist[i]},
+          );
+        } else {
+          log(agency_karyawan);
+          response2produk = await dio.get(
+            '${myIpAddr()}/komisi/getkomisiprodukagency',
+            data: {
+              "id_paket_msg": idproduklist[i],
+              "nama_agency": agency_karyawan,
+            },
+          );
+        }
+
+        var datanominalkomisiproduk = response2produk.data[0]['nominal_komisi'];
+        var datatipekomisiproduk = response2produk.data[0]['tipe_komisi'];
         var datanominalkomisiprodukgro =
-            response2.data[0]['nominal_komisi_gro'];
-        var datatipekomisiprodukgro = response2.data[0]['tipe_komisi_gro'];
-        var datahargaproduk = response2.data[0]['harga_produk'];
+            response2produk.data[0]['nominal_komisi_gro'];
+        var datatipekomisiprodukgro =
+            response2produk.data[0]['tipe_komisi_gro'];
+        var datahargaproduk = response2produk.data[0]['harga_produk'];
 
         var response4 = await dio.get(
           '${myIpAddr()}/komisi/getqtyproduk',
@@ -684,6 +752,7 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
           },
         );
 
+        progressinputkomisi.value = true;
         log("data sukses tersimpan");
       } catch (e) {
         log("error: ${e.toString()}");
@@ -1433,7 +1502,6 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
                                     _isFinished.value = true;
 
                                     try {
-                                      Get.back();
                                       await inputkomisi();
 
                                       if (namaterapis2.value != '' ||
@@ -1445,7 +1513,9 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
                                       namaterapis2.value = '';
                                       namaterapis3.value = '';
 
-                                      await _checkAndNavigate();
+                                      if (progressinputkomisi.value = true) {
+                                        await _checkAndNavigate();
+                                      }
                                     } finally {
                                       // Balikin Lg Ke Value awal, biar sukses atau gagal
                                       _isFinished.value = false;

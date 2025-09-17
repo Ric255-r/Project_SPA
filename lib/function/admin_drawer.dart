@@ -1,9 +1,10 @@
 import 'dart:developer';
 
 import 'package:Project_SPA/admin/list_member.dart';
+import 'package:Project_SPA/admin/listagency.dart';
 import 'package:Project_SPA/admin/listterapis.dart';
 import 'package:Project_SPA/admin/pajak.dart';
-import 'package:Project_SPA/admin/set_harga_vip.dart';
+import 'package:Project_SPA/admin/regis_agency.dart';
 import 'package:Project_SPA/resepsionis/list_transaksi.dart';
 // import 'package:Project_SPA/admin/list_transaksi.dart';
 import 'package:Project_SPA/resepsionis/list_transaksi.dart';
@@ -197,7 +198,7 @@ class _AdminDrawerState extends State<AdminDrawer> {
                         padding: const EdgeInsets.only(left: 20),
                         child: Text(
                           'Pendaftaran',
-                          style: TextStyle(fontSize: 30, fontFamily: 'Poppins'),
+                          style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
                         ),
                       ),
                       children: [
@@ -277,6 +278,18 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           color: Colors.white,
                           child: ListTile(
                             title: const Text(
+                              'Daftar Agency',
+                              style: TextStyle(fontFamily: 'Poppins'),
+                            ),
+                            onTap: () {
+                              Get.to(() => RegisAgency());
+                            },
+                          ),
+                        ),
+                        Material(
+                          color: Colors.white,
+                          child: ListTile(
+                            title: const Text(
                               'Pajak',
                               style: TextStyle(fontFamily: 'Poppins'),
                             ),
@@ -306,7 +319,7 @@ class _AdminDrawerState extends State<AdminDrawer> {
                         padding: const EdgeInsets.only(left: 20),
                         child: Text(
                           'List Data',
-                          style: TextStyle(fontSize: 30, fontFamily: 'Poppins'),
+                          style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
                         ),
                       ),
                       children: [
@@ -394,6 +407,18 @@ class _AdminDrawerState extends State<AdminDrawer> {
                             },
                           ),
                         ),
+                        Material(
+                          color: Colors.white,
+                          child: ListTile(
+                            title: const Text(
+                              'List Agency',
+                              style: TextStyle(fontFamily: 'Poppins'),
+                            ),
+                            onTap: () {
+                              Get.to(() => ListAgency());
+                            },
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -415,7 +440,7 @@ class _AdminDrawerState extends State<AdminDrawer> {
                         padding: const EdgeInsets.only(left: 20),
                         child: Text(
                           'Transaksi',
-                          style: TextStyle(fontSize: 30, fontFamily: 'Poppins'),
+                          style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
                         ),
                       ),
                       children: [
@@ -452,7 +477,7 @@ class _AdminDrawerState extends State<AdminDrawer> {
                         padding: const EdgeInsets.only(left: 20),
                         child: Text(
                           'Laporan',
-                          style: TextStyle(fontSize: 30, fontFamily: 'Poppins'),
+                          style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
                         ),
                       ),
                       children: [

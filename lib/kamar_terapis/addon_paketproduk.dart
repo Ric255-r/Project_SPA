@@ -21,16 +21,23 @@ class AddonPaketProdukController extends GetxController {
     _getLatestTrans();
   }
 
-  final formatCurrency = new NumberFormat.currency(locale: "id_ID", decimalDigits: 0, symbol: 'Rp. ');
+  final formatCurrency = new NumberFormat.currency(
+    locale: "id_ID",
+    decimalDigits: 0,
+    symbol: 'Rp. ',
+  );
 
   RxList<Map<String, dynamic>> dataJual = <Map<String, dynamic>>[].obs;
 
   void addToDataJual(Map<String, dynamic> newItem) {
-    final existsIdx = dataJual.indexWhere((item) => item['id_paket_msg'] == newItem['id_paket_msg']);
+    final existsIdx = dataJual.indexWhere(
+      (item) => item['id_paket_msg'] == newItem['id_paket_msg'],
+    );
 
     if (existsIdx != -1) {
       dataJual[existsIdx]['jlh'] += 1;
-      dataJual[existsIdx]['harga_total'] = dataJual[existsIdx]['harga_paket_msg'] * dataJual[existsIdx]['jlh'];
+      dataJual[existsIdx]['harga_total'] =
+          dataJual[existsIdx]['harga_paket_msg'] * dataJual[existsIdx]['jlh'];
     } else {
       dataJual.add({...newItem, 'harga_total': newItem['harga_paket_msg']});
     }
@@ -52,9 +59,17 @@ class AddonPaketProdukController extends GetxController {
 
   Future<void> _storeTrans() async {
     try {
-      var data = {"id_transaksi": idTrans, "detail_trans": dataJual, "status": "unpaid", "jenis_pembayaran": true};
+      var data = {
+        "id_transaksi": idTrans,
+        "detail_trans": dataJual,
+        "status": "unpaid",
+        "jenis_pembayaran": true,
+      };
 
-      var response = await dio.post('${myIpAddr()}/revisi/tambahpaket_produk', data: data);
+      var response = await dio.post(
+        '${myIpAddr()}/revisi/tambahpaket_produk',
+        data: data,
+      );
 
       if (response.statusCode == 200) {
         await _kamarTerapisMgr.updateDataProdukPaket(idTrans);
@@ -84,7 +99,9 @@ class AddonPaketProdukController extends GetxController {
   RxInt _noLoker = RxInt(-1);
   Future<void> _getLatestTrans() async {
     try {
-      var response = await dio.get('${myIpAddr()}/revisi/transaksi?id_transaksi=${idTrans}');
+      var response = await dio.get(
+        '${myIpAddr()}/revisi/transaksi?id_transaksi=${idTrans}',
+      );
 
       Map<String, dynamic> responseData = response.data;
       _noLoker.value = responseData['no_loker'];
@@ -106,13 +123,18 @@ class AddonPaketProdukController extends GetxController {
 
   Future<void> getidmember() async {
     String idTransaksi = _kamarTerapisMgr.getData()['idTransaksi'];
-    var idmemberresponse = await dio.get('${myIpAddr()}/kamar_terapis/getidmember', data: {"id_transaksi": idTransaksi});
+    var idmemberresponse = await dio.get(
+      '${myIpAddr()}/kamar_terapis/getidmember',
+      data: {"id_transaksi": idTransaksi},
+    );
     idMember = idmemberresponse.data[0]['id_member'];
   }
 
   Future<void> _checkMemberPromos(String id_member) async {
     try {
-      var response = await dio.get('${myIpAddr()}/history/historymember/$id_member');
+      var response = await dio.get(
+        '${myIpAddr()}/history/historymember/$id_member',
+      );
       final now = DateTime.now();
 
       _activePromos.assignAll(
@@ -163,9 +185,7 @@ class AddonPaketProdukController extends GetxController {
               "nominal_komisi_gro": item['nominal_komisi_gro'],
             };
           }).toList();
-      dataproduk.clear();
       dataproduk.assignAll(fetcheddata);
-      dataproduk.refresh();
     } catch (e) {
       log("Error di fn getdatafnb : $e");
     }
@@ -193,10 +213,17 @@ class AddonPaketProduk extends StatelessWidget {
   final String idTrans;
   final String namaRuangan;
 
-  AddonPaketProduk({super.key, required this.idTrans, required this.namaRuangan}) {
+  AddonPaketProduk({
+    super.key,
+    required this.idTrans,
+    required this.namaRuangan,
+  }) {
     // Get.put(AddonPaketProdukController(idTrans: idTrans));
 
-    Get.lazyPut<AddonPaketProdukController>(() => AddonPaketProdukController(idTrans: idTrans), fenix: false);
+    Get.lazyPut<AddonPaketProdukController>(
+      () => AddonPaketProdukController(idTrans: idTrans),
+      fenix: false,
+    );
   }
   KamarTerapisMgr _kamarTerapisMgr = KamarTerapisMgr();
   @override
@@ -216,7 +243,15 @@ class AddonPaketProduk extends StatelessWidget {
               Column(
                 children: [
                   SizedBox(height: 30),
-                  const Text("Massage", style: TextStyle(color: Colors.black, fontSize: 30, fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
+                  const Text(
+                    "Massage",
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
                 ],
               ),
               SizedBox(height: 20),
@@ -229,27 +264,45 @@ class AddonPaketProduk extends StatelessWidget {
                       child: Column(
                         children: [
                           Container(
-                            margin: const EdgeInsets.only(top: 20, left: 40, right: 40),
+                            margin: const EdgeInsets.only(
+                              top: 20,
+                              left: 40,
+                              right: 40,
+                            ),
                             width: Get.width - 200,
                             decoration: BoxDecoration(
                               color: Colors.grey[200],
-                              borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(12),
+                                topRight: Radius.circular(12),
+                              ),
                             ),
                             child: ClipRRect(
-                              borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(12),
+                                topRight: Radius.circular(12),
+                              ),
                               child: TabBar(
                                 onTap: (index) {
                                   print("Tab Aktif Sekarang $index");
                                 },
                                 indicator: BoxDecoration(
                                   color: Colors.blue,
-                                  borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(12),
+                                    topRight: Radius.circular(12),
+                                  ),
                                 ),
                                 indicatorSize: TabBarIndicatorSize.tab,
                                 labelColor: Colors.black,
                                 unselectedLabelColor: Colors.black38,
-                                labelStyle: TextStyle(fontWeight: FontWeight.bold),
-                                tabs: const [Tab(text: "Paketan"), Tab(text: "Produk")],
+                                labelStyle: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                tabs: const [
+                                  Tab(text: "Paketan"),
+                                  Tab(text: "Produk"),
+                                ],
                               ),
                             ),
                           ),
@@ -259,23 +312,39 @@ class AddonPaketProduk extends StatelessWidget {
                             margin: const EdgeInsets.only(left: 40, right: 40),
                             decoration: BoxDecoration(
                               color: Colors.grey[200],
-                              borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)),
+                              borderRadius: const BorderRadius.only(
+                                bottomLeft: Radius.circular(10),
+                                bottomRight: Radius.circular(10),
+                              ),
                             ),
                             child: TabBarView(
                               children: [
                                 // Konten 1
                                 Container(
                                   width: Get.width - 200,
-                                  padding: const EdgeInsets.only(left: 10, top: 20, right: 10),
+                                  padding: const EdgeInsets.only(
+                                    left: 10,
+                                    top: 20,
+                                    right: 10,
+                                  ),
                                   // child: IsiPaketMassages(
                                   //   onAddItem: addToDataJual,
                                   // ),
-                                  child: MassageItemGrid(apiEndpoint: '/massages/paket', defaultUnit: 'Paket', icon: Icons.spa, onAddItem: c.addToDataJual),
+                                  child: MassageItemGrid(
+                                    apiEndpoint: '/massages/paket',
+                                    defaultUnit: 'Paket',
+                                    icon: Icons.spa,
+                                    onAddItem: c.addToDataJual,
+                                  ),
                                 ),
                                 // Konten 2
                                 Container(
                                   width: Get.width - 200,
-                                  padding: const EdgeInsets.only(left: 10, top: 20, right: 10),
+                                  padding: const EdgeInsets.only(
+                                    left: 10,
+                                    top: 20,
+                                    right: 10,
+                                  ),
                                   // child: IsiProdukMassages(
                                   //   onAddItem: addToDataJual,
                                   // ),
@@ -298,14 +367,30 @@ class AddonPaketProduk extends StatelessWidget {
                     padding: const EdgeInsets.only(left: 10, top: 15),
                     height: Get.height - 250,
                     width: Get.width - 200,
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                     child: Column(
                       children: [
                         Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            Expanded(flex: 1, child: AutoSizeText("No Loker", minFontSize: 15, style: TextStyle(fontFamily: 'Poppins'))),
-                            Flexible(child: AutoSizeText(": ", minFontSize: 15, style: TextStyle(fontFamily: 'Poppins'))),
+                            Expanded(
+                              flex: 1,
+                              child: AutoSizeText(
+                                "No Loker",
+                                minFontSize: 15,
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                            ),
+                            Flexible(
+                              child: AutoSizeText(
+                                ": ",
+                                minFontSize: 15,
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                            ),
                             Expanded(
                               flex: 6,
                               child: Obx(
@@ -323,9 +408,29 @@ class AddonPaketProduk extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            Expanded(flex: 1, child: AutoSizeText("Room", minFontSize: 15, style: TextStyle(fontFamily: 'Poppins'))),
-                            Flexible(child: AutoSizeText(": ", minFontSize: 15, style: TextStyle(fontFamily: 'Poppins'))),
-                            Expanded(flex: 6, child: AutoSizeText(globalData['namaRuangan'], minFontSize: 15, style: TextStyle(fontFamily: 'Poppins'))),
+                            Expanded(
+                              flex: 1,
+                              child: AutoSizeText(
+                                "Room",
+                                minFontSize: 15,
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                            ),
+                            Flexible(
+                              child: AutoSizeText(
+                                ": ",
+                                minFontSize: 15,
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 6,
+                              child: AutoSizeText(
+                                globalData['namaRuangan'],
+                                minFontSize: 15,
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                            ),
                           ],
                         ),
                         SizedBox(height: 10),
@@ -334,13 +439,39 @@ class AddonPaketProduk extends StatelessWidget {
                         Center(
                           child: Row(
                             children: [
-                              Expanded(child: Text("Nama Item", style: TextStyle(fontFamily: 'Poppins'))),
                               Expanded(
-                                child: Padding(padding: const EdgeInsets.only(left: 18), child: Text("Jumlah", style: TextStyle(fontFamily: 'Poppins'))),
+                                child: Text(
+                                  "Nama Item",
+                                  style: TextStyle(fontFamily: 'Poppins'),
+                                ),
                               ),
-                              Expanded(child: Text("Satuan", style: TextStyle(fontFamily: 'Poppins'))),
-                              Expanded(child: Text("Harga", style: TextStyle(fontFamily: 'Poppins'))),
-                              Expanded(child: Text("Total", style: TextStyle(fontFamily: 'Poppins'))),
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 18),
+                                  child: Text(
+                                    "Jumlah",
+                                    style: TextStyle(fontFamily: 'Poppins'),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Text(
+                                  "Satuan",
+                                  style: TextStyle(fontFamily: 'Poppins'),
+                                ),
+                              ),
+                              Expanded(
+                                child: Text(
+                                  "Harga",
+                                  style: TextStyle(fontFamily: 'Poppins'),
+                                ),
+                              ),
+                              Expanded(
+                                child: Text(
+                                  "Total",
+                                  style: TextStyle(fontFamily: 'Poppins'),
+                                ),
+                              ),
                               Flexible(child: Text("")),
                             ],
                           ),
@@ -353,7 +484,12 @@ class AddonPaketProduk extends StatelessWidget {
                             Expanded(child: Text("")),
                             Expanded(child: Text("")),
                             Expanded(child: Text("")),
-                            Expanded(child: Text("Total Add On", style: TextStyle(fontFamily: 'Poppins'))),
+                            Expanded(
+                              child: Text(
+                                "Total Add On",
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                            ),
                             Expanded(
                               child: Obx(() {
                                 var harga = c.getHargaBeforeDisc();
@@ -384,12 +520,17 @@ class AddonPaketProduk extends StatelessWidget {
                                   onPressed: () {
                                     c._storeTrans().then((_) async {
                                       // await updatedataloker();
-                                      await Future.delayed(Duration(milliseconds: 500));
+                                      await Future.delayed(
+                                        Duration(milliseconds: 500),
+                                      );
 
                                       // Get.offAll(() => MainResepsionis());
                                     });
                                   },
-                                  child: Text("Simpan Transaksi", style: TextStyle(fontFamily: 'Poppins')),
+                                  child: Text(
+                                    "Simpan Transaksi",
+                                    style: TextStyle(fontFamily: 'Poppins'),
+                                  ),
                                 ),
                               ),
                             ),
@@ -423,7 +564,13 @@ class MassageItemGrid extends StatefulWidget {
   final IconData icon;
   final Function(Map<String, dynamic>) onAddItem;
 
-  const MassageItemGrid({super.key, required this.apiEndpoint, required this.defaultUnit, required this.icon, required this.onAddItem});
+  const MassageItemGrid({
+    super.key,
+    required this.apiEndpoint,
+    required this.defaultUnit,
+    required this.icon,
+    required this.onAddItem,
+  });
 
   @override
   State<MassageItemGrid> createState() => _MassageItemGridState();
@@ -435,7 +582,11 @@ class _MassageItemGridState extends State<MassageItemGrid> {
 
   var dio = Dio();
 
-  final formatCurrency = NumberFormat.currency(locale: "id_ID", decimalDigits: 0, symbol: 'Rp. ');
+  final formatCurrency = NumberFormat.currency(
+    locale: "id_ID",
+    decimalDigits: 0,
+    symbol: 'Rp. ',
+  );
 
   // set awal loading true, kalo datanya udh kefetch maka false
   RxBool isLoading = true.obs;
@@ -503,22 +654,29 @@ class _MassageItemGridState extends State<MassageItemGrid> {
             () => Column(
               children: [
                 if (isLoading.isTrue && ap.isloadingpromo.isTrue)
-                  Padding(padding: const EdgeInsets.only(top: 80), child: Center(child: CircularProgressIndicator()))
+                  Padding(
+                    padding: const EdgeInsets.only(top: 80),
+                    child: Center(child: CircularProgressIndicator()),
+                  )
                 else
                   GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4,
-                      crossAxisSpacing: 30,
-                      mainAxisSpacing: 25,
-                      childAspectRatio: 2 / 1.5,
-                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          crossAxisSpacing: 30,
+                          mainAxisSpacing: 25,
+                          childAspectRatio: 2 / 1.5,
+                        ),
                     itemCount: items.length,
                     itemBuilder: (context, index) {
                       final item = items[index];
                       int displayPrice = 0;
-                      final promoExists = ap._activePromos.any((promo) => promo['nama_promo'] == item['nama_paket_msg']);
+                      final promoExists = ap._activePromos.any(
+                        (promo) =>
+                            promo['nama_promo'] == item['nama_paket_msg'],
+                      );
                       if (promoExists) {
                         displayPrice = 0;
                       } else {
@@ -534,17 +692,29 @@ class _MassageItemGridState extends State<MassageItemGrid> {
                           behavior: HitTestBehavior.opaque,
                           onTapDown: (_) => isPressed.value = true,
                           onTapUp: (_) async {
-                            await Future.delayed(const Duration(milliseconds: 100)); // Give time for press animation
+                            await Future.delayed(
+                              const Duration(milliseconds: 100),
+                            ); // Give time for press animation
                             isPressed.value = false;
 
                             if (promoExists) {
                               String itemname = items[index]['nama_paket_msg'];
                               retrieveindex = itemname;
-                              for (var promo in ap._activePromos.where((p) => p['nama_paket_msg'] == item['nama_paket_msg'])) {
-                                sisakunjungan = int.tryParse(promo['sisa_kunjungan'].toString()) ?? 0;
+                              for (var promo in ap._activePromos.where(
+                                (p) =>
+                                    p['nama_paket_msg'] ==
+                                    item['nama_paket_msg'],
+                              )) {
+                                sisakunjungan =
+                                    int.tryParse(
+                                      promo['sisa_kunjungan'].toString(),
+                                    ) ??
+                                    0;
                               }
-                              if (retrieveindex != null && itemTapCounts.containsKey(retrieveindex)) {
-                                itemTapCounts[retrieveindex!] = itemTapCounts[retrieveindex]! + 1;
+                              if (retrieveindex != null &&
+                                  itemTapCounts.containsKey(retrieveindex)) {
+                                itemTapCounts[retrieveindex!] =
+                                    itemTapCounts[retrieveindex]! + 1;
                               } else if (retrieveindex != null) {
                                 itemTapCounts[retrieveindex!] = 1;
                               }
@@ -553,7 +723,8 @@ class _MassageItemGridState extends State<MassageItemGrid> {
                               log('tapped : ${itemTapCounts[retrieveindex]}');
 
                               if (retrieveindex != null) {
-                                if (itemTapCounts[retrieveindex]! > sisakunjungan) {
+                                if (itemTapCounts[retrieveindex]! >
+                                    sisakunjungan) {
                                   kondisilebih = 'benar';
                                 } else {
                                   kondisilebih = 'salah';
@@ -579,11 +750,21 @@ class _MassageItemGridState extends State<MassageItemGrid> {
                                   "is_addon": true,
                                 });
                               } else {
-                                CherryToast.error(title: Text('Error'), description: Text('melebihi pemakaian')).show(context);
+                                CherryToast.error(
+                                  title: Text('Error'),
+                                  description: Text('melebihi pemakaian'),
+                                ).show(context);
                               }
                             } else {
-                              for (var produk in ap.dataproduk.where((p) => p['nama_produk'] == item['nama_paket_msg'])) {
-                                sisastok = int.tryParse(produk['stok_produk'].toString()) ?? 0;
+                              for (var produk in ap.dataproduk.where(
+                                (p) =>
+                                    p['nama_produk'] == item['nama_paket_msg'],
+                              )) {
+                                sisastok =
+                                    int.tryParse(
+                                      produk['stok_produk'].toString(),
+                                    ) ??
+                                    0;
                                 tipepaket = 'produk';
                               }
 
@@ -592,17 +773,28 @@ class _MassageItemGridState extends State<MassageItemGrid> {
                                 // selecteditemindex[itemname] = index;
                                 // retrieveindex = selecteditemindex[itemname];
                                 retrieveindex = itemname;
-                                if (retrieveindex != null && itemTapCounts.containsKey(retrieveindex)) {
-                                  itemTapCounts[retrieveindex!] = itemTapCounts[retrieveindex]! + 1;
+                                if (retrieveindex != null &&
+                                    itemTapCounts.containsKey(retrieveindex)) {
+                                  itemTapCounts[retrieveindex!] =
+                                      itemTapCounts[retrieveindex]! + 1;
                                 } else if (retrieveindex != null) {
                                   itemTapCounts[retrieveindex!] = 1;
                                 }
                                 log('counter : $itemTapCounts');
                                 if (sisastok == 0) {
-                                  CherryToast.error(title: Text('Error'), description: Text('Stok sudah kosong')).show(context);
+                                  CherryToast.error(
+                                    title: Text('Error'),
+                                    description: Text('Stok sudah kosong'),
+                                  ).show(context);
                                 } else if (retrieveindex != null) {
-                                  if (itemTapCounts[retrieveindex]! > sisastok) {
-                                    CherryToast.error(title: Text('Error'), description: Text('Penggunaan item melebihi stok')).show(context);
+                                  if (itemTapCounts[retrieveindex]! >
+                                      sisastok) {
+                                    CherryToast.error(
+                                      title: Text('Error'),
+                                      description: Text(
+                                        'Penggunaan item melebihi stok',
+                                      ),
+                                    ).show(context);
                                   } else {
                                     widget.onAddItem({
                                       "id_paket_msg": item['id_paket_msg'],
@@ -652,13 +844,33 @@ class _MassageItemGridState extends State<MassageItemGrid> {
                           child: Transform.scale(
                             scale: isPressed.isTrue ? 0.8 : 1.0,
                             child: Container(
-                              decoration: BoxDecoration(color: const Color.fromARGB(255, 64, 97, 55), borderRadius: BorderRadius.circular(20)),
+                              decoration: BoxDecoration(
+                                color: const Color.fromARGB(255, 64, 97, 55),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(widget.icon, size: 50, color: Colors.white),
-                                  Text(item['nama_paket_msg'], style: const TextStyle(color: Colors.white, fontSize: 16), textAlign: TextAlign.center),
-                                  Text(formatCurrency.format(displayPrice), style: const TextStyle(color: Colors.white, fontSize: 16)),
+                                  Icon(
+                                    widget.icon,
+                                    size: 50,
+                                    color: Colors.white,
+                                  ),
+                                  Text(
+                                    item['nama_paket_msg'],
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  Text(
+                                    formatCurrency.format(displayPrice),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -681,7 +893,11 @@ class DataTransaksiMassages extends StatelessWidget {
 
   DataTransaksiMassages({super.key, required this.dataJual});
 
-  final formatCurrency = new NumberFormat.currency(locale: "id_ID", decimalDigits: 0, symbol: 'Rp. ');
+  final formatCurrency = new NumberFormat.currency(
+    locale: "id_ID",
+    decimalDigits: 0,
+    symbol: 'Rp. ',
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -699,7 +915,12 @@ class DataTransaksiMassages extends StatelessWidget {
             String tipepaket = '';
             return Row(
               children: [
-                Expanded(child: AutoSizeText(dataJual[index]['nama_paket_msg'], minFontSize: 15)),
+                Expanded(
+                  child: AutoSizeText(
+                    dataJual[index]['nama_paket_msg'],
+                    minFontSize: 15,
+                  ),
+                ),
                 Expanded(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.start,
@@ -707,52 +928,84 @@ class DataTransaksiMassages extends StatelessWidget {
                       IconButton(
                         icon: Icon(Icons.remove, size: 18),
                         onPressed: () {
-                          final promoExists = ap._activePromos.any((promo) => promo['nama_promo'] == dataJual[index]['nama_paket_msg']);
+                          final promoExists = ap._activePromos.any(
+                            (promo) =>
+                                promo['nama_promo'] ==
+                                dataJual[index]['nama_paket_msg'],
+                          );
 
                           if (promoExists) {
-                            for (var promo in ap._activePromos.where((p) => p['nama_paket_msg'] == dataJual[index]['nama_paket_msg'])) {
-                              sisakunjungan = int.tryParse(promo['sisa_kunjungan'].toString()) ?? 0;
+                            for (var promo in ap._activePromos.where(
+                              (p) =>
+                                  p['nama_paket_msg'] ==
+                                  dataJual[index]['nama_paket_msg'],
+                            )) {
+                              sisakunjungan =
+                                  int.tryParse(
+                                    promo['sisa_kunjungan'].toString(),
+                                  ) ??
+                                  0;
                             }
                             String itemname = dataJual[index]['nama_paket_msg'];
                             retrieveindex = itemname;
-                            if (retrieveindex != null && itemTapCounts.containsKey(retrieveindex)) {
-                              if (retrieveindex != null && itemTapCounts[retrieveindex]! <= 1) {
+                            if (retrieveindex != null &&
+                                itemTapCounts.containsKey(retrieveindex)) {
+                              if (retrieveindex != null &&
+                                  itemTapCounts[retrieveindex]! <= 1) {
                                 itemTapCounts[retrieveindex!] = 1;
-                              } else if (retrieveindex != null && itemTapCounts[retrieveindex]! >= sisakunjungan) {
+                              } else if (retrieveindex != null &&
+                                  itemTapCounts[retrieveindex]! >=
+                                      sisakunjungan) {
                                 if (sisakunjungan == 1) {
                                   itemTapCounts[retrieveindex!] = 1;
                                 } else {
-                                  itemTapCounts[retrieveindex!] = sisakunjungan - 1;
+                                  itemTapCounts[retrieveindex!] =
+                                      sisakunjungan - 1;
                                 }
                               } else if (retrieveindex != null) {
-                                itemTapCounts[retrieveindex!] = itemTapCounts[retrieveindex]! - 1;
+                                itemTapCounts[retrieveindex!] =
+                                    itemTapCounts[retrieveindex]! - 1;
                               }
                             } else if (retrieveindex != null) {
                               itemTapCounts[retrieveindex!] = 1;
                             }
                             log('tapped : $itemTapCounts');
                           } else {
-                            for (var produk in ap.dataproduk.where((p) => p['nama_produk'] == dataJual[index]['nama_paket_msg'])) {
-                              sisastok = int.tryParse(produk['stok_produk'].toString()) ?? 0;
+                            for (var produk in ap.dataproduk.where(
+                              (p) =>
+                                  p['nama_produk'] ==
+                                  dataJual[index]['nama_paket_msg'],
+                            )) {
+                              sisastok =
+                                  int.tryParse(
+                                    produk['stok_produk'].toString(),
+                                  ) ??
+                                  0;
                               tipepaket = 'produk';
                             }
 
                             if (tipepaket == 'produk') {
-                              String itemname = dataJual[index]['nama_paket_msg'];
+                              String itemname =
+                                  dataJual[index]['nama_paket_msg'];
                               // retrieveindex = selecteditemindex[itemname];
                               retrieveindex = itemname;
 
-                              if (retrieveindex != null && itemTapCounts.containsKey(retrieveindex)) {
-                                if (retrieveindex != null && itemTapCounts[retrieveindex]! <= 1) {
+                              if (retrieveindex != null &&
+                                  itemTapCounts.containsKey(retrieveindex)) {
+                                if (retrieveindex != null &&
+                                    itemTapCounts[retrieveindex]! <= 1) {
                                   itemTapCounts[retrieveindex!] = 1;
-                                } else if (retrieveindex != null && itemTapCounts[retrieveindex]! >= sisastok) {
+                                } else if (retrieveindex != null &&
+                                    itemTapCounts[retrieveindex]! >= sisastok) {
                                   if (sisastok == 1) {
                                     itemTapCounts[retrieveindex!] = 1;
                                   } else {
-                                    itemTapCounts[retrieveindex!] = sisastok - 1;
+                                    itemTapCounts[retrieveindex!] =
+                                        sisastok - 1;
                                   }
                                 } else if (retrieveindex != null) {
-                                  itemTapCounts[retrieveindex!] = itemTapCounts[retrieveindex]! - 1;
+                                  itemTapCounts[retrieveindex!] =
+                                      itemTapCounts[retrieveindex]! - 1;
                                 }
                               } else if (retrieveindex != null) {
                                 itemTapCounts[retrieveindex!] = 1;
@@ -764,7 +1017,9 @@ class DataTransaksiMassages extends StatelessWidget {
                           if (dataJual[index]['jlh'] > 1) {
                             dataJual[index]['jlh']--;
                             // Update Harga Total Juga
-                            dataJual[index]['harga_total'] = dataJual[index]['harga_paket_msg'] * dataJual[index]['jlh'];
+                            dataJual[index]['harga_total'] =
+                                dataJual[index]['harga_paket_msg'] *
+                                dataJual[index]['jlh'];
                           }
 
                           dataJual.refresh();
@@ -772,26 +1027,47 @@ class DataTransaksiMassages extends StatelessWidget {
                           // widget.onChangeHrg();
                         },
                       ),
-                      Container(padding: EdgeInsets.symmetric(horizontal: 8), child: AutoSizeText("${dataJual[index]['jlh']}", minFontSize: 15)),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: AutoSizeText(
+                          "${dataJual[index]['jlh']}",
+                          minFontSize: 15,
+                        ),
+                      ),
                       IconButton(
                         icon: Icon(Icons.add, size: 18),
                         onPressed: () {
-                          final promoExists = ap._activePromos.any((promo) => promo['nama_promo'] == dataJual[index]['nama_paket_msg']);
+                          final promoExists = ap._activePromos.any(
+                            (promo) =>
+                                promo['nama_promo'] ==
+                                dataJual[index]['nama_paket_msg'],
+                          );
 
                           if (promoExists) {
-                            for (var promo in ap._activePromos.where((p) => p['nama_paket_msg'] == dataJual[index]['nama_paket_msg'])) {
-                              sisakunjungan = int.tryParse(promo['sisa_kunjungan'].toString()) ?? 0;
+                            for (var promo in ap._activePromos.where(
+                              (p) =>
+                                  p['nama_paket_msg'] ==
+                                  dataJual[index]['nama_paket_msg'],
+                            )) {
+                              sisakunjungan =
+                                  int.tryParse(
+                                    promo['sisa_kunjungan'].toString(),
+                                  ) ??
+                                  0;
                             }
                             String itemname = dataJual[index]['nama_paket_msg'];
                             retrieveindex = itemname;
-                            if (retrieveindex != null && itemTapCounts.containsKey(retrieveindex)) {
-                              itemTapCounts[retrieveindex!] = itemTapCounts[retrieveindex]! + 1;
+                            if (retrieveindex != null &&
+                                itemTapCounts.containsKey(retrieveindex)) {
+                              itemTapCounts[retrieveindex!] =
+                                  itemTapCounts[retrieveindex]! + 1;
                             } else if (retrieveindex != null) {
                               itemTapCounts[retrieveindex!] = 1;
                             }
 
                             if (retrieveindex != null) {
-                              if (itemTapCounts[retrieveindex]! > sisakunjungan) {
+                              if (itemTapCounts[retrieveindex]! >
+                                  sisakunjungan) {
                                 kondisilebih = 'benar';
                               } else {
                                 kondisilebih = 'salah';
@@ -799,39 +1075,65 @@ class DataTransaksiMassages extends StatelessWidget {
                             }
                           }
                           if (kondisilebih == 'benar') {
-                            CherryToast.error(title: Text('Error'), description: Text('melebihi pemakaian')).show(context);
+                            CherryToast.error(
+                              title: Text('Error'),
+                              description: Text('melebihi pemakaian'),
+                            ).show(context);
                           } else {
-                            for (var produk in ap.dataproduk.where((p) => p['nama_produk'] == dataJual[index]['nama_paket_msg'])) {
-                              sisastok = int.tryParse(produk['stok_produk'].toString()) ?? 0;
+                            for (var produk in ap.dataproduk.where(
+                              (p) =>
+                                  p['nama_produk'] ==
+                                  dataJual[index]['nama_paket_msg'],
+                            )) {
+                              sisastok =
+                                  int.tryParse(
+                                    produk['stok_produk'].toString(),
+                                  ) ??
+                                  0;
                               tipepaket = 'produk';
                             }
 
                             if (tipepaket == 'produk') {
-                              String itemname = dataJual[index]['nama_paket_msg'];
+                              String itemname =
+                                  dataJual[index]['nama_paket_msg'];
                               // selecteditemindex[itemname] = index;
                               // retrieveindex = selecteditemindex[itemname];
                               retrieveindex = itemname;
-                              if (retrieveindex != null && itemTapCounts.containsKey(retrieveindex)) {
-                                itemTapCounts[retrieveindex!] = itemTapCounts[retrieveindex]! + 1;
+                              if (retrieveindex != null &&
+                                  itemTapCounts.containsKey(retrieveindex)) {
+                                itemTapCounts[retrieveindex!] =
+                                    itemTapCounts[retrieveindex]! + 1;
                               } else if (retrieveindex != null) {
                                 itemTapCounts[retrieveindex!] = 1;
                               }
                               log('counter : $itemTapCounts');
                               if (sisastok == 0) {
-                                CherryToast.error(title: Text('Error'), description: Text('Stok sudah kosong')).show(context);
+                                CherryToast.error(
+                                  title: Text('Error'),
+                                  description: Text('Stok sudah kosong'),
+                                ).show(context);
                               } else if (retrieveindex != null) {
                                 if (itemTapCounts[retrieveindex]! > sisastok) {
-                                  CherryToast.error(title: Text('Error'), description: Text('Penggunaan item melebihi stok')).show(context);
+                                  CherryToast.error(
+                                    title: Text('Error'),
+                                    description: Text(
+                                      'Penggunaan item melebihi stok',
+                                    ),
+                                  ).show(context);
                                 } else {
                                   dataJual[index]['jlh']++;
                                   // Update Harga Total Juga
-                                  dataJual[index]['harga_total'] = dataJual[index]['harga_paket_msg'] * dataJual[index]['jlh'];
+                                  dataJual[index]['harga_total'] =
+                                      dataJual[index]['harga_paket_msg'] *
+                                      dataJual[index]['jlh'];
                                 }
                               }
                             } else {
                               dataJual[index]['jlh']++;
                               // Update Harga Total Juga
-                              dataJual[index]['harga_total'] = dataJual[index]['harga_paket_msg'] * dataJual[index]['jlh'];
+                              dataJual[index]['harga_total'] =
+                                  dataJual[index]['harga_paket_msg'] *
+                                  dataJual[index]['jlh'];
                             }
                           }
                           log(promoExists.toString());
@@ -843,9 +1145,24 @@ class DataTransaksiMassages extends StatelessWidget {
                     ],
                   ),
                 ),
-                Expanded(child: AutoSizeText(dataJual[index]['satuan'], minFontSize: 15)),
-                Expanded(child: AutoSizeText("${formatCurrency.format(dataJual[index]['harga_paket_msg'])}", minFontSize: 15)),
-                Expanded(child: Text("${formatCurrency.format(dataJual[index]['harga_total'])}", style: TextStyle(fontFamily: 'Poppins'))),
+                Expanded(
+                  child: AutoSizeText(
+                    dataJual[index]['satuan'],
+                    minFontSize: 15,
+                  ),
+                ),
+                Expanded(
+                  child: AutoSizeText(
+                    "${formatCurrency.format(dataJual[index]['harga_paket_msg'])}",
+                    minFontSize: 15,
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    "${formatCurrency.format(dataJual[index]['harga_total'])}",
+                    style: TextStyle(fontFamily: 'Poppins'),
+                  ),
+                ),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.only(right: 40),
@@ -855,23 +1172,37 @@ class DataTransaksiMassages extends StatelessWidget {
                         IconButton(
                           icon: Icon(Icons.delete, size: 18),
                           onPressed: () {
-                            final promoExists = ap._activePromos.any((promo) => promo['nama_promo'] == dataJual[index]['nama_paket_msg']);
+                            final promoExists = ap._activePromos.any(
+                              (promo) =>
+                                  promo['nama_promo'] ==
+                                  dataJual[index]['nama_paket_msg'],
+                            );
 
                             if (promoExists) {
                               if (retrieveindex != null) {
-                                String itemname = dataJual[index]['nama_paket_msg'];
+                                String itemname =
+                                    dataJual[index]['nama_paket_msg'];
                                 retrieveindex = itemname;
 
                                 itemTapCounts[retrieveindex!] = 0;
                               }
                             } else {
-                              for (var produk in ap.dataproduk.where((p) => p['nama_produk'] == dataJual[index]['nama_paket_msg'])) {
-                                sisastok = int.tryParse(produk['stok_produk'].toString()) ?? 0;
+                              for (var produk in ap.dataproduk.where(
+                                (p) =>
+                                    p['nama_produk'] ==
+                                    dataJual[index]['nama_paket_msg'],
+                              )) {
+                                sisastok =
+                                    int.tryParse(
+                                      produk['stok_produk'].toString(),
+                                    ) ??
+                                    0;
                                 tipepaket = 'produk';
                               }
 
                               if (tipepaket == 'produk') {
-                                String itemname = dataJual[index]['nama_paket_msg'];
+                                String itemname =
+                                    dataJual[index]['nama_paket_msg'];
                                 // selecteditemindex[itemname] = index;
                                 // retrieveindex = selecteditemindex[itemname];
                                 retrieveindex = itemname;

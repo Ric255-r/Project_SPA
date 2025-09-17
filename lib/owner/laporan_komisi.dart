@@ -56,12 +56,35 @@ class _laporankomisiState extends State<laporankomisi>
 
   var dio = Dio();
 
-  Future<void> getdatakomisi(bulan, tahun) async {
+  String? selectedagencybulanan;
+  String? selectedagencytahunan;
+  String? selectedagencyharian;
+  RxList<Map<String, dynamic>> data_agency = <Map<String, dynamic>>[].obs;
+
+  Future<void> getdataagency() async {
+    try {
+      var response2 = await dio.get('${myIpAddr()}/listagency/getdataagency');
+      data_agency.value =
+          (response2.data as List)
+              .map((item) => Map<String, dynamic>.from(item))
+              .toList();
+
+      data_agency.insert(0, {
+        'id_agency': '0',
+        'nama_agency': 'All Terapis & GRO',
+      });
+      log(data_agency.toString());
+    } catch (e) {
+      log("error di getdataagency: ${e.toString()}");
+    }
+  }
+
+  Future<void> getdatakomisi(bulan, tahun, namaagency) async {
     try {
       print('ini jalan');
       var response = await dio.get(
         '${myIpAddr()}/cekkomisi/listkomisiowner',
-        data: {'month': bulan, 'year': tahun},
+        data: {'month': bulan, 'year': tahun, 'nama_agency': namaagency},
       );
       List<Map<String, dynamic>> fetcheddata =
           (response.data as List).map((item) {
@@ -82,7 +105,7 @@ class _laporankomisiState extends State<laporankomisi>
     }
   }
 
-  Future<void> exportkomisibulanan(bulan, tahun) async {
+  Future<void> exportkomisibulanan(bulan, tahun, namaagency) async {
     try {
       print('ini jalan');
       Get.dialog(const DownloadSplash(), barrierDismissible: false);
@@ -92,7 +115,11 @@ class _laporankomisiState extends State<laporankomisi>
       var response = await dio.download(
         url,
         filepath,
-        queryParameters: {'month': bulan, 'year': tahun},
+        queryParameters: {
+          'month': bulan,
+          'year': tahun,
+          'nama_agency': namaagency,
+        },
         options: Options(
           responseType: ResponseType.bytes,
           headers: {'Accept': 'application/pdf'},
@@ -139,12 +166,12 @@ class _laporankomisiState extends State<laporankomisi>
     }
   }
 
-  Future<void> getdatakomisitahunan(tahun) async {
+  Future<void> getdatakomisitahunan(tahun, namaagency) async {
     try {
       print('ini jalan');
       var response = await dio.get(
         '${myIpAddr()}/cekkomisi/listkomisiownertahunan',
-        data: {'year': tahun},
+        data: {'year': tahun, 'nama_agency': namaagency},
       );
       List<Map<String, dynamic>> fetcheddata =
           (response.data as List).map((item) {
@@ -161,11 +188,11 @@ class _laporankomisiState extends State<laporankomisi>
       });
       hitungtotaltahunan();
     } catch (e) {
-      log("Error di fn getdatakomisi : $e");
+      log("Error di fn getdatakomisitahunan : $e");
     }
   }
 
-  Future<void> exportkomisitahunan(tahun) async {
+  Future<void> exportkomisitahunan(tahun, namaagency) async {
     try {
       print('ini jalan');
       Get.dialog(const DownloadSplash(), barrierDismissible: false);
@@ -175,7 +202,7 @@ class _laporankomisiState extends State<laporankomisi>
       var response = await dio.download(
         url,
         filepath,
-        queryParameters: {'year': tahun},
+        queryParameters: {'year': tahun, 'nama_agency': namaagency},
         options: Options(
           responseType: ResponseType.bytes,
           headers: {'Accept': 'application/pdf'},
@@ -221,12 +248,20 @@ class _laporankomisiState extends State<laporankomisi>
     }
   }
 
-  Future<void> getdatakomisiharian(tanggalawal, tanggalakhir) async {
+  Future<void> getdatakomisiharian(
+    tanggalawal,
+    tanggalakhir,
+    namaagency,
+  ) async {
     try {
       print('ini jalan');
       var response = await dio.get(
         '${myIpAddr()}/cekkomisi/listkomisiownerharian',
-        data: {'startdate': tanggalawal, 'enddate': tanggalakhir},
+        data: {
+          'startdate': tanggalawal,
+          'enddate': tanggalakhir,
+          'nama_agency': namaagency,
+        },
       );
       List<Map<String, dynamic>> fetcheddata =
           (response.data as List).map((item) {
@@ -247,7 +282,7 @@ class _laporankomisiState extends State<laporankomisi>
     }
   }
 
-  Future<void> exportkomisiharian(strdate, enddate) async {
+  Future<void> exportkomisiharian(strdate, enddate, namaagency) async {
     try {
       print('ini jalan');
       Get.dialog(const DownloadSplash(), barrierDismissible: false);
@@ -258,7 +293,11 @@ class _laporankomisiState extends State<laporankomisi>
       var response = await dio.download(
         url,
         filepath,
-        queryParameters: {'strdate': strdate, 'enddate': enddate},
+        queryParameters: {
+          'strdate': strdate,
+          'enddate': enddate,
+          'nama_agency': namaagency,
+        },
         options: Options(
           responseType: ResponseType.bytes,
           headers: {'Accept': 'application/pdf'},
@@ -345,8 +384,12 @@ class _laporankomisiState extends State<laporankomisi>
     super.initState();
     pilihanbulan = currentmonth;
     pilihantahun = currentyear;
-    getdatakomisi(currentmonth, currentyear);
-    getdatakomisitahunan(currentyear);
+    selectedagencyharian = 'All Terapis & GRO';
+    selectedagencybulanan = 'All Terapis & GRO';
+    selectedagencytahunan = 'All Terapis & GRO';
+    getdatakomisi(currentmonth, currentyear, selectedagencybulanan);
+    getdatakomisitahunan(currentyear, selectedagencytahunan);
+    getdataagency();
     _tabController = TabController(length: 3, initialIndex: 1, vsync: this);
     _tabController.addListener(() {
       setState(() {
@@ -413,7 +456,7 @@ class _laporankomisiState extends State<laporankomisi>
                 selectedtabindex == 1
                     ? Container(
                       width: 1100.w,
-                      height: 100.w,
+                      height: 140.w,
                       margin: EdgeInsets.only(top: 50.w),
                       child: Column(
                         children: [
@@ -595,7 +638,11 @@ class _laporankomisiState extends State<laporankomisi>
                                 height: 35.w,
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    getdatakomisi(pilihanbulan, pilihantahun);
+                                    getdatakomisi(
+                                      pilihanbulan,
+                                      pilihantahun,
+                                      selectedagencybulanan,
+                                    );
                                     log(selectedtabindex.toString());
                                   },
                                   child: Text(
@@ -615,6 +662,69 @@ class _laporankomisiState extends State<laporankomisi>
                               ),
                             ],
                           ),
+
+                          Obx(
+                            () => Container(
+                              width: 400.w,
+                              height: 25.w,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(10),
+                                ),
+                                border: Border.all(width: 1),
+                              ),
+                              margin: EdgeInsets.only(left: 10, top: 5.w),
+                              child: DropdownButton<String>(
+                                value: selectedagencybulanan,
+                                hint: Text('Select Agency'),
+                                isExpanded: true,
+                                icon: const Icon(Icons.arrow_drop_down),
+                                elevation: 14,
+                                style: const TextStyle(
+                                  color: Colors.deepPurple,
+                                ),
+                                underline: SizedBox(),
+                                padding: EdgeInsets.symmetric(horizontal: 10),
+                                onChanged: (String? value) {
+                                  setState(() {
+                                    selectedagencybulanan = value;
+                                    getdatakomisi(
+                                      pilihanbulan,
+                                      pilihantahun,
+                                      selectedagencybulanan,
+                                    );
+                                  });
+                                },
+                                items:
+                                    data_agency.map<DropdownMenuItem<String>>((
+                                      agency,
+                                    ) {
+                                      final namaagency =
+                                          agency['nama_agency']?.toString() ??
+                                          '';
+                                      final kodeagency =
+                                          agency['kode_agency']?.toString() ??
+                                          '';
+                                      return DropdownMenuItem<String>(
+                                        value: namaagency,
+                                        child: Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: Text(
+                                            namaagency,
+                                            style: TextStyle(
+                                              fontSize: 20,
+                                              fontFamily: 'Poppins',
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 10.w),
+
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -628,6 +738,7 @@ class _laporankomisiState extends State<laporankomisi>
                                     exportkomisibulanan(
                                       pilihanbulan,
                                       pilihantahun,
+                                      selectedagencybulanan,
                                     );
                                   },
                                   child: Text(
@@ -797,7 +908,11 @@ class _laporankomisiState extends State<laporankomisi>
                                                   ''
                                               : startdate;
 
-                                      getdatakomisiharian(startdate, enddate);
+                                      getdatakomisiharian(
+                                        startdate,
+                                        enddate,
+                                        selectedagencyharian,
+                                      );
 
                                       print(
                                         'ini adalah isi data harian $datakomisiharian',
@@ -824,6 +939,67 @@ class _laporankomisiState extends State<laporankomisi>
                             ],
                           ),
                           SizedBox(height: 15.w),
+                          Obx(
+                            () => Container(
+                              width: 400.w,
+                              height: 25.w,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(10),
+                                ),
+                                border: Border.all(width: 1),
+                              ),
+                              margin: EdgeInsets.only(left: 10, top: 5.w),
+                              child: DropdownButton<String>(
+                                value: selectedagencyharian,
+                                hint: Text('Select Agency'),
+                                isExpanded: true,
+                                icon: const Icon(Icons.arrow_drop_down),
+                                elevation: 14,
+                                style: const TextStyle(
+                                  color: Colors.deepPurple,
+                                ),
+                                underline: SizedBox(),
+                                padding: EdgeInsets.symmetric(horizontal: 10),
+                                onChanged: (String? value) {
+                                  setState(() {
+                                    selectedagencyharian = value;
+                                    getdatakomisiharian(
+                                      startdate,
+                                      enddate,
+                                      selectedagencyharian,
+                                    );
+                                  });
+                                },
+                                items:
+                                    data_agency.map<DropdownMenuItem<String>>((
+                                      agency,
+                                    ) {
+                                      final namaagency =
+                                          agency['nama_agency']?.toString() ??
+                                          '';
+                                      final kodeagency =
+                                          agency['kode_agency']?.toString() ??
+                                          '';
+                                      return DropdownMenuItem<String>(
+                                        value: namaagency,
+                                        child: Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: Text(
+                                            namaagency,
+                                            style: TextStyle(
+                                              fontSize: 20,
+                                              fontFamily: 'Poppins',
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 10.w),
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -834,7 +1010,11 @@ class _laporankomisiState extends State<laporankomisi>
                                 height: 35.w,
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    exportkomisiharian(startdate, enddate);
+                                    exportkomisiharian(
+                                      startdate,
+                                      enddate,
+                                      selectedagencyharian,
+                                    );
                                   },
                                   child: Text(
                                     'Cetak Komisi Terapis',
@@ -962,7 +1142,10 @@ class _laporankomisiState extends State<laporankomisi>
                                 height: 35.w,
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    getdatakomisitahunan(pilihantahun);
+                                    getdatakomisitahunan(
+                                      pilihantahun,
+                                      selectedagencytahunan,
+                                    );
                                     log(datakomisitahunan.toString());
                                   },
                                   child: Text(
@@ -982,6 +1165,65 @@ class _laporankomisiState extends State<laporankomisi>
                               ),
                             ],
                           ),
+                          Obx(
+                            () => Container(
+                              width: 400.w,
+                              height: 25.w,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(10),
+                                ),
+                                border: Border.all(width: 1),
+                              ),
+                              margin: EdgeInsets.only(left: 10, top: 5.w),
+                              child: DropdownButton<String>(
+                                value: selectedagencytahunan,
+                                hint: Text('Select Agency'),
+                                isExpanded: true,
+                                icon: const Icon(Icons.arrow_drop_down),
+                                elevation: 14,
+                                style: const TextStyle(
+                                  color: Colors.deepPurple,
+                                ),
+                                underline: SizedBox(),
+                                padding: EdgeInsets.symmetric(horizontal: 10),
+                                onChanged: (String? value) {
+                                  setState(() {
+                                    selectedagencytahunan = value;
+                                    getdatakomisitahunan(
+                                      pilihantahun,
+                                      selectedagencytahunan,
+                                    );
+                                  });
+                                },
+                                items:
+                                    data_agency.map<DropdownMenuItem<String>>((
+                                      agency,
+                                    ) {
+                                      final namaagency =
+                                          agency['nama_agency']?.toString() ??
+                                          '';
+                                      final kodeagency =
+                                          agency['kode_agency']?.toString() ??
+                                          '';
+                                      return DropdownMenuItem<String>(
+                                        value: namaagency,
+                                        child: Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: Text(
+                                            namaagency,
+                                            style: TextStyle(
+                                              fontSize: 20,
+                                              fontFamily: 'Poppins',
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                              ),
+                            ),
+                          ),
                           SizedBox(height: 10.w),
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
@@ -993,7 +1235,10 @@ class _laporankomisiState extends State<laporankomisi>
                                 height: 35.w,
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    exportkomisitahunan(pilihantahun);
+                                    exportkomisitahunan(
+                                      pilihantahun,
+                                      selectedagencytahunan,
+                                    );
                                   },
                                   child: Text(
                                     'Cetak Komisi Terapis',

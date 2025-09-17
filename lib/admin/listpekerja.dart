@@ -38,11 +38,13 @@ class Listpekerja extends StatefulWidget {
 
 class _ListpekerjaState extends State<Listpekerja> {
   late final Dio dio;
+  String? selectedagency;
 
   @override
   void initState() {
     super.initState();
     dio = Dio();
+    getdataagency();
     futureData = fetchData();
     futureData.then((data) {
       setState(() {
@@ -59,6 +61,21 @@ class _ListpekerjaState extends State<Listpekerja> {
       dataList = updatedData;
       filteredList = dataList; // Ensures UI updates with fresh data
     });
+  }
+
+  RxList<Map<String, dynamic>> data_agency = <Map<String, String>>[].obs;
+
+  Future<void> getdataagency() async {
+    try {
+      var response2 = await dio.get('${myIpAddr()}/agency/getagency');
+
+      data_agency.value =
+          (response2.data as List)
+              .map((item) => Map<String, String>.from(item))
+              .toList();
+    } catch (e) {
+      log("error: ${e.toString()}");
+    }
   }
 
   Timer? _debounce;
@@ -132,6 +149,16 @@ class _ListpekerjaState extends State<Listpekerja> {
     List<String> oldFileNames = [];
     oldFileNames = item['kontrak_img']?.split(',') ?? [];
     List<PlatformFile> selectedFiles = [];
+    selectedagency = item['agency'];
+
+    final uniqueAgencies =
+        {
+          for (var agency in data_agency)
+            agency['nama_agency']?.toString(): agency,
+        }.values.toList();
+
+    // Validate selected value
+
     Get.dialog(
       StatefulBuilder(
         builder: (context, setState) {
@@ -152,7 +179,7 @@ class _ListpekerjaState extends State<Listpekerja> {
             content: SingleChildScrollView(
               child: Container(
                 width: Get.width - 250,
-                height: Get.height - 250,
+                height: Get.height - 200,
                 child: ListView(
                   children: [
                     Row(
@@ -220,6 +247,14 @@ class _ListpekerjaState extends State<Listpekerja> {
                                   ),
                                   SizedBox(height: 15),
                                   Text(
+                                    'Agency :',
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  SizedBox(height: 15),
+                                  Text(
                                     'Kontrak :',
                                     style: TextStyle(
                                       fontFamily: 'Poppins',
@@ -234,7 +269,7 @@ class _ListpekerjaState extends State<Listpekerja> {
                         Padding(
                           padding: const EdgeInsets.only(top: 55),
                           child: Container(
-                            height: 370,
+                            height: 420,
                             width: 500,
                             child: Padding(
                               padding: EdgeInsets.only(left: 10),
@@ -397,6 +432,7 @@ class _ListpekerjaState extends State<Listpekerja> {
                                       ),
                                     ),
                                   ),
+
                                   SizedBox(height: 8),
                                   Container(
                                     alignment: Alignment.centerLeft,
@@ -433,6 +469,59 @@ class _ListpekerjaState extends State<Listpekerja> {
                                                 alignment: Alignment.centerLeft,
                                                 child: Text(
                                                   value,
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    fontFamily: 'Poppins',
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          }).toList(),
+                                    ),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Container(
+                                    alignment: Alignment.centerLeft,
+                                    width: 480,
+                                    height: 30,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      color: Colors.grey[300],
+                                    ),
+                                    child: DropdownButton<String>(
+                                      value: selectedagency,
+                                      isExpanded: true,
+                                      icon: const Icon(Icons.arrow_drop_down),
+                                      elevation: 14,
+                                      style: const TextStyle(
+                                        color: Colors.deepPurple,
+                                      ),
+                                      underline: SizedBox(),
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                      ),
+                                      onChanged: (String? value) {
+                                        setState(() {
+                                          selectedagency = value;
+                                          print(
+                                            'selected agency : $selectedagency',
+                                          );
+                                        });
+                                      },
+                                      items:
+                                          uniqueAgencies.map<
+                                            DropdownMenuItem<String>
+                                          >((agency) {
+                                            final namaagency =
+                                                agency['nama_agency']
+                                                    ?.toString() ??
+                                                '';
+                                            return DropdownMenuItem<String>(
+                                              value: namaagency,
+                                              child: Align(
+                                                alignment: Alignment.centerLeft,
+                                                child: Text(
+                                                  namaagency,
                                                   style: TextStyle(
                                                     fontSize: 14,
                                                     fontFamily: 'Poppins',
@@ -513,6 +602,7 @@ class _ListpekerjaState extends State<Listpekerja> {
                                                       alamatController.text,
                                                   "jk": dropdownJK,
                                                   "status": dropdownStatus,
+                                                  "kode_agency": selectedagency,
                                                   "kontrak_img":
                                                       selectedFiles.map((file) {
                                                         return MultipartFile.fromBytes(
@@ -551,6 +641,8 @@ class _ListpekerjaState extends State<Listpekerja> {
                                                   ),
                                                 ).show(context);
                                               }
+
+                                              log(selectedagency.toString());
                                             },
                                             child: Text(
                                               'Simpan',
@@ -934,6 +1026,39 @@ class _ListpekerjaState extends State<Listpekerja> {
                                                 }
                                               },
                                               child: Text('View'),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        children: [
+                                          Container(
+                                            width: 100,
+                                            margin: EdgeInsets.only(
+                                              left: 20,
+                                              bottom: 0,
+                                              right: 5,
+                                            ),
+                                            child: Text(
+                                              'Agency ',
+                                              style: TextStyle(
+                                                fontSize: 20,
+                                                fontFamily: 'Poppins',
+                                              ),
+                                            ),
+                                          ),
+                                          Container(
+                                            width: 370,
+                                            child: Text(
+                                              item['agency'] ?? "Unknown",
+                                              style: TextStyle(
+                                                fontSize: 20,
+                                                fontFamily: 'Poppins',
+                                              ),
                                             ),
                                           ),
                                         ],
@@ -1391,6 +1516,14 @@ class _WidgetListPekerjaMobileState extends State<WidgetListPekerjaMobile> {
                                   ),
                                   SizedBox(height: 15),
                                   Text(
+                                    'Agency :',
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  SizedBox(height: 15),
+                                  Text(
                                     'Kontrak :',
                                     style: TextStyle(
                                       fontFamily: 'Poppins',
@@ -1566,6 +1699,52 @@ class _WidgetListPekerjaMobileState extends State<WidgetListPekerjaMobile> {
                                         fontSize: 14,
                                         fontFamily: 'Poppins',
                                       ),
+                                    ),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Container(
+                                    alignment: Alignment.centerLeft,
+                                    width: 480,
+                                    height: 30,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      color: Colors.grey[300],
+                                    ),
+                                    child: DropdownButton<String>(
+                                      value: dropdownStatus,
+                                      isExpanded: true,
+                                      icon: const Icon(Icons.arrow_drop_down),
+                                      elevation: 14,
+                                      style: const TextStyle(
+                                        color: Colors.deepPurple,
+                                      ),
+                                      underline: SizedBox(),
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                      ),
+                                      onChanged: (String? value) {
+                                        setState(() {
+                                          dropdownStatus = value;
+                                        });
+                                      },
+                                      items:
+                                          listStatus.map<
+                                            DropdownMenuItem<String>
+                                          >((String value) {
+                                            return DropdownMenuItem<String>(
+                                              value: value,
+                                              child: Align(
+                                                alignment: Alignment.centerLeft,
+                                                child: Text(
+                                                  value,
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    fontFamily: 'Poppins',
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          }).toList(),
                                     ),
                                   ),
                                   SizedBox(height: 8),
@@ -2068,6 +2247,39 @@ class _WidgetListPekerjaMobileState extends State<WidgetListPekerjaMobile> {
                                               }
                                             },
                                             child: Text('View'),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      children: [
+                                        Container(
+                                          width: 100,
+                                          margin: EdgeInsets.only(
+                                            left: 20,
+                                            bottom: 0,
+                                            right: 5,
+                                          ),
+                                          child: Text(
+                                            'Agency ',
+                                            style: TextStyle(
+                                              fontSize: 20,
+                                              fontFamily: 'Poppins',
+                                            ),
+                                          ),
+                                        ),
+                                        Container(
+                                          width: 370,
+                                          child: Text(
+                                            item['agency'] ?? "Unknown",
+                                            style: TextStyle(
+                                              fontSize: 20,
+                                              fontFamily: 'Poppins',
+                                            ),
                                           ),
                                         ),
                                       ],
