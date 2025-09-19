@@ -104,214 +104,155 @@ class _OurDrawerState extends State<OurDrawer> {
 
   @override
   Widget build(BuildContext context) {
-    return Drawer(
-      child: Column(
-        children: [
-          SizedBox(
-            // awal height = 210
-            height: 200,
-            child: Obx(
-              () => DrawerHeader(
-                decoration: BoxDecoration(color: Color(0XFFFFE0B2)),
-                child: UserAccountsDrawerHeader(
+    return SafeArea(
+      child: Drawer(
+        child: Column(
+          children: [
+            SizedBox(
+              // awal height = 210
+              height: 200,
+              child: Obx(
+                () => DrawerHeader(
                   decoration: BoxDecoration(color: Color(0XFFFFE0B2)),
-                  accountName: Text(
-                    namaKaryawan.value,
-                    style: TextStyle(color: Colors.black),
-                  ),
-                  accountEmail: Text(jabatan.value),
-                  currentAccountPictureSize: Size.square(50),
-                  currentAccountPicture: CircleAvatar(
-                    backgroundColor: Colors.amberAccent,
-                    child: Text(
-                      idKaryawan.value,
-                      style: TextStyle(fontSize: 12),
+                  child: UserAccountsDrawerHeader(
+                    decoration: BoxDecoration(color: Color(0XFFFFE0B2)),
+                    accountName: Text(namaKaryawan.value, style: TextStyle(color: Colors.black)),
+                    accountEmail: Text(jabatan.value),
+                    currentAccountPictureSize: Size.square(50),
+                    currentAccountPicture: CircleAvatar(
+                      backgroundColor: Colors.amberAccent,
+                      child: Text(idKaryawan.value, style: TextStyle(fontSize: 12)),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-          SizedBox(
-            height: Get.height - 270,
-            width: double.infinity,
-            child: Scrollbar(
-              thumbVisibility: true,
-              controller: _scrollBarController,
-              child: ListView(
+            SizedBox(
+              height: Get.height - 270,
+              width: double.infinity,
+              child: Scrollbar(
+                thumbVisibility: true,
                 controller: _scrollBarController,
-                children: [
-                  if (_listSecondHakAkses.contains("resepsionis") ||
-                      _firstHakAkses == "resepsionis") ...[
-                    ListTile(
-                      leading: const Icon(Icons.room),
-                      title: const Text(
-                        'Menu Awal Resepsionis',
-                        style: TextStyle(fontFamily: 'Poppins'),
+                child: ListView(
+                  controller: _scrollBarController,
+                  children: [
+                    if (_listSecondHakAkses.contains("resepsionis") || _firstHakAkses == "resepsionis") ...[
+                      ListTile(
+                        leading: const Icon(Icons.room),
+                        title: const Text('Menu Awal Resepsionis', style: TextStyle(fontFamily: 'Poppins')),
+                        onTap: () {
+                          Get.to(() => MainResepsionis());
+                        },
                       ),
-                      onTap: () {
-                        Get.to(() => MainResepsionis());
-                      },
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.list_rounded),
-                      title: const Text(
-                        'List Transaksi',
-                        style: TextStyle(fontFamily: 'Poppins'),
+                      ListTile(
+                        leading: const Icon(Icons.list_rounded),
+                        title: const Text('List Transaksi', style: TextStyle(fontFamily: 'Poppins')),
+                        onTap: () {
+                          Get.offAll(() => ListTransaksi());
+                        },
                       ),
-                      onTap: () {
-                        Get.offAll(() => ListTransaksi());
-                      },
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.person_2),
-                      title: const Text(
-                        'List Terapis',
-                        style: TextStyle(fontFamily: 'Poppins'),
+                      ListTile(
+                        leading: const Icon(Icons.person_2),
+                        title: const Text('List Terapis', style: TextStyle(fontFamily: 'Poppins')),
+                        onTap: () {
+                          Get.offAll(() => TampilanTerapis());
+                        },
                       ),
-                      onTap: () {
-                        Get.offAll(() => TampilanTerapis());
-                      },
-                    ),
-                  ],
+                    ],
 
-                  if (_listSecondHakAkses.contains("spv") ||
-                      _firstHakAkses == "spv")
-                    ListTile(
-                      leading: const Icon(Icons.room),
-                      title: const Text(
-                        'Ruang Tunggu Terapis',
-                        style: TextStyle(fontFamily: 'Poppins'),
+                    if (_listSecondHakAkses.contains("spv") || _firstHakAkses == "spv")
+                      ListTile(
+                        leading: const Icon(Icons.room),
+                        title: const Text('Ruang Tunggu Terapis', style: TextStyle(fontFamily: 'Poppins')),
+                        onTap: () {
+                          Get.to(() => MainRt());
+                        },
                       ),
-                      onTap: () {
-                        Get.to(() => MainRt());
-                      },
-                    ),
-                  if (_listSecondHakAkses.contains("ruangan") ||
-                      _firstHakAkses == "ruangan")
-                    ListTile(
-                      leading: const Icon(Icons.room_service),
-                      title: const Text(
-                        'Kamar Terapis',
-                        style: TextStyle(fontFamily: 'Poppins'),
+                    if (_listSecondHakAkses.contains("ruangan") || _firstHakAkses == "ruangan")
+                      ListTile(
+                        leading: const Icon(Icons.room_service),
+                        title: const Text('Kamar Terapis', style: TextStyle(fontFamily: 'Poppins')),
+                        onTap: () {
+                          Get.to(() => MainKamarTerapis());
+                        },
                       ),
-                      onTap: () {
-                        Get.to(() => MainKamarTerapis());
-                      },
-                    ),
-                  if (_listSecondHakAkses.contains("ob") ||
-                      _firstHakAkses == "ob")
-                    ListTile(
-                      leading: const Icon(Icons.room_service),
-                      title: const Text(
-                        'Menu Utama',
-                        style: TextStyle(fontFamily: 'Poppins'),
+                    if (_listSecondHakAkses.contains("ob") || _firstHakAkses == "ob")
+                      ListTile(
+                        leading: const Icon(Icons.room_service),
+                        title: const Text('Menu Utama', style: TextStyle(fontFamily: 'Poppins')),
+                        onTap: () {
+                          Get.to(() => Hp_Ob());
+                        },
                       ),
-                      onTap: () {
-                        Get.to(() => Hp_Ob());
-                      },
-                    ),
-                  if (_listSecondHakAkses.contains("admin") ||
-                      _firstHakAkses == "admin")
-                    ListTile(
-                      leading: const Icon(Icons.admin_panel_settings_rounded),
-                      title: const Text(
-                        'Admin',
-                        style: TextStyle(fontFamily: 'Poppins'),
+                    if (_listSecondHakAkses.contains("admin") || _firstHakAkses == "admin")
+                      ListTile(
+                        leading: const Icon(Icons.admin_panel_settings_rounded),
+                        title: const Text('Admin', style: TextStyle(fontFamily: 'Poppins')),
+                        onTap: () {
+                          Get.to(() => MainAdmin());
+                        },
                       ),
-                      onTap: () {
-                        Get.to(() => MainAdmin());
-                      },
-                    ),
 
-                  if (_listSecondHakAkses.contains("kitchen") ||
-                      _firstHakAkses == "kitchen")
-                    ListTile(
-                      leading: const Icon(Icons.admin_panel_settings_rounded),
-                      title: const Text(
-                        'Kitchen',
-                        style: TextStyle(fontFamily: 'Poppins'),
+                    if (_listSecondHakAkses.contains("kitchen") || _firstHakAkses == "kitchen")
+                      ListTile(
+                        leading: const Icon(Icons.admin_panel_settings_rounded),
+                        title: const Text('Kitchen', style: TextStyle(fontFamily: 'Poppins')),
+                        onTap: () {
+                          Get.to(() => MainKitchen());
+                        },
                       ),
-                      onTap: () {
-                        Get.to(() => MainKitchen());
-                      },
-                    ),
-                  if (_listSecondHakAkses.contains("admin") ||
-                      _firstHakAkses == "admin")
-                    ListTile(
-                      leading: const Icon(Icons.admin_panel_settings_rounded),
-                      title: const Text(
-                        'Komisi Pekerja',
-                        style: TextStyle(fontFamily: 'Poppins'),
+                    if (_listSecondHakAkses.contains("admin") || _firstHakAkses == "admin")
+                      ListTile(
+                        leading: const Icon(Icons.admin_panel_settings_rounded),
+                        title: const Text('Komisi Pekerja', style: TextStyle(fontFamily: 'Poppins')),
+                        onTap: () {
+                          Get.to(() => PageKomisiPekerja());
+                        },
                       ),
-                      onTap: () {
-                        Get.to(() => PageKomisiPekerja());
-                      },
-                    ),
-                  if (_firstHakAkses == "owner") ...[
-                    ListTile(
-                      leading: const Icon(Icons.admin_panel_settings_rounded),
-                      title: const Text(
-                        'Owner',
-                        style: TextStyle(fontFamily: 'Poppins'),
+                    if (_firstHakAkses == "owner") ...[
+                      ListTile(
+                        leading: const Icon(Icons.admin_panel_settings_rounded),
+                        title: const Text('Owner', style: TextStyle(fontFamily: 'Poppins')),
+                        onTap: () {
+                          Get.to(() => OwnerPage());
+                        },
                       ),
-                      onTap: () {
-                        Get.to(() => OwnerPage());
-                      },
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.admin_panel_settings_rounded),
-                      title: const Text(
-                        'Admin',
-                        style: TextStyle(fontFamily: 'Poppins'),
+                      ListTile(
+                        leading: const Icon(Icons.admin_panel_settings_rounded),
+                        title: const Text('Admin', style: TextStyle(fontFamily: 'Poppins')),
+                        onTap: () {
+                          Get.off(() => MainAdmin());
+                        },
                       ),
-                      onTap: () {
-                        Get.off(() => MainAdmin());
-                      },
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.list_rounded),
-                      title: const Text(
-                        'List Transaksi',
-                        style: TextStyle(fontFamily: 'Poppins'),
+                      ListTile(
+                        leading: const Icon(Icons.list_rounded),
+                        title: const Text('List Transaksi', style: TextStyle(fontFamily: 'Poppins')),
+                        onTap: () {
+                          Get.offAll(() => ListTransaksi());
+                        },
                       ),
-                      onTap: () {
-                        Get.offAll(() => ListTransaksi());
-                      },
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.safety_check),
-                      title: const Text(
-                        'Komisi',
-                        style: TextStyle(fontFamily: 'Poppins'),
+                      ListTile(
+                        leading: const Icon(Icons.safety_check),
+                        title: const Text('Komisi', style: TextStyle(fontFamily: 'Poppins')),
+                        onTap: () {
+                          Get.offAll(() => laporankomisi());
+                        },
                       ),
-                      onTap: () {
-                        Get.offAll(() => laporankomisi());
-                      },
-                    ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
-          ),
 
-          Expanded(
-            child: Container(),
-          ), // Pushes the Log Out ListTile to the bottom
-          Padding(
-            padding: const EdgeInsets.only(bottom: 30, left: 20),
-            child: InkWell(
-              child: SizedBox(
-                height: 40,
-                width: double.infinity,
+            Expanded(child: Container()), // Pushes the Log Out ListTile to the bottom
+            InkWell(
+              child: Container(
+                padding: const EdgeInsets.only(bottom: 20, left: 20),
                 child: Row(
                   children: [
                     const Icon(Icons.logout),
                     SizedBox(width: 5),
-                    Text(
-                      'Log Out',
-                      style: TextStyle(fontFamily: 'Poppins', fontSize: 16),
-                    ),
+                    Text('Log Out', style: TextStyle(fontFamily: 'Poppins', fontSize: 16)),
                   ],
                 ),
               ),
@@ -321,22 +262,22 @@ class _OurDrawerState extends State<OurDrawer> {
                 await fnLogout();
               },
             ),
-          ),
 
-          // ListTile(
-          //   leading: const Icon(Icons.logout),
-          //   title: const Text(
-          //     'Log Out',
-          //     style: TextStyle(fontFamily: 'Poppins'),
-          //   ),
-          //   onTap: () async {
-          //     // Krna ak buat permanen, jd paksa hapus
-          //     Get.delete<MainResepsionisController>(force: true);
-          //     await fnLogout();
-          //   },
-          // ),
-          // SizedBox(height: 20),
-        ],
+            // ListTile(
+            //   leading: const Icon(Icons.logout),
+            //   title: const Text(
+            //     'Log Out',
+            //     style: TextStyle(fontFamily: 'Poppins'),
+            //   ),
+            //   onTap: () async {
+            //     // Krna ak buat permanen, jd paksa hapus
+            //     Get.delete<MainResepsionisController>(force: true);
+            //     await fnLogout();
+            //   },
+            // ),
+            // SizedBox(height: 20),
+          ],
+        ),
       ),
     );
   }

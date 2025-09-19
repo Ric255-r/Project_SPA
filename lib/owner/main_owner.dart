@@ -1196,7 +1196,9 @@ class IsiOwnerPage extends StatelessWidget {
                                                 ),
                                               ),
                                               Text(
-                                                "${persentase.toStringAsFixed(2)}%",
+                                                persentase.isInfinite
+                                                    ? "∞"
+                                                    : "${persentase.toStringAsFixed(2)}%",
                                                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                                               ),
                                             ],
