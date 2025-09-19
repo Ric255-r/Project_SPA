@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'dart:math' as math;
+import 'package:Project_SPA/function/rupiah_formatter.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
@@ -416,22 +417,22 @@ class OwnerPageController extends GetxController {
 
                 TextField(
                   keyboardType: TextInputType.number,
-
-                  inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly], //
+                  inputFormatters: <TextInputFormatter>[RupiahInputFormatter()], //
                   decoration: InputDecoration(
                     border: OutlineInputBorder(),
                     hintText: "Rp. ",
                     contentPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 1),
                   ),
                   onChanged: (value) {
-                    _nominalTargetOmset = int.tryParse(value) ?? 0;
+                    final digits = value.replaceAll(RegExp(r'[^0-9]'), '');
+                    _nominalTargetOmset = int.tryParse(digits) ?? 0;
                     log("Isi Nominal target Omset $_nominalTargetOmset");
                   },
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: () {
-                    _storeDataTarget();
+                  onPressed: () async {
+                    await _storeDataTarget();
                   },
                   child: Text("Simpan Perubahan"),
                 ),
@@ -454,8 +455,11 @@ class OwnerPageController extends GetxController {
   RxList<dynamic> _produkSales = [].obs;
   RxList<dynamic> _paketTerlaris = [].obs;
   RxList<String> _tahunTransaksi = <String>[].obs;
+  //  satu paket utk get target sales
   RxList<dynamic> dataTargetOmset = [].obs;
+  RxList<dynamic> dataOmset = [].obs;
   RxList<String> tahunTransaksiTarget = <String>[].obs;
+  // End 1 Paket
   RxList<int> listYear = List<int>.generate(100, (index) => 2020 + index).obs;
 
   Future<void> _getLineChart({String? startDate, String? endDate}) async {
@@ -547,7 +551,6 @@ class OwnerPageController extends GetxController {
     }
   }
 
-  RxInt targetOmsetBulanIni = 0.obs;
   Future<void> _getDataTarget({int? startMonth, int? endMonth, int? startYear, int? endYear}) async {
     try {
       DateTime now = DateTime.now(); // Get the current date and time
@@ -564,16 +567,20 @@ class OwnerPageController extends GetxController {
       if (startMonth != null && endMonth != null) {
         url += "&start_month=$startMonth&end_month=$endMonth";
         log("Execute getDataTarget filter");
+      } else {
+        // Default Ambil Bulan Saat Ini
+        url += "&start_month=${now.month}&end_month=${now.month}";
       }
 
       var response = await dio.get(url);
       Map<String, dynamic> responseData = response.data;
       dataTargetOmset.assignAll(responseData['get_sales_target']);
+      dataOmset.assignAll(responseData['get_omset']);
+
+      log("Isi Omset = ${responseData['get_omset']}");
       tahunTransaksiTarget.assignAll(
         (responseData['tahun_target'] as List).map((el) => el['year'].toString()),
       );
-
-      targetOmsetBulanIni.value = (responseData['current_month_target_sales'] as int);
     } catch (e) {
       if (e is DioException) {
         log("Error di getDataTarget dio ${e.response!.data}");
@@ -595,12 +602,9 @@ class OwnerPageController extends GetxController {
       );
 
       if (response.statusCode == 200) {
+        await Future.wait([_getDataTarget(), _getLineChart()]);
         Get.back();
         Get.snackbar("Success", "Data Target Berhasil Disimpan");
-
-        _getDataTarget();
-        _getLineChart();
-        targetOmsetBulanIni.refresh();
       }
     } catch (e) {
       if (e is DioException) {
@@ -1044,7 +1048,6 @@ class IsiOwnerPage extends StatelessWidget {
                       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
-                      height: 300,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
@@ -1090,97 +1093,127 @@ class IsiOwnerPage extends StatelessWidget {
 
                             if (list.isEmpty) return const Text('Tidak ada data');
 
-                            return GridView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(), // biar ikut parent scroll
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 6, // 6 kolom = "tiap baris 6 item"
-                                crossAxisSpacing: 0, // sama seperti Row tanpa gap horizontal
-                                mainAxisSpacing: 12, // jarak antar "baris" = 12
-                                mainAxisExtent: 80, // tinggi tile; sesuaikan (≈ badge + gap + text)
-                              ),
-                              itemCount: list.length,
-                              itemBuilder: (context, i) {
-                                final item = list[i]; // Map/dynamic
+                            return SizedBox(
+                              height: c.dataOmset.length > 1 ? 170 : 90,
+                              child: ListView.builder(
+                                itemCount: c.dataTargetOmset.length,
+                                itemBuilder: (context, index) {
+                                  var item = c.dataTargetOmset[index];
+                                  var itemOmset = c.dataOmset[index];
 
-                                return Align(
-                                  alignment: Alignment.topCenter, // konten nempel di atas
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min, // tinggi mengikuti konten
-                                    mainAxisAlignment: MainAxisAlignment.start,
+                                  double persentase = (itemOmset['omset'] / item['target_omset']) * 100;
+
+                                  return Column(
                                     children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFF3F4F6),
-                                          borderRadius: BorderRadius.circular(999),
-                                        ),
-                                        child: Text(
-                                          '${item['month_name']}',
-                                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                                        ),
+                                      // baris info singkat (opsional, boleh kamu isi dinamis)
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            'Omset Bulan ${item['month_name']}',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          Text(
+                                            formatRupiah(double.tryParse("${itemOmset['omset']}") ?? 0.0),
+                                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                                          ),
+                                        ],
                                       ),
-                                      const SizedBox(height: 8),
-                                      AutoSizeText(
-                                        formatRupiah(double.tryParse("${item['target_omset']}") ?? 0.0),
-                                        style: const TextStyle(fontWeight: FontWeight.w700, height: 1.1),
-                                        maxFontSize: 20,
-                                        minFontSize: 6,
-                                        maxLines: 1,
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            'Target bulan ${item['month_name']} ',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          Text(
+                                            formatRupiah(double.tryParse("${item['target_omset']}") ?? 0.0),
+                                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                                          ),
+                                        ],
                                       ),
+
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            'Persentase Capaian Target ',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          Text(
+                                            "${persentase.toStringAsFixed(2)}%",
+                                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                                          ),
+                                        ],
+                                      ),
+
+                                      SizedBox(height: 10),
+                                      const Divider(),
                                     ],
-                                  ),
-                                );
-                              },
+                                  );
+                                },
+                              ),
                             );
                           }),
 
-                          const Spacer(),
+                          // const Spacer(),
 
-                          // garis tipis biar rapi (opsional)
-                          const Divider(height: 1),
+                          // // garis tipis biar rapi (opsional)
+                          // const Divider(height: 1),
 
-                          const SizedBox(height: 8),
+                          // const SizedBox(height: 8),
 
-                          // baris info singkat (opsional, boleh kamu isi dinamis)
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Omset Bulan Ini (${c.monthNames["${DateTime.now().month}".padLeft(2, "0")]} - ${DateTime.now().year})',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Obx(
-                                () => Text(
-                                  formatRupiah(double.tryParse("${currSalesMethod()}") ?? 0.0),
-                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                                ),
-                              ),
-                            ],
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Target bulan ini (${c.monthNames["${DateTime.now().month}".padLeft(2, "0")]} - ${DateTime.now().year})',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Obx(
-                                () => Text(
-                                  formatRupiah(double.tryParse("${c.targetOmsetBulanIni.value}") ?? 0.0),
-                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                                ),
-                              ),
-                            ],
-                          ),
+                          // // baris info singkat (opsional, boleh kamu isi dinamis)
+                          // Row(
+                          //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          //   children: [
+                          //     Text(
+                          //       'Omset Bulan Ini (${c.monthNames["${DateTime.now().month}".padLeft(2, "0")]} - ${DateTime.now().year})',
+                          //       style: TextStyle(
+                          //         fontSize: 14,
+                          //         color: Colors.black,
+                          //         fontWeight: FontWeight.bold,
+                          //       ),
+                          //     ),
+                          //     Obx(
+                          //       () => Text(
+                          //         formatRupiah(double.tryParse("${currSalesMethod()}") ?? 0.0),
+                          //         style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                          //       ),
+                          //     ),
+                          //   ],
+                          // ),
+                          // Row(
+                          //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          //   children: [
+                          //     Text(
+                          //       'Target bulan ini (${c.monthNames["${DateTime.now().month}".padLeft(2, "0")]} - ${DateTime.now().year})',
+                          //       style: TextStyle(
+                          //         fontSize: 14,
+                          //         color: Colors.black,
+                          //         fontWeight: FontWeight.bold,
+                          //       ),
+                          //     ),
+                          //     Obx(
+                          //       () => Text(
+                          //         formatRupiah(double.tryParse("${c.targetOmsetBulanIni.value}") ?? 0.0),
+                          //         style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                          //       ),
+                          //     ),
+                          //   ],
+                          // ),
                         ],
                       ),
                     ),
@@ -1340,21 +1373,6 @@ String formatRupiah(double amount) {
 class MonthlyRevenueChart extends StatelessWidget {
   final List<MonthlySales> salesData;
   final List<MonthlySales> targetSalesData;
-
-  // List<double> targetSales = [
-  //   100000000,
-  //   100000000,
-  //   100000000,
-  //   100000000,
-  //   100000000,
-  //   100000000,
-  //   100000000,
-  //   100000000,
-  //   100000000,
-  //   100000000,
-  //   100000000,
-  //   100000000,
-  // ];
 
   const MonthlyRevenueChart({super.key, required this.salesData, required this.targetSalesData});
 

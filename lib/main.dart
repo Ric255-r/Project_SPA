@@ -301,6 +301,8 @@ class _LoginPageState extends State<LoginPage> {
           CherryToast.warning(title: Text('User Tidak Ditemukan')).show(context);
         }
       }
+
+      CherryToast.warning(title: Text('Error $e')).show(context);
       log("Error : ${e}");
     }
   }
