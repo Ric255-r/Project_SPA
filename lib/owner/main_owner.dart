@@ -461,6 +461,7 @@ class OwnerPageController extends GetxController {
   RxList<String> tahunTransaksiTarget = <String>[].obs;
   // End 1 Paket
   RxList<int> listYear = List<int>.generate(100, (index) => 2020 + index).obs;
+  ScrollController scrollControllerTarget = ScrollController();
 
   Future<void> _getLineChart({String? startDate, String? endDate}) async {
     print("Eksekusi GetLineChart");
@@ -621,6 +622,38 @@ class OwnerPageController extends GetxController {
     _monthlySales.close();
     _paketSales.close();
     _produkSales.close();
+
+    try {
+      _selectedTahun.close();
+    } catch (_) {}
+    try {
+      _startMonth.close();
+    } catch (_) {}
+    try {
+      _startYear.close();
+    } catch (_) {}
+    try {
+      _endMonth.close();
+    } catch (_) {}
+    try {
+      _endYear.close();
+    } catch (_) {}
+    try {
+      _startMonthTargetOmset.close();
+    } catch (_) {}
+    try {
+      _startYearTargetOmset.close();
+    } catch (_) {}
+    try {
+      _endMonthTargetOmset.close();
+    } catch (_) {}
+    try {
+      _endYearTargetOmset.close();
+    } catch (_) {}
+
+    try {
+      scrollControllerTarget.dispose();
+    } catch (_) {}
 
     super.onClose();
   }
@@ -1095,75 +1128,87 @@ class IsiOwnerPage extends StatelessWidget {
 
                             return SizedBox(
                               height: c.dataOmset.length > 1 ? 170 : 90,
-                              child: ListView.builder(
-                                itemCount: c.dataTargetOmset.length,
-                                itemBuilder: (context, index) {
-                                  var item = c.dataTargetOmset[index];
-                                  var itemOmset = c.dataOmset[index];
+                              child: Scrollbar(
+                                controller: c.scrollControllerTarget,
+                                thumbVisibility: true,
+                                thickness: 4.0,
+                                radius: Radius.circular(10),
+                                child: ListView.builder(
+                                  controller: c.scrollControllerTarget,
+                                  itemCount: c.dataTargetOmset.length,
+                                  itemBuilder: (context, index) {
+                                    var item = c.dataTargetOmset[index];
+                                    var itemOmset = c.dataOmset[index];
 
-                                  double persentase = (itemOmset['omset'] / item['target_omset']) * 100;
+                                    double persentase = (itemOmset['omset'] / item['target_omset']) * 100;
 
-                                  return Column(
-                                    children: [
-                                      // baris info singkat (opsional, boleh kamu isi dinamis)
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    return Container(
+                                      padding: const EdgeInsets.only(right: 10),
+                                      child: Column(
                                         children: [
-                                          Text(
-                                            'Omset Bulan ${item['month_name']}',
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.black,
-                                              fontWeight: FontWeight.bold,
-                                            ),
+                                          // baris info singkat (opsional, boleh kamu isi dinamis)
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(
+                                                'Omset Bulan ${item['month_name']}',
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: Colors.black,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              Text(
+                                                formatRupiah(double.tryParse("${itemOmset['omset']}") ?? 0.0),
+                                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                                              ),
+                                            ],
                                           ),
-                                          Text(
-                                            formatRupiah(double.tryParse("${itemOmset['omset']}") ?? 0.0),
-                                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(
+                                                'Target bulan ${item['month_name']} ',
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: Colors.black,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              Text(
+                                                formatRupiah(
+                                                  double.tryParse("${item['target_omset']}") ?? 0.0,
+                                                ),
+                                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                                              ),
+                                            ],
                                           ),
+
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(
+                                                'Persentase Capaian Target ',
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: Colors.black,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              Text(
+                                                "${persentase.toStringAsFixed(2)}%",
+                                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                                              ),
+                                            ],
+                                          ),
+
+                                          SizedBox(height: 10),
+                                          const Divider(),
                                         ],
                                       ),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            'Target bulan ${item['month_name']} ',
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.black,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          Text(
-                                            formatRupiah(double.tryParse("${item['target_omset']}") ?? 0.0),
-                                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                                          ),
-                                        ],
-                                      ),
-
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            'Persentase Capaian Target ',
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.black,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          Text(
-                                            "${persentase.toStringAsFixed(2)}%",
-                                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                                          ),
-                                        ],
-                                      ),
-
-                                      SizedBox(height: 10),
-                                      const Divider(),
-                                    ],
-                                  );
-                                },
+                                    );
+                                  },
+                                ),
                               ),
                             );
                           }),
