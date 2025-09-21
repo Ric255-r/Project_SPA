@@ -90,6 +90,7 @@ void startbackgroundservice() async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   startbackgroundservice();
+  await ApiEndpointResolver.init(); // <<— cukup sekali di sini
 
   // Add this error handler
   FlutterError.onError = (details) {

@@ -5,6 +5,7 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   awesome_notifications
   charset_converter
+  connectivity_plus
   file_selector_windows
   flutter_tts
   permission_handler_windows

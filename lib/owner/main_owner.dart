@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:Project_SPA/function/rupiah_formatter.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:cherry_toast/cherry_toast.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -202,7 +203,19 @@ class OwnerPageController extends GetxController {
                       _startYear.value == null ||
                       _endMonth.value == null ||
                       _endYear.value == null) {
-                    Get.snackbar('Perhatian', 'Pilih bulan & tahun untuk periode awal dan akhir.');
+                    CherryToast.info(
+                      title: Text(
+                        "Perhatian!",
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Poppins',
+                        ),
+                      ),
+                      description: Text('Pilih bulan & tahun untuk periode awal dan akhir.'),
+                      animationDuration: const Duration(milliseconds: 3000),
+                      autoDismiss: true,
+                    ).show(Get.context!);
                     return;
                   }
 
@@ -366,7 +379,19 @@ class OwnerPageController extends GetxController {
                         _startYearTargetOmset.value == null ||
                         _endMonthTargetOmset.value == null ||
                         _endYearTargetOmset.value == null) {
-                      Get.snackbar('Perhatian', 'Pilih bulan & tahun untuk periode awal dan akhir.');
+                      CherryToast.warning(
+                        title: Text(
+                          "Perhatian!",
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Poppins',
+                          ),
+                        ),
+                        description: Text('Pilih bulan & tahun untuk periode awal dan akhir.'),
+                        animationDuration: const Duration(milliseconds: 2000),
+                        autoDismiss: true,
+                      ).show(Get.context!);
                       return;
                     }
 
@@ -375,19 +400,54 @@ class OwnerPageController extends GetxController {
                     final end = _toYm(_endYearTargetOmset.value!, _endMonthTargetOmset.value!);
                     // 1️⃣ Cek tahun harus sama
                     if (start.year != end.year) {
-                      Get.snackbar('Tidak Valid', 'Tahun awal dan tahun akhir harus sama.');
+                      CherryToast.warning(
+                        title: Text(
+                          "Tidak Valid!",
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Poppins',
+                          ),
+                        ),
+                        description: Text('Tahun Awal dan Tahun Akhir Harus Sama.'),
+                        animationDuration: const Duration(milliseconds: 2000),
+                        autoDismiss: true,
+                      ).show(Get.context!);
                       return;
                     }
                     // Validasi Range Maks 12 bln
                     if (!isRangeValid(start, end)) {
                       final selisih = monthDiff(start, end);
                       if (selisih < 0) {
-                        Get.snackbar('Periode Bulan Terbalik', ' (sekarang: Selisih $selisih bulan).');
+                        CherryToast.warning(
+                          title: Text(
+                            "Perhatian!",
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Poppins',
+                            ),
+                          ),
+                          description: Text('Periode Bulan Terbalik. (sekarang: Selisih $selisih bulan).'),
+                          animationDuration: const Duration(milliseconds: 2000),
+                          autoDismiss: true,
+                        ).show(Get.context!);
                       } else {
-                        Get.snackbar(
-                          'Range terlalu panjang',
-                          'Maksimal 12 bulan (sekarang: $selisih bulan).',
-                        );
+                        CherryToast.warning(
+                          title: Text(
+                            "Perhatian!",
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Poppins',
+                            ),
+                          ),
+                          description: Text(
+                            'Range terlalu panjang Maksimal 12 bulan (sekarang: $selisih bulan).',
+                          ),
+                          animationDuration: const Duration(milliseconds: 2000),
+                          autoDismiss: true,
+                        ).show(Get.context!);
                       }
                       return; // matikan fungsi sesuai requirement
                     }
@@ -605,13 +665,42 @@ class OwnerPageController extends GetxController {
       if (response.statusCode == 200) {
         await Future.wait([_getDataTarget(), _getLineChart()]);
         Get.back();
-        Get.snackbar("Success", "Data Target Berhasil Disimpan");
+
+        CherryToast.info(
+          title: Text(
+            "Success!",
+            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
+          ),
+          description: Text('Data Target Berhasil Disimpan'),
+          animationDuration: const Duration(milliseconds: 2000),
+          autoDismiss: true,
+        ).show(Get.context!);
       }
     } catch (e) {
       if (e is DioException) {
+        CherryToast.error(
+          title: Text(
+            "Error!",
+            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
+          ),
+          description: Text('gagal storeDataTarget dioErr'),
+          animationDuration: const Duration(milliseconds: 2000),
+          autoDismiss: true,
+        ).show(Get.context!);
         log("Error di storeDataTarget dio ${e.response!.data}");
+
+        return;
       }
 
+      CherryToast.error(
+        title: Text(
+          "Error!",
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
+        ),
+        description: Text('gagal storeDataTarget '),
+        animationDuration: const Duration(milliseconds: 2000),
+        autoDismiss: true,
+      ).show(Get.context!);
       log("Error di storeDataTarget $e");
     }
   }

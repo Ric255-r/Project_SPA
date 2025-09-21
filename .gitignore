@@ -33,6 +33,7 @@ lib/function/ip_address.dart
 .pub-cache/
 .pub/
 /build/
+test/widget_test.dart
 
 # Symbolication related
 app.*.symbols
