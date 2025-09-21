@@ -34,6 +34,31 @@ class MonthlySales {
   MonthlySales(this.month, this.revenue);
 }
 
+const Map<String, String> hariInggrisKeIndonesia = {
+  'Sunday': 'Minggu',
+  'Monday': 'Senin',
+  'Tuesday': 'Selasa',
+  'Wednesday': 'Rabu',
+  'Thursday': 'Kamis',
+  'Friday': 'Jumat',
+  'Saturday': 'Sabtu',
+};
+
+final monthNames = {
+  "01": "Jan",
+  "02": "Feb",
+  "03": "Mar",
+  "04": "Apr",
+  "05": "Mei",
+  "06": "Jun",
+  "07": "Jul",
+  "08": "Aug",
+  "09": "Sep",
+  "10": "Okt",
+  "11": "Nov",
+  "12": "Des",
+};
+
 class OwnerPageController extends GetxController {
   // Data COntoh buat piechart
   // final List<ChartData> pieChartData = [
@@ -63,6 +88,7 @@ class OwnerPageController extends GetxController {
     _getData();
     _getLineChart();
     _getDataTarget();
+    _getDataTargetHarian();
     log("${DateTime.now().month}".padLeft(2, "0"));
   }
 
@@ -76,21 +102,6 @@ class OwnerPageController extends GetxController {
   RxnString _endMonthTargetOmset = RxnString(null);
   RxnString _endYearTargetOmset = RxnString(null);
   int _nominalTargetOmset = 0;
-
-  final monthNames = {
-    "01": "Jan",
-    "02": "Feb",
-    "03": "Mar",
-    "04": "Apr",
-    "05": "Mei",
-    "06": "Jun",
-    "07": "Jul",
-    "08": "Aug",
-    "09": "Sep",
-    "10": "Okt",
-    "11": "Nov",
-    "12": "Des",
-  };
 
   /// Hitung selisih bulan berbasis (tahun, bulan) — hari diabaikan.
   int monthDiff(DateTime start, DateTime end) {
@@ -245,8 +256,6 @@ class OwnerPageController extends GetxController {
                       '${end.year.toString().padLeft(4, '0')}-${end.month.toString().padLeft(2, '0')}';
 
                   _getLineChart(startDate: startStr, endDate: endStr).then((_) => Get.back());
-
-                  log("Hasil startStr ${startStr} dan endStr ${endStr}");
                 },
                 child: Text("Filter!"),
               ),
@@ -466,8 +475,6 @@ class OwnerPageController extends GetxController {
                       startYear: start.year,
                       endYear: end.year,
                     ).then((_) => Get.back());
-
-                    log("Hasil startStr $startStr dan endStr $endStr");
                   },
                   child: Text("Filter!"),
                 ),
@@ -519,9 +526,14 @@ class OwnerPageController extends GetxController {
   RxList<dynamic> dataTargetOmset = [].obs;
   RxList<dynamic> dataOmset = [].obs;
   RxList<String> tahunTransaksiTarget = <String>[].obs;
-  // End 1 Paket
   RxList<int> listYear = List<int>.generate(100, (index) => 2020 + index).obs;
   ScrollController scrollControllerTarget = ScrollController();
+  // End 1 Paket Target Sales Bulanan
+
+  // Var TargetSales Harian
+  RxList<_HarianData> dataSalesHarian = <_HarianData>[].obs;
+  RxBool isLoadingDataSalesHarian = false.obs;
+  // End Data Target Sales Harian
 
   Future<void> _getLineChart({String? startDate, String? endDate}) async {
     print("Eksekusi GetLineChart");
@@ -538,8 +550,6 @@ class OwnerPageController extends GetxController {
 
       List<dynamic> lineChart = responseData['for_line_chart'];
       List<dynamic> targetLineChart = responseData['line_chart_target'];
-
-      log("Isi Data GetLineChart $responseData");
 
       monthlyData.clear();
       monthlyDataTarget.clear();
@@ -569,8 +579,6 @@ class OwnerPageController extends GetxController {
 
       Map<String, dynamic> responseData = response.data;
       List<dynamic> paketTerlaris = responseData['paket_terlaris'];
-
-      log("isi responseData $responseData");
 
       _monthlySales.assignAll(responseData['monthly_sales']);
       _paketSales.assignAll(responseData['sum_paket']);
@@ -627,7 +635,6 @@ class OwnerPageController extends GetxController {
 
       if (startMonth != null && endMonth != null) {
         url += "&start_month=$startMonth&end_month=$endMonth";
-        log("Execute getDataTarget filter");
       } else {
         // Default Ambil Bulan Saat Ini
         url += "&start_month=${now.month}&end_month=${now.month}";
@@ -638,7 +645,6 @@ class OwnerPageController extends GetxController {
       dataTargetOmset.assignAll(responseData['get_sales_target']);
       dataOmset.assignAll(responseData['get_omset']);
 
-      log("Isi Omset = ${responseData['get_omset']}");
       tahunTransaksiTarget.assignAll(
         (responseData['tahun_target'] as List).map((el) => el['year'].toString()),
       );
@@ -648,6 +654,35 @@ class OwnerPageController extends GetxController {
       }
 
       log("Error di getDataTarget dio $e");
+    }
+  }
+
+  Future<void> _getDataTargetHarian({int? startMonth, int? endMonth, int? startYear, int? endYear}) async {
+    try {
+      isLoadingDataSalesHarian.value = true;
+
+      var url = '${myIpAddr()}/main_owner/sales_chart_harian';
+
+      var response = await dio.get(url);
+      Map<String, dynamic> responseData = response.data;
+
+      dataSalesHarian.assignAll(
+        (responseData['data'] as List).map((el) {
+          return _HarianData(el['nama_hari'], el['tanggal'], el['total']);
+        }).toList(),
+      );
+
+      if (response.statusCode == 200) {
+        isLoadingDataSalesHarian.value = false;
+      }
+
+      log("Isi dataSalesHarian Harian = ${dataSalesHarian}");
+    } catch (e) {
+      if (e is DioException) {
+        log("Error di _getDataTargetHarian dio ${e.response!.data}");
+      }
+
+      log("Error di _getDataTargetHarian dio $e");
     }
   }
 
@@ -748,8 +783,11 @@ class OwnerPageController extends GetxController {
   }
 }
 
+// Ini Parentnya. Init getx Disini
 class OwnerPage extends StatefulWidget {
-  const OwnerPage({super.key});
+  OwnerPage({super.key}) {
+    Get.lazyPut(() => OwnerPageController(), fenix: false);
+  }
 
   @override
   State<OwnerPage> createState() => _OwnerPageState();
@@ -799,9 +837,7 @@ class _OwnerPageState extends State<OwnerPage> {
 }
 
 class IsiOwnerPage extends StatelessWidget {
-  IsiOwnerPage({super.key}) {
-    Get.lazyPut(() => OwnerPageController(), fenix: false);
-  }
+  const IsiOwnerPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -1165,6 +1201,27 @@ class IsiOwnerPage extends StatelessWidget {
                       ],
                     ),
                     SizedBox(height: 12.w),
+
+                    Obx(
+                      () => Container(
+                        margin: const EdgeInsets.only(left: 10, right: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        child:
+                            c.isLoadingDataSalesHarian.value
+                                ? Center(
+                                  // Gunakan Center agar posisinya rapi
+                                  child: Transform.scale(scale: 0.55, child: CircularProgressIndicator()),
+                                )
+                                : TotalSalesHarianChart(),
+                      ),
+                    ),
+                    SizedBox(height: 12.w),
+
                     Container(
                       margin: const EdgeInsets.only(left: 10, right: 10),
                       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
@@ -1181,9 +1238,14 @@ class IsiOwnerPage extends StatelessWidget {
                               SizedBox(width: 210),
                               const Expanded(
                                 child: Text(
-                                  'Target Sales',
+                                  'Target Sales Bulanan',
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, height: 1),
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    height: 1,
+                                    fontFamily: 'Poppins',
+                                  ),
                                 ),
                               ),
                               SizedBox(
@@ -1240,7 +1302,7 @@ class IsiOwnerPage extends StatelessWidget {
                                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
                                               Text(
-                                                'Omset Bulan ${item['month_name']}',
+                                                'Omset Bulan ${item['month_name']} - ${item['year']}',
                                                 style: TextStyle(
                                                   fontSize: 14,
                                                   color: Colors.black,
@@ -1257,7 +1319,7 @@ class IsiOwnerPage extends StatelessWidget {
                                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
                                               Text(
-                                                'Target bulan ${item['month_name']} ',
+                                                'Target bulan ${item['month_name']} - ${item['year']}',
                                                 style: TextStyle(
                                                   fontSize: 14,
                                                   color: Colors.black,
@@ -1286,7 +1348,7 @@ class IsiOwnerPage extends StatelessWidget {
                                               ),
                                               Text(
                                                 persentase.isInfinite
-                                                    ? "∞"
+                                                    ? "-"
                                                     : "${persentase.toStringAsFixed(2)}%",
                                                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                                               ),
@@ -1365,7 +1427,6 @@ class IsiOwnerPage extends StatelessWidget {
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            height: isMobile ? 280.w : 300.w,
                             width: double.infinity,
                             child: Column(
                               children: [
@@ -1383,34 +1444,12 @@ class IsiOwnerPage extends StatelessWidget {
                                             fontSize: 12.w,
                                             fontWeight: FontWeight.bold,
                                             height: 1,
+                                            fontFamily: 'Poppins',
                                           ),
                                           textAlign: TextAlign.center,
                                         ),
                                       ),
                                     ),
-                                    // Padding(
-                                    //   padding: const EdgeInsets.only(right: 15),
-                                    //   child: SizedBox(
-                                    //     height: 20.w, // samain dengan fontSize Text kiri
-                                    //     width: 60.w,
-                                    //     child: Obx(
-                                    //       () => DropdownButtonFormField<String>(
-                                    //         value: c._selectedTahun.value,
-                                    //         onChanged: (String? value) {
-                                    //           c._selectedTahun.value = value!;
-                                    //         },
-                                    //         items:
-                                    //             c._tahunTransaksi.map((String data) {
-                                    //               return DropdownMenuItem<String>(value: data, child: Text(data));
-                                    //             }).toList(),
-                                    //         decoration: InputDecoration(
-                                    //           border: OutlineInputBorder(),
-                                    //           contentPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 1),
-                                    //         ),
-                                    //       ),
-                                    //     ),
-                                    //   ),
-                                    // ),
                                     Padding(
                                       padding: const EdgeInsets.only(right: 15),
                                       child: SizedBox(
@@ -1426,6 +1465,42 @@ class IsiOwnerPage extends StatelessWidget {
                                     ),
                                   ],
                                 ),
+
+                                Container(
+                                  margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                                  child: Column(
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.end,
+                                        children: [
+                                          Container(
+                                            height: 10,
+                                            width: 10,
+                                            margin: const EdgeInsets.only(right: 10),
+                                            decoration: BoxDecoration(
+                                              color: Colors.amber,
+                                              borderRadius: BorderRadius.circular(10),
+                                            ),
+                                          ),
+                                          Text("Target Sales", style: TextStyle(fontSize: 12)),
+                                          const SizedBox(width: 30),
+
+                                          Container(
+                                            height: 10,
+                                            width: 10,
+                                            margin: const EdgeInsets.only(right: 10),
+                                            decoration: BoxDecoration(
+                                              color: Colors.blue,
+                                              borderRadius: BorderRadius.circular(10),
+                                            ),
+                                          ),
+                                          Text("Omset Sales", style: TextStyle(fontSize: 12)),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
                                 Obx(() {
                                   if (c.monthlyData.isEmpty) {
                                     return CircularProgressIndicator();
@@ -1488,6 +1563,8 @@ class IsiOwnerPage extends StatelessWidget {
                         ),
                       ],
                     ),
+
+                    SizedBox(height: 20.w),
                   ],
                 ),
               ),
@@ -1506,21 +1583,21 @@ String formatRupiah(double amount) {
   return formatter.format(amount);
 }
 
+String formatRupiahShort(double amount) {
+  if (amount >= 1000000) {
+    return 'Rp${(amount / 1000000).toInt()}Jt';
+  } else if (amount >= 10000) {
+    return 'Rp${(amount / 10000).toInt()}Rb';
+  } else {
+    return formatRupiah(amount);
+  }
+}
+
 class MonthlyRevenueChart extends StatelessWidget {
   final List<MonthlySales> salesData;
   final List<MonthlySales> targetSalesData;
 
   const MonthlyRevenueChart({super.key, required this.salesData, required this.targetSalesData});
-
-  String formatRupiahShort(double amount) {
-    if (amount >= 1000000) {
-      return 'Rp${(amount / 1000000).toInt()}Jt';
-    } else if (amount >= 10000) {
-      return 'Rp${(amount / 10000).toInt()}Rb';
-    } else {
-      return formatRupiah(amount);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -1551,7 +1628,7 @@ class MonthlyRevenueChart extends StatelessWidget {
     return AspectRatio(
       aspectRatio: 1.7,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.only(left: 16, bottom: 16, right: 16, top: 5),
         child: LineChart(
           LineChartData(
             lineTouchData: LineTouchData(
@@ -1902,6 +1979,167 @@ class _DynamicBarChartState extends State<DynamicBarChart> {
   }
 }
 
+// /// ====== Helper Bar Chart Omset Harian untuk interval Y yang rapi ======
+double _niceInterval(double maxY) {
+  // bikin 4 grid line: bagi 4 lalu bundarkan ke 1jt terdekat
+  final raw = maxY / 4;
+  // bundar ke 100.000 terdekat biar rapih; bisa ganti ke 1.000.000 jika mau
+  const unit = 100000.0;
+  return (raw / unit).ceil() * unit;
+}
+
+class _HarianData {
+  final String namaHari;
+  final String tanggal;
+  final int total;
+  _HarianData(this.namaHari, this.tanggal, this.total);
+}
+
+class TotalSalesHarianChart extends StatelessWidget {
+  const TotalSalesHarianChart({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Get.find<OwnerPageController>();
+    // ====== Data dari contohmu ======
+    final List<_HarianData> data = c.dataSalesHarian;
+
+    // ====== Skala Y (dengan padding 20%) ======
+    final double maxValue = data.map((e) => e.total.toDouble()).reduce(math.max);
+    final double maxY = (maxValue * 1.2);
+    final double interval = _niceInterval(maxY);
+
+    // ====== Bar groups ======
+    final barGroups = List.generate(data.length, (i) {
+      final d = data[i];
+      return BarChartGroupData(
+        x: i,
+        barRods: [
+          BarChartRodData(
+            toY: d.total.toDouble(),
+            width: 16,
+            borderRadius: const BorderRadius.only(topLeft: Radius.circular(6), topRight: Radius.circular(6)),
+            // Sesuaikan warna bila mau
+            color: Colors.blue,
+          ),
+        ],
+      );
+    });
+
+    return SizedBox(
+      height: 300,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            child: Text(
+              'Total Sales Harian',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, fontFamily: 'Poppins'),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: BarChart(
+                BarChartData(
+                  barGroups: barGroups,
+                  alignment: BarChartAlignment.spaceAround,
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: false,
+                    drawHorizontalLine: true,
+                    horizontalInterval: interval,
+                    getDrawingHorizontalLine: (value) => FlLine(strokeWidth: 0.6, color: Colors.white12),
+                  ),
+                  borderData: FlBorderData(
+                    show: true,
+                    border: const Border(
+                      bottom: BorderSide(color: Colors.white24, width: 1),
+                      left: BorderSide(color: Colors.white24, width: 1),
+                      right: BorderSide(color: Colors.transparent),
+                      top: BorderSide(color: Colors.transparent),
+                    ),
+                  ),
+                  titlesData: FlTitlesData(
+                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 34,
+                        getTitlesWidget: (value, meta) {
+                          final idx = value.toInt();
+                          if (idx < 0 || idx >= data.length) return const SizedBox.shrink();
+                          return Obx(
+                            () => Padding(
+                              padding: const EdgeInsets.only(top: 6.0),
+                              child: Text(
+                                hariInggrisKeIndonesia[data[idx].namaHari]!,
+                                style: const TextStyle(fontSize: 10),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 56,
+                        interval: interval,
+                        getTitlesWidget: (value, meta) {
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 4.0),
+                            child: Text(formatRupiahShort(value), style: const TextStyle(fontSize: 10)),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  barTouchData: BarTouchData(
+                    enabled: true,
+                    touchTooltipData: BarTouchTooltipData(
+                      tooltipRoundedRadius: 8,
+                      tooltipPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      tooltipMargin: 12,
+                      fitInsideHorizontally: true,
+                      fitInsideVertically: true,
+                      tooltipBorder: const BorderSide(color: Colors.white24, width: 1),
+                      getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                        final d = data[group.x.toInt()];
+                        final title = d.namaHari;
+                        // 1. Ubah string tanggal menjadi objek DateTime
+                        final dateTime = DateTime.parse(d.tanggal);
+
+                        // 2. Buat formatter untuk format output yang diinginkan
+                        final outputFormat = DateFormat("dd-MM-yyyy");
+
+                        // 3. Format objek DateTime menjadi string yang cantik
+                        final subtitle = outputFormat.format(dateTime); // Gunakan .format()
+
+                        final valueStr = rod.toY;
+                        return BarTooltipItem(
+                          '${hariInggrisKeIndonesia[title]}\n$subtitle\n${formatRupiah(valueStr)}',
+                          const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white),
+                        );
+                      },
+                    ),
+                  ),
+                  minY: 0,
+                  maxY: maxY,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Kode Awal Pake PieChart. Sementara Di Taruh sini Aja gpp, Takut Dia berubah pikiran
 class DynamicPieChart extends StatefulWidget {
   // parameter. diambil dari list pieChartData di OwnerPageState
   final List<ChartData> chartData;
