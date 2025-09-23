@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:Project_SPA/function/rupiah_formatter.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:cherry_toast/cherry_toast.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
@@ -528,6 +529,8 @@ class OwnerPageController extends GetxController {
   RxList<String> tahunTransaksiTarget = <String>[].obs;
   RxList<int> listYear = List<int>.generate(100, (index) => 2020 + index).obs;
   ScrollController scrollControllerTarget = ScrollController();
+  ScrollController scrollTglController = ScrollController();
+  RxList<DateTime?> rangeDatePickerOmset = <DateTime?>[].obs;
   // End 1 Paket Target Sales Bulanan
 
   // Var TargetSales Harian
@@ -657,11 +660,14 @@ class OwnerPageController extends GetxController {
     }
   }
 
-  Future<void> _getDataTargetHarian({int? startMonth, int? endMonth, int? startYear, int? endYear}) async {
+  Future<void> _getDataTargetHarian({String? startDate, String? endDate}) async {
     try {
       isLoadingDataSalesHarian.value = true;
 
       var url = '${myIpAddr()}/main_owner/sales_chart_harian';
+      if (startDate != null && endDate != null) {
+        url += "?start_date=$startDate&end_date=$endDate";
+      }
 
       var response = await dio.get(url);
       Map<String, dynamic> responseData = response.data;
@@ -676,14 +682,119 @@ class OwnerPageController extends GetxController {
         isLoadingDataSalesHarian.value = false;
       }
 
-      log("Isi dataSalesHarian Harian = ${dataSalesHarian}");
+      log("Isi dataSalesHarian Harian = $dataSalesHarian");
     } catch (e) {
       if (e is DioException) {
+        if (e.response!.statusCode == 400) {
+          CherryToast.error(
+            title: Text(
+              "Error!",
+              style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
+            ),
+            description: Text(e.response!.data['message']!),
+            animationDuration: const Duration(milliseconds: 2500),
+            autoDismiss: true,
+            onToastClosed: () {
+              _getDataTargetHarian();
+            },
+          ).show(Get.context!);
+        }
+
         log("Error di _getDataTargetHarian dio ${e.response!.data}");
       }
 
       log("Error di _getDataTargetHarian dio $e");
     }
+  }
+
+  void showDialogFilterTargetHarian() {
+    rangeDatePickerOmset.clear();
+
+    Get.dialog(
+      AlertDialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        contentPadding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+        content: Builder(
+          builder: (context) {
+            final mq = MediaQuery.of(context);
+            final isPortrait = mq.orientation == Orientation.landscape;
+
+            // Tentukan ukuran dialog yang TEGAS (tight), responsif ke layar
+            final maxDialogWidth = 500.0; // cap untuk tablet/layar lebar
+            final dialogWidth = mq.size.width.clamp(0.0, maxDialogWidth);
+            final dialogHeight = (isPortrait ? mq.size.height * 0.7 : mq.size.height * 0.8) - 110;
+
+            return SizedBox(
+              width: dialogWidth,
+              height: dialogHeight, // <- TIGHT! tidak ada intrinsic ke anak
+              child: Scrollbar(
+                controller: scrollTglController,
+                thumbVisibility: true,
+                child: ListView(
+                  // Penting: biarkan default (shrinkWrap: false)
+                  controller: scrollTglController,
+                  padding: const EdgeInsets.only(right: 4, bottom: 8),
+                  children: [
+                    const Text(
+                      "Petunjuk : Anda bisa memilih lebih dari 1 Tanggal\nMaks 7 Hari",
+                      style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Isi lebar dialog
+                    SizedBox(
+                      width: double.infinity,
+                      child: Obx(
+                        () => CalendarDatePicker2(
+                          config: CalendarDatePicker2Config(
+                            calendarType: CalendarDatePicker2Type.range,
+                            selectedDayHighlightColor: Colors.deepPurple,
+                            selectedRangeHighlightColor: Colors.purpleAccent.withOpacity(0.2),
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime(2100),
+                          ),
+                          value: rangeDatePickerOmset,
+                          onValueChanged: (dates) {
+                            rangeDatePickerOmset.assignAll(dates);
+                            log("Isi Range Date $rangeDatePickerOmset");
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+
+        actions: [
+          ElevatedButton(
+            onPressed: () async {
+              // refreshData();
+              String startDate = rangeDatePickerOmset[0].toString().split(" ")[0];
+              String endDate = "";
+              if (rangeDatePickerOmset.length > 1) {
+                endDate = rangeDatePickerOmset[1].toString().split(" ")[0];
+              } else {
+                endDate = startDate;
+              }
+
+              await _getDataTargetHarian(startDate: startDate, endDate: endDate);
+
+              Get.back();
+            },
+            child: const Text("SUBMIT"),
+          ),
+        ],
+      ),
+    ).then((_) {
+      if (rangeDatePickerOmset.isEmpty) {
+        _getDataTargetHarian();
+      }
+    });
   }
 
   Future<void> _storeDataTarget() async {
@@ -746,7 +857,6 @@ class OwnerPageController extends GetxController {
     _monthlySales.close();
     _paketSales.close();
     _produkSales.close();
-
     try {
       _selectedTahun.close();
     } catch (_) {}
@@ -774,9 +884,11 @@ class OwnerPageController extends GetxController {
     try {
       _endYearTargetOmset.close();
     } catch (_) {}
-
     try {
       scrollControllerTarget.dispose();
+    } catch (_) {}
+    try {
+      scrollTglController.dispose();
     } catch (_) {}
 
     super.onClose();
@@ -1554,7 +1666,7 @@ class IsiOwnerPage extends StatelessWidget {
                                     if (c.pieChartData.isEmpty) {
                                       return CircularProgressIndicator();
                                     }
-                                    return Expanded(child: DynamicBarChart(chartData: c.pieChartData));
+                                    return Expanded(child: BarChartTop4Paket(chartData: c.pieChartData));
                                   }),
                                 ],
                               ),
@@ -1783,15 +1895,15 @@ class MonthlyRevenueChart extends StatelessWidget {
   }
 }
 
-class DynamicBarChart extends StatefulWidget {
+class BarChartTop4Paket extends StatefulWidget {
   final List<ChartData> chartData;
-  const DynamicBarChart({super.key, required this.chartData});
+  const BarChartTop4Paket({super.key, required this.chartData});
 
   @override
-  State<DynamicBarChart> createState() => _DynamicBarChartState();
+  State<BarChartTop4Paket> createState() => _BarChartTop4PaketState();
 }
 
-class _DynamicBarChartState extends State<DynamicBarChart> {
+class _BarChartTop4PaketState extends State<BarChartTop4Paket> {
   final RxInt touchedIndex = (-1).obs;
 
   @override
@@ -1980,12 +2092,15 @@ class _DynamicBarChartState extends State<DynamicBarChart> {
 }
 
 // /// ====== Helper Bar Chart Omset Harian untuk interval Y yang rapi ======
-double _niceInterval(double maxY) {
+double _safeNiceInterval(double maxY) {
+  // Minimal 1 supaya tidak pernah 0 (pakai 1000/100000 kalau mau skala Rupiah besar)
+  if (maxY <= 0) return 1;
   // bikin 4 grid line: bagi 4 lalu bundarkan ke 1jt terdekat
   final raw = maxY / 4;
   // bundar ke 100.000 terdekat biar rapih; bisa ganti ke 1.000.000 jika mau
-  const unit = 100000.0;
-  return (raw / unit).ceil() * unit;
+  const unit = 100000.0; // sesuaikan kebutuhanmu
+  final v = (raw / unit).ceil() * unit;
+  return v > 0 ? v : 1;
 }
 
 class _HarianData {
@@ -2007,7 +2122,7 @@ class TotalSalesHarianChart extends StatelessWidget {
     // ====== Skala Y (dengan padding 20%) ======
     final double maxValue = data.map((e) => e.total.toDouble()).reduce(math.max);
     final double maxY = (maxValue * 1.2);
-    final double interval = _niceInterval(maxY);
+    final double interval = _safeNiceInterval(maxY);
 
     // ====== Bar groups ======
     final barGroups = List.generate(data.length, (i) {
@@ -2029,16 +2144,46 @@ class TotalSalesHarianChart extends StatelessWidget {
     return SizedBox(
       height: 300,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            child: Text(
-              'Total Sales Harian',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, fontFamily: 'Poppins'),
-              textAlign: TextAlign.center,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            child: Row(
+              children: [
+                // Ghost: transparan, buat penyeimbang lebar tombol kanan
+                Opacity(
+                  opacity: 0,
+                  child: SizedBox(
+                    height: 25,
+                    child: ElevatedButton(
+                      onPressed: () {}, // dummy
+                      child: const Text('Filter'),
+                    ),
+                  ),
+                ),
+
+                // Judul center
+                const Expanded(
+                  child: Center(
+                    child: Text(
+                      'Total Sales Harian',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, fontFamily: 'Poppins'),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+
+                // Tombol kanan
+                SizedBox(
+                  height: 25,
+                  child: ElevatedButton(
+                    onPressed: () => c.showDialogFilterTargetHarian(),
+                    child: const Text('Filter'),
+                  ),
+                ),
+              ],
             ),
           ),
+
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -2046,18 +2191,12 @@ class TotalSalesHarianChart extends StatelessWidget {
                 BarChartData(
                   barGroups: barGroups,
                   alignment: BarChartAlignment.spaceAround,
-                  gridData: FlGridData(
-                    show: true,
-                    drawVerticalLine: false,
-                    drawHorizontalLine: true,
-                    horizontalInterval: interval,
-                    getDrawingHorizontalLine: (value) => FlLine(strokeWidth: 0.6, color: Colors.white12),
-                  ),
+                  gridData: FlGridData(show: true, drawVerticalLine: false, horizontalInterval: interval),
                   borderData: FlBorderData(
                     show: true,
                     border: const Border(
-                      bottom: BorderSide(color: Colors.white24, width: 1),
-                      left: BorderSide(color: Colors.white24, width: 1),
+                      bottom: BorderSide(color: Colors.black12, width: 1),
+                      left: BorderSide(color: Colors.black12, width: 1),
                       right: BorderSide(color: Colors.transparent),
                       top: BorderSide(color: Colors.transparent),
                     ),

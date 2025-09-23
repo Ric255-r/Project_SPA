@@ -59,65 +59,71 @@ class ListTransaksiController extends GetxController {
 
     Get.dialog(
       AlertDialog(
-        // Let the AlertDialog handle the padding
-        contentPadding: EdgeInsets.fromLTRB(24.0, 20.0, 24.0, 0),
-        // Use shape for rounded corners
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.0),
-        ),
-        content: Scrollbar(
-          controller: _scrollTglController,
-          thumbVisibility: true,
-          child: SingleChildScrollView(
-            controller: _scrollTglController,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  "Petunjuk : Anda bisa memilih lebih dari 1 Tanggal",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Poppins',
-                  ),
-                ),
-                SizedBox(height: 10),
-                Obx(
-                  () => SizedBox(
-                    height: Get.height - 150,
-                    width: Get.width - 100,
-                    child: CalendarDatePicker2(
-                      config: CalendarDatePicker2Config(
-                        calendarType: CalendarDatePicker2Type.range,
-                        selectedDayHighlightColor: Colors.deepPurple,
-                        selectedRangeHighlightColor: Colors.purple.withOpacity(
-                          0.2,
-                        ),
-                        firstDate: DateTime(
-                          2000,
-                        ), // Optional: set earliest selectable date
-                        lastDate: DateTime(
-                          2100,
-                        ), // Optional: set latest selectable date
-                      ),
-                      value: rangeDatePickerOmset,
-                      onValueChanged: (dates) {
-                        rangeDatePickerOmset.assignAll(dates);
-                        log("Isi Range Date $rangeDatePickerOmset");
-                      },
+        insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        contentPadding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+        content: Builder(
+          builder: (context) {
+            final mq = MediaQuery.of(context);
+            final isPortrait = mq.orientation == Orientation.landscape;
+
+            // Tentukan ukuran dialog yang TEGAS (tight), responsif ke layar
+            final maxDialogWidth = 500.0; // cap untuk tablet/layar lebar
+            final dialogWidth = mq.size.width.clamp(0.0, maxDialogWidth);
+            final dialogHeight = (isPortrait ? mq.size.height * 0.7 : mq.size.height * 0.8) - 110;
+
+            return SizedBox(
+              width: dialogWidth,
+              height: dialogHeight, // <- TIGHT! tidak ada intrinsic ke anak
+              child: Scrollbar(
+                controller: _scrollTglController,
+                thumbVisibility: true,
+                child: ListView(
+                  // Penting: biarkan default (shrinkWrap: false)
+                  controller: _scrollTglController,
+                  padding: const EdgeInsets.only(right: 4, bottom: 8),
+                  children: [
+                    const Text(
+                      "Petunjuk : Anda bisa memilih lebih dari 1 Tanggal",
+                      style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
+                      textAlign: TextAlign.center,
                     ),
-                  ),
+                    const SizedBox(height: 10),
+
+                    // Isi lebar dialog
+                    SizedBox(
+                      width: double.infinity,
+                      child: Obx(
+                        () => CalendarDatePicker2(
+                          config: CalendarDatePicker2Config(
+                            calendarType: CalendarDatePicker2Type.range,
+                            selectedDayHighlightColor: Colors.deepPurple,
+                            selectedRangeHighlightColor: Colors.purpleAccent.withOpacity(0.2),
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime(2100),
+                          ),
+                          value: rangeDatePickerOmset,
+                          onValueChanged: (dates) {
+                            rangeDatePickerOmset.assignAll(dates);
+                            log("Isi Range Date $rangeDatePickerOmset");
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
+
         actions: [
           ElevatedButton(
             onPressed: () {
               refreshData();
               Get.back();
             },
-            child: Text("SUBMIT"),
+            child: const Text("SUBMIT"),
           ),
         ],
       ),
@@ -186,8 +192,7 @@ class ListTransaksiController extends GetxController {
 
   Future<List<Map<String, dynamic>>> fetchData({bool isOwner = false}) async {
     try {
-      String myUrl =
-          '${myIpAddr()}/listtrans/datatrans?hak_akses=${_hakAkses.value}';
+      String myUrl = '${myIpAddr()}/listtrans/datatrans?hak_akses=${_hakAkses.value}';
 
       if (isOwner) {
         List<dynamic> rangeDate = rangeDatePickerOmset;
@@ -213,18 +218,10 @@ class ListTransaksiController extends GetxController {
         omsetQris.value = response.data['total_qris'] ?? 0;
         tglNow.value = (response.data['tgl'] as String);
 
-        dataCash.assignAll(
-          (response.data['data_cash'] as List).map((el) => {...el}),
-        );
-        dataDebit.assignAll(
-          (response.data['data_debit'] as List).map((el) => {...el}),
-        );
-        dataKredit.assignAll(
-          (response.data['data_kredit'] as List).map((el) => {...el}),
-        );
-        dataQris.assignAll(
-          (response.data['data_qris'] as List).map((el) => {...el}),
-        );
+        dataCash.assignAll((response.data['data_cash'] as List).map((el) => {...el}));
+        dataDebit.assignAll((response.data['data_debit'] as List).map((el) => {...el}));
+        dataKredit.assignAll((response.data['data_kredit'] as List).map((el) => {...el}));
+        dataQris.assignAll((response.data['data_qris'] as List).map((el) => {...el}));
 
         log("Isi Data Cash $dataCash");
 
@@ -248,10 +245,8 @@ class ListTransaksiController extends GetxController {
       List<dynamic> data = response.data;
       if (data.isNotEmpty) {
         var firstRecord = data[0];
-        double pjk =
-            double.tryParse(firstRecord['pajak_msg'].toString()) ?? 0.0;
-        double pjkFnb =
-            double.tryParse(firstRecord['pajak_fnb'].toString()) ?? 0.0;
+        double pjk = double.tryParse(firstRecord['pajak_msg'].toString()) ?? 0.0;
+        double pjkFnb = double.tryParse(firstRecord['pajak_fnb'].toString()) ?? 0.0;
 
         pajakMsg.value = pjk;
         pajakFnb.value = pjkFnb;
@@ -297,9 +292,7 @@ class ListTransaksiController extends GetxController {
 
   Future<void> refreshData() async {
     try {
-      final data = await fetchData(
-        isOwner: _hakAkses.value == "owner" || _hakAkses.value == "admin",
-      );
+      final data = await fetchData(isOwner: _hakAkses.value == "owner" || _hakAkses.value == "admin");
       // assign data yang sama utk dataList dengan filteredList
       dataList.assignAll(data);
       filteredList.assignAll(data);
@@ -322,9 +315,7 @@ class ListTransaksiController extends GetxController {
     }
 
     final itemFilter = dataList.where(
-      (item) => item['id_transaksi'].toString().toLowerCase().contains(
-        query.toLowerCase(),
-      ),
+      (item) => item['id_transaksi'].toString().toLowerCase().contains(query.toLowerCase()),
     );
 
     filteredList.assignAll(itemFilter);
@@ -349,17 +340,11 @@ class ListTransaksiController extends GetxController {
     return text[0].toUpperCase() + text.substring(1);
   }
 
-  final currencyFormatter = NumberFormat.currency(
-    locale: 'id_ID',
-    symbol: 'Rp. ',
-    decimalDigits: 0,
-  );
+  final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp. ', decimalDigits: 0);
 
   Future<Map<String, dynamic>> getDetailTrans(String idTrans) async {
     try {
-      final response = await dio.get(
-        '${myIpAddr()}/listtrans/detailtrans/${idTrans}',
-      );
+      final response = await dio.get('${myIpAddr()}/listtrans/detailtrans/${idTrans}');
 
       if (response.statusCode == 200) {
         Map<String, dynamic> responseData = response.data;
@@ -378,9 +363,7 @@ class ListTransaksiController extends GetxController {
 
   Future<Map<String, dynamic>> getTerapisData(String idTrans) async {
     try {
-      final response = await dio.get(
-        '${myIpAddr()}/listtrans/data_terapis/${idTrans}',
-      );
+      final response = await dio.get('${myIpAddr()}/listtrans/data_terapis/${idTrans}');
 
       if (response.statusCode == 200) {
         return (response.data as Map<String, dynamic>);
@@ -442,18 +425,14 @@ class ListTransaksiController extends GetxController {
                     if (mode == "cash") ...[
                       Expanded(child: Text("Id Transaksi")),
                       Expanded(child: Text("Metode Bayar")),
-                      Expanded(
-                        child: Text("Jumlah Bayar", textAlign: TextAlign.right),
-                      ),
+                      Expanded(child: Text("Jumlah Bayar", textAlign: TextAlign.right)),
                     ] else ...[
                       Expanded(child: Text("Id Transaksi")),
                       Expanded(child: Text("Metode Bayar")),
                       Expanded(child: Text("Nama Akun")),
                       Expanded(child: Text("No_Rek")),
                       Expanded(child: Text("Nama Bank")),
-                      Expanded(
-                        child: Text("Jumlah Bayar", textAlign: TextAlign.right),
-                      ),
+                      Expanded(child: Text("Jumlah Bayar", textAlign: TextAlign.right)),
                     ],
                   ],
                 ),
@@ -477,28 +456,16 @@ class ListTransaksiController extends GetxController {
                         // Add cash header
                         cashWidgets.add(
                           Padding(
-                            padding: const EdgeInsets.only(
-                              top: 8.0,
-                              bottom: 5.0,
-                            ),
+                            padding: const EdgeInsets.only(top: 8.0, bottom: 5.0),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Expanded(
-                                  child: Text(
-                                    "CASH",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
+                                Expanded(child: Text("CASH", style: TextStyle(fontWeight: FontWeight.bold))),
                                 Expanded(
                                   child: Obx(
                                     () => Text(
                                       "Total Cash: ${currencyFormatter.format(omsetCash.value)}",
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                      style: TextStyle(fontWeight: FontWeight.bold),
                                       textAlign: TextAlign.right,
                                     ),
                                   ),
@@ -515,14 +482,10 @@ class ListTransaksiController extends GetxController {
                             Row(
                               children: [
                                 Expanded(child: Text(data['id_transaksi'])),
-                                Expanded(
-                                  child: Text(data['metode_pembayaran']),
-                                ),
+                                Expanded(child: Text(data['metode_pembayaran'])),
                                 Expanded(
                                   child: Text(
-                                    currencyFormatter.format(
-                                      data['jumlah_bayar'],
-                                    ),
+                                    currencyFormatter.format(data['jumlah_bayar']),
                                     textAlign: TextAlign.right,
                                   ),
                                 ),
@@ -536,31 +499,11 @@ class ListTransaksiController extends GetxController {
                         return Text("Tidak Ada Transaksi Cash");
                       }
                     } else {
-                      dataBCA =
-                          allDataOmset
-                              ?.where(
-                                (el) => el['nama_bank'].toLowerCase() == "bca",
-                              )
-                              .toList();
-                      dataBNI =
-                          allDataOmset
-                              ?.where(
-                                (el) => el['nama_bank'].toLowerCase() == "bni",
-                              )
-                              .toList();
-                      dataBRI =
-                          allDataOmset
-                              ?.where(
-                                (el) => el['nama_bank'].toLowerCase() == "bri",
-                              )
-                              .toList();
+                      dataBCA = allDataOmset?.where((el) => el['nama_bank'].toLowerCase() == "bca").toList();
+                      dataBNI = allDataOmset?.where((el) => el['nama_bank'].toLowerCase() == "bni").toList();
+                      dataBRI = allDataOmset?.where((el) => el['nama_bank'].toLowerCase() == "bri").toList();
                       dataMandiri =
-                          allDataOmset
-                              ?.where(
-                                (el) =>
-                                    el['nama_bank'].toLowerCase() == "mandiri",
-                              )
-                              .toList();
+                          allDataOmset?.where((el) => el['nama_bank'].toLowerCase() == "mandiri").toList();
 
                       RxInt omsetBCA = 0.obs;
                       RxInt omsetBNI = 0.obs;
@@ -571,29 +514,17 @@ class ListTransaksiController extends GetxController {
                       if (dataBCA!.isNotEmpty) {
                         bankDataWidgets.add(
                           Padding(
-                            padding: const EdgeInsets.only(
-                              top: 8.0,
-                              bottom: 5.0,
-                            ),
+                            padding: const EdgeInsets.only(top: 8.0, bottom: 5.0),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Expanded(
-                                  child: Text(
-                                    "BCA",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
+                                Expanded(child: Text("BCA", style: TextStyle(fontWeight: FontWeight.bold))),
 
                                 Expanded(
                                   child: Obx(
                                     () => Text(
                                       "Total BCA : ${currencyFormatter.format(omsetBCA.value)}",
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                      style: TextStyle(fontWeight: FontWeight.bold),
                                       textAlign: TextAlign.right,
                                     ),
                                   ),
@@ -610,17 +541,13 @@ class ListTransaksiController extends GetxController {
                             Row(
                               children: [
                                 Expanded(child: Text(data['id_transaksi'])),
-                                Expanded(
-                                  child: Text(data['metode_pembayaran']),
-                                ),
+                                Expanded(child: Text(data['metode_pembayaran'])),
                                 Expanded(child: Text(data['nama_akun'])),
                                 Expanded(child: Text(data['no_rek'])),
                                 Expanded(child: Text(data['nama_bank'])),
                                 Expanded(
                                   child: Text(
-                                    currencyFormatter.format(
-                                      data['jumlah_bayar'],
-                                    ),
+                                    currencyFormatter.format(data['jumlah_bayar']),
                                     textAlign: TextAlign.right,
                                   ),
                                 ),
@@ -633,29 +560,17 @@ class ListTransaksiController extends GetxController {
                       if (dataBNI!.isNotEmpty) {
                         bankDataWidgets.add(
                           Padding(
-                            padding: const EdgeInsets.only(
-                              top: 8.0,
-                              bottom: 5.0,
-                            ),
+                            padding: const EdgeInsets.only(top: 8.0, bottom: 5.0),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Expanded(
-                                  child: Text(
-                                    "BNI",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
+                                Expanded(child: Text("BNI", style: TextStyle(fontWeight: FontWeight.bold))),
 
                                 Expanded(
                                   child: Obx(
                                     () => Text(
                                       "Total BNI : ${currencyFormatter.format(omsetBNI.value)}",
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                      style: TextStyle(fontWeight: FontWeight.bold),
                                       textAlign: TextAlign.right,
                                     ),
                                   ),
@@ -672,17 +587,13 @@ class ListTransaksiController extends GetxController {
                             Row(
                               children: [
                                 Expanded(child: Text(data['id_transaksi'])),
-                                Expanded(
-                                  child: Text(data['metode_pembayaran']),
-                                ),
+                                Expanded(child: Text(data['metode_pembayaran'])),
                                 Expanded(child: Text(data['nama_akun'])),
                                 Expanded(child: Text(data['no_rek'])),
                                 Expanded(child: Text(data['nama_bank'])),
                                 Expanded(
                                   child: Text(
-                                    currencyFormatter.format(
-                                      data['jumlah_bayar'],
-                                    ),
+                                    currencyFormatter.format(data['jumlah_bayar']),
                                     textAlign: TextAlign.right,
                                   ),
                                 ),
@@ -696,29 +607,17 @@ class ListTransaksiController extends GetxController {
                       if (dataBRI!.isNotEmpty) {
                         bankDataWidgets.add(
                           Padding(
-                            padding: const EdgeInsets.only(
-                              top: 8.0,
-                              bottom: 5.0,
-                            ),
+                            padding: const EdgeInsets.only(top: 8.0, bottom: 5.0),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Expanded(
-                                  child: Text(
-                                    "BRI",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
+                                Expanded(child: Text("BRI", style: TextStyle(fontWeight: FontWeight.bold))),
 
                                 Expanded(
                                   child: Obx(
                                     () => Text(
                                       "Total BRI : ${currencyFormatter.format(omsetBRI.value)}",
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                      style: TextStyle(fontWeight: FontWeight.bold),
                                       textAlign: TextAlign.right,
                                     ),
                                   ),
@@ -735,17 +634,13 @@ class ListTransaksiController extends GetxController {
                             Row(
                               children: [
                                 Expanded(child: Text(data['id_transaksi'])),
-                                Expanded(
-                                  child: Text(data['metode_pembayaran']),
-                                ),
+                                Expanded(child: Text(data['metode_pembayaran'])),
                                 Expanded(child: Text(data['nama_akun'])),
                                 Expanded(child: Text(data['no_rek'])),
                                 Expanded(child: Text(data['nama_bank'])),
                                 Expanded(
                                   child: Text(
-                                    currencyFormatter.format(
-                                      data['jumlah_bayar'],
-                                    ),
+                                    currencyFormatter.format(data['jumlah_bayar']),
                                     textAlign: TextAlign.right,
                                   ),
                                 ),
@@ -759,29 +654,19 @@ class ListTransaksiController extends GetxController {
                       if (dataMandiri!.isNotEmpty) {
                         bankDataWidgets.add(
                           Padding(
-                            padding: const EdgeInsets.only(
-                              top: 8.0,
-                              bottom: 5.0,
-                            ),
+                            padding: const EdgeInsets.only(top: 8.0, bottom: 5.0),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Expanded(
-                                  child: Text(
-                                    "Mandiri",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
+                                  child: Text("Mandiri", style: TextStyle(fontWeight: FontWeight.bold)),
                                 ),
 
                                 Expanded(
                                   child: Obx(
                                     () => Text(
                                       "Total Mandiri : ${currencyFormatter.format(omsetMandiri.value)}",
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                      style: TextStyle(fontWeight: FontWeight.bold),
                                       textAlign: TextAlign.right,
                                     ),
                                   ),
@@ -798,17 +683,13 @@ class ListTransaksiController extends GetxController {
                             Row(
                               children: [
                                 Expanded(child: Text(data['id_transaksi'])),
-                                Expanded(
-                                  child: Text(data['metode_pembayaran']),
-                                ),
+                                Expanded(child: Text(data['metode_pembayaran'])),
                                 Expanded(child: Text(data['nama_akun'])),
                                 Expanded(child: Text(data['no_rek'])),
                                 Expanded(child: Text(data['nama_bank'])),
                                 Expanded(
                                   child: Text(
-                                    currencyFormatter.format(
-                                      data['jumlah_bayar'],
-                                    ),
+                                    currencyFormatter.format(data['jumlah_bayar']),
                                     textAlign: TextAlign.right,
                                   ),
                                 ),
@@ -825,8 +706,7 @@ class ListTransaksiController extends GetxController {
 
                     return Column(
                       mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment:
-                          CrossAxisAlignment.stretch, // pastikan rows stretch
+                      crossAxisAlignment: CrossAxisAlignment.stretch, // pastikan rows stretch
                       children: bankDataWidgets,
                     );
                   },
@@ -885,13 +765,7 @@ class ListTransaksiController extends GetxController {
   RxString selectedBank = ''.obs;
   final List<String> bankList = ['BCA', 'BNI', 'BRI', 'Mandiri'];
 
-  void dialogPelunasan(
-    String idTrans,
-    int grandTotal,
-    int jumlahBayar,
-    int kembalian,
-    String status,
-  ) async {
+  void dialogPelunasan(String idTrans, int grandTotal, int jumlahBayar, int kembalian, String status) async {
     _selectedMetode?.value = _metodeByr.first;
 
     // new dari deepseek
@@ -916,10 +790,8 @@ class ListTransaksiController extends GetxController {
 
     if (status == "unpaid" || status == "done-unpaid") {
       _sisaBayar.value = totalDanAddon - jlhBayar;
-    } else if (status == "done-unpaid-addon" ||
-        (totalAddOnAll != 0 && status == "paid")) {
-      _sisaBayar.value =
-          totalAddOnAll; // Gunakan totalAddOnAll yang sudah termasuk pajak
+    } else if (status == "done-unpaid-addon" || (totalAddOnAll != 0 && status == "paid")) {
+      _sisaBayar.value = totalAddOnAll; // Gunakan totalAddOnAll yang sudah termasuk pajak
     }
     // end new
 
@@ -950,24 +822,15 @@ class ListTransaksiController extends GetxController {
               Row(
                 children: [
                   Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 20),
-                      child: Text("Sisa Bayar"),
-                    ),
+                    child: Padding(padding: const EdgeInsets.only(top: 20), child: Text("Sisa Bayar")),
                   ),
-                  Expanded(
-                    flex: 3,
-                    child: TextField(readOnly: true, controller: _txtSisaBayar),
-                  ),
+                  Expanded(flex: 3, child: TextField(readOnly: true, controller: _txtSisaBayar)),
                 ],
               ),
               Row(
                 children: [
                   Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 20),
-                      child: Text("Metode Bayar"),
-                    ),
+                    child: Padding(padding: const EdgeInsets.only(top: 20), child: Text("Metode Bayar")),
                   ),
                   Expanded(
                     flex: 3,
@@ -1005,9 +868,7 @@ class ListTransaksiController extends GetxController {
                   Obx(() {
                     if (_selectedMetode!.value != "cash") {
                       // samakan jlhbayar dgn sisabayar kalo dia debit/qris
-                      _txtJlhBayar.text = currencyFormatter.format(
-                        _sisaBayar.value,
-                      );
+                      _txtJlhBayar.text = currencyFormatter.format(_sisaBayar.value);
                     } else {
                       _txtJlhBayar.text = "";
                       _kembalian.value = 0;
@@ -1020,9 +881,7 @@ class ListTransaksiController extends GetxController {
                         controller: _txtJlhBayar,
                         readOnly: _selectedMetode!.value != "cash",
                         keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                         onChanged: (value) {
                           _fnFormatTotalBayar(value);
                         },
@@ -1040,18 +899,9 @@ class ListTransaksiController extends GetxController {
                       Row(
                         children: [
                           Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 20),
-                              child: Text("Kembalian"),
-                            ),
+                            child: Padding(padding: const EdgeInsets.only(top: 20), child: Text("Kembalian")),
                           ),
-                          Expanded(
-                            flex: 3,
-                            child: TextField(
-                              controller: _txtKembalian,
-                              readOnly: true,
-                            ),
-                          ),
+                          Expanded(flex: 3, child: TextField(controller: _txtKembalian, readOnly: true)),
                         ],
                       ),
                       Row(
@@ -1093,57 +943,30 @@ class ListTransaksiController extends GetxController {
                         children: [
                           Text(
                             "Informasi Bank Pemilik",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'Poppins',
-                            ),
+                            style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
                           ),
                         ],
                       ),
                       Row(
                         children: [
-                          Expanded(
-                            child: Text(
-                              "Nama Akun: ",
-                              style: TextStyle(fontFamily: 'Poppins'),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 3,
-                            child: TextField(controller: _namaAkun),
-                          ),
+                          Expanded(child: Text("Nama Akun: ", style: TextStyle(fontFamily: 'Poppins'))),
+                          Expanded(flex: 3, child: TextField(controller: _namaAkun)),
                         ],
                       ),
                       Row(
                         children: [
-                          Expanded(
-                            child: Text(
-                              "Nomor Rekening: ",
-                              style: TextStyle(fontFamily: 'Poppins'),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 3,
-                            child: TextField(controller: _noRek),
-                          ),
+                          Expanded(child: Text("Nomor Rekening: ", style: TextStyle(fontFamily: 'Poppins'))),
+                          Expanded(flex: 3, child: TextField(controller: _noRek)),
                         ],
                       ),
                       Row(
                         children: [
-                          Expanded(
-                            child: Text(
-                              "Nama Bank: ",
-                              style: TextStyle(fontFamily: 'Poppins'),
-                            ),
-                          ),
+                          Expanded(child: Text("Nama Bank: ", style: TextStyle(fontFamily: 'Poppins'))),
                           Expanded(
                             flex: 3,
                             child: Obx(
                               () => DropdownButtonFormField<String>(
-                                value:
-                                    c.selectedBank.value.isEmpty
-                                        ? null
-                                        : c.selectedBank.value,
+                                value: c.selectedBank.value.isEmpty ? null : c.selectedBank.value,
                                 onChanged: (String? newValue) {
                                   if (newValue != null) {
                                     c.selectedBank.value = newValue;
@@ -1151,17 +974,11 @@ class ListTransaksiController extends GetxController {
                                 },
                                 items:
                                     c.bankList.map((String bank) {
-                                      return DropdownMenuItem<String>(
-                                        value: bank,
-                                        child: Text(bank),
-                                      );
+                                      return DropdownMenuItem<String>(value: bank, child: Text(bank));
                                     }).toList(),
                                 decoration: InputDecoration(
                                   border: OutlineInputBorder(),
-                                  contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 12,
-                                  ),
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
                                 ),
                               ),
                             ),
@@ -1176,8 +993,7 @@ class ListTransaksiController extends GetxController {
                               padding: const EdgeInsets.only(top: 20),
                               child: ElevatedButton(
                                 onPressed: () async {
-                                  if (_txtJlhBayar.text == "" ||
-                                      _txtJlhBayar.text.isEmpty) {
+                                  if (_txtJlhBayar.text == "" || _txtJlhBayar.text.isEmpty) {
                                     return;
                                   }
 
@@ -1215,10 +1031,7 @@ class ListTransaksiController extends GetxController {
       var response = await dio.put(
         '${myIpAddr()}/listtrans/cancel_transaksi',
         data: {"id_trans": idTrans, "passwd": password},
-        options: Options(
-          contentType: Headers.jsonContentType,
-          responseType: ResponseType.json,
-        ),
+        options: Options(contentType: Headers.jsonContentType, responseType: ResponseType.json),
       );
 
       if (response.statusCode == 200) {
@@ -1397,10 +1210,7 @@ class ListTransaksiController extends GetxController {
         data['nama_bank'] = selectedBank.value;
       }
 
-      var response = await dio.put(
-        '${myIpAddr()}/massages/pelunasan',
-        data: data,
-      );
+      var response = await dio.put('${myIpAddr()}/massages/pelunasan', data: data);
 
       if (response.statusCode == 200) {
         await refreshData();
@@ -1542,14 +1352,9 @@ class ListTransaksiController extends GetxController {
         "type": tipe,
         "id_detail_transaksi": dataAddOn[i]['id_detail_transaksi'],
         "id_transaksi": dataAddOn[i]['id_transaksi'],
-        "id_item":
-            dataAddOn[i]['id_fnb'] ??
-            dataAddOn[i]['id_produk'] ??
-            dataAddOn[i]['id_paket'],
+        "id_item": dataAddOn[i]['id_fnb'] ?? dataAddOn[i]['id_produk'] ?? dataAddOn[i]['id_paket'],
         "nama_item":
-            dataAddOn[i]['nama_fnb'] ??
-            dataAddOn[i]['nama_produk'] ??
-            dataAddOn[i]['nama_paket_msg'],
+            dataAddOn[i]['nama_fnb'] ?? dataAddOn[i]['nama_produk'] ?? dataAddOn[i]['nama_paket_msg'],
         "qty": dataAddOn[i]['qty'],
         "satuan": dataAddOn[i]['satuan'],
         "harga_item": dataAddOn[i]['harga_item'],
@@ -1588,26 +1393,15 @@ class ListTransaksiController extends GetxController {
       final response = await dio.post(
         '${myIpAddr()}/listtrans/print',
         data: Stream.fromIterable([bytes]),
-        options: Options(
-          contentType: 'application/octet-stream',
-          responseType: ResponseType.json,
-        ),
+        options: Options(contentType: 'application/octet-stream', responseType: ResponseType.json),
       );
 
       if (response.statusCode != 200) {
-        Get.snackbar(
-          "Error",
-          "Gagal Konek Printer ${response.data}",
-          backgroundColor: Colors.white,
-        );
+        Get.snackbar("Error", "Gagal Konek Printer ${response.data}", backgroundColor: Colors.white);
         throw Exception("Failed to print: ${response.statusCode}");
       }
     } catch (e) {
-      Get.snackbar(
-        "Error",
-        "Gagal Kirim Ke printer $e",
-        backgroundColor: Colors.white,
-      );
+      Get.snackbar("Error", "Gagal Kirim Ke printer $e", backgroundColor: Colors.white);
       log("Error sending to printer: $e");
       rethrow;
     }
@@ -1624,9 +1418,7 @@ class ListTransaksiController extends GetxController {
 
       List<dynamic> responseTerapis = response3.data;
 
-      dataterapistambahan.assignAll(
-        responseTerapis.map((e) => Map<String, dynamic>.from(e)).toList(),
-      );
+      dataterapistambahan.assignAll(responseTerapis.map((e) => Map<String, dynamic>.from(e)).toList());
 
       if (idtrans != '') {
         if (dataterapistambahan.isNotEmpty) {
@@ -1667,16 +1459,8 @@ class ListTransaksiController extends GetxController {
     }
   }
 
-  void dialogDetail(
-    String idTrans,
-    double disc,
-    int jenisPembayaran,
-    int isCancel,
-  ) async {
-    var fetchAll = await Future.wait([
-      getDetailTrans(idTrans),
-      getTerapisData(idTrans),
-    ]);
+  void dialogDetail(String idTrans, double disc, int jenisPembayaran, int isCancel) async {
+    var fetchAll = await Future.wait([getDetailTrans(idTrans), getTerapisData(idTrans)]);
     final dataOri = fetchAll[0];
     final dataTerapis = fetchAll[1];
 
@@ -1729,14 +1513,9 @@ class ListTransaksiController extends GetxController {
         "type": tipe,
         "id_detail_transaksi": dataAddOn[i]['id_detail_transaksi'],
         "id_transaksi": dataAddOn[i]['id_transaksi'],
-        "id_item":
-            dataAddOn[i]['id_fnb'] ??
-            dataAddOn[i]['id_produk'] ??
-            dataAddOn[i]['id_paket'],
+        "id_item": dataAddOn[i]['id_fnb'] ?? dataAddOn[i]['id_produk'] ?? dataAddOn[i]['id_paket'],
         "nama_item":
-            dataAddOn[i]['nama_fnb'] ??
-            dataAddOn[i]['nama_produk'] ??
-            dataAddOn[i]['nama_paket_msg'],
+            dataAddOn[i]['nama_fnb'] ?? dataAddOn[i]['nama_produk'] ?? dataAddOn[i]['nama_paket_msg'],
         "qty": dataAddOn[i]['qty'],
         "satuan": dataAddOn[i]['satuan'],
         "harga_item": dataAddOn[i]['harga_item'],
@@ -1754,11 +1533,7 @@ class ListTransaksiController extends GetxController {
 
     Get.dialog(
       AlertDialog(
-        title: Center(
-          child: Column(
-            children: [Text("Detail Transaksi ${idTrans}"), Divider()],
-          ),
-        ),
+        title: Center(child: Column(children: [Text("Detail Transaksi ${idTrans}"), Divider()])),
         content: Container(
           height: Get.height - 100,
           width: Get.width - 150,
@@ -1769,24 +1544,15 @@ class ListTransaksiController extends GetxController {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Padding(
-                      padding: const EdgeInsets.only(
-                        left: 16,
-                        top: 8,
-                        bottom: 10,
-                      ),
+                      padding: const EdgeInsets.only(left: 16, top: 8, bottom: 10),
                       child: Column(
                         // align children kekanan
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [Text("Data Terapis")],
-                          ),
+                          Row(mainAxisAlignment: MainAxisAlignment.start, children: [Text("Data Terapis")]),
                           SizedBox(height: 5),
                           Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment
-                                    .start, // Align row contents to end
+                            mainAxisAlignment: MainAxisAlignment.start, // Align row contents to end
                             children: [
                               Text("Nama Terapis: "),
                               SizedBox(width: 8), // Add some spacing
@@ -1797,9 +1563,7 @@ class ListTransaksiController extends GetxController {
                           ),
                           SizedBox(height: 2),
                           Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment
-                                    .start, // Align row contents to end
+                            mainAxisAlignment: MainAxisAlignment.start, // Align row contents to end
                             children: [
                               Text("Kode Terapis: "),
                               SizedBox(width: 8), // Add some spacing
@@ -1810,9 +1574,7 @@ class ListTransaksiController extends GetxController {
                           ),
                           SizedBox(height: 2),
                           Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment
-                                    .start, // Align row contents to end
+                            mainAxisAlignment: MainAxisAlignment.start, // Align row contents to end
                             children: [
                               Text("Jam Datang: "),
                               SizedBox(width: 8), // Add some spacing
@@ -1827,18 +1589,12 @@ class ListTransaksiController extends GetxController {
                               Text("${dataTerapis['jam_selesai']} | "),
                               Text(
                                 "Harga Room : ",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                               ),
                               SizedBox(width: 8),
                               Text(
                                 "${currencyFormatter.format(hargaroom)}",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                               ),
                             ],
                           ),
@@ -1850,15 +1606,8 @@ class ListTransaksiController extends GetxController {
 
                 if (_combinedAddOn.isNotEmpty) ...[
                   Padding(
-                    padding: const EdgeInsets.only(
-                      left: 16,
-                      top: 8,
-                      bottom: 10,
-                    ),
-                    child: Text(
-                      "AddOn Details",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
+                    padding: const EdgeInsets.only(left: 16, top: 8, bottom: 10),
+                    child: Text("AddOn Details", style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                   // Header Row
                   Padding(
@@ -1867,44 +1616,20 @@ class ListTransaksiController extends GetxController {
                       children: [
                         Expanded(
                           flex: 2,
-                          child: Text(
-                            "Id & Nama Addon",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
+                          child: Text("Id & Nama Addon", style: TextStyle(fontWeight: FontWeight.bold)),
                         ),
                         Expanded(
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 10),
-                            child: Text(
-                              "Qty",
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
+                            child: Text("Qty", style: TextStyle(fontWeight: FontWeight.bold)),
                           ),
                         ),
+                        Expanded(child: Text("Harga Satuan", style: TextStyle(fontWeight: FontWeight.bold))),
+                        Expanded(child: Text("Total Harga", style: TextStyle(fontWeight: FontWeight.bold))),
                         Expanded(
-                          child: Text(
-                            "Harga Satuan",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
+                          child: Text("Durasi (Menit)", style: TextStyle(fontWeight: FontWeight.bold)),
                         ),
-                        Expanded(
-                          child: Text(
-                            "Total Harga",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        Expanded(
-                          child: Text(
-                            "Durasi (Menit)",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        Expanded(
-                          child: Text(
-                            "Status",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
+                        Expanded(child: Text("Status", style: TextStyle(fontWeight: FontWeight.bold))),
                       ],
                     ),
                   ),
@@ -1949,30 +1674,18 @@ class ListTransaksiController extends GetxController {
                               ),
                               Expanded(
                                 child: AutoSizeText(
-                                  data['type'] != "fnb"
-                                      ? "${data['durasi']} x ${data['qty']}"
-                                      : "-",
+                                  data['type'] != "fnb" ? "${data['durasi']} x ${data['qty']}" : "-",
                                   minFontSize: 8,
                                   maxLines: 1,
                                 ),
                               ),
-                              Expanded(
-                                child: AutoSizeText(
-                                  "${data['status']}",
-                                  minFontSize: 8,
-                                  maxLines: 1,
-                                ),
-                              ),
+                              Expanded(child: AutoSizeText("${data['status']}", minFontSize: 8, maxLines: 1)),
                             ],
                           ),
                         ),
                       Container(
                         width: double.infinity, // Take full width
-                        padding: const EdgeInsets.only(
-                          left: 10,
-                          right: 30,
-                          top: 20,
-                        ),
+                        padding: const EdgeInsets.only(left: 10, right: 30, top: 20),
                         child: Column(
                           children: [
                             Row(
@@ -1980,64 +1693,43 @@ class ListTransaksiController extends GetxController {
                               children: [
                                 Text(
                                   "Total Pembelian Addon ${disc > 0 && jenisPembayaran == 1 ? "(Sblm Disc)" : ""}:",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                 ),
                                 Text(
                                   currencyFormatter.format(addOnTotal),
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                 ),
                               ],
                             ),
                             if (disc > 0 && jenisPembayaran == 1) ...[
                               Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     "Diskon :",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                   ),
                                   Text(
                                     "${disc * 100}%",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                   ),
                                 ],
                               ),
                               Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     "Total Pembelian Addon (Stlh Disc):",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                   ),
                                   Builder(
                                     builder: (context) {
                                       var nominalDisc = paketTotal * disc;
-                                      var paketStlhDisc =
-                                          paketTotal - nominalDisc;
+                                      var paketStlhDisc = paketTotal - nominalDisc;
 
                                       return Text(
                                         currencyFormatter.format(paketStlhDisc),
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                        ),
+                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                       );
                                     },
                                   ),
@@ -2054,15 +1746,8 @@ class ListTransaksiController extends GetxController {
                 ],
                 if (dataPaket.isNotEmpty) ...[
                   Padding(
-                    padding: const EdgeInsets.only(
-                      left: 16,
-                      top: 8,
-                      bottom: 10,
-                    ),
-                    child: Text(
-                      "Paket Details",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
+                    padding: const EdgeInsets.only(left: 16, top: 8, bottom: 10),
+                    child: Text("Paket Details", style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                   // Header Row
                   Padding(
@@ -2071,44 +1756,20 @@ class ListTransaksiController extends GetxController {
                       children: [
                         Expanded(
                           flex: 2,
-                          child: Text(
-                            "Id & Nama Paket",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
+                          child: Text("Id & Nama Paket", style: TextStyle(fontWeight: FontWeight.bold)),
                         ),
                         Expanded(
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 10),
-                            child: Text(
-                              "Qty",
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
+                            child: Text("Qty", style: TextStyle(fontWeight: FontWeight.bold)),
                           ),
                         ),
+                        Expanded(child: Text("Harga Satuan", style: TextStyle(fontWeight: FontWeight.bold))),
+                        Expanded(child: Text("Total Harga", style: TextStyle(fontWeight: FontWeight.bold))),
                         Expanded(
-                          child: Text(
-                            "Harga Satuan",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
+                          child: Text("Durasi (Menit)", style: TextStyle(fontWeight: FontWeight.bold)),
                         ),
-                        Expanded(
-                          child: Text(
-                            "Total Harga",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        Expanded(
-                          child: Text(
-                            "Durasi (Menit)",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        Expanded(
-                          child: Text(
-                            "Status",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
+                        Expanded(child: Text("Status", style: TextStyle(fontWeight: FontWeight.bold))),
                       ],
                     ),
                   ),
@@ -2159,22 +1820,14 @@ class ListTransaksiController extends GetxController {
                                 ),
                               ),
                               Expanded(
-                                child: AutoSizeText(
-                                  "${paket['status']}",
-                                  minFontSize: 8,
-                                  maxLines: 1,
-                                ),
+                                child: AutoSizeText("${paket['status']}", minFontSize: 8, maxLines: 1),
                               ),
                             ],
                           ),
                         ),
                       Container(
                         width: double.infinity, // Take full width
-                        padding: const EdgeInsets.only(
-                          left: 10,
-                          right: 30,
-                          top: 20,
-                        ),
+                        padding: const EdgeInsets.only(left: 10, right: 30, top: 20),
                         child: Column(
                           children: [
                             Row(
@@ -2182,68 +1835,45 @@ class ListTransaksiController extends GetxController {
                               children: [
                                 Text(
                                   "Total Pembelian Paket ${disc > 0 ? "(Sblm Disc)" : ""}:",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                 ),
                                 Text(
                                   currencyFormatter.format(paketTotal),
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                 ),
                               ],
                             ),
                             if (disc > 0) ...[
                               Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     "Diskon :",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                   ),
                                   Text(
                                     "${disc * 100}%",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                   ),
                                 ],
                               ),
                               Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     "Total Pembelian Paket (Stlh Disc):",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                   ),
                                   Builder(
                                     builder: (context) {
                                       var nominalDisc = paketTotal * disc;
-                                      var paketStlhDisc =
-                                          (((paketTotal - nominalDisc) + 999) ~/
-                                              1000) *
-                                          1000;
+                                      var paketStlhDisc = (((paketTotal - nominalDisc) + 999) ~/ 1000) * 1000;
 
                                       print('isinya adalah $paketStlhDisc');
 
                                       return Text(
                                         currencyFormatter.format(paketStlhDisc),
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                        ),
+                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                       );
                                     },
                                   ),
@@ -2260,15 +1890,8 @@ class ListTransaksiController extends GetxController {
                 ],
                 if (dataProduk.isNotEmpty) ...[
                   Padding(
-                    padding: const EdgeInsets.only(
-                      left: 16,
-                      top: 8,
-                      bottom: 10,
-                    ),
-                    child: Text(
-                      "Produk Details",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
+                    padding: const EdgeInsets.only(left: 16, top: 8, bottom: 10),
+                    child: Text("Produk Details", style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                   // Header Row
                   Padding(
@@ -2277,44 +1900,20 @@ class ListTransaksiController extends GetxController {
                       children: [
                         Expanded(
                           flex: 2,
-                          child: Text(
-                            "Id & Nama Produk",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
+                          child: Text("Id & Nama Produk", style: TextStyle(fontWeight: FontWeight.bold)),
                         ),
                         Expanded(
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 10),
-                            child: Text(
-                              "Qty",
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
+                            child: Text("Qty", style: TextStyle(fontWeight: FontWeight.bold)),
                           ),
                         ),
+                        Expanded(child: Text("Harga Satuan", style: TextStyle(fontWeight: FontWeight.bold))),
+                        Expanded(child: Text("Total Harga", style: TextStyle(fontWeight: FontWeight.bold))),
                         Expanded(
-                          child: Text(
-                            "Harga Satuan",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
+                          child: Text("Durasi (Menit)", style: TextStyle(fontWeight: FontWeight.bold)),
                         ),
-                        Expanded(
-                          child: Text(
-                            "Total Harga",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        Expanded(
-                          child: Text(
-                            "Durasi (Menit)",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        Expanded(
-                          child: Text(
-                            "Status",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
+                        Expanded(child: Text("Status", style: TextStyle(fontWeight: FontWeight.bold))),
                       ],
                     ),
                   ),
@@ -2365,22 +1964,14 @@ class ListTransaksiController extends GetxController {
                                 ),
                               ),
                               Expanded(
-                                child: AutoSizeText(
-                                  "${produk['status']}",
-                                  minFontSize: 8,
-                                  maxLines: 1,
-                                ),
+                                child: AutoSizeText("${produk['status']}", minFontSize: 8, maxLines: 1),
                               ),
                             ],
                           ),
                         ),
                       Container(
                         width: double.infinity, // Take full width
-                        padding: const EdgeInsets.only(
-                          left: 10,
-                          right: 30,
-                          top: 20,
-                        ),
+                        padding: const EdgeInsets.only(left: 10, right: 30, top: 20),
                         child: Column(
                           children: [
                             Row(
@@ -2388,66 +1979,43 @@ class ListTransaksiController extends GetxController {
                               children: [
                                 Text(
                                   "Total Pembelian Produk ${disc > 0 ? "(Sblm Disc)" : ""}:",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                 ),
                                 Text(
                                   currencyFormatter.format(produkTotal),
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                 ),
                               ],
                             ),
                             if (disc > 0) ...[
                               Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     "Diskon :",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                   ),
                                   Text(
                                     "${disc * 100}%",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                   ),
                                 ],
                               ),
                               Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     "Total Pembelian Produk (Stlh Disc):",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                   ),
                                   Builder(
                                     builder: (context) {
                                       var nominalDisc = produkTotal * disc;
-                                      var produkStlhDisc =
-                                          produkTotal - nominalDisc;
+                                      var produkStlhDisc = produkTotal - nominalDisc;
 
                                       return Text(
-                                        currencyFormatter.format(
-                                          produkStlhDisc,
-                                        ),
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                        ),
+                                        currencyFormatter.format(produkStlhDisc),
+                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                       );
                                     },
                                   ),
@@ -2464,15 +2032,8 @@ class ListTransaksiController extends GetxController {
                 ],
                 if (dataFood.isNotEmpty) ...[
                   Padding(
-                    padding: const EdgeInsets.only(
-                      left: 16,
-                      top: 8,
-                      bottom: 10,
-                    ),
-                    child: Text(
-                      "Food Details",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
+                    padding: const EdgeInsets.only(left: 16, top: 8, bottom: 10),
+                    child: Text("Food Details", style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                   // Header Row
                   Padding(
@@ -2481,38 +2042,17 @@ class ListTransaksiController extends GetxController {
                       children: [
                         Expanded(
                           flex: 2,
-                          child: Text(
-                            "Id & Nama Food",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
+                          child: Text("Id & Nama Food", style: TextStyle(fontWeight: FontWeight.bold)),
                         ),
                         Expanded(
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 10),
-                            child: Text(
-                              "Qty",
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
+                            child: Text("Qty", style: TextStyle(fontWeight: FontWeight.bold)),
                           ),
                         ),
-                        Expanded(
-                          child: Text(
-                            "Harga Satuan",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        Expanded(
-                          child: Text(
-                            "Total Harga",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        Expanded(
-                          child: Text(
-                            "Status",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
+                        Expanded(child: Text("Harga Satuan", style: TextStyle(fontWeight: FontWeight.bold))),
+                        Expanded(child: Text("Total Harga", style: TextStyle(fontWeight: FontWeight.bold))),
+                        Expanded(child: Text("Status", style: TextStyle(fontWeight: FontWeight.bold))),
                       ],
                     ),
                   ),
@@ -2555,23 +2095,13 @@ class ListTransaksiController extends GetxController {
                                   maxLines: 1,
                                 ),
                               ),
-                              Expanded(
-                                child: AutoSizeText(
-                                  "${food['status']}",
-                                  minFontSize: 8,
-                                  maxLines: 1,
-                                ),
-                              ),
+                              Expanded(child: AutoSizeText("${food['status']}", minFontSize: 8, maxLines: 1)),
                             ],
                           ),
                         ),
                       Container(
                         width: double.infinity, // Take full width
-                        padding: const EdgeInsets.only(
-                          left: 10,
-                          right: 30,
-                          top: 20,
-                        ),
+                        padding: const EdgeInsets.only(left: 10, right: 30, top: 20),
                         child: Column(
                           children: [
                             Row(
@@ -2579,64 +2109,43 @@ class ListTransaksiController extends GetxController {
                               children: [
                                 Text(
                                   "Total Pembelian Food ${disc > 0 ? "(Sblm Disc)" : ""}:",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                 ),
                                 Text(
                                   currencyFormatter.format(foodTotal),
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                 ),
                               ],
                             ),
                             if (disc > 0) ...[
                               Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     "Diskon :",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                   ),
                                   Text(
                                     "${disc * 100}%",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                   ),
                                 ],
                               ),
                               Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     "Total Pembelian Food (Stlh Disc):",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                   ),
                                   Builder(
                                     builder: (context) {
                                       var nominalDisc = foodTotal * disc;
-                                      var foodStlhDisc =
-                                          foodTotal - nominalDisc;
+                                      var foodStlhDisc = foodTotal - nominalDisc;
 
                                       return Text(
                                         currencyFormatter.format(foodStlhDisc),
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                        ),
+                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                       );
                                     },
                                   ),
@@ -2653,15 +2162,8 @@ class ListTransaksiController extends GetxController {
                 ],
                 if (dataFasilitas.isNotEmpty) ...[
                   Padding(
-                    padding: const EdgeInsets.only(
-                      left: 16,
-                      top: 8,
-                      bottom: 10,
-                    ),
-                    child: Text(
-                      "Fasilitas Details",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
+                    padding: const EdgeInsets.only(left: 16, top: 8, bottom: 10),
+                    child: Text("Fasilitas Details", style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                   // Header Row
                   Padding(
@@ -2670,32 +2172,18 @@ class ListTransaksiController extends GetxController {
                       children: [
                         Expanded(
                           flex: 2,
-                          child: Text(
-                            "Id & Nama Fasilitas",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
+                          child: Text("Id & Nama Fasilitas", style: TextStyle(fontWeight: FontWeight.bold)),
                         ),
                         Expanded(
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 10),
-                            child: Text(
-                              "Qty",
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
+                            child: Text("Qty", style: TextStyle(fontWeight: FontWeight.bold)),
                           ),
                         ),
                         Expanded(
-                          child: Text(
-                            "Harga Fasilitas",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
+                          child: Text("Harga Fasilitas", style: TextStyle(fontWeight: FontWeight.bold)),
                         ),
-                        Expanded(
-                          child: Text(
-                            "Status",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
+                        Expanded(child: Text("Status", style: TextStyle(fontWeight: FontWeight.bold))),
                       ],
                     ),
                   ),
@@ -2731,23 +2219,13 @@ class ListTransaksiController extends GetxController {
                                   maxLines: 1,
                                 ),
                               ),
-                              Expanded(
-                                child: AutoSizeText(
-                                  "${data['status']}",
-                                  minFontSize: 8,
-                                  maxLines: 1,
-                                ),
-                              ),
+                              Expanded(child: AutoSizeText("${data['status']}", minFontSize: 8, maxLines: 1)),
                             ],
                           ),
                         ),
                       Container(
                         width: double.infinity, // Take full width
-                        padding: const EdgeInsets.only(
-                          left: 10,
-                          right: 30,
-                          top: 20,
-                        ),
+                        padding: const EdgeInsets.only(left: 10, right: 30, top: 20),
                         child: Column(
                           children: [
                             Row(
@@ -2755,66 +2233,43 @@ class ListTransaksiController extends GetxController {
                               children: [
                                 Text(
                                   "Total Pembelian Fasilitas ${disc > 0 ? "(Sblm Disc)" : ""}:",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                 ),
                                 Text(
                                   currencyFormatter.format(fasilitasTotal),
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                 ),
                               ],
                             ),
                             if (disc > 0) ...[
                               Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     "Diskon :",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                   ),
                                   Text(
                                     "${disc * 100}%",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                   ),
                                 ],
                               ),
                               Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     "Total Pembelian Fasilitas (Stlh Disc):",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                   ),
                                   Builder(
                                     builder: (context) {
                                       var nominalDisc = fasilitasTotal * disc;
-                                      var fasilitasStlhDisc =
-                                          fasilitasTotal - nominalDisc;
+                                      var fasilitasStlhDisc = fasilitasTotal - nominalDisc;
 
                                       return Text(
-                                        currencyFormatter.format(
-                                          fasilitasStlhDisc,
-                                        ),
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                        ),
+                                        currencyFormatter.format(fasilitasStlhDisc),
+                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                       );
                                     },
                                   ),
@@ -2831,15 +2286,8 @@ class ListTransaksiController extends GetxController {
                 ],
                 if (dataMember.isNotEmpty) ...[
                   Padding(
-                    padding: const EdgeInsets.only(
-                      left: 16,
-                      top: 8,
-                      bottom: 10,
-                    ),
-                    child: Text(
-                      "Member Details",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
+                    padding: const EdgeInsets.only(left: 16, top: 8, bottom: 10),
+                    child: Text("Member Details", style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                   // Header Row
                   Padding(
@@ -2848,10 +2296,7 @@ class ListTransaksiController extends GetxController {
                       children: [
                         Expanded(
                           flex: 2,
-                          child: Text(
-                            "Id & Nama Promo",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
+                          child: Text("Id & Nama Promo", style: TextStyle(fontWeight: FontWeight.bold)),
                         ),
                         Expanded(
                           child: Padding(
@@ -2883,18 +2328,8 @@ class ListTransaksiController extends GetxController {
                             ),
                           ),
                         ),
-                        Expanded(
-                          child: Text(
-                            "Harga Promo",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        Expanded(
-                          child: Text(
-                            "Status",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
+                        Expanded(child: Text("Harga Promo", style: TextStyle(fontWeight: FontWeight.bold))),
+                        Expanded(child: Text("Status", style: TextStyle(fontWeight: FontWeight.bold))),
                       ],
                     ),
                   ),
@@ -2921,9 +2356,7 @@ class ListTransaksiController extends GetxController {
                                 width: 60,
                                 height: 25,
                                 child: AutoSizeText(
-                                  data?['sisa_kunjungan'] != null
-                                      ? '${data!['sisa_kunjungan']} Kali'
-                                      : '',
+                                  data?['sisa_kunjungan'] != null ? '${data!['sisa_kunjungan']} Kali' : '',
                                   minFontSize: 8,
                                   maxLines: 1,
                                 ),
@@ -2962,22 +2395,14 @@ class ListTransaksiController extends GetxController {
                               Container(
                                 width: 70,
                                 height: 25,
-                                child: AutoSizeText(
-                                  "${data['status']}",
-                                  minFontSize: 8,
-                                  maxLines: 1,
-                                ),
+                                child: AutoSizeText("${data['status']}", minFontSize: 8, maxLines: 1),
                               ),
                             ],
                           ),
                         ),
                       Container(
                         width: double.infinity, // Take full width
-                        padding: const EdgeInsets.only(
-                          left: 10,
-                          right: 30,
-                          top: 20,
-                        ),
+                        padding: const EdgeInsets.only(left: 10, right: 30, top: 20),
                         child: Column(
                           children: [
                             Row(
@@ -2985,64 +2410,41 @@ class ListTransaksiController extends GetxController {
                               children: [
                                 Text(
                                   "Total Pembelian Member ${disc > 0 ? "(Sblm Disc)" : ""}:",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                 ),
                                 Text(
                                   currencyFormatter.format(memberTotal),
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                 ),
                                 if (disc > 0) ...[
                                   Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
                                         "Diskon :",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                        ),
+                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                       ),
                                       Text(
                                         "${disc * 100}%",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                        ),
+                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                       ),
                                     ],
                                   ),
                                   Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
                                         "Total Pembelian Member (Stlh Disc):",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                        ),
+                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                       ),
                                       Builder(
                                         builder: (context) {
                                           var nominalDisc = memberTotal * disc;
-                                          var memberStlhDisc =
-                                              memberTotal - nominalDisc;
+                                          var memberStlhDisc = memberTotal - nominalDisc;
 
                                           return Text(
-                                            currencyFormatter.format(
-                                              memberStlhDisc,
-                                            ),
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 14,
-                                            ),
+                                            currencyFormatter.format(memberStlhDisc),
+                                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                           );
                                         },
                                       ),
@@ -3096,9 +2498,7 @@ class ListTransaksiController extends GetxController {
             children: [
               TextField(
                 controller: txtIdTransFnb,
-                decoration: InputDecoration(
-                  hintText: "Masukkan Id Transaksi Tambahan",
-                ),
+                decoration: InputDecoration(hintText: "Masukkan Id Transaksi Tambahan"),
               ),
             ],
           ),
@@ -3120,8 +2520,7 @@ class ListTransaksiController extends GetxController {
   Future<void> downloadExcel() async {
     Get.dialog(
       const DownloadSplash(),
-      barrierDismissible:
-          false, // Prevent user from dismissing by tapping outside
+      barrierDismissible: false, // Prevent user from dismissing by tapping outside
     );
     try {
       // final dir = await getApplicationDocumentsDirectory();
@@ -3146,10 +2545,7 @@ class ListTransaksiController extends GetxController {
       await dio.download(
         url,
         filePath,
-        options: Options(
-          responseType: ResponseType.bytes,
-          headers: {'Accept': 'application/pdf'},
-        ),
+        options: Options(responseType: ResponseType.bytes, headers: {'Accept': 'application/pdf'}),
       );
 
       // Close the loading dialog
@@ -3168,10 +2564,7 @@ class ListTransaksiController extends GetxController {
 
 class ListTransaksi extends StatelessWidget {
   ListTransaksi({super.key}) {
-    Get.lazyPut<ListTransaksiController>(
-      () => ListTransaksiController(),
-      fenix: false,
-    );
+    Get.lazyPut<ListTransaksiController>(() => ListTransaksiController(), fenix: false);
   }
 
   @override
@@ -3193,14 +2586,10 @@ class ListTransaksi extends StatelessWidget {
 
     // 3. Hitung designSize yang efektif berdasarkan tipe perangkat
     final double effectiveDesignWidth =
-        isMobile
-            ? tabletDesignWidth * mobileAdjustmentFactor
-            : tabletDesignWidth;
+        isMobile ? tabletDesignWidth * mobileAdjustmentFactor : tabletDesignWidth;
 
     final double effectiveDesignHeight =
-        isMobile
-            ? tabletDesignHeight * mobileAdjustmentFactor
-            : tabletDesignHeight;
+        isMobile ? tabletDesignHeight * mobileAdjustmentFactor : tabletDesignHeight;
 
     return ScreenUtilInit(
       // 660 ini lebar dp terkecil yang kita patok
@@ -3239,11 +2628,7 @@ class ListTransaksi extends StatelessWidget {
                       padding: EdgeInsets.only(top: 20),
                       child: Text(
                         'List Transaksi',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 20.w,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: TextStyle(fontFamily: 'Poppins', fontSize: 20.w, fontWeight: FontWeight.bold),
                       ),
                     ),
                     SizedBox(
@@ -3270,16 +2655,10 @@ class ListTransaksi extends StatelessWidget {
                     ),
                     SizedBox(height: 10),
                     Obx(() {
-                      if (c._hakAkses.value == "owner" ||
-                          c._hakAkses.value == "admin") {
+                      if (c._hakAkses.value == "owner" || c._hakAkses.value == "admin") {
                         return Container(
                           alignment: Alignment.centerLeft,
-                          margin: EdgeInsets.only(
-                            top: 5,
-                            bottom: 5,
-                            left: 50.w,
-                            right: 50.w,
-                          ),
+                          margin: EdgeInsets.only(top: 5, bottom: 5, left: 50.w, right: 50.w),
                           width: MediaQuery.of(context).size.width,
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -3293,29 +2672,17 @@ class ListTransaksi extends StatelessWidget {
                                       c.showDialogTgl();
                                     },
                                     style: ElevatedButton.styleFrom(
-                                      padding: const EdgeInsets.fromLTRB(
-                                        20,
-                                        5,
-                                        20,
-                                        5,
-                                      ),
+                                      padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
                                       minimumSize: Size.zero,
-                                      tapTargetSize:
-                                          MaterialTapTargetSize.shrinkWrap,
+                                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                     ),
-                                    child: Text(
-                                      "Pilih",
-                                      style: TextStyle(height: 1),
-                                    ),
+                                    child: Text("Pilih", style: TextStyle(height: 1)),
                                   ),
                                 ],
                               ),
 
                               Container(
-                                constraints: BoxConstraints(
-                                  minWidth: 0,
-                                  maxWidth: double.infinity,
-                                ),
+                                constraints: BoxConstraints(minWidth: 0, maxWidth: double.infinity),
                                 margin: EdgeInsets.only(top: 10.w),
                                 alignment: Alignment.centerRight,
                                 child: Align(
@@ -3347,25 +2714,17 @@ class ListTransaksi extends StatelessWidget {
                       String teks = "";
                       List<dynamic> rangeDate = c.rangeDatePickerOmset;
                       if (rangeDate.isNotEmpty) {
-                        String startDate =
-                            rangeDate[0].toString().split(" ")[0];
-                        teks +=
-                            "Tanggal Mulai: ${c.formatDate(startDate, format: "dd-MM-yyyy")} ";
+                        String startDate = rangeDate[0].toString().split(" ")[0];
+                        teks += "Tanggal Mulai: ${c.formatDate(startDate, format: "dd-MM-yyyy")} ";
                         if (rangeDate.length == 2) {
-                          String endDate =
-                              rangeDate[1].toString().split(" ")[0];
-                          teks +=
-                              "| Tanggal Akhir: ${c.formatDate(endDate, format: "dd-MM-yyyy")}";
+                          String endDate = rangeDate[1].toString().split(" ")[0];
+                          teks += "| Tanggal Akhir: ${c.formatDate(endDate, format: "dd-MM-yyyy")}";
                         }
                       } else {
                         return SizedBox.shrink();
                       }
                       return Container(
-                        margin: EdgeInsets.only(
-                          bottom: 5,
-                          left: 50.w,
-                          right: 50.w,
-                        ),
+                        margin: EdgeInsets.only(bottom: 5, left: 50.w, right: 50.w),
                         alignment: Alignment.centerLeft,
                         child: Text(teks),
                       );
@@ -3389,9 +2748,7 @@ class ListTransaksi extends StatelessWidget {
                           width: double.infinity,
                           child: Obx(() {
                             if (c._isNotFound.value || c.filteredList.isEmpty) {
-                              return const Center(
-                                child: Text("Tidak Ada Transaksi"),
-                              );
+                              return const Center(child: Text("Tidak Ada Transaksi"));
                             }
 
                             return ListView.builder(
@@ -3415,9 +2772,7 @@ class ListTransaksi extends StatelessWidget {
                                       padding: EdgeInsets.all(16),
                                       decoration: BoxDecoration(
                                         color: Colors.white,
-                                        border: Border.all(
-                                          color: Colors.grey.shade300,
-                                        ),
+                                        border: Border.all(color: Colors.grey.shade300),
                                         borderRadius: BorderRadius.circular(8),
                                         boxShadow: [
                                           BoxShadow(
@@ -3429,89 +2784,66 @@ class ListTransaksi extends StatelessWidget {
                                         ],
                                       ),
                                       child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           // Header row
                                           Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
                                               Flexible(
                                                 child: Builder(
                                                   builder: (context) {
-                                                    var teks =
-                                                        "${item['id_transaksi']}";
+                                                    var teks = "${item['id_transaksi']}";
 
-                                                    if (item['no_loker'] !=
-                                                        -1) {
-                                                      teks +=
-                                                          " - Loker: ${item['no_loker']}";
+                                                    if (item['no_loker'] != -1) {
+                                                      teks += " - Loker: ${item['no_loker']}";
                                                     }
 
-                                                    if (item['is_cancel'] ==
-                                                        1) {
+                                                    if (item['is_cancel'] == 1) {
                                                       teks += " - DIBATALKAN -";
                                                     }
 
-                                                    if (item['jenis_transaksi'] ==
-                                                            "fnb" &&
-                                                        item['nama_tamu'] ==
-                                                            "") {
+                                                    if (item['jenis_transaksi'] == "fnb" &&
+                                                        item['nama_tamu'] == "") {
                                                       return Row(
                                                         children: [
                                                           Text(
                                                             teks,
                                                             style: TextStyle(
-                                                              fontFamily:
-                                                                  'Poppins',
+                                                              fontFamily: 'Poppins',
                                                               fontSize: 10.w,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
+                                                              fontWeight: FontWeight.bold,
                                                               color:
-                                                                  item['is_cancel'] ==
-                                                                          1
-                                                                      ? Colors
-                                                                          .red
-                                                                      : Colors
-                                                                          .black,
+                                                                  item['is_cancel'] == 1
+                                                                      ? Colors.red
+                                                                      : Colors.black,
                                                             ),
                                                           ),
                                                           SizedBox(width: 10.w),
                                                           ElevatedButton(
                                                             onPressed: () {
-                                                              c.showDialogFnb(
-                                                                item['id_transaksi'],
-                                                              );
+                                                              c.showDialogFnb(item['id_transaksi']);
                                                             },
                                                             style: ElevatedButton.styleFrom(
-                                                              padding:
-                                                                  const EdgeInsets.fromLTRB(
-                                                                    20,
-                                                                    5,
-                                                                    20,
-                                                                    5,
-                                                                  ),
-                                                              minimumSize:
-                                                                  Size.zero,
-                                                              tapTargetSize:
-                                                                  MaterialTapTargetSize
-                                                                      .shrinkWrap,
+                                                              padding: const EdgeInsets.fromLTRB(
+                                                                20,
+                                                                5,
+                                                                20,
+                                                                5,
+                                                              ),
+                                                              minimumSize: Size.zero,
+                                                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                                             ),
                                                             child: Text(
                                                               "- Input Id Transaksi Tambahan -",
-                                                              style: TextStyle(
-                                                                height: 1,
-                                                              ),
+                                                              style: TextStyle(height: 1),
                                                             ),
                                                           ),
                                                         ],
                                                       );
                                                     } else {
                                                       teks +=
-                                                          item['nama_tamu'] ==
-                                                                  ""
+                                                          item['nama_tamu'] == ""
                                                               ? ""
                                                               : " / ${item['nama_tamu']}";
                                                     }
@@ -3523,11 +2855,9 @@ class ListTransaksi extends StatelessWidget {
                                                       style: TextStyle(
                                                         fontFamily: 'Poppins',
                                                         fontSize: 10.w,
-                                                        fontWeight:
-                                                            FontWeight.bold,
+                                                        fontWeight: FontWeight.bold,
                                                         color:
-                                                            item['is_cancel'] ==
-                                                                    1
+                                                            item['is_cancel'] == 1
                                                                 ? Colors.red
                                                                 : Colors.black,
                                                       ),
@@ -3539,38 +2869,23 @@ class ListTransaksi extends StatelessWidget {
                                                 // Use a single FutureBuilder to fetch the data once.
                                                 // cara ori ku pindahkan paling bawah
                                                 child: FutureBuilder(
-                                                  future: c.getDetailTrans(
-                                                    item['id_transaksi'],
-                                                  ),
+                                                  future: c.getDetailTrans(item['id_transaksi']),
                                                   builder: (context, snapshot) {
                                                     // Handle the loading state
-                                                    if (snapshot
-                                                            .connectionState ==
-                                                        ConnectionState
-                                                            .waiting) {
+                                                    if (snapshot.connectionState == ConnectionState.waiting) {
                                                       return Row(
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .spaceBetween,
+                                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                         children: [
                                                           // Use SizedBox to maintain space while loading
                                                           SizedBox(
                                                             width: 24,
                                                             height: 24,
-                                                            child:
-                                                                CircularProgressIndicator(
-                                                                  strokeWidth:
-                                                                      2,
-                                                                ),
+                                                            child: CircularProgressIndicator(strokeWidth: 2),
                                                           ),
                                                           SizedBox(
                                                             width: 24,
                                                             height: 24,
-                                                            child:
-                                                                CircularProgressIndicator(
-                                                                  strokeWidth:
-                                                                      2,
-                                                                ),
+                                                            child: CircularProgressIndicator(strokeWidth: 2),
                                                           ),
                                                         ],
                                                       );
@@ -3581,82 +2896,52 @@ class ListTransaksi extends StatelessWidget {
                                                       return Center(
                                                         child: Text(
                                                           'Error: ${snapshot.error}',
-                                                          style: TextStyle(
-                                                            color: Colors.red,
-                                                          ),
+                                                          style: TextStyle(color: Colors.red),
                                                         ),
                                                       );
                                                     }
 
                                                     // Handle the state where data is successfully loaded
                                                     if (snapshot.hasData) {
-                                                      final dataOri =
-                                                          snapshot.data!;
-                                                      List<dynamic> dataAddOn =
-                                                          dataOri['all_addon'];
+                                                      final dataOri = snapshot.data!;
+                                                      List<dynamic> dataAddOn = dataOri['all_addon'];
                                                       int totalAddOnAll = 0;
 
                                                       // Calculate the total for all add-ons with tax, performed only once.
-                                                      if (item['total_addon'] !=
-                                                          0) {
-                                                        for (var addon
-                                                            in dataAddOn) {
+                                                      if (item['total_addon'] != 0) {
+                                                        for (var addon in dataAddOn) {
                                                           double pajak =
-                                                              addon['type'] ==
-                                                                      'fnb'
-                                                                  ? c
-                                                                      .pajakFnb
-                                                                      .value
-                                                                  : c
-                                                                      .pajakMsg
-                                                                      .value;
-                                                          double nominalPjk =
-                                                              addon['harga_total'] *
-                                                              pajak;
-                                                          double
-                                                          addOnSblmBulat =
-                                                              addon['harga_total'] +
-                                                              nominalPjk;
+                                                              addon['type'] == 'fnb'
+                                                                  ? c.pajakFnb.value
+                                                                  : c.pajakMsg.value;
+                                                          double nominalPjk = addon['harga_total'] * pajak;
+                                                          double addOnSblmBulat =
+                                                              addon['harga_total'] + nominalPjk;
                                                           totalAddOnAll +=
-                                                              (addOnSblmBulat /
-                                                                      1000)
-                                                                  .round() *
-                                                              1000;
+                                                              (addOnSblmBulat / 1000).round() * 1000;
                                                         }
                                                       }
 
                                                       // Build the Row with the calculated data.
                                                       return Row(
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .spaceBetween,
+                                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                         children: [
                                                           // First child: Conditionally display the "Unpaid" status.
-                                                          if (item['status'] ==
-                                                                  "unpaid" ||
-                                                              item['status'] ==
-                                                                  'done-unpaid' ||
-                                                              item['status'] ==
-                                                                  'done-unpaid-addon' ||
-                                                              item['total_addon'] !=
-                                                                  0) ...[
+                                                          if (item['status'] == "unpaid" ||
+                                                              item['status'] == 'done-unpaid' ||
+                                                              item['status'] == 'done-unpaid-addon' ||
+                                                              item['total_addon'] != 0) ...[
                                                             Builder(
-                                                              builder: (
-                                                                context,
-                                                              ) {
+                                                              builder: (context) {
                                                                 String teks;
-                                                                int
-                                                                totalDanAddon =
-                                                                    item['gtotal_stlh_pajak'] +
-                                                                    totalAddOnAll;
+                                                                int totalDanAddon =
+                                                                    item['gtotal_stlh_pajak'] + totalAddOnAll;
                                                                 int jlhBayar =
                                                                     item['jumlah_bayar'] -
                                                                     item['jumlah_kembalian'];
 
-                                                                if (item['status'] ==
-                                                                        "done-unpaid" ||
-                                                                    item['status'] ==
-                                                                        "unpaid") {
+                                                                if (item['status'] == "done-unpaid" ||
+                                                                    item['status'] == "unpaid") {
                                                                   teks =
                                                                       "Belum Lunas: ${c.currencyFormatter.format(totalDanAddon - jlhBayar)}";
                                                                 } else {
@@ -3667,17 +2952,10 @@ class ListTransaksi extends StatelessWidget {
                                                                 return Text(
                                                                   teks,
                                                                   style: TextStyle(
-                                                                    fontFamily:
-                                                                        'Poppins',
-                                                                    fontSize:
-                                                                        10.w,
-                                                                    fontWeight:
-                                                                        FontWeight
-                                                                            .bold,
-                                                                    color:
-                                                                        Colors
-                                                                            .red
-                                                                            .shade700,
+                                                                    fontFamily: 'Poppins',
+                                                                    fontSize: 10.w,
+                                                                    fontWeight: FontWeight.bold,
+                                                                    color: Colors.red.shade700,
                                                                   ),
                                                                 );
                                                               },
@@ -3691,20 +2969,13 @@ class ListTransaksi extends StatelessWidget {
                                                           Text(
                                                             'Total: ${c.currencyFormatter.format(item['gtotal_stlh_pajak'] + totalAddOnAll)}',
                                                             style: TextStyle(
-                                                              fontFamily:
-                                                                  'Poppins',
+                                                              fontFamily: 'Poppins',
                                                               fontSize: 10.w,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
+                                                              fontWeight: FontWeight.bold,
                                                               color:
-                                                                  item['is_cancel'] ==
-                                                                          1
-                                                                      ? Colors
-                                                                          .red
-                                                                      : Colors
-                                                                          .blue
-                                                                          .shade700,
+                                                                  item['is_cancel'] == 1
+                                                                      ? Colors.red
+                                                                      : Colors.blue.shade700,
                                                             ),
                                                           ),
                                                         ],
@@ -3712,11 +2983,7 @@ class ListTransaksi extends StatelessWidget {
                                                     }
 
                                                     // Handle the case where there is no data
-                                                    return const Center(
-                                                      child: Text(
-                                                        "No data available",
-                                                      ),
-                                                    );
+                                                    return const Center(child: Text("No data available"));
                                                   },
                                                 ),
                                               ),
@@ -3729,8 +2996,7 @@ class ListTransaksi extends StatelessWidget {
                                           Wrap(
                                             spacing: 4.w,
                                             runSpacing: 4.w,
-                                            crossAxisAlignment:
-                                                WrapCrossAlignment.center,
+                                            crossAxisAlignment: WrapCrossAlignment.center,
                                             children: [
                                               RichText(
                                                 text: TextSpan(
@@ -3742,15 +3008,9 @@ class ListTransaksi extends StatelessWidget {
                                                   children: [
                                                     TextSpan(
                                                       text: 'Disc: ',
-                                                      style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                      ),
+                                                      style: TextStyle(fontWeight: FontWeight.bold),
                                                     ),
-                                                    TextSpan(
-                                                      text:
-                                                          '${(item['disc'] * 100).toInt()}%',
-                                                    ),
+                                                    TextSpan(text: '${(item['disc'] * 100).toInt()}%'),
                                                   ],
                                                 ),
                                               ),
@@ -3758,9 +3018,7 @@ class ListTransaksi extends StatelessWidget {
                                                 height: 16,
                                                 width: 1,
                                                 color: Colors.grey.shade400,
-                                                margin: EdgeInsets.symmetric(
-                                                  horizontal: 4,
-                                                ),
+                                                margin: EdgeInsets.symmetric(horizontal: 4),
                                               ),
                                               RichText(
                                                 text: TextSpan(
@@ -3772,16 +3030,9 @@ class ListTransaksi extends StatelessWidget {
                                                   children: [
                                                     TextSpan(
                                                       text: 'Jenis Transaksi: ',
-                                                      style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                      ),
+                                                      style: TextStyle(fontWeight: FontWeight.bold),
                                                     ),
-                                                    TextSpan(
-                                                      text: c.capitalize(
-                                                        item['jenis_transaksi'],
-                                                      ),
-                                                    ),
+                                                    TextSpan(text: c.capitalize(item['jenis_transaksi'])),
                                                   ],
                                                 ),
                                               ),
@@ -3789,9 +3040,7 @@ class ListTransaksi extends StatelessWidget {
                                                 height: 16,
                                                 width: 1,
                                                 color: Colors.grey.shade400,
-                                                margin: EdgeInsets.symmetric(
-                                                  horizontal: 4,
-                                                ),
+                                                margin: EdgeInsets.symmetric(horizontal: 4),
                                               ),
                                               RichText(
                                                 text: TextSpan(
@@ -3803,15 +3052,9 @@ class ListTransaksi extends StatelessWidget {
                                                   children: [
                                                     TextSpan(
                                                       text: 'Kamar: ',
-                                                      style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                      ),
+                                                      style: TextStyle(fontWeight: FontWeight.bold),
                                                     ),
-                                                    TextSpan(
-                                                      text:
-                                                          item['nama_ruangan'],
-                                                    ),
+                                                    TextSpan(text: item['nama_ruangan']),
                                                   ],
                                                 ),
                                               ),
@@ -3819,9 +3062,7 @@ class ListTransaksi extends StatelessWidget {
                                                 height: 16,
                                                 width: 1,
                                                 color: Colors.grey.shade400,
-                                                margin: EdgeInsets.symmetric(
-                                                  horizontal: 4,
-                                                ),
+                                                margin: EdgeInsets.symmetric(horizontal: 4),
                                               ),
                                               RichText(
                                                 text: TextSpan(
@@ -3833,14 +3074,9 @@ class ListTransaksi extends StatelessWidget {
                                                   children: [
                                                     TextSpan(
                                                       text: 'Jenis Tamu: ',
-                                                      style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                      ),
+                                                      style: TextStyle(fontWeight: FontWeight.bold),
                                                     ),
-                                                    TextSpan(
-                                                      text: item['jenis_tamu'],
-                                                    ),
+                                                    TextSpan(text: item['jenis_tamu']),
                                                   ],
                                                 ),
                                               ),
@@ -3848,9 +3084,7 @@ class ListTransaksi extends StatelessWidget {
                                                 height: 16,
                                                 width: 1,
                                                 color: Colors.grey.shade400,
-                                                margin: EdgeInsets.symmetric(
-                                                  horizontal: 4,
-                                                ),
+                                                margin: EdgeInsets.symmetric(horizontal: 4),
                                               ),
                                               RichText(
                                                 text: TextSpan(
@@ -3862,23 +3096,15 @@ class ListTransaksi extends StatelessWidget {
                                                   children: [
                                                     TextSpan(
                                                       text: 'Status: ',
-                                                      style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                      ),
+                                                      style: TextStyle(fontWeight: FontWeight.bold),
                                                     ),
                                                     TextSpan(
                                                       text: c.capitalize(
-                                                        item['status'] ==
-                                                                    'unpaid' ||
-                                                                item['status'] ==
-                                                                    "done-unpaid" ||
-                                                                item['status'] ==
-                                                                    "done-unpaid-addon" ||
-                                                                (item['total_addon'] !=
-                                                                        0 &&
-                                                                    item['status'] ==
-                                                                        "paid")
+                                                        item['status'] == 'unpaid' ||
+                                                                item['status'] == "done-unpaid" ||
+                                                                item['status'] == "done-unpaid-addon" ||
+                                                                (item['total_addon'] != 0 &&
+                                                                    item['status'] == "paid")
                                                             ? "Belum Lunas"
                                                             : "Lunas",
                                                       ),
@@ -3894,23 +3120,17 @@ class ListTransaksi extends StatelessWidget {
                                           Container(
                                             width: double.infinity,
                                             child: Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                               children: [
                                                 Flexible(
                                                   child: Builder(
                                                     builder: (context) {
-                                                      var createdAt =
-                                                          item['created_at']
-                                                              .toString()
-                                                              .split("T");
-                                                      var tgl = createdAt[0]
-                                                          .toString()
-                                                          .split("-");
+                                                      var createdAt = item['created_at'].toString().split(
+                                                        "T",
+                                                      );
+                                                      var tgl = createdAt[0].toString().split("-");
                                                       var jam = createdAt[1];
-                                                      var tglIndo =
-                                                          "${tgl[2]}-${tgl[1]}-${tgl[0]}";
+                                                      var tglIndo = "${tgl[2]}-${tgl[1]}-${tgl[0]}";
 
                                                       return Text(
                                                         "Dibuat Pada: $tglIndo - $jam",
@@ -3927,22 +3147,17 @@ class ListTransaksi extends StatelessWidget {
                                                   flex: 2,
                                                   child: Align(
                                                     child: Row(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment.end,
+                                                      mainAxisAlignment: MainAxisAlignment.end,
                                                       children: [
                                                         Visibility(
-                                                          visible:
-                                                              item['is_cancel'] ==
-                                                              0,
+                                                          visible: item['is_cancel'] == 0,
                                                           child: IconButton(
                                                             onPressed: () {
                                                               showCancelTransactionDialog(context, (
                                                                 password,
                                                               ) async {
                                                                 // Do validation with the password
-                                                                print(
-                                                                  "Password entered: $password",
-                                                                );
+                                                                print("Password entered: $password");
                                                                 // You can now validate password and cancel transaction here
                                                                 try {
                                                                   await c.cancelTransaksi(
@@ -3957,17 +3172,13 @@ class ListTransaksi extends StatelessWidget {
                                                                 }
                                                               });
                                                             },
-                                                            icon: Icon(
-                                                              Icons.cancel,
-                                                            ),
+                                                            icon: Icon(Icons.cancel),
                                                           ),
                                                         ),
                                                         SizedBox(width: 10),
                                                         ElevatedButton(
                                                           onPressed: () {
-                                                            log(
-                                                              "isi item adalah $item",
-                                                            );
+                                                            log("isi item adalah $item");
                                                             c.dialogDetail(
                                                               item['id_transaksi'],
                                                               item['disc'],
@@ -3977,33 +3188,21 @@ class ListTransaksi extends StatelessWidget {
                                                             // Add your button action here
                                                           },
                                                           style: ElevatedButton.styleFrom(
-                                                            padding:
-                                                                EdgeInsets.symmetric(
-                                                                  horizontal:
-                                                                      16.w,
-                                                                  vertical: 8.w,
-                                                                ),
-                                                            backgroundColor:
-                                                                Colors
-                                                                    .blue
-                                                                    .shade600,
+                                                            padding: EdgeInsets.symmetric(
+                                                              horizontal: 16.w,
+                                                              vertical: 8.w,
+                                                            ),
+                                                            backgroundColor: Colors.blue.shade600,
                                                             shape: RoundedRectangleBorder(
-                                                              borderRadius:
-                                                                  BorderRadius.circular(
-                                                                    8,
-                                                                  ),
+                                                              borderRadius: BorderRadius.circular(8),
                                                             ),
                                                           ),
                                                           child: Text(
                                                             'Details',
                                                             style: TextStyle(
-                                                              fontFamily:
-                                                                  'Poppins',
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w500,
-                                                              color:
-                                                                  Colors.white,
+                                                              fontFamily: 'Poppins',
+                                                              fontWeight: FontWeight.w500,
+                                                              color: Colors.white,
                                                               fontSize: 8.w,
                                                             ),
                                                           ),
@@ -4013,63 +3212,41 @@ class ListTransaksi extends StatelessWidget {
                                                         ElevatedButton(
                                                           onPressed: () {
                                                             Get.to(
-                                                              () => Rating(
-                                                                idTransaksi:
-                                                                    item['id_transaksi'],
-                                                              ),
+                                                              () => Rating(idTransaksi: item['id_transaksi']),
                                                             );
                                                           },
                                                           style: ElevatedButton.styleFrom(
-                                                            padding:
-                                                                EdgeInsets.symmetric(
-                                                                  horizontal:
-                                                                      16.w,
-                                                                  vertical: 8.w,
-                                                                ),
-                                                            backgroundColor:
-                                                                Colors
-                                                                    .blue
-                                                                    .shade600,
+                                                            padding: EdgeInsets.symmetric(
+                                                              horizontal: 16.w,
+                                                              vertical: 8.w,
+                                                            ),
+                                                            backgroundColor: Colors.blue.shade600,
                                                             shape: RoundedRectangleBorder(
-                                                              borderRadius:
-                                                                  BorderRadius.circular(
-                                                                    8,
-                                                                  ),
+                                                              borderRadius: BorderRadius.circular(8),
                                                             ),
                                                           ),
                                                           child: Text(
                                                             'Rating',
                                                             style: TextStyle(
-                                                              fontFamily:
-                                                                  'Poppins',
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w500,
-                                                              color:
-                                                                  Colors.white,
+                                                              fontFamily: 'Poppins',
+                                                              fontWeight: FontWeight.w500,
+                                                              color: Colors.white,
                                                               fontSize: 8.w,
                                                             ),
                                                           ),
                                                         ),
                                                         SizedBox(width: 10),
-                                                        if ((item['total_addon'] !=
-                                                                    0 &&
-                                                                item['status'] ==
-                                                                    "paid") ||
-                                                            item['status'] ==
-                                                                'unpaid' ||
-                                                            item['status'] ==
-                                                                'done-unpaid' ||
-                                                            item['status'] ==
-                                                                'done-unpaid-addon') ...[
+                                                        if ((item['total_addon'] != 0 &&
+                                                                item['status'] == "paid") ||
+                                                            item['status'] == 'unpaid' ||
+                                                            item['status'] == 'done-unpaid' ||
+                                                            item['status'] == 'done-unpaid-addon') ...[
                                                           ElevatedButton(
                                                             onPressed: () {
                                                               // c.dialogDetail(
                                                               //     item['id_transaksi']);
                                                               // Add your button action here
-                                                              log(
-                                                                "Isi Item adalah $item",
-                                                              );
+                                                              log("Isi Item adalah $item");
                                                               // int totalAddOnOri = item['total_addon'];
                                                               // var totalAddOnAll = 0;
                                                               // if (item['total_addon'] != 0) {
@@ -4089,35 +3266,21 @@ class ListTransaksi extends StatelessWidget {
                                                               );
                                                             },
                                                             style: ElevatedButton.styleFrom(
-                                                              padding:
-                                                                  EdgeInsets.symmetric(
-                                                                    horizontal:
-                                                                        16.w,
-                                                                    vertical:
-                                                                        8.w,
-                                                                  ),
-                                                              backgroundColor:
-                                                                  Colors
-                                                                      .blue
-                                                                      .shade600,
+                                                              padding: EdgeInsets.symmetric(
+                                                                horizontal: 16.w,
+                                                                vertical: 8.w,
+                                                              ),
+                                                              backgroundColor: Colors.blue.shade600,
                                                               shape: RoundedRectangleBorder(
-                                                                borderRadius:
-                                                                    BorderRadius.circular(
-                                                                      8,
-                                                                    ),
+                                                                borderRadius: BorderRadius.circular(8),
                                                               ),
                                                             ),
                                                             child: Text(
                                                               'Pelunasan',
                                                               style: TextStyle(
-                                                                fontFamily:
-                                                                    'Poppins',
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w500,
-                                                                color:
-                                                                    Colors
-                                                                        .white,
+                                                                fontFamily: 'Poppins',
+                                                                fontWeight: FontWeight.w500,
+                                                                color: Colors.white,
                                                               ),
                                                             ),
                                                           ),
@@ -4127,9 +3290,7 @@ class ListTransaksi extends StatelessWidget {
                                                               // c.dialogDetail(
                                                               //     item['id_transaksi']);
                                                               // Add your button action here
-                                                              log(
-                                                                "Isi Item adalah $item",
-                                                              );
+                                                              log("Isi Item adalah $item");
                                                               // c.dialogPelunasan(
                                                               //   item['id_transaksi'],
                                                               //   item['grand_total'],
@@ -4150,47 +3311,28 @@ class ListTransaksi extends StatelessWidget {
                                                               // var data = await c.getDetailTrans(item['id_transaksi']);
                                                               // c.printStruk(data, item['id_transaksi']);
 
-                                                              var data = await c
-                                                                  .getDetailTrans(
-                                                                    item['id_transaksi'],
-                                                                  );
+                                                              var data = await c.getDetailTrans(
+                                                                item['id_transaksi'],
+                                                              );
 
-                                                              await c
-                                                                  ._processPrintViaLAN(
-                                                                    data,
-                                                                    item,
-                                                                  );
+                                                              await c._processPrintViaLAN(data, item);
                                                             },
                                                             style: ElevatedButton.styleFrom(
-                                                              padding:
-                                                                  EdgeInsets.symmetric(
-                                                                    horizontal:
-                                                                        14.w,
-                                                                    vertical:
-                                                                        8.w,
-                                                                  ),
-                                                              backgroundColor:
-                                                                  Colors
-                                                                      .blue
-                                                                      .shade600,
+                                                              padding: EdgeInsets.symmetric(
+                                                                horizontal: 14.w,
+                                                                vertical: 8.w,
+                                                              ),
+                                                              backgroundColor: Colors.blue.shade600,
                                                               shape: RoundedRectangleBorder(
-                                                                borderRadius:
-                                                                    BorderRadius.circular(
-                                                                      8,
-                                                                    ),
+                                                                borderRadius: BorderRadius.circular(8),
                                                               ),
                                                             ),
                                                             child: Text(
                                                               'Cetak Struk',
                                                               style: TextStyle(
-                                                                fontFamily:
-                                                                    'Poppins',
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w500,
-                                                                color:
-                                                                    Colors
-                                                                        .white,
+                                                                fontFamily: 'Poppins',
+                                                                fontWeight: FontWeight.w500,
+                                                                color: Colors.white,
                                                                 fontSize: 8.w,
                                                               ),
                                                             ),
@@ -4234,10 +3376,7 @@ class ListTransaksi extends StatelessWidget {
 
                               return Text(
                                 "Omset $teksHarian",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 8.w,
-                                ),
+                                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10.w),
                               );
                             }),
                           ),
@@ -4253,7 +3392,7 @@ class ListTransaksi extends StatelessWidget {
                                   style: TextStyle(
                                     color: Colors.green[700],
                                     fontWeight: FontWeight.w900,
-                                    fontSize: 8.w,
+                                    fontSize: 9.5.w,
                                   ),
                                 ),
                               ),
@@ -4271,7 +3410,7 @@ class ListTransaksi extends StatelessWidget {
                                   style: TextStyle(
                                     color: Colors.blue[700],
                                     fontWeight: FontWeight.w900,
-                                    fontSize: 8.w,
+                                    fontSize: 9.5.w,
                                   ),
                                 ),
                               ),
@@ -4287,14 +3426,9 @@ class ListTransaksi extends StatelessWidget {
                                   "Kredit: ${c.currencyFormatter.format(c.omsetKredit.value)}",
                                   textAlign: TextAlign.end,
                                   style: TextStyle(
-                                    color: const Color.fromARGB(
-                                      255,
-                                      54,
-                                      109,
-                                      2,
-                                    ),
+                                    color: const Color.fromARGB(255, 54, 109, 2),
                                     fontWeight: FontWeight.w900,
-                                    fontSize: 8.w,
+                                    fontSize: 9.5.w,
                                   ),
                                 ),
                               ),
@@ -4312,7 +3446,7 @@ class ListTransaksi extends StatelessWidget {
                                   style: TextStyle(
                                     color: Colors.purple[700],
                                     fontWeight: FontWeight.w900,
-                                    fontSize: 8.w,
+                                    fontSize: 9.5.w,
                                   ),
                                 ),
                               ),
@@ -4341,10 +3475,7 @@ class ListTransaksi extends StatelessWidget {
   }
 }
 
-void showCancelTransactionDialog(
-  BuildContext context,
-  void Function(String) onConfirm,
-) async {
+void showCancelTransactionDialog(BuildContext context, void Function(String) onConfirm) async {
   final TextEditingController passwordController = TextEditingController();
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
@@ -4365,17 +3496,12 @@ void showCancelTransactionDialog(
               // Obx listens to changes in observable variables
               () => TextFormField(
                 controller: passwordController,
-                obscureText:
-                    !isPasswordVisible.value, // Access value with .value
+                obscureText: !isPasswordVisible.value, // Access value with .value
                 decoration: InputDecoration(
                   border: const OutlineInputBorder(),
                   labelText: "Password",
                   suffixIcon: IconButton(
-                    icon: Icon(
-                      isPasswordVisible.value
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                    ),
+                    icon: Icon(isPasswordVisible.value ? Icons.visibility : Icons.visibility_off),
                     onPressed: () {
                       isPasswordVisible.toggle(); // Toggle the RxBool value
                     },
