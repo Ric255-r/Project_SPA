@@ -128,11 +128,11 @@ class _ListpaketState extends State<Listpaket> {
   @override
   void dispose() {
     // TODO: implement dispose
-    textinputan.dispose();
-    textSearchMassage.dispose();
-    textSearchFnb.dispose();
-    textSearchProduk.dispose();
-    textSearchFasilitas.dispose();
+    // textinputan.dispose();
+    // textSearchMassage.dispose();
+    // textSearchFnb.dispose();
+    // textSearchProduk.dispose();
+    // textSearchFasilitas.dispose();
     controller_edit_nama_massage.dispose();
     controller_edit_harga_massage.dispose();
     controller_nominal_komisi_terapis.dispose();

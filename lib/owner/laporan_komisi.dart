@@ -143,7 +143,7 @@ class _laporankomisiState extends State<laporankomisi>
       Get.dialog(const DownloadSplash(), barrierDismissible: false);
       final dir = await getDownloadsDirectory();
       final filepath =
-          '${dir!.path}/data komisi terapis bulan $bulan tahun $tahun.pdf';
+          '${dir!.path}/data komisi gro bulan $bulan tahun $tahun.pdf';
       String url = '${myIpAddr()}/main_owner/export_excel_komisi_bulanan_gro';
       var response = await dio.download(
         url,
@@ -225,7 +225,7 @@ class _laporankomisiState extends State<laporankomisi>
       print('ini jalan');
       Get.dialog(const DownloadSplash(), barrierDismissible: false);
       final dir = await getDownloadsDirectory();
-      final filepath = '${dir!.path}/data komisi terapis Tahun $tahun.pdf';
+      final filepath = '${dir!.path}/data komisi gro Tahun $tahun.pdf';
       String url = '${myIpAddr()}/main_owner/export_excel_komisi_tahunan_gro';
       var response = await dio.download(
         url,
@@ -321,7 +321,7 @@ class _laporankomisiState extends State<laporankomisi>
       Get.dialog(const DownloadSplash(), barrierDismissible: false);
       final dir = await getDownloadsDirectory();
       final filepath =
-          '${dir!.path}/data komisi terapis Tanggal $strdate tahun $endddate.pdf';
+          '${dir!.path}/data komisi gro Tanggal $strdate tahun $endddate.pdf';
       String url = '${myIpAddr()}/main_owner/export_excel_komisi_harian_gro';
       var response = await dio.download(
         url,
