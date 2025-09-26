@@ -129,454 +129,483 @@ class _AdminDrawerState extends State<AdminDrawer> {
 
   @override
   Widget build(BuildContext context) {
-    return Drawer(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: ListView(
-              controller: _scrollController,
-              padding: EdgeInsets.zero,
-              children: [
-                SizedBox(
-                  height: 200,
-                  child: Obx(
-                    () => DrawerHeader(
-                      padding: EdgeInsets.zero,
-                      margin: EdgeInsets.zero,
-                      decoration: const BoxDecoration(color: Color(0XFFFFE0B2)),
-                      child: Theme(
-                        data: ThemeData().copyWith(
-                          dividerTheme: DividerThemeData(
-                            color: Colors.transparent,
+    return SafeArea(
+      child: Drawer(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: ListView(
+                controller: _scrollController,
+                padding: EdgeInsets.zero,
+                children: [
+                  SizedBox(
+                    height: 200,
+                    child: Obx(
+                      () => DrawerHeader(
+                        padding: EdgeInsets.zero,
+                        margin: EdgeInsets.zero,
+                        decoration: const BoxDecoration(
+                          color: Color(0XFFFFE0B2),
+                        ),
+                        child: Theme(
+                          data: ThemeData().copyWith(
+                            dividerTheme: DividerThemeData(
+                              color: Colors.transparent,
+                            ),
+                          ),
+                          child: UserAccountsDrawerHeader(
+                            decoration: BoxDecoration(color: Color(0XFFFFE0B2)),
+                            accountName: Text(
+                              namaKaryawan.value,
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontFamily: 'Poppins',
+                                fontSize: 25,
+                              ),
+                            ),
+                            accountEmail: Text(
+                              capitalize(
+                                (jabatan.value == null || jabatan.value.isEmpty)
+                                    ? _firstHakAkses
+                                    : jabatan.value,
+                              ),
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontFamily: 'Poppins',
+                                fontSize: 20,
+                              ),
+                            ),
+                            currentAccountPictureSize: Size.square(60),
+                            currentAccountPicture: CircleAvatar(
+                              backgroundColor: Colors.amberAccent,
+                              child: Text(
+                                capitalize(idKaryawan.value),
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                            ),
                           ),
                         ),
-                        child: UserAccountsDrawerHeader(
-                          decoration: BoxDecoration(color: Color(0XFFFFE0B2)),
-                          accountName: Text(
-                            namaKaryawan.value,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.zero,
+                    margin: EdgeInsets.zero,
+                    child: Theme(
+                      data: ThemeData().copyWith(
+                        dividerColor: Colors.transparent,
+                        expansionTileTheme: ExpansionTileThemeData(
+                          backgroundColor: Color(0XFFFFE0B2),
+                          collapsedBackgroundColor: Color(0XFFFFE0B2),
+                          tilePadding: EdgeInsets.zero,
+                        ),
+                      ),
+                      child: ExpansionTile(
+                        title: Padding(
+                          padding: const EdgeInsets.only(left: 20),
+                          child: Text(
+                            'Pendaftaran',
                             style: TextStyle(
-                              color: Colors.black,
-                              fontFamily: 'Poppins',
                               fontSize: 25,
-                            ),
-                          ),
-                          accountEmail: Text(
-                            capitalize(
-                              (jabatan.value == null || jabatan.value.isEmpty)
-                                  ? _firstHakAkses
-                                  : jabatan.value,
-                            ),
-                            style: TextStyle(
-                              color: Colors.black,
                               fontFamily: 'Poppins',
-                              fontSize: 20,
-                            ),
-                          ),
-                          currentAccountPictureSize: Size.square(60),
-                          currentAccountPicture: CircleAvatar(
-                            backgroundColor: Colors.amberAccent,
-                            child: Text(
-                              capitalize(idKaryawan.value),
-                              style: TextStyle(fontFamily: 'Poppins'),
                             ),
                           ),
                         ),
+                        children: [
+                          Material(
+                            color: Colors.white,
+                            child: ListTile(
+                              title: const Text(
+                                'Daftar Pekerja',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                              onTap: () {
+                                Get.to(() => RegisPekerja());
+                              },
+                            ),
+                          ),
+                          Material(
+                            color: Colors.white,
+                            child: ListTile(
+                              title: const Text(
+                                'Daftar Paket',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                              onTap: () {
+                                Get.to(() => RegisPaket());
+                              },
+                            ),
+                          ),
+                          Material(
+                            color: Colors.white,
+                            child: ListTile(
+                              title: const Text(
+                                'Daftar Ruangan',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                              onTap: () {
+                                Get.to(() => RegisRoom());
+                              },
+                            ),
+                          ),
+                          Material(
+                            color: Colors.white,
+                            child: ListTile(
+                              title: const Text(
+                                'Daftar Promo',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                              onTap: () {
+                                Get.to(() => RegisPromo());
+                              },
+                            ),
+                          ),
+                          Material(
+                            color: Colors.white,
+                            child: ListTile(
+                              title: const Text(
+                                'Daftar Users',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                              onTap: () {
+                                Get.to(() => RegisUser());
+                              },
+                            ),
+                          ),
+                          Material(
+                            color: Colors.white,
+                            child: ListTile(
+                              title: const Text(
+                                'Daftar Locker',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                              onTap: () {
+                                Get.to(() => RegisLocker());
+                              },
+                            ),
+                          ),
+                          Material(
+                            color: Colors.white,
+                            child: ListTile(
+                              title: const Text(
+                                'Daftar Agency',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                              onTap: () {
+                                Get.to(() => RegisAgency());
+                              },
+                            ),
+                          ),
+                          Material(
+                            color: Colors.white,
+                            child: ListTile(
+                              title: const Text(
+                                'Pajak',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                              onTap: () {
+                                Get.to(() => Pajak());
+                              },
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ),
-                Container(
-                  padding: EdgeInsets.zero,
-                  margin: EdgeInsets.zero,
-                  child: Theme(
-                    data: ThemeData().copyWith(
-                      dividerColor: Colors.transparent,
-                      expansionTileTheme: ExpansionTileThemeData(
-                        backgroundColor: Color(0XFFFFE0B2),
-                        collapsedBackgroundColor: Color(0XFFFFE0B2),
-                        tilePadding: EdgeInsets.zero,
-                      ),
-                    ),
-                    child: ExpansionTile(
-                      title: Padding(
-                        padding: const EdgeInsets.only(left: 20),
-                        child: Text(
-                          'Pendaftaran',
-                          style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
+                  Container(
+                    padding: EdgeInsets.zero,
+                    margin: EdgeInsets.zero,
+                    child: Theme(
+                      data: ThemeData().copyWith(
+                        dividerColor: Colors.transparent,
+                        expansionTileTheme: ExpansionTileThemeData(
+                          backgroundColor: Color(0XFFFFE0B2),
+                          collapsedBackgroundColor: Color(0XFFFFE0B2),
+                          tilePadding: EdgeInsets.zero,
                         ),
                       ),
-                      children: [
-                        Material(
-                          color: Colors.white,
-                          child: ListTile(
-                            title: const Text(
-                              'Daftar Pekerja',
-                              style: TextStyle(fontFamily: 'Poppins'),
+                      child: ExpansionTile(
+                        title: Padding(
+                          padding: const EdgeInsets.only(left: 20),
+                          child: Text(
+                            'List Data',
+                            style: TextStyle(
+                              fontSize: 25,
+                              fontFamily: 'Poppins',
                             ),
-                            onTap: () {
-                              Get.to(() => RegisPekerja());
-                            },
                           ),
                         ),
-                        Material(
-                          color: Colors.white,
-                          child: ListTile(
-                            title: const Text(
-                              'Daftar Paket',
-                              style: TextStyle(fontFamily: 'Poppins'),
+                        children: [
+                          Material(
+                            color: Colors.white,
+                            child: ListTile(
+                              title: const Text(
+                                'List Pekerja',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                              onTap: () {
+                                Get.to(() => Listpekerja());
+                              },
                             ),
-                            onTap: () {
-                              Get.to(() => RegisPaket());
-                            },
                           ),
-                        ),
-                        Material(
-                          color: Colors.white,
-                          child: ListTile(
-                            title: const Text(
-                              'Daftar Ruangan',
-                              style: TextStyle(fontFamily: 'Poppins'),
+                          Material(
+                            color: Colors.white,
+                            child: ListTile(
+                              title: const Text(
+                                'List Paket',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                              onTap: () {
+                                Get.to(() => Listpaket());
+                              },
                             ),
-                            onTap: () {
-                              Get.to(() => RegisRoom());
-                            },
                           ),
-                        ),
-                        Material(
-                          color: Colors.white,
-                          child: ListTile(
-                            title: const Text(
-                              'Daftar Promo',
-                              style: TextStyle(fontFamily: 'Poppins'),
+                          Material(
+                            color: Colors.white,
+                            child: ListTile(
+                              title: const Text(
+                                'List Barang',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                              onTap: () {
+                                Get.to(() => ListBarang());
+                              },
                             ),
-                            onTap: () {
-                              Get.to(() => RegisPromo());
-                            },
                           ),
-                        ),
-                        Material(
-                          color: Colors.white,
-                          child: ListTile(
-                            title: const Text(
-                              'Daftar Users',
-                              style: TextStyle(fontFamily: 'Poppins'),
+                          Material(
+                            color: Colors.white,
+                            child: ListTile(
+                              title: const Text(
+                                'List Ruangan',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                              onTap: () {
+                                Get.to(() => ListRoom());
+                              },
                             ),
-                            onTap: () {
-                              Get.to(() => RegisUser());
-                            },
                           ),
-                        ),
-                        Material(
-                          color: Colors.white,
-                          child: ListTile(
-                            title: const Text(
-                              'Daftar Locker',
-                              style: TextStyle(fontFamily: 'Poppins'),
+                          Material(
+                            color: Colors.white,
+                            child: ListTile(
+                              title: const Text(
+                                'List Promo',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                              onTap: () {
+                                Get.to(() => Listpromo());
+                              },
                             ),
-                            onTap: () {
-                              Get.to(() => RegisLocker());
-                            },
                           ),
-                        ),
-                        Material(
-                          color: Colors.white,
-                          child: ListTile(
-                            title: const Text(
-                              'Daftar Agency',
-                              style: TextStyle(fontFamily: 'Poppins'),
+                          Material(
+                            color: Colors.white,
+                            child: ListTile(
+                              title: const Text(
+                                'List Users',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                              onTap: () {
+                                Get.to(() => ListUser());
+                              },
                             ),
-                            onTap: () {
-                              Get.to(() => RegisAgency());
-                            },
                           ),
-                        ),
-                        Material(
-                          color: Colors.white,
-                          child: ListTile(
-                            title: const Text(
-                              'Pajak',
-                              style: TextStyle(fontFamily: 'Poppins'),
+                          Material(
+                            color: Colors.white,
+                            child: ListTile(
+                              title: const Text(
+                                'List Member',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                              onTap: () {
+                                Get.to(() => ListMember());
+                              },
                             ),
-                            onTap: () {
-                              Get.to(() => Pajak());
-                            },
                           ),
-                        ),
-                      ],
+                          Material(
+                            color: Colors.white,
+                            child: ListTile(
+                              title: const Text(
+                                'List Terapis',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                              onTap: () {
+                                Get.to(() => ListTerapis());
+                              },
+                            ),
+                          ),
+                          Material(
+                            color: Colors.white,
+                            child: ListTile(
+                              title: const Text(
+                                'List Supplier',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                              onTap: () {
+                                Get.to(() => ListSupplierPage());
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                Container(
-                  padding: EdgeInsets.zero,
-                  margin: EdgeInsets.zero,
-                  child: Theme(
-                    data: ThemeData().copyWith(
-                      dividerColor: Colors.transparent,
-                      expansionTileTheme: ExpansionTileThemeData(
-                        backgroundColor: Color(0XFFFFE0B2),
-                        collapsedBackgroundColor: Color(0XFFFFE0B2),
-                        tilePadding: EdgeInsets.zero,
-                      ),
-                    ),
-                    child: ExpansionTile(
-                      title: Padding(
-                        padding: const EdgeInsets.only(left: 20),
-                        child: Text(
-                          'List Data',
-                          style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
+                  Container(
+                    padding: EdgeInsets.zero,
+                    margin: EdgeInsets.zero,
+                    child: Theme(
+                      data: ThemeData().copyWith(
+                        dividerColor: Colors.transparent,
+                        expansionTileTheme: ExpansionTileThemeData(
+                          backgroundColor: Color(0XFFFFE0B2),
+                          collapsedBackgroundColor: Color(0XFFFFE0B2),
+                          tilePadding: EdgeInsets.zero,
                         ),
                       ),
-                      children: [
-                        Material(
-                          color: Colors.white,
-                          child: ListTile(
-                            title: const Text(
-                              'List Pekerja',
-                              style: TextStyle(fontFamily: 'Poppins'),
+                      child: ExpansionTile(
+                        title: Padding(
+                          padding: const EdgeInsets.only(left: 20),
+                          child: Text(
+                            'Transaksi',
+                            style: TextStyle(
+                              fontSize: 25,
+                              fontFamily: 'Poppins',
                             ),
-                            onTap: () {
-                              Get.to(() => Listpekerja());
-                            },
                           ),
                         ),
-                        Material(
-                          color: Colors.white,
-                          child: ListTile(
-                            title: const Text(
-                              'List Paket',
-                              style: TextStyle(fontFamily: 'Poppins'),
+                        children: [
+                          Material(
+                            color: Colors.white,
+                            child: ListTile(
+                              title: const Text(
+                                'Detail Transaksi',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                              onTap: () {
+                                Get.off(() => ListTransaksi());
+                              },
                             ),
-                            onTap: () {
-                              Get.to(() => Listpaket());
-                            },
                           ),
-                        ),
-                        // Material(
-                        //   color: Colors.white,
-                        //   child: ListTile(
-                        //     title: const Text(
-                        //       'List Barang',
-                        //       style: TextStyle(fontFamily: 'Poppins'),
-                        //     ),
-                        //     onTap: () {
-                        //       Get.to(() => ListBarang());
-                        //     },
-                        //   ),
-                        // ),
-                        Material(
-                          color: Colors.white,
-                          child: ListTile(
-                            title: const Text(
-                              'List Ruangan',
-                              style: TextStyle(fontFamily: 'Poppins'),
-                            ),
-                            onTap: () {
-                              Get.to(() => ListRoom());
-                            },
-                          ),
-                        ),
-                        Material(
-                          color: Colors.white,
-                          child: ListTile(
-                            title: const Text(
-                              'List Promo',
-                              style: TextStyle(fontFamily: 'Poppins'),
-                            ),
-                            onTap: () {
-                              Get.to(() => Listpromo());
-                            },
-                          ),
-                        ),
-                        Material(
-                          color: Colors.white,
-                          child: ListTile(
-                            title: const Text(
-                              'List Users',
-                              style: TextStyle(fontFamily: 'Poppins'),
-                            ),
-                            onTap: () {
-                              Get.to(() => ListUser());
-                            },
-                          ),
-                        ),
-                        Material(
-                          color: Colors.white,
-                          child: ListTile(
-                            title: const Text(
-                              'List Member',
-                              style: TextStyle(fontFamily: 'Poppins'),
-                            ),
-                            onTap: () {
-                              Get.to(() => ListMember());
-                            },
-                          ),
-                        ),
-                        Material(
-                          color: Colors.white,
-                          child: ListTile(
-                            title: const Text(
-                              'List Terapis',
-                              style: TextStyle(fontFamily: 'Poppins'),
-                            ),
-                            onTap: () {
-                              Get.to(() => ListTerapis());
-                            },
-                          ),
-                        ),
-                        // Material(
-                        //   color: Colors.white,
-                        //   child: ListTile(
-                        //     title: const Text(
-                        //       'List Supplier',
-                        //       style: TextStyle(fontFamily: 'Poppins'),
-                        //     ),
-                        //     onTap: () {
-                        //       Get.to(() => ListSupplierPage());
-                        //     },
-                        //   ),
-                        // ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                Container(
-                  padding: EdgeInsets.zero,
-                  margin: EdgeInsets.zero,
-                  child: Theme(
-                    data: ThemeData().copyWith(
-                      dividerColor: Colors.transparent,
-                      expansionTileTheme: ExpansionTileThemeData(
-                        backgroundColor: Color(0XFFFFE0B2),
-                        collapsedBackgroundColor: Color(0XFFFFE0B2),
-                        tilePadding: EdgeInsets.zero,
-                      ),
-                    ),
-                    child: ExpansionTile(
-                      title: Padding(
-                        padding: const EdgeInsets.only(left: 20),
-                        child: Text(
-                          'Transaksi',
-                          style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
+                  Container(
+                    padding: EdgeInsets.zero,
+                    margin: EdgeInsets.zero,
+                    child: Theme(
+                      data: ThemeData().copyWith(
+                        dividerColor: Colors.transparent,
+                        expansionTileTheme: ExpansionTileThemeData(
+                          backgroundColor: Color(0XFFFFE0B2),
+                          collapsedBackgroundColor: Color(0XFFFFE0B2),
+                          tilePadding: EdgeInsets.zero,
                         ),
                       ),
-                      children: [
-                        Material(
-                          color: Colors.white,
-                          child: ListTile(
-                            title: const Text(
-                              'Detail Transaksi',
-                              style: TextStyle(fontFamily: 'Poppins'),
+                      child: ExpansionTile(
+                        title: Padding(
+                          padding: const EdgeInsets.only(left: 20),
+                          child: Text(
+                            'Laporan',
+                            style: TextStyle(
+                              fontSize: 25,
+                              fontFamily: 'Poppins',
                             ),
-                            onTap: () {
-                              Get.off(() => ListTransaksi());
-                            },
                           ),
                         ),
-                      ],
+                        children: [
+                          Material(
+                            color: Colors.white,
+                            child: ListTile(
+                              title: const Text(
+                                'Laporan OB',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                              onTap: () {
+                                Get.to(() => LaporanOB());
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                Container(
-                  padding: EdgeInsets.zero,
-                  margin: EdgeInsets.zero,
-                  child: Theme(
-                    data: ThemeData().copyWith(
-                      dividerColor: Colors.transparent,
-                      expansionTileTheme: ExpansionTileThemeData(
-                        backgroundColor: Color(0XFFFFE0B2),
-                        collapsedBackgroundColor: Color(0XFFFFE0B2),
-                        tilePadding: EdgeInsets.zero,
-                      ),
-                    ),
-                    child: ExpansionTile(
-                      title: Padding(
-                        padding: const EdgeInsets.only(left: 20),
-                        child: Text(
-                          'Laporan',
-                          style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
+                  Container(
+                    padding: EdgeInsets.zero,
+                    margin: EdgeInsets.zero,
+                    child: Theme(
+                      data: ThemeData().copyWith(
+                        dividerColor: Colors.transparent,
+                        expansionTileTheme: ExpansionTileThemeData(
+                          backgroundColor: Color(0XFFFFE0B2),
+                          collapsedBackgroundColor: Color(0XFFFFE0B2),
+                          tilePadding: EdgeInsets.zero,
                         ),
                       ),
-                      children: [
-                        Material(
-                          color: Colors.white,
-                          child: ListTile(
-                            title: const Text(
-                              'Laporan OB',
-                              style: TextStyle(fontFamily: 'Poppins'),
+                      child: ExpansionTile(
+                        title: Padding(
+                          padding: const EdgeInsets.only(left: 20),
+                          child: Text(
+                            'Pembelian',
+                            style: TextStyle(
+                              fontSize: 30,
+                              fontFamily: 'Poppins',
                             ),
-                            onTap: () {
-                              Get.to(() => LaporanOB());
-                            },
                           ),
                         ),
-                      ],
+                        children: [
+                          Material(
+                            color: Colors.white,
+                            child: ListTile(
+                              title: const Text(
+                                'Pesanan Pembelian',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                              onTap: () {
+                                Get.to(() => PesananPembelian());
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                // Container(
-                //   padding: EdgeInsets.zero,
-                //   margin: EdgeInsets.zero,
-                //   child: Theme(
-                //     data: ThemeData().copyWith(
-                //       dividerColor: Colors.transparent,
-                //       expansionTileTheme: ExpansionTileThemeData(
-                //         backgroundColor: Color(0XFFFFE0B2),
-                //         collapsedBackgroundColor: Color(0XFFFFE0B2),
-                //         tilePadding: EdgeInsets.zero,
-                //       ),
-                //     ),
-                //     child: ExpansionTile(
-                //       title: Padding(
-                //         padding: const EdgeInsets.only(left: 20),
-                //         child: Text(
-                //           'Pembelian',
-                //           style: TextStyle(fontSize: 30, fontFamily: 'Poppins'),
-                //         ),
-                //       ),
-                //       children: [
-                //         Material(
-                //           color: Colors.white,
-                //           child: ListTile(
-                //             title: const Text(
-                //               'Pesanan Pembelian',
-                //               style: TextStyle(fontFamily: 'Poppins'),
-                //             ),
-                //             onTap: () {
-                //               Get.to(() => PesananPembelian());
-                //             },
-                //           ),
-                //         ),
-                //       ],
-                //     ),
-                //   ),
-                // ),
-                if (_firstHakAkses == "owner") ...[
-                  ListTile(
-                    leading: const Icon(Icons.admin_panel_settings_rounded),
-                    title: const Text(
-                      'Owner',
-                      style: TextStyle(fontFamily: 'Poppins'),
+                  if (_firstHakAkses == "owner") ...[
+                    ListTile(
+                      leading: const Icon(Icons.admin_panel_settings_rounded),
+                      title: const Text(
+                        'Owner',
+                        style: TextStyle(fontFamily: 'Poppins'),
+                      ),
+                      onTap: () {
+                        Get.to(() => OwnerPage());
+                      },
                     ),
-                    onTap: () {
-                      Get.to(() => OwnerPage());
-                    },
-                  ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.logout),
-            title: const Text(
-              'Log Out',
-              style: TextStyle(fontFamily: 'Poppins'),
+            InkWell(
+              child: Container(
+                padding: const EdgeInsets.only(bottom: 20, left: 20),
+                child: Row(
+                  children: [
+                    const Icon(Icons.logout),
+                    SizedBox(width: 5),
+                    Text(
+                      'Log Out',
+                      style: TextStyle(fontFamily: 'Poppins', fontSize: 16),
+                    ),
+                  ],
+                ),
+              ),
+              onTap: () async {
+                // Krna ak buat permanen, jd paksa hapus
+                Get.delete<MainResepsionisController>(force: true);
+                await fnLogout();
+              },
             ),
-            onTap: () async {
-              await fnLogout();
-            },
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

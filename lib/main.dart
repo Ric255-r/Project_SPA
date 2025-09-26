@@ -51,7 +51,11 @@ void onStartBackgroundTask(ServiceInstance service) async {
     await service.setAsForegroundService();
 
     // Keep WebSocket or other logic running
-    service.invoke('startForeground', {'id': 1, 'title': 'WebSocket Running', 'content': 'Keeping WebSocket Active'});
+    service.invoke('startForeground', {
+      'id': 1,
+      'title': 'WebSocket Running',
+      'content': 'Keeping WebSocket Active',
+    });
   }
 
   service.on("keepAlive").listen((event) {
@@ -68,9 +72,16 @@ void startbackgroundservice() async {
   }
 
   // autostart awal itu true, ak jadikan false biar nda 2x callstack di main
-  final androidConfiguration = AndroidConfiguration(onStart: onStartBackgroundTask, isForegroundMode: true, autoStart: false);
+  final androidConfiguration = AndroidConfiguration(
+    onStart: onStartBackgroundTask,
+    isForegroundMode: true,
+    autoStart: false,
+  );
 
-  final iosConfiguration = IosConfiguration(onForeground: onStartBackgroundTask, onBackground: (service) => false);
+  final iosConfiguration = IosConfiguration(
+    onForeground: onStartBackgroundTask,
+    onBackground: (service) => false,
+  );
 
   await service.configure(androidConfiguration: androidConfiguration, iosConfiguration: iosConfiguration);
   await service.startService();
@@ -79,6 +90,7 @@ void startbackgroundservice() async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   startbackgroundservice();
+  await ApiEndpointResolver.init(); // <<— cukup sekali di sini
 
   // Add this error handler
   FlutterError.onError = (details) {
@@ -168,23 +180,12 @@ class Myapp extends StatelessWidget {
     return GetMaterialApp(
       theme: ThemeData(primaryColor: Colors.white),
       debugShowCheckedModeBanner: false,
-      // initialRoute: '/mainresepsionis', // Set initial screen
-      // builder: (context, child) {
-      //   // get the actual devices media query data
-      //   final mediaQueryData = MediaQuery.of(context);
-      //   final double actualScreenWidth = mediaQueryData.size.width;
-
-      //   // calculate scale factor untuk ngefit ke screenwidth 650dp
-      //   // jadi anggapannya nanti tu dia bkl ngescale app ini ke 650dp,
-      //   //ga usah repot2 main screenwidth di developer mode
-      //   final double scale = actualScreenWidth / referenceScreenWidth;
-
-      //   return Transform.scale(
-      //     scale: scale / 1.65,
-      //     alignment: Alignment.center,
-      //     child: SizedBox(width: referenceScreenWidth, height: mediaQueryData.size.height / scale, child: child!),
-      //   );
-      // },
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+          child: child!,
+        );
+      },
       home: initialPage,
       getPages: [
         GetPage(
@@ -234,7 +235,10 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> fnLogin() async {
     log("Login WOi");
     try {
-      var response = await dio.post('${myIpAddr()}/login', data: {'id_karyawan': _userController.text, 'passwd': _passwordController.text});
+      var response = await dio.post(
+        '${myIpAddr()}/login',
+        data: {'id_karyawan': _userController.text, 'passwd': _passwordController.text},
+      );
 
       // Convert Response data
       final Map<String, dynamic> responseData = response.data;
@@ -298,6 +302,8 @@ class _LoginPageState extends State<LoginPage> {
           CherryToast.warning(title: Text('User Tidak Ditemukan')).show(context);
         }
       }
+
+      CherryToast.warning(title: Text('Error $e')).show(context);
       log("Error : ${e}");
     }
   }
@@ -320,7 +326,10 @@ class _LoginPageState extends State<LoginPage> {
     // testStorage();
     super.initState();
     // Kunci Login Screen Saja
-    SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
   }
 
   @override
@@ -331,7 +340,13 @@ class _LoginPageState extends State<LoginPage> {
         child: Stack(
           children: [
             Container(
-              decoration: BoxDecoration(gradient: LinearGradient(colors: [Colors.black, Colors.yellow], begin: Alignment.topLeft, end: Alignment.bottomRight)),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.black, Colors.yellow],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
             ),
             Positioned.fill(
               child: SingleChildScrollView(
@@ -343,7 +358,10 @@ class _LoginPageState extends State<LoginPage> {
                         margin: EdgeInsets.only(top: 150),
                         width: 200,
                         height: 200,
-                        decoration: BoxDecoration(borderRadius: BorderRadius.circular(100), border: Border.all(width: 0, color: Colors.black)),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(100),
+                          border: Border.all(width: 0, color: Colors.black),
+                        ),
                         child: ClipOval(
                           child: Image.asset(
                             'assets/spa.jpg',
@@ -360,7 +378,10 @@ class _LoginPageState extends State<LoginPage> {
                         padding: EdgeInsets.only(left: 10),
                         margin: EdgeInsets.only(top: 40),
                         width: 300,
-                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                         child: TextField(
                           focusNode: _firstFieldFocus,
                           textInputAction: TextInputAction.next,
@@ -377,7 +398,10 @@ class _LoginPageState extends State<LoginPage> {
                         padding: EdgeInsets.only(left: 10),
                         margin: EdgeInsets.only(top: 20),
                         width: 300,
-                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                         child: TextField(
                           focusNode: _secondFieldFocus,
                           textInputAction: TextInputAction.done,
@@ -398,10 +422,19 @@ class _LoginPageState extends State<LoginPage> {
                               if (_userController.text != "" && _passwordController.text != "") {
                                 await fnLogin();
                               } else {
-                                CherryToast.warning(title: Text('Inputan Username / Password Kosong')).show(context);
+                                CherryToast.warning(
+                                  title: Text('Inputan Username / Password Kosong'),
+                                ).show(context);
                               }
                             },
-                            child: Text('LOGIN', style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: Colors.white)),
+                            child: Text(
+                              'LOGIN',
+                              style: TextStyle(
+                                fontSize: 25,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
                             style: ElevatedButton.styleFrom(backgroundColor: Colors.black.withOpacity(0.5)),
                           ),
                         ),

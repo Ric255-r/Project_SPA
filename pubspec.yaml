@@ -66,6 +66,7 @@ dependencies:
   scrollable_positioned_list: ^0.3.8
   dropdown_search: ^5.0.6
   stroke_text: ^1.0.0
+  connectivity_plus: ^5.0.0 # Untuk mengecek konektivitas network
 
   # image_gallery_saver: ^2.0.3
   # The following adds the Cupertino Icons font to your application.
