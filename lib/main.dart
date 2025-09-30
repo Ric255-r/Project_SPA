@@ -46,7 +46,10 @@ void onStartBackgroundTask(ServiceInstance service) async {
   print("Background service started!");
 
   if (service is AndroidServiceInstance) {
-    await service.setForegroundNotificationInfo(title: "SPA App Service", content: "Running in background");
+    await service.setForegroundNotificationInfo(
+      title: "SPA App Service",
+      content: "Running in background",
+    );
 
     await service.setAsForegroundService();
 
@@ -83,7 +86,10 @@ void startbackgroundservice() async {
     onBackground: (service) => false,
   );
 
-  await service.configure(androidConfiguration: androidConfiguration, iosConfiguration: iosConfiguration);
+  await service.configure(
+    androidConfiguration: androidConfiguration,
+    iosConfiguration: iosConfiguration,
+  );
   await service.startService();
 }
 
@@ -112,7 +118,9 @@ void main() async {
         channelDescription: 'Notification channel for basic tests',
         defaultColor: Color(0xFF9D50DD),
         ledColor: Colors.white,
-        importance: NotificationImportance.Max, // Ensure high importance untuk event Tap
+        importance:
+            NotificationImportance
+                .Max, // Ensure high importance untuk event Tap
       ),
     ],
     debug: true, //
@@ -182,7 +190,9 @@ class Myapp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       builder: (context, child) {
         return MediaQuery(
-          data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.noScaling),
           child: child!,
         );
       },
@@ -196,7 +206,9 @@ class Myapp extends StatelessWidget {
             //   () => MainResepsionisController(),
             // );
             // Change from Get.create to Get.lazyPut to ensure singleton behavior:
-            Get.lazyPut<MainResepsionisController>(() => MainResepsionisController());
+            Get.lazyPut<MainResepsionisController>(
+              () => MainResepsionisController(),
+            );
           }),
         ),
         GetPage(name: '/rating', page: () => Rating()),
@@ -237,7 +249,10 @@ class _LoginPageState extends State<LoginPage> {
     try {
       var response = await dio.post(
         '${myIpAddr()}/login',
-        data: {'id_karyawan': _userController.text, 'passwd': _passwordController.text},
+        data: {
+          'id_karyawan': _userController.text,
+          'passwd': _passwordController.text,
+        },
       );
 
       // Convert Response data
@@ -297,14 +312,18 @@ class _LoginPageState extends State<LoginPage> {
     } catch (e) {
       if (e is DioException) {
         if (e.response!.statusCode == 401) {
-          CherryToast.warning(title: Text('Username Atau Password Tidak sesuai')).show(context);
+          CherryToast.warning(
+            title: Text('Username Atau Password Tidak sesuai'),
+          ).show(context);
         } else if (e.response!.statusCode == 404) {
-          CherryToast.warning(title: Text('User Tidak Ditemukan')).show(context);
+          CherryToast.warning(
+            title: Text('User Tidak Ditemukan'),
+          ).show(context);
         }
+      } else {
+        CherryToast.warning(title: Text('Error $e')).show(context);
+        log("Error : ${e}");
       }
-
-      CherryToast.warning(title: Text('Error $e')).show(context);
-      log("Error : ${e}");
     }
   }
 
@@ -386,10 +405,15 @@ class _LoginPageState extends State<LoginPage> {
                           focusNode: _firstFieldFocus,
                           textInputAction: TextInputAction.next,
                           onEditingComplete: () {
-                            FocusScope.of(context).requestFocus(_secondFieldFocus);
+                            FocusScope.of(
+                              context,
+                            ).requestFocus(_secondFieldFocus);
                           },
                           controller: _userController,
-                          decoration: InputDecoration(hintText: 'Isi User ID', border: InputBorder.none),
+                          decoration: InputDecoration(
+                            hintText: 'Isi User ID',
+                            border: InputBorder.none,
+                          ),
                         ),
                       ),
                     ),
@@ -406,7 +430,10 @@ class _LoginPageState extends State<LoginPage> {
                           focusNode: _secondFieldFocus,
                           textInputAction: TextInputAction.done,
                           controller: _passwordController,
-                          decoration: InputDecoration(hintText: 'Isi Password', border: InputBorder.none),
+                          decoration: InputDecoration(
+                            hintText: 'Isi Password',
+                            border: InputBorder.none,
+                          ),
                           obscureText: true,
                         ),
                       ),
@@ -419,11 +446,14 @@ class _LoginPageState extends State<LoginPage> {
                           height: 50,
                           child: ElevatedButton(
                             onPressed: () async {
-                              if (_userController.text != "" && _passwordController.text != "") {
+                              if (_userController.text != "" &&
+                                  _passwordController.text != "") {
                                 await fnLogin();
                               } else {
                                 CherryToast.warning(
-                                  title: Text('Inputan Username / Password Kosong'),
+                                  title: Text(
+                                    'Inputan Username / Password Kosong',
+                                  ),
                                 ).show(context);
                               }
                             },
@@ -435,7 +465,9 @@ class _LoginPageState extends State<LoginPage> {
                                 color: Colors.white,
                               ),
                             ),
-                            style: ElevatedButton.styleFrom(backgroundColor: Colors.black.withOpacity(0.5)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.black.withOpacity(0.5),
+                            ),
                           ),
                         ),
                       ),

@@ -437,6 +437,18 @@ class _AdminDrawerState extends State<AdminDrawer> {
                             color: Colors.white,
                             child: ListTile(
                               title: const Text(
+                                'List Agency',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                              onTap: () {
+                                Get.to(() => ListAgency());
+                              },
+                            ),
+                          ),
+                          Material(
+                            color: Colors.white,
+                            child: ListTile(
+                              title: const Text(
                                 'List Supplier',
                                 style: TextStyle(fontFamily: 'Poppins'),
                               ),
