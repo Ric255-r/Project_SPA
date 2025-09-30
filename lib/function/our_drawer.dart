@@ -247,7 +247,7 @@ class _OurDrawerState extends State<OurDrawer> {
             Expanded(child: Container()), // Pushes the Log Out ListTile to the bottom
             InkWell(
               child: Container(
-                padding: const EdgeInsets.only(bottom: 20, left: 20),
+                padding: const EdgeInsets.only(bottom: 10, left: 20),
                 child: Row(
                   children: [
                     const Icon(Icons.logout),
