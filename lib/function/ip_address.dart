@@ -4,7 +4,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 
 class ApiEndpointResolver {
   // Mainkan IP Kalian Disini
-  static const String _localIp = "10.34.239.54";
+  static const String _localIp = "192.168.7.149";
   static const String _tailscaleIp = "100.90.36.28";
   // End Cukup Mainkan Disini
 
@@ -17,7 +17,7 @@ class ApiEndpointResolver {
 
   /// Panggil sekali saat app start (di main()).
   static Future<void> init() async {
-    // Resolve awal secara sinkron ke default, lalu coba “perbaiki” via probe async
+    // Resolve awal secara sinkron ke default, lalu coba “p erbaiki” via probe async
     _cachedBase = _tailscaleBase;
     await _refresh(); // pastikan di-try resolve di awal
     _isInitialized = true;

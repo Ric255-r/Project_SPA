@@ -34,9 +34,6 @@ class Listpaket extends StatefulWidget {
 }
 
 class _ListpaketState extends State<Listpaket> {
-  List<String> listproduk = <String>['Pewangi', 'Pembersih'];
-  List<String> listFnB = <String>['Food', 'Beverage'];
-
   String? selectedKategoriIdFnb;
 
   TextEditingController textinputan = TextEditingController();
@@ -4458,9 +4455,6 @@ class WidgetListPaketMobile extends StatefulWidget {
 }
 
 class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
-  List<String> listproduk = <String>['Pewangi', 'Pembersih'];
-  List<String> listFnB = <String>['Food', 'Beverage'];
-
   String? selectedKategoriIdFnb;
 
   TextEditingController textinputan = TextEditingController();
@@ -4578,11 +4572,11 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
   void initState() {
     super.initState();
     refreshData();
-    refreshData();
     refreshDataProduk();
     refreshDatafnb();
     refreshDataFasilitas();
     getkategorifnb();
+    getdataagency();
   }
 
   void _moveSecondContainerToTop() {
@@ -4681,7 +4675,11 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
     if (_isSecondContainerOnTop == false &&
         _isThirdContainerOntop == false &&
         _isFourthContainerOnTop == false) {
-      searchdatamassage();
+      if (selectedagency == null || selectedagency == "No Agency") {
+        searchdatamassage();
+      } else {
+        searchdatamassageagency(selectedagency);
+      }
     } else if (_isSecondContainerOnTop == true &&
         _isThirdContainerOntop == false &&
         _isFourthContainerOnTop == false) {
@@ -4689,7 +4687,11 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
     } else if (_isSecondContainerOnTop == false &&
         _isThirdContainerOntop == true &&
         _isFourthContainerOnTop == false) {
-      searchdataproduk();
+      if (selectedagency == null || selectedagency == "No Agency") {
+        searchdataproduk();
+      } else {
+        searchdataprodukagency(selectedagency);
+      }
     } else if (_isSecondContainerOnTop == false &&
         _isThirdContainerOntop == false &&
         _isFourthContainerOnTop == true) {
@@ -4895,53 +4897,70 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                     ],
                                   ),
                                   SizedBox(height: 10),
-                                  Obx(
-                                    () => Container(
-                                      width: 120,
-                                      height: 30,
-                                      padding: EdgeInsets.only(left: 10),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10),
-                                        color: Colors.grey[300],
-                                      ),
-                                      child: DropdownButton<RxString>(
-                                        value:
-                                            selecteditem?.value == null ||
-                                                    selecteditem!.value.isEmpty
-                                                ? null
-                                                : dropdownpenerimakomisi
-                                                    .firstWhereOrNull(
-                                                      (itemRx) =>
-                                                          itemRx.value ==
-                                                          selecteditem!.value,
-                                                    ),
-                                        isExpanded: true,
-                                        underline: SizedBox(),
-                                        elevation: 20,
-                                        style: const TextStyle(
-                                          color: Colors.deepPurple,
-                                          fontSize: 18,
+                                  selectedagency == 'No Agency'
+                                      ? Obx(
+                                        () => Container(
+                                          width: 120,
+                                          height: 30,
+                                          padding: EdgeInsets.only(left: 10),
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
+                                            color: Colors.grey[300],
+                                          ),
+                                          child: DropdownButton<RxString>(
+                                            value:
+                                                selecteditem?.value == null ||
+                                                        selecteditem!
+                                                            .value
+                                                            .isEmpty
+                                                    ? null
+                                                    : dropdownpenerimakomisi
+                                                        .firstWhereOrNull(
+                                                          (itemRx) =>
+                                                              itemRx.value ==
+                                                              selecteditem!
+                                                                  .value,
+                                                        ),
+                                            isExpanded: true,
+                                            underline: SizedBox(),
+                                            elevation: 20,
+                                            style: const TextStyle(
+                                              color: Colors.deepPurple,
+                                              fontSize: 18,
+                                            ),
+                                            onChanged: (RxString? newvalue) {
+                                              if (newvalue != null) {
+                                                selecteditem!.value =
+                                                    newvalue.value;
+                                              } else {
+                                                selecteditem!.value = '';
+                                              }
+                                            },
+                                            items:
+                                                dropdownpenerimakomisi.map<
+                                                  DropdownMenuItem<RxString>
+                                                >((RxString itemRx) {
+                                                  return DropdownMenuItem<
+                                                    RxString
+                                                  >(
+                                                    value: itemRx,
+                                                    child: Text(itemRx.value),
+                                                  );
+                                                }).toList(),
+                                          ),
                                         ),
-                                        onChanged: (RxString? newvalue) {
-                                          if (newvalue != null) {
-                                            selecteditem!.value =
-                                                newvalue.value;
-                                          } else {
-                                            selecteditem!.value = '';
-                                          }
-                                        },
-                                        items:
-                                            dropdownpenerimakomisi.map<
-                                              DropdownMenuItem<RxString>
-                                            >((RxString itemRx) {
-                                              return DropdownMenuItem<RxString>(
-                                                value: itemRx,
-                                                child: Text(itemRx.value),
-                                              );
-                                            }).toList(),
+                                      )
+                                      : Text(
+                                        'Terapis',
+
+                                        style: TextStyle(
+                                          fontSize: 18,
+
+                                          fontFamily: 'Poppins',
+                                        ),
                                       ),
-                                    ),
-                                  ),
                                   Obx(
                                     () =>
                                         selecteditem!.value == 'Terapis'
@@ -5364,7 +5383,16 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                           backgroundColor: Colors.green,
                                         ),
                                         onPressed: () {
-                                          updatedataproduk(id_produk);
+                                          if (selectedagency == null ||
+                                              selectedagency == 'No Agency') {
+                                            updatedataproduk(id_produk);
+                                          } else {
+                                            updatekomisiprodukagency(
+                                              id_produk,
+                                              selectedagency,
+                                            );
+                                          }
+
                                           dataproduk.isEmpty
                                               ? Center(
                                                 child:
@@ -5874,53 +5902,74 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                     ],
                                   ),
                                   SizedBox(height: 10),
-                                  Obx(
-                                    () => Container(
-                                      width: 120,
-                                      height: 30,
-                                      padding: EdgeInsets.only(left: 10),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10),
-                                        color: Colors.grey[300],
-                                      ),
-                                      child: DropdownButton<RxString>(
-                                        value:
-                                            selecteditem?.value == null ||
-                                                    selecteditem!.value.isEmpty
-                                                ? null
-                                                : dropdownpenerimakomisi
-                                                    .firstWhereOrNull(
-                                                      (itemRx) =>
-                                                          itemRx.value ==
-                                                          selecteditem!.value,
-                                                    ),
-                                        isExpanded: true,
-                                        underline: SizedBox(),
-                                        elevation: 20,
-                                        style: const TextStyle(
-                                          color: Colors.deepPurple,
-                                          fontSize: 18,
+                                  id_paket_msg[0] == 'M' &&
+                                          (selectedagency == 'No Agency' ||
+                                              selectedagency == null)
+                                      ? Obx(
+                                        () => Container(
+                                          width: 120,
+                                          height: 30,
+                                          padding: EdgeInsets.only(left: 10),
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
+                                            color: Colors.grey[300],
+                                          ),
+                                          child: DropdownButton<RxString>(
+                                            value:
+                                                selecteditem?.value == null ||
+                                                        selecteditem!
+                                                            .value
+                                                            .isEmpty
+                                                    ? null
+                                                    : dropdownpenerimakomisi
+                                                        .firstWhereOrNull(
+                                                          (itemRx) =>
+                                                              itemRx.value ==
+                                                              selecteditem!
+                                                                  .value,
+                                                        ),
+                                            isExpanded: true,
+                                            underline: SizedBox(),
+                                            elevation: 20,
+                                            style: const TextStyle(
+                                              color: Colors.deepPurple,
+                                              fontSize: 18,
+                                            ),
+                                            onChanged: (RxString? newvalue) {
+                                              if (newvalue != null) {
+                                                selecteditem!.value =
+                                                    newvalue.value;
+                                              } else {
+                                                selecteditem!.value = '';
+                                              }
+                                            },
+                                            items:
+                                                dropdownpenerimakomisi.map<
+                                                  DropdownMenuItem<RxString>
+                                                >((RxString itemRx) {
+                                                  return DropdownMenuItem<
+                                                    RxString
+                                                  >(
+                                                    value: itemRx,
+                                                    child: Text(itemRx.value),
+                                                  );
+                                                }).toList(),
+                                          ),
                                         ),
-                                        onChanged: (RxString? newvalue) {
-                                          if (newvalue != null) {
-                                            selecteditem!.value =
-                                                newvalue.value;
-                                          } else {
-                                            selecteditem!.value = '';
-                                          }
-                                        },
-                                        items:
-                                            dropdownpenerimakomisi.map<
-                                              DropdownMenuItem<RxString>
-                                            >((RxString itemRx) {
-                                              return DropdownMenuItem<RxString>(
-                                                value: itemRx,
-                                                child: Text(itemRx.value),
-                                              );
-                                            }).toList(),
+                                      )
+                                      : Container(
+                                        width: 100,
+                                        child: Text(
+                                          'Terapis',
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            color: Colors.black,
+                                            fontFamily: 'Poppins',
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                  ),
                                   Obx(
                                     () =>
                                         selecteditem!.value == 'Terapis'
@@ -5939,26 +5988,34 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                                   },
                                                 ),
                                                 Text('Nominal'),
-                                                Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                        left: 20,
+                                                id_paket_msg[0] == 'M'
+                                                    ? Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                            left: 20,
+                                                          ),
+                                                      child: Radio<int>(
+                                                        value: 0,
+                                                        groupValue:
+                                                            _selectedRadio,
+                                                        onChanged: (
+                                                          int? value,
+                                                        ) {
+                                                          setState(() {
+                                                            _selectedRadio =
+                                                                value;
+                                                            if (_selectedRadio ==
+                                                                0) {
+                                                              valueradio = 0;
+                                                            }
+                                                          });
+                                                        },
                                                       ),
-                                                  child: Radio<int>(
-                                                    value: 0,
-                                                    groupValue: _selectedRadio,
-                                                    onChanged: (int? value) {
-                                                      setState(() {
-                                                        _selectedRadio = value;
-                                                        if (_selectedRadio ==
-                                                            0) {
-                                                          valueradio = 0;
-                                                        }
-                                                      });
-                                                    },
-                                                  ),
-                                                ),
-                                                Text('Persenan'),
+                                                    )
+                                                    : SizedBox.shrink(),
+                                                id_paket_msg[0] == 'M'
+                                                    ? Text('Persenan')
+                                                    : SizedBox.shrink(),
                                               ],
                                             )
                                             : Row(
@@ -6287,29 +6344,44 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                             ),
                                   ),
                                   SizedBox(height: 12),
-                                  Container(
-                                    alignment: Alignment.centerLeft,
-                                    width: Get.width * 0.55,
-                                    height: 45,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: Colors.grey[300],
-                                    ),
-                                    child: TextField(
-                                      controller: controller_edit_detail_paket,
-                                      decoration: InputDecoration(
-                                        border: InputBorder.none,
-                                        contentPadding: EdgeInsets.symmetric(
-                                          vertical: 13.5,
-                                          horizontal: 10,
+                                  id_paket_msg[0] == 'M'
+                                      ? Container(
+                                        alignment: Alignment.centerLeft,
+                                        width: Get.width * 0.55,
+                                        height: 45,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                          color: Colors.grey[300],
+                                        ),
+                                        child: TextField(
+                                          controller:
+                                              controller_edit_detail_paket,
+                                          decoration: InputDecoration(
+                                            border: InputBorder.none,
+                                            contentPadding:
+                                                EdgeInsets.symmetric(
+                                                  vertical: 13.5,
+                                                  horizontal: 10,
+                                                ),
+                                          ),
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontFamily: 'Poppins',
+                                          ),
+                                        ),
+                                      )
+                                      : Padding(
+                                        padding: EdgeInsets.only(top: 5),
+                                        child: Text(
+                                          '-',
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontFamily: 'Poppins',
+                                          ),
                                         ),
                                       ),
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontFamily: 'Poppins',
-                                      ),
-                                    ),
-                                  ),
                                   SizedBox(height: 20),
                                   Padding(
                                     padding: const EdgeInsets.only(left: 130),
@@ -6321,7 +6393,18 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                           backgroundColor: Colors.green,
                                         ),
                                         onPressed: () {
-                                          updatedatapaketmassage(id_paket_msg);
+                                          if (selectedagency == null ||
+                                              selectedagency == 'No Agency') {
+                                            updatedatapaketmassage(
+                                              id_paket_msg,
+                                            );
+                                          } else {
+                                            updatedatapaketmassageagency(
+                                              id_paket_msg,
+
+                                              selectedagency,
+                                            );
+                                          }
                                           datapaketmassage.isEmpty
                                               ? Center(
                                                 child:
@@ -6559,10 +6642,11 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
     }
   }
 
-  Future<void> getdatapaketmassageagency() async {
+  Future<void> getdatapaketmassageagency(namaagency) async {
     try {
       var response = await dio.get(
         '${myIpAddr()}/listmassage/getdatapaketmassageagency',
+        data: {'nama_agency': namaagency},
       );
       List<Map<String, dynamic>> fetcheddata =
           (response.data as List).map((item) {
@@ -6582,7 +6666,7 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
         datapaketmassage.assignAll(fetcheddata);
       });
     } catch (e) {
-      log("Error di fn Getdatapaketmassage : $e");
+      log("Error di fn getdatapaketmassageagency : $e");
     }
   }
 
@@ -6608,6 +6692,40 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
     }
   }
 
+  Future<void> updatedatapaketmassageagency(id_paket_msg, namaagency) async {
+    try {
+      log(valueradio.toString());
+
+      var response = await dio.put(
+        '${myIpAddr()}/listmassage/updatekomisiagency',
+
+        data: {
+          "nama_paket_msg": controller_edit_nama_massage.text,
+
+          "harga_paket_msg": int.parse(controller_edit_harga_massage.text),
+
+          "durasi": int.parse(controller_edit_durasi.text),
+
+          "tipe_komisi": valueradio,
+
+          "nominal_komisi": int.parse(controller_nominal_komisi_terapis.text),
+
+          "tipe_komisi_gro": valueradiogro,
+
+          "nominal_komisi_gro": int.parse(controller_nominal_komisi_gro.text),
+
+          "id_paket_msg": id_paket_msg,
+
+          "detail_paket": controller_edit_detail_paket.text,
+
+          "nama_agency": namaagency,
+        },
+      );
+    } catch (e) {
+      log("Error di fn updatepaketmassageagency : $e");
+    }
+  }
+
   Future<void> deletedatapaketmassage(id_paket_msg) async {
     try {
       var response = await dio.delete(
@@ -6621,7 +6739,12 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
 
   Future<void> refreshData() async {
     await Future.delayed(Duration(seconds: 1));
-    await getdatapaketmassage();
+
+    if (selectedagency == 'No Agency' || selectedagency == null) {
+      await getdatapaketmassage();
+    } else {
+      await getdatapaketmassageagency(selectedagency);
+    }
   }
 
   Future<void> getdatafnb() async {
@@ -6713,7 +6836,46 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
         dataproduk.refresh();
       });
     } catch (e) {
-      log("Error di fn getdatafnb : $e");
+      log("Error di fn getdataproduk : $e");
+    }
+  }
+
+  Future<void> getdataprodukagency(namaagency) async {
+    try {
+      var response = await dio.get(
+        '${myIpAddr()}/listproduk/getdataprodukagency',
+
+        data: {'nama_agency': namaagency},
+      );
+
+      List<Map<String, dynamic>> fetcheddata =
+          (response.data as List).map((item) {
+            return {
+              "id_produk": item['id_produk'],
+
+              "nama_produk": item['nama_produk'],
+
+              "harga_produk": item['harga_produk'],
+
+              "stok_produk": item['stok_produk'],
+
+              "durasi": item['durasi'],
+
+              "tipe_komisi": item['tipe_komisi'],
+
+              "nominal_komisi": item['nominal_komisi'],
+
+              "tipe_komisi_gro": item['tipe_komisi_gro'],
+
+              "nominal_komisi_gro": item['nominal_komisi_gro'],
+            };
+          }).toList();
+
+      setState(() {
+        dataproduk.assignAll(fetcheddata);
+      });
+    } catch (e) {
+      log("Error di fn getdataprodukagency : $e");
     }
   }
 
@@ -6736,7 +6898,41 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
         },
       );
     } catch (e) {
-      log("Error di fn Getdapaketmassage : $e");
+      log("Error di fn updatedataproduk : $e");
+    }
+  }
+
+  Future<void> updatekomisiprodukagency(id_produk, namaagency) async {
+    try {
+      var response = await dio.put(
+        '${myIpAddr()}/listproduk/updatekomisiprodukagency',
+
+        data: {
+          "nama_produk": controller_edit_nama_produk.text,
+
+          "durasi": int.parse(controller_edit_durasi_produk.text),
+
+          "harga_produk": int.parse(controller_edit_harga_produk.text),
+
+          "stok_produk": int.parse(controller_edit_stok_produk.text),
+
+          "tipe_komisi": valueRadioKomisiProduk,
+
+          "nominal_komisi": int.parse(
+            controller_edit_nominal_komisi_produk.text,
+          ),
+
+          "tipe_komisi_gro": valueRadioKomisiProdukGro,
+
+          "nominal_komisi_gro": controller_edit_nominal_komisi_produk_gro.text,
+
+          "id_produk": id_produk,
+
+          "nama_agency": namaagency,
+        },
+      );
+    } catch (e) {
+      log("Error di fn updatekomisiprodukagency : $e");
     }
   }
 
@@ -6814,7 +7010,12 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
 
   Future<void> refreshDataProduk() async {
     await Future.delayed(Duration(seconds: 1));
-    await getdataproduk();
+
+    if (selectedagency == 'No Agency' || selectedagency == null) {
+      await getdataproduk();
+    } else {
+      await getdataprodukagency(selectedagency);
+    }
   }
 
   Future<void> refreshDataFasilitas() async {
@@ -6864,18 +7065,55 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
               "durasi": item['durasi'],
               "tipe_komisi": item['tipe_komisi'],
               "nominal_komisi": item['nominal_komisi'],
+              "detail_paket": item['detail_paket'],
               "tipe_komisi_gro": item['tipe_komisi_gro'],
               "nominal_komisi_gro": item['nominal_komisi_gro'],
-              "detail_paket": item['detail_paket'],
             };
           }).toList();
       setState(() {
-        datapaketmassage.clear();
         datapaketmassage.assignAll(fetcheddata);
-        datapaketmassage.refresh();
       });
     } catch (e) {
-      log("Error di fn Getdapaketmassage : $e");
+      log("Error di fn searchdatapaketmassage : $e");
+    }
+  }
+
+  Future<void> searchdatamassageagency(namaagency) async {
+    try {
+      var response = await dio.get(
+        '${myIpAddr()}/search/searchdatamassageagency',
+
+        data: {"nama_paket_msg": textinputan.text, "nama_agency": namaagency},
+      );
+
+      List<Map<String, dynamic>> fetcheddata =
+          (response.data as List).map((item) {
+            return {
+              "id_paket_msg": item['id_paket_msg'],
+
+              "nama_paket_msg": item['nama_paket_msg'],
+
+              "harga_paket_msg": item['harga_paket_msg'],
+
+              "durasi": item['durasi'],
+
+              "tipe_komisi": item['tipe_komisi'],
+
+              "nominal_komisi": item['nominal_komisi'],
+
+              "detail_paket": item['detail_paket'],
+
+              "tipe_komisi_gro": item['tipe_komisi_gro'],
+
+              "nominal_komisi_gro": item['nominal_komisi_gro'],
+            };
+          }).toList();
+
+      setState(() {
+        datapaketmassage.assignAll(fetcheddata);
+      });
+    } catch (e) {
+      log("Error di fn searchdatapaketmassageagency : $e");
     }
   }
 
@@ -6919,8 +7157,11 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
               "nama_produk": item['nama_produk'],
               "harga_produk": item['harga_produk'],
               "durasi": item['durasi'],
+              "stok_produk": item['stok_produk'],
               "tipe_komisi": item['tipe_komisi'],
               "nominal_komisi": item['nominal_komisi'],
+              "tipe_komisi_gro": item['tipe_komisi_gro'],
+              "nominal_komisi_gro": item['nominal_komisi_gro'],
             };
           }).toList();
       setState(() {
@@ -6929,7 +7170,46 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
         dataproduk.refresh();
       });
     } catch (e) {
-      log("Error di fn getdatafnb : $e");
+      log("Error di fn searchdataproduk : $e");
+    }
+  }
+
+  Future<void> searchdataprodukagency(namaagency) async {
+    try {
+      var response = await dio.get(
+        '${myIpAddr()}/search/searchdataprodukagency',
+
+        data: {"nama_produk": textinputan.text, "nama_agency": namaagency},
+      );
+
+      List<Map<String, dynamic>> fetcheddata =
+          (response.data as List).map((item) {
+            return {
+              "id_produk": item['id_produk'],
+
+              "nama_produk": item['nama_produk'],
+
+              "harga_produk": item['harga_produk'],
+
+              "stok_produk": item['stok_produk'],
+
+              "durasi": item['durasi'],
+
+              "tipe_komisi": item['tipe_komisi'],
+
+              "nominal_komisi": item['nominal_komisi'],
+
+              "tipe_komisi_gro": item['tipe_komisi_gro'],
+
+              "nominal_komisi_gro": item['nominal_komisi_gro'],
+            };
+          }).toList();
+
+      setState(() {
+        dataproduk.assignAll(fetcheddata);
+      });
+    } catch (e) {
+      log("Error di fn searchdataprodukagency : $e");
     }
   }
 
@@ -6954,6 +7234,25 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
       });
     } catch (e) {
       log("Error di fn getdatafnb : $e");
+    }
+  }
+
+  String? selectedagency;
+
+  RxList<Map<String, dynamic>> data_agency = <Map<String, String>>[].obs;
+
+  Future<void> getdataagency() async {
+    try {
+      var response2 = await dio.get('${myIpAddr()}/listagency/getdataagency');
+
+      data_agency.value =
+          (response2.data as List)
+              .map((item) => Map<String, String>.from(item))
+              .toList();
+
+      log(data_agency.toString());
+    } catch (e) {
+      log("error di getdataagency: ${e.toString()}");
     }
   }
 
@@ -7018,7 +7317,89 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                   ],
                 ),
               ),
-              SizedBox(height: 10),
+              if (_isSecondContainerOnTop == false &&
+                  _isFourthContainerOnTop == false)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Container(
+                      width: 240,
+
+                      height: 45,
+
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+
+                        borderRadius: BorderRadius.all(Radius.circular(10)),
+
+                        border: Border.all(width: 1),
+                      ),
+
+                      margin: EdgeInsets.only(right: 70, top: 17.5),
+
+                      child: DropdownButton<String>(
+                        value: selectedagency,
+                        hint: Text('Select Agency'),
+                        isExpanded: true,
+                        icon: const Icon(Icons.arrow_drop_down),
+                        elevation: 14,
+                        style: const TextStyle(color: Colors.deepPurple),
+                        underline: SizedBox(),
+                        padding: EdgeInsets.symmetric(horizontal: 10),
+
+                        onChanged: (String? value) {
+                          setState(() {
+                            selectedagency = value;
+
+                            if (textinputan.text != '') {
+                              if (selectedagency == null ||
+                                  selectedagency == "No Agency") {
+                                searchdatamassage();
+
+                                searchdataproduk();
+                              } else {
+                                searchdatamassageagency(selectedagency);
+
+                                searchdataprodukagency(selectedagency);
+                              }
+                            } else {
+                              refreshData();
+
+                              refreshDataProduk();
+                            }
+                          });
+                        },
+
+                        items:
+                            data_agency.map<DropdownMenuItem<String>>((agency) {
+                              final namaagency =
+                                  agency['nama_agency']?.toString() ?? '';
+
+                              final kodeagency =
+                                  agency['kode_agency']?.toString() ?? '';
+
+                              return DropdownMenuItem<String>(
+                                value: namaagency,
+
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+
+                                  child: Text(
+                                    namaagency,
+
+                                    style: TextStyle(
+                                      fontSize: 20,
+
+                                      fontFamily: 'Poppins',
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                      ),
+                    ),
+                  ],
+                ),
               Row(
                 children: [
                   Padding(
