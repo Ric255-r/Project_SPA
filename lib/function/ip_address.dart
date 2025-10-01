@@ -4,7 +4,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 
 class ApiEndpointResolver {
   // Mainkan IP Kalian Disini
-  static const String _localIp = "192.168.7.149";
+  static const String _localIp = "192.168.1.25";
   static const String _tailscaleIp = "100.90.36.28";
   // End Cukup Mainkan Disini
 
