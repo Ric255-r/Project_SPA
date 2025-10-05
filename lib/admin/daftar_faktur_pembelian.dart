@@ -7,8 +7,18 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:dio/dio.dart';
+import 'package:intl/intl.dart';
 
-class DaftarFakturPembelianController extends GetxController {
+String formatrupiah(num amount) {
+  final formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+  return formatter.format(amount);
+}
+
+String indonesianDateFormat(DateTime date) {
+  return '${(date.day).toString().padLeft(2, '0')}-${(date.month).toString().padLeft(2, '0')}-${date.year}';
+}
+
+class HistoryPembelianController extends GetxController {
   RxList<DateTime?> rangeDatePickerSupplier = <DateTime?>[].obs;
   ScrollController scrollTglController = ScrollController();
   Dio dio = Dio();
@@ -18,7 +28,96 @@ class DaftarFakturPembelianController extends GetxController {
   RxList<Map<String, dynamic>> dataFaktur = <Map<String, dynamic>>[].obs;
   // TAMBAHKAN INI: Variabel untuk "STATE UI" dropdown
   Rxn<Map<String, dynamic>> uiSelectedSupplier = Rxn(null);
-  RxBool hasSearched = false.obs;
+  RxBool hasSearched = false.obs; // flag untuk trigger pas pencet btn tampil
+
+  // --- TAMBAHANB VARIABEL BARU UNTUK MENAMPILKAN DIALOG ---
+
+  RxBool isDetailLoading = false.obs;
+  RxList<Map<String, dynamic>> detailFakturItems = <Map<String, dynamic>>[].obs;
+
+  Future<void> showDetailDialog(Map<String, dynamic> faktur) async {
+    // 1. Set loading jadi true dan kosongkan list lama
+    isDetailLoading.value = true;
+    detailFakturItems.clear();
+
+    // 2. Tampilkan dialog SEGERA. Isinya akan reaktif.
+    Get.dialog(
+      AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Detail Faktur", style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(
+              // ignore: prefer_interpolation_to_compose_strings
+              "No Faktur Supplier: " + faktur['no_faktur'],
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+            ),
+          ],
+        ),
+        content: Obx(() {
+          // Tampilkan loading spinner jika sedang mengambil data
+          if (isDetailLoading.isTrue) {
+            return SizedBox(height: 100, child: Center(child: CircularProgressIndicator()));
+          }
+
+          // Tampilkan list item jika data sudah ada
+          if (detailFakturItems.isEmpty) {
+            return Text("Tidak ada item detail untuk faktur ini.");
+          }
+
+          // Untuk format angka
+          final currencyFormat = NumberFormat.decimalPattern('id_ID');
+
+          return SizedBox(
+            width: Get.width * 0.8, // Agar dialog tidak terlalu lebar
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: detailFakturItems.length,
+              itemBuilder: (context, index) {
+                final item = detailFakturItems[index];
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 4),
+                  child: ListTile(
+                    title: Text(
+                      "ID Item: ${item['id_item'] ?? '-'}",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(
+                      "Qty: ${item['qty']} x Rp ${currencyFormat.format(item['harga_beli'] ?? 0)}",
+                    ),
+                    trailing: Text(
+                      "Rp ${currencyFormat.format(item['total'] ?? 0)}",
+                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurple, fontSize: 18),
+                    ),
+                  ),
+                );
+              },
+            ),
+          );
+        }),
+        actions: [TextButton(onPressed: () => Get.back(), child: const Text("TUTUP"))],
+      ),
+      // Mencegah dialog tertutup saat disentuh di luar area
+      barrierDismissible: false,
+    );
+
+    // 3. Ambil data dari API setelah dialog muncul
+    try {
+      final idForm = faktur['id_form'];
+      final response = await dio.get('${myIpAddr()}/pembelian/detail_faktur_pembelian?id_form=$idForm');
+
+      final List<dynamic> responseData = response.data;
+      detailFakturItems.assignAll(responseData.map((e) => e as Map<String, dynamic>).toList());
+    } catch (e) {
+      log("Gagal mengambil detail faktur: $e");
+      // Opsional: Tampilkan pesan error dengan Get.snackbar
+      Get.snackbar('Error', 'Gagal memuat detail data.');
+    } finally {
+      // 4. Pastikan loading disetel ke false setelah selesai
+      isDetailLoading.value = false;
+    }
+  }
 
   @override
   void onClose() {
@@ -36,10 +135,6 @@ class DaftarFakturPembelianController extends GetxController {
       uiSelectedSupplier.close();
     } catch (_) {}
     super.onClose();
-  }
-
-  String indonesianDateFormat(DateTime date) {
-    return '${(date.day).toString().padLeft(2, '0')}-${(date.month).toString().padLeft(2, '0')}-${date.year}';
   }
 
   Future<void> fetchSuppliers() async {
@@ -181,16 +276,16 @@ class DaftarFakturPembelianController extends GetxController {
   }
 }
 
-class DaftarFakturPembelian extends StatelessWidget {
-  DaftarFakturPembelian({super.key});
+class HistoryPembelian extends StatelessWidget {
+  HistoryPembelian({super.key});
 
-  final c = Get.put(DaftarFakturPembelianController());
+  final c = Get.put(HistoryPembelianController());
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Daftar Faktur Pembelian', style: TextStyle(fontFamily: 'Poppins', fontSize: 40)),
+        title: const Text('History Pembelian', style: TextStyle(fontFamily: 'Poppins', fontSize: 40)),
         centerTitle: true,
         backgroundColor: const Color(0XFFFFE0B2),
       ),
@@ -220,9 +315,9 @@ class DaftarFakturPembelian extends StatelessWidget {
                       if (c.rangeDatePickerSupplier.length > 1) {
                         endDate = c.rangeDatePickerSupplier[1]!;
                         c.txtTglController.text =
-                            "${c.indonesianDateFormat(startDate)} s/d ${c.indonesianDateFormat(endDate)}";
+                            "${indonesianDateFormat(startDate)} s/d ${indonesianDateFormat(endDate)}";
                       } else {
-                        c.txtTglController.text = c.indonesianDateFormat(startDate);
+                        c.txtTglController.text = indonesianDateFormat(startDate);
                       }
                     },
                     controller: c.txtTglController,
@@ -334,8 +429,14 @@ class DaftarFakturPembelian extends StatelessWidget {
 
             Obx(() {
               if (c.dataFaktur.isNotEmpty) {
+                int totalHargaFaktur = c.dataFaktur
+                    .map((el) => el['total'])
+                    .reduce((value, element) => value + element);
+
                 if (c.selectedSupplierId.value != null) {
-                  int totalDataFaktur = c.dataFaktur.length;
+                  int panjangDataFaktur = c.dataFaktur.length;
+                  // int totalDataFakturTerbayar = c.dataFaktur.where((element) => element['status'] == 'Lunas').length;
+
                   Map selectedSupplier = c.suppliers.firstWhere(
                     (element) => element['id_supplier'].toString() == c.selectedSupplierId.value.toString(),
                   );
@@ -345,13 +446,26 @@ class DaftarFakturPembelian extends StatelessWidget {
                     children: [
                       Padding(
                         padding: const EdgeInsets.only(top: 24),
-                        child: Text(
-                          "Supplier: ${selectedSupplier['nama_supplier']} - Total Data: $totalDataFaktur",
-                          style: const TextStyle(
-                            color: Colors.black,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Supplier: ${selectedSupplier['nama_supplier']} - Total Data: $panjangDataFaktur",
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              "Total Pembelian: ${formatrupiah(totalHargaFaktur)}",
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
 
@@ -369,18 +483,32 @@ class DaftarFakturPembelian extends StatelessWidget {
                     ],
                   );
                 }
+
                 return Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Padding(
                       padding: const EdgeInsets.only(top: 24),
-                      child: Text(
-                        "Total Data: ${c.dataFaktur.length} - Seluruh Supplier",
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Total Data: ${c.dataFaktur.length} - Seluruh Supplier",
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            "Total Pembelian: ${formatrupiah(totalHargaFaktur)}",
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
 
@@ -463,6 +591,8 @@ class ContainerDataFaktur extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = Get.find<HistoryPembelianController>();
+
     final labelStyle = TextStyle(
       fontSize: 13,
       color: Colors.grey.shade700,
@@ -487,27 +617,6 @@ class ContainerDataFaktur extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // No Faktur
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: 110,
-                      child: Text("No Faktur :", style: labelStyle, overflow: TextOverflow.ellipsis),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        item['no_faktur'] ?? "-",
-                        style: valueStyle,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-
                 // Id Form
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -529,6 +638,27 @@ class ContainerDataFaktur extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
 
+                // No Faktur
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 110,
+                      child: Text("No Faktur :", style: labelStyle, overflow: TextOverflow.ellipsis),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        item['no_faktur'] ?? "-",
+                        style: valueStyle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+
                 // Tanggal Form
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -539,11 +669,16 @@ class ContainerDataFaktur extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(
-                        item['tanggal_form'] ?? "-",
-                        style: valueStyle,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                      child: Builder(
+                        builder: (context) {
+                          DateTime tanggalForm = DateTime.parse(item['tanggal_form']);
+                          return Text(
+                            indonesianDateFormat(tanggalForm),
+                            style: valueStyle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          );
+                        },
                       ),
                     ),
                   ],
@@ -561,7 +696,7 @@ class ContainerDataFaktur extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        "${item['total'] ?? 0}",
+                        formatrupiah(item['total'] ?? 0),
                         style: valueStyle.copyWith(fontWeight: FontWeight.w700),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -607,7 +742,9 @@ class ContainerDataFaktur extends StatelessWidget {
                         message: 'Detail',
                         waitDuration: const Duration(milliseconds: 400),
                         child: OutlinedButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            c.showDetailDialog(item);
+                          },
                           style: OutlinedButton.styleFrom(
                             minimumSize: const Size(40, 40),
                             padding: EdgeInsets.zero,

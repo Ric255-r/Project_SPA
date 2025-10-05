@@ -498,9 +498,9 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           Material(
                             color: Colors.white,
                             child: ListTile(
-                              title: const Text('Daftar Pembelian', style: TextStyle(fontFamily: 'Poppins')),
+                              title: const Text('History Pembelian', style: TextStyle(fontFamily: 'Poppins')),
                               onTap: () {
-                                Get.to(() => DaftarFakturPembelian());
+                                Get.to(() => HistoryPembelian());
                               },
                             ),
                           ),
