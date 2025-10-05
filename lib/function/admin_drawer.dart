@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:Project_SPA/admin/daftar_faktur_pembelian.dart';
 import 'package:Project_SPA/admin/list_barang.dart';
 import 'package:Project_SPA/admin/list_member.dart';
 import 'package:Project_SPA/admin/listagency.dart';
@@ -195,7 +196,7 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           padding: const EdgeInsets.only(left: 20),
                           child: AutoSizeText(
                             'Pendaftaran',
-                            style: TextStyle(fontFamily: 'Poppins'),
+                            style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold),
                             minFontSize: 18,
                             maxFontSize: 25,
                             maxLines: 1,
@@ -295,7 +296,7 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           padding: const EdgeInsets.only(left: 20),
                           child: AutoSizeText(
                             'List Data',
-                            style: TextStyle(fontFamily: 'Poppins'),
+                            style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold),
                             minFontSize: 18,
                             maxFontSize: 25,
                             maxLines: 1,
@@ -413,7 +414,7 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           padding: const EdgeInsets.only(left: 20),
                           child: AutoSizeText(
                             'Transaksi',
-                            style: TextStyle(fontFamily: 'Poppins'),
+                            style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold),
                             minFontSize: 18,
                             maxFontSize: 25,
                             maxLines: 1,
@@ -450,7 +451,7 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           padding: const EdgeInsets.only(left: 20),
                           child: AutoSizeText(
                             'Laporan',
-                            style: TextStyle(fontFamily: 'Poppins'),
+                            style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold),
                             minFontSize: 18,
                             maxFontSize: 25,
                             maxLines: 1,
@@ -487,13 +488,22 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           padding: const EdgeInsets.only(left: 20),
                           child: AutoSizeText(
                             'Pembelian',
-                            style: TextStyle(fontFamily: 'Poppins'),
+                            style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold),
                             minFontSize: 18,
                             maxFontSize: 25,
                             maxLines: 1,
                           ),
                         ),
                         children: [
+                          Material(
+                            color: Colors.white,
+                            child: ListTile(
+                              title: const Text('Daftar Pembelian', style: TextStyle(fontFamily: 'Poppins')),
+                              onTap: () {
+                                Get.to(() => DaftarFakturPembelian());
+                              },
+                            ),
+                          ),
                           Material(
                             color: Colors.white,
                             child: ListTile(
