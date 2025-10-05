@@ -68,16 +68,21 @@ class _RegisPromoState extends State<RegisPromo> {
   final TextEditingController controller_harga_promo_tahunan =
       TextEditingController();
   List<Map<String, dynamic>> _listNamaPaket = [];
+  List<Map<String, dynamic>> _listfnb = [];
   String? dropdownNamaPaket;
+  String? dropdownnamapaketbonusitem;
+  String? selecteditem;
 
   var dio = Dio();
   bool _isSecondContainerOnTop = false;
   bool _isThirdContainerOnTop = false;
   bool _isFirstContainerOnTop = true;
+  bool _isFourthContainerOnTop = false;
 
   Color _FirstbuttonColor = Colors.blue;
   Color _SecondbuttonColor = Colors.white;
   Color _ThirdbuttonColor = Colors.white;
+  Color _FourthbuttonCOlor = Colors.white;
 
   bool isUmumChecked = false;
   bool isMemberChecked = false;
@@ -116,8 +121,10 @@ class _RegisPromoState extends State<RegisPromo> {
   void initState() {
     // TODO: implement initState
     getDataPaket();
+    getDataFnb();
     hargaPromo.value = 0;
     dropdownNamaPaket = null;
+    dropdownnamapaketbonusitem = null;
     super.initState();
   }
 
@@ -126,6 +133,7 @@ class _RegisPromoState extends State<RegisPromo> {
       _isSecondContainerOnTop = true;
       _isFirstContainerOnTop = false;
       _isThirdContainerOnTop = false;
+      _isFourthContainerOnTop = false;
     });
   }
 
@@ -134,6 +142,7 @@ class _RegisPromoState extends State<RegisPromo> {
       _isSecondContainerOnTop = false;
       _isFirstContainerOnTop = true;
       _isThirdContainerOnTop = false;
+      _isFourthContainerOnTop = false;
     });
   }
 
@@ -142,6 +151,16 @@ class _RegisPromoState extends State<RegisPromo> {
       _isSecondContainerOnTop = false;
       _isThirdContainerOnTop = true;
       _isFirstContainerOnTop = false;
+      _isFourthContainerOnTop = false;
+    });
+  }
+
+  void _moveFourthContainerToTop() {
+    setState(() {
+      _isSecondContainerOnTop = false;
+      _isThirdContainerOnTop = false;
+      _isFirstContainerOnTop = false;
+      _isFourthContainerOnTop = true;
     });
   }
 
@@ -151,14 +170,22 @@ class _RegisPromoState extends State<RegisPromo> {
         _FirstbuttonColor = Colors.blue;
         _SecondbuttonColor = Colors.white;
         _ThirdbuttonColor = Colors.white;
+        _FourthbuttonCOlor = Colors.white;
       } else if (buttonIndex == 2) {
         _FirstbuttonColor = Colors.white;
         _SecondbuttonColor = Colors.blue;
         _ThirdbuttonColor = Colors.white;
+        _FourthbuttonCOlor = Colors.white;
       } else if (buttonIndex == 3) {
         _FirstbuttonColor = Colors.white;
         _SecondbuttonColor = Colors.white;
         _ThirdbuttonColor = Colors.blue;
+        _FourthbuttonCOlor = Colors.white;
+      } else if (buttonIndex == 4) {
+        _FirstbuttonColor = Colors.white;
+        _SecondbuttonColor = Colors.white;
+        _ThirdbuttonColor = Colors.white;
+        _FourthbuttonCOlor = Colors.blue;
       }
     });
   }
@@ -183,6 +210,20 @@ class _RegisPromoState extends State<RegisPromo> {
       });
     } catch (e) {
       log("Error di fn Get Data Paket $e");
+    }
+  }
+
+  Future<void> getDataFnb() async {
+    try {
+      var response = await dio.get('${myIpAddr()}/listfnb/getdatafnb');
+      setState(() {
+        _listfnb =
+            (response.data as List).map((item) {
+              return {"id_fnb": item["id_fnb"], "nama_fnb": item["nama_fnb"]};
+            }).toList();
+      });
+    } catch (e) {
+      log("Error di fn Get Data Fnb $e");
     }
   }
 
@@ -518,6 +559,30 @@ class _RegisPromoState extends State<RegisPromo> {
                       ),
                       child: Text(
                         'Promo Tahunan',
+                        style: TextStyle(color: Colors.black),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(top: 20, left: 10),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        _moveFourthContainerToTop();
+                        _toggleButtonColors(buttonIndex: 4);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _FourthbuttonCOlor,
+                        foregroundColor:
+                            _FirstbuttonColor == Colors.blue
+                                ? Colors.white
+                                : Colors.black,
+                        minimumSize: Size(150, 45),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.zero,
+                        ),
+                      ),
+                      child: Text(
+                        'Promo Bonus Item',
                         style: TextStyle(color: Colors.black),
                       ),
                     ),
@@ -1902,6 +1967,301 @@ class _RegisPromoState extends State<RegisPromo> {
                         ],
                       ),
                     ),
+                  if (_isFourthContainerOnTop)
+                    Center(
+                      child: Container(
+                        child: Text(
+                          'ON PROGRESS',
+                          style: TextStyle(fontSize: 100),
+                        ),
+                      ),
+                    ),
+                  // Container(
+                  //   height: 300,
+                  //   width: 950,
+                  //   child: Column(
+                  //     mainAxisAlignment: MainAxisAlignment.start,
+                  //     crossAxisAlignment: CrossAxisAlignment.start,
+                  //     children: [
+                  //       Row(
+                  //         mainAxisAlignment: MainAxisAlignment.start,
+                  //         crossAxisAlignment: CrossAxisAlignment.start,
+                  //         children: [
+                  //           Padding(
+                  //             padding: EdgeInsets.zero,
+                  //             child: Container(
+                  //               height: 220,
+                  //               width: 200,
+                  //               decoration: BoxDecoration(
+                  //                 color: Colors.white,
+                  //               ),
+                  //               child: Padding(
+                  //                 padding: EdgeInsets.only(right: 10),
+                  //                 child: Column(
+                  //                   crossAxisAlignment:
+                  //                       CrossAxisAlignment.end,
+                  //                   children: [
+                  //                     SizedBox(height: 15),
+                  //                     Text(
+                  //                       'Kode Promo :',
+                  //                       style: TextStyle(
+                  //                         fontFamily: 'Poppins',
+                  //                         fontSize: 18,
+                  //                       ),
+                  //                     ),
+                  //                     SizedBox(height: 15),
+                  //                     Text(
+                  //                       'Nama Promo :',
+                  //                       style: TextStyle(
+                  //                         fontFamily: 'Poppins',
+                  //                         fontSize: 18,
+                  //                       ),
+                  //                     ),
+                  //                     SizedBox(height: 15),
+                  //                     Text(
+                  //                       'Paket :',
+                  //                       style: TextStyle(
+                  //                         fontFamily: 'Poppins',
+                  //                         fontSize: 18,
+                  //                       ),
+                  //                     ),
+                  //                     SizedBox(height: 15),
+                  //                     Text(
+                  //                       'Bonus Item :',
+                  //                       style: TextStyle(
+                  //                         fontFamily: 'Poppins',
+                  //                         fontSize: 18,
+                  //                       ),
+                  //                     ),
+                  //                     SizedBox(height: 15),
+                  //                     Text(
+                  //                       'Qty :',
+                  //                       style: TextStyle(
+                  //                         fontFamily: 'Poppins',
+                  //                         fontSize: 18,
+                  //                       ),
+                  //                     ),
+                  //                   ],
+                  //                 ),
+                  //               ),
+                  //             ),
+                  //           ),
+                  //           Container(
+                  //             height: 220,
+                  //             width: 750,
+                  //             decoration: BoxDecoration(color: Colors.white),
+                  //             child: Padding(
+                  //               padding: EdgeInsets.only(left: 10),
+                  //               child: Column(
+                  //                 crossAxisAlignment:
+                  //                     CrossAxisAlignment.start,
+                  //                 children: [
+                  //                   SizedBox(height: 12),
+                  //                   Container(
+                  //                     alignment: Alignment.centerLeft,
+                  //                     width: 730,
+                  //                     height: 30,
+                  //                     decoration: BoxDecoration(
+                  //                       borderRadius: BorderRadius.circular(
+                  //                         10,
+                  //                       ),
+                  //                       color: Colors.grey[300],
+                  //                     ),
+                  //                     child: TextField(
+                  //                       controller:
+                  //                           controller_kode_promo_tahunan,
+                  //                       decoration: InputDecoration(
+                  //                         border: InputBorder.none,
+                  //                         contentPadding:
+                  //                             EdgeInsets.symmetric(
+                  //                               vertical: 13.5,
+                  //                               horizontal: 10,
+                  //                             ),
+                  //                       ),
+                  //                       style: TextStyle(
+                  //                         fontSize: 14,
+                  //                         fontFamily: 'Poppins',
+                  //                       ),
+                  //                     ),
+                  //                   ),
+                  //                   SizedBox(height: 12),
+                  //                   Container(
+                  //                     alignment: Alignment.centerLeft,
+                  //                     width: 730,
+                  //                     height: 30,
+                  //                     decoration: BoxDecoration(
+                  //                       borderRadius: BorderRadius.circular(
+                  //                         10,
+                  //                       ),
+                  //                       color: Colors.grey[300],
+                  //                     ),
+                  //                     child: TextField(
+                  //                       controller:
+                  //                           controller_nama_promo_tahunan,
+                  //                       decoration: InputDecoration(
+                  //                         border: InputBorder.none,
+                  //                         contentPadding:
+                  //                             EdgeInsets.symmetric(
+                  //                               vertical: 13.5,
+                  //                               horizontal: 10,
+                  //                             ),
+                  //                       ),
+                  //                       style: TextStyle(
+                  //                         fontSize: 14,
+                  //                         fontFamily: 'Poppins',
+                  //                       ),
+                  //                     ),
+                  //                   ),
+                  //                   SizedBox(height: 12),
+                  //                   Row(
+                  //                     children: [
+                  //                       Container(
+                  //                         alignment: Alignment.centerLeft,
+                  //                         width: 500,
+                  //                         height: 30,
+                  //                         decoration: BoxDecoration(
+                  //                           borderRadius:
+                  //                               BorderRadius.circular(10),
+                  //                           color: Colors.grey[300],
+                  //                         ),
+                  //                         child: DropdownButton<String>(
+                  //                           value: dropdownnamapaketbonusitem,
+                  //                           isExpanded: true,
+                  //                           icon: const Icon(
+                  //                             Icons.arrow_drop_down,
+                  //                           ),
+                  //                           elevation: 16,
+                  //                           style: const TextStyle(
+                  //                             color: Colors.deepPurple,
+                  //                           ),
+                  //                           underline: SizedBox(),
+                  //                           padding: EdgeInsets.symmetric(
+                  //                             horizontal: 10,
+                  //                           ),
+                  //                           onChanged: (String? value) {
+                  //                             setState(() {
+                  //                               dropdownnamapaketbonusitem =
+                  //                                   value;
+                  //                             });
+                  //                           },
+                  //                           items:
+                  //                               _listNamaPaket.map<
+                  //                                 DropdownMenuItem<String>
+                  //                               >((item) {
+                  //                                 return DropdownMenuItem<
+                  //                                   String
+                  //                                 >(
+                  //                                   value:
+                  //                                       item['id_paket_msg'], // Use ID as value
+                  //                                   child: Align(
+                  //                                     alignment:
+                  //                                         Alignment
+                  //                                             .centerLeft,
+                  //                                     child: Text(
+                  //                                       item['nama_paket_msg']
+                  //                                           .toString(), // Display category name
+                  //                                       style:
+                  //                                           const TextStyle(
+                  //                                             fontSize: 18,
+                  //                                             fontFamily:
+                  //                                                 'Poppins',
+                  //                                           ),
+                  //                                     ),
+                  //                                   ),
+                  //                                 );
+                  //                               }).toList(),
+                  //                         ),
+                  //                       ),
+                  //                     ],
+                  //                   ),
+                  //                   SizedBox(height: 10),
+                  //                   Container(
+                  //                     alignment: Alignment.centerLeft,
+                  //                     width: 270,
+                  //                     height: 30,
+                  //                     decoration: BoxDecoration(
+                  //                       borderRadius: BorderRadius.circular(
+                  //                         10,
+                  //                       ),
+                  //                       color: Colors.grey[300],
+                  //                     ),
+                  //                     child: DropdownButton<String>(
+                  //                       value: selecteditem,
+                  //                       isExpanded: true,
+                  //                       icon: const Icon(
+                  //                         Icons.arrow_drop_down,
+                  //                       ),
+                  //                       elevation: 16,
+                  //                       style: const TextStyle(
+                  //                         color: Colors.deepPurple,
+                  //                       ),
+                  //                       underline: SizedBox(),
+                  //                       padding: EdgeInsets.symmetric(
+                  //                         horizontal: 10,
+                  //                       ),
+                  //                       onChanged: (String? value) {
+                  //                         setState(() {
+                  //                           selecteditem = value;
+                  //                         });
+                  //                       },
+                  //                       items:
+                  //                           _listfnb.map<
+                  //                             DropdownMenuItem<String>
+                  //                           >((item) {
+                  //                             return DropdownMenuItem<String>(
+                  //                               value:
+                  //                                   item['id_fnb'], // Use ID as value
+                  //                               child: Align(
+                  //                                 alignment:
+                  //                                     Alignment.centerLeft,
+                  //                                 child: Text(
+                  //                                   item['nama_fnb']
+                  //                                       .toString(), // Display category name
+                  //                                   style: const TextStyle(
+                  //                                     fontSize: 18,
+                  //                                     fontFamily: 'Poppins',
+                  //                                   ),
+                  //                                 ),
+                  //                               ),
+                  //                             );
+                  //                           }).toList(),
+                  //                     ),
+                  //                   ),
+                  //                 ],
+                  //               ),
+                  //             ),
+                  //           ),
+                  //         ],
+                  //       ),
+                  //       SizedBox(height: 10),
+                  //       Center(
+                  //         child: Container(
+                  //           decoration: BoxDecoration(
+                  //             borderRadius: BorderRadius.circular(15),
+                  //             color: Color(0XFFF6F7C4),
+                  //           ),
+                  //           height: 70,
+                  //           width: 300,
+                  //           child: TextButton(
+                  //             onPressed: () {
+                  //               inputdatapromotahunan();
+                  //             },
+                  //             style: TextButton.styleFrom(
+                  //               foregroundColor: Colors.black,
+                  //             ),
+                  //             child: Text(
+                  //               'Simpan',
+                  //               style: TextStyle(
+                  //                 fontSize: 40,
+                  //                 fontFamily: 'Poppins',
+                  //               ),
+                  //             ),
+                  //           ),
+                  //         ),
+                  //       ),
+                  //     ],
+                  //   ),
+                  // ),
                 ],
               ),
             ],

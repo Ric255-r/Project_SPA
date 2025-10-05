@@ -293,7 +293,7 @@ class _PageKomisiPekerjaState extends State<PageKomisiPekerja> {
                     var nominalkomisi = 0.0;
                     var komisijabatan = 0;
                     var tipekomisi = 0;
-                    if (jabatan == 'terapis') {
+                    if (jabatan == 'Terapis') {
                       tipekomisi = item['tipe_komisi'];
                       komisijabatan = item['nominal_komisi'];
                     } else {

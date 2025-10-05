@@ -59,6 +59,9 @@ class _laporankomisiState extends State<laporankomisi>
   String? selectedagencybulanan;
   String? selectedagencytahunan;
   String? selectedagencyharian;
+  String isitekscetakkomisibulanan = 'Cetak Komisi Gro';
+  String isitekscetakkomisiharian = 'Cetak Komisi Gro';
+  String isitekscetakkomisitahunan = 'Cetak Komisi Gro';
   RxList<Map<String, dynamic>> data_agency = <Map<String, dynamic>>[].obs;
 
   Future<void> getdataagency() async {
@@ -137,7 +140,7 @@ class _laporankomisiState extends State<laporankomisi>
     }
   }
 
-  Future<void> exportkomisigrobulanan(bulan, tahun) async {
+  Future<void> exportkomisigrobulanan(bulan, tahun, selectedagency) async {
     try {
       print('ini jalan');
       Get.dialog(const DownloadSplash(), barrierDismissible: false);
@@ -148,7 +151,11 @@ class _laporankomisiState extends State<laporankomisi>
       var response = await dio.download(
         url,
         filepath,
-        queryParameters: {'month': bulan, 'year': tahun},
+        queryParameters: {
+          'month': bulan,
+          'year': tahun,
+          'nama_agency': selectedagency,
+        },
         options: Options(
           responseType: ResponseType.bytes,
           headers: {'Accept': 'application/pdf'},
@@ -220,7 +227,7 @@ class _laporankomisiState extends State<laporankomisi>
     }
   }
 
-  Future<void> exportkomisigrotahunan(tahun) async {
+  Future<void> exportkomisigrotahunan(tahun, namaagency) async {
     try {
       print('ini jalan');
       Get.dialog(const DownloadSplash(), barrierDismissible: false);
@@ -230,7 +237,7 @@ class _laporankomisiState extends State<laporankomisi>
       var response = await dio.download(
         url,
         filepath,
-        queryParameters: {'year': tahun},
+        queryParameters: {'year': tahun, 'nama_agency': namaagency},
         options: Options(
           responseType: ResponseType.bytes,
           headers: {'Accept': 'application/pdf'},
@@ -315,7 +322,7 @@ class _laporankomisiState extends State<laporankomisi>
     }
   }
 
-  Future<void> exportkomisigroharian(strdate, endddate) async {
+  Future<void> exportkomisigroharian(strdate, endddate, namaagency) async {
     try {
       print('ini jalan');
       Get.dialog(const DownloadSplash(), barrierDismissible: false);
@@ -326,7 +333,11 @@ class _laporankomisiState extends State<laporankomisi>
       var response = await dio.download(
         url,
         filepath,
-        queryParameters: {'strdate': strdate, 'enddate': endddate},
+        queryParameters: {
+          'strdate': strdate,
+          'enddate': endddate,
+          'nama_agency': namaagency,
+        },
         options: Options(
           responseType: ResponseType.bytes,
           headers: {'Accept': 'application/pdf'},
@@ -694,6 +705,16 @@ class _laporankomisiState extends State<laporankomisi>
                                       pilihantahun,
                                       selectedagencybulanan,
                                     );
+
+                                    if (selectedagencybulanan ==
+                                            'All Terapis & GRO' ||
+                                        selectedagencybulanan == 'No Agency') {
+                                      isitekscetakkomisibulanan =
+                                          'Cetak Komisi Gro';
+                                    } else {
+                                      isitekscetakkomisibulanan =
+                                          'Cetak Komisi & Agency';
+                                    }
                                   });
                                 },
                                 items:
@@ -766,19 +787,20 @@ class _laporankomisiState extends State<laporankomisi>
                                     exportkomisigrobulanan(
                                       pilihanbulan,
                                       pilihantahun,
+                                      selectedagencybulanan,
                                     );
                                   },
-                                  child: Text(
-                                    'Cetak Komisi Gro',
-                                    style: TextStyle(
-                                      fontSize: 15.w,
-                                      color: Colors.black,
-                                    ),
-                                  ),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Color(0xFFFCEFCB),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    isitekscetakkomisibulanan,
+                                    style: TextStyle(
+                                      fontSize: 15.w,
+                                      color: Colors.black,
                                     ),
                                   ),
                                 ),
@@ -965,11 +987,22 @@ class _laporankomisiState extends State<laporankomisi>
                                 onChanged: (String? value) {
                                   setState(() {
                                     selectedagencyharian = value;
+
                                     getdatakomisiharian(
                                       startdate,
                                       enddate,
                                       selectedagencyharian,
                                     );
+
+                                    if (selectedagencyharian ==
+                                            'All Terapis & GRO' ||
+                                        selectedagencyharian == 'No Agency') {
+                                      isitekscetakkomisiharian =
+                                          'Cetak Komisi Gro';
+                                    } else {
+                                      isitekscetakkomisiharian =
+                                          'Cetak Komisi & Agency';
+                                    }
                                   });
                                 },
                                 items:
@@ -1038,10 +1071,14 @@ class _laporankomisiState extends State<laporankomisi>
                                 height: 35.w,
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    exportkomisigroharian(startdate, enddate);
+                                    exportkomisigroharian(
+                                      startdate,
+                                      enddate,
+                                      selectedagencyharian,
+                                    );
                                   },
                                   child: Text(
-                                    'Cetak Komisi Gro',
+                                    isitekscetakkomisiharian,
                                     style: TextStyle(
                                       fontSize: 15.w,
                                       color: Colors.black,
@@ -1195,6 +1232,16 @@ class _laporankomisiState extends State<laporankomisi>
                                       pilihantahun,
                                       selectedagencytahunan,
                                     );
+
+                                    if (selectedagencytahunan ==
+                                            'All Terapis & GRO' ||
+                                        selectedagencytahunan == 'No Agency') {
+                                      isitekscetakkomisitahunan =
+                                          'Cetak Komisi Gro';
+                                    } else {
+                                      isitekscetakkomisitahunan =
+                                          'Cetak Komisi & Agency';
+                                    }
                                   });
                                 },
                                 items:
@@ -1262,10 +1309,13 @@ class _laporankomisiState extends State<laporankomisi>
                                 height: 35.w,
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    exportkomisigrotahunan(pilihantahun);
+                                    exportkomisigrotahunan(
+                                      pilihantahun,
+                                      selectedagencytahunan,
+                                    );
                                   },
                                   child: Text(
-                                    'Cetak Komisi Gro',
+                                    isitekscetakkomisitahunan,
                                     style: TextStyle(
                                       fontSize: 15.w,
                                       color: Colors.black,
