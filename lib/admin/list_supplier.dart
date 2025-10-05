@@ -1,4 +1,8 @@
+import 'dart:developer';
+
+import 'package:Project_SPA/function/rupiah_formatter.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
@@ -15,6 +19,7 @@ class SupplierController extends GetxController {
 
   // Master nama item (gabungan 3 tabel) untuk DropdownSearch di "Tambah Item"
   final RxList<String> masterNama = <String>[].obs;
+  final RxList<String> masterSatuan = <String>[].obs;
 
   String get _base => myIpAddr().replaceAll(RegExp(r"/$"), "");
   String _ts() => DateTime.now().millisecondsSinceEpoch.toString();
@@ -66,16 +71,12 @@ class SupplierController extends GetxController {
       }
     });
 
-    await fetchSuppliers(); // initial
-    await fetchMasterNama(); // <-- ambil opsi dropdown nama item
+    await Future.wait([fetchSuppliers(), fetchMasterNama()]);
   }
 
   /// ---------- GET ----------
   Future<void> fetchSuppliers() async {
-    final res = await dio.get(
-      '$_base/supplier/listsupplier?_ts=${_ts()}',
-      options: _noCache,
-    );
+    final res = await dio.get('$_base/supplier/listsupplier?_ts=${_ts()}', options: _noCache);
     final List data = res.data;
 
     // dedup by id + simpan detail
@@ -117,17 +118,29 @@ class SupplierController extends GetxController {
 
   /// Ambil master nama items gabungan dari backend untuk dropdown
   Future<void> fetchMasterNama() async {
-    final res = await dio.get(
-      '$_base/supplier/master-nama-items?_ts=${_ts()}',
-      options: _noCache,
-    );
-    final List data = res.data;
+    final res = await dio.get('$_base/supplier/master-nama-items?_ts=${_ts()}', options: _noCache);
+    Map responseData = res.data;
+
+    final List dataProduk = responseData['produk'];
+    final String dataSatuan = responseData['satuan'];
     final s = <String>{};
-    for (final e in data) {
+    for (final e in dataProduk) {
       final n = (e['nama'] ?? '').toString().trim();
       if (n.isNotEmpty) s.add(n);
     }
+
     masterNama.assignAll(s.toList()..sort());
+    // Bersihkan string dari karakter yang tidak dibutuhkan
+    final String cleanedString = dataSatuan
+        .replaceAll("enum(", "") // -> "'pcs','pack','liter','box')"
+        .replaceAll(")", "") // -> "'pcs','pack','liter','box'"
+        .replaceAll("'", ""); // -> "pcs,pack,liter,box"
+
+    // Pisahkan string menjadi List berdasarkan koma
+    final List<String> satuanList = cleanedString.split(',');
+    masterSatuan.assignAll(satuanList);
+
+    log("Isi Master nama ${masterNama}");
   }
 
   /// Re-fetch suppliers & keep selection (atau pilih pertama jika hilang)
@@ -136,8 +149,7 @@ class SupplierController extends GetxController {
     if (keep != null && suppliers.any((s) => s['id_supplier'] == keep)) {
       selectedSupplierId.value = keep; // triggers ever -> fetchItems
     } else if (suppliers.isNotEmpty) {
-      selectedSupplierId.value =
-          suppliers.first['id_supplier'].toString(); // triggers ever
+      selectedSupplierId.value = suppliers.first['id_supplier'].toString(); // triggers ever
     } else {
       selectedSupplierId.value = null; // triggers ever -> items.clear()
     }
@@ -204,10 +216,7 @@ class SupplierController extends GetxController {
     await refreshSuppliersPreserve();
   }
 
-  Future<bool> _confirmDeleteSupplier(
-    BuildContext context, {
-    String? supplierName,
-  }) async {
+  Future<bool> _confirmDeleteSupplier(BuildContext context, {String? supplierName}) async {
     final result = await Get.dialog<bool>(
       AlertDialog(
         title: const Text('Hapus Supplier?'),
@@ -217,10 +226,7 @@ class SupplierController extends GetxController {
           'Tindakan ini akan menghapus semua item miliknya.',
         ),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(result: false),
-            child: const Text('Tidak'),
-          ),
+          TextButton(onPressed: () => Get.back(result: false), child: const Text('Tidak')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Get.back(result: true),
@@ -234,26 +240,15 @@ class SupplierController extends GetxController {
   }
 
   /// ---------- Item CRUD ----------
-  Future<void> addItemsToSupplier(
-    String idSupplier,
-    List<Map<String, dynamic>> payload,
-  ) async {
-    await dio.post(
-      '$_base/supplier/$idSupplier/items',
-      data: {"items": payload},
-    );
+  Future<void> addItemsToSupplier(String idSupplier, List<Map<String, dynamic>> payload) async {
+    await dio.post('$_base/supplier/$idSupplier/items', data: {"items": payload});
     await fetchItems(idSupplier); // AUTO REFRESH
   }
 
-  Future<void> updateItem(
-    int id,
-    String idSupplier,
-    String nama,
-    double harga,
-  ) async {
+  Future<void> updateItem(int id, String idSupplier, String nama, String satuan, double harga) async {
     await dio.put(
       '$_base/supplier/updateitem/$id',
-      data: {"nama_item": nama, "harga_item": harga},
+      data: {"nama_item": nama, "satuan": satuan, "harga_item": harga},
     );
     await fetchItems(idSupplier);
     Get.back(); // AUTO REFRESH
@@ -270,19 +265,13 @@ class SupplierController extends GetxController {
   }
 }
 
-Future<bool> _confirmDeleteItem(
-  BuildContext context, {
-  required String itemName,
-}) async {
+Future<bool> _confirmDeleteItem(BuildContext context, {required String itemName}) async {
   final res = await Get.dialog<bool>(
     AlertDialog(
       title: const Text('Hapus Item?'),
       content: Text('Yakin ingin menghapus item "$itemName"?'),
       actions: [
-        TextButton(
-          onPressed: () => Get.back(result: false),
-          child: const Text('Tidak'),
-        ),
+        TextButton(onPressed: () => Get.back(result: false), child: const Text('Tidak')),
         ElevatedButton(
           style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
           onPressed: () => Get.back(result: true),
@@ -305,10 +294,7 @@ class ListSupplierPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0XFFFFE0B2),
       appBar: AppBar(
-        title: const Text(
-          "List Supplier",
-          style: TextStyle(fontFamily: 'Poppins', fontSize: 30),
-        ),
+        title: const Text("List Supplier", style: TextStyle(fontFamily: 'Poppins', fontSize: 30)),
         backgroundColor: const Color(0XFFFFE0B2),
       ),
       floatingActionButton: FloatingActionButton(
@@ -334,8 +320,7 @@ class ListSupplierPage extends StatelessWidget {
                 asyncItems: (String? filter) async {
                   await c.fetchSuppliers();
                   final q = (filter ?? '').trim().toLowerCase();
-                  if (q.isEmpty)
-                    return List<Map<String, dynamic>>.from(c.suppliers);
+                  if (q.isEmpty) return List<Map<String, dynamic>>.from(c.suppliers);
                   final seen = <String>{};
                   final list = <Map<String, dynamic>>[];
                   for (final s in c.suppliers) {
@@ -349,8 +334,7 @@ class ListSupplierPage extends StatelessWidget {
                   return list;
                 },
                 selectedItem: selected,
-                itemAsString:
-                    (m) => "${m?['id_supplier']} - ${m?['nama_supplier']}",
+                itemAsString: (m) => "${m?['id_supplier']} - ${m?['nama_supplier']}",
                 onChanged: (m) async {
                   final id = m?['id_supplier']?.toString();
                   c.selectedSupplierId.value = id;
@@ -373,10 +357,7 @@ class ListSupplierPage extends StatelessWidget {
                   ),
                 ),
                 dropdownDecoratorProps: DropDownDecoratorProps(
-                  baseStyle: TextStyle(
-                    color: Colors.brown.shade900,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  baseStyle: TextStyle(color: Colors.brown.shade900, fontWeight: FontWeight.w500),
                   dropdownSearchDecoration: InputDecoration(
                     labelText: "Pilih Supplier",
                     labelStyle: TextStyle(color: Colors.brown.shade700),
@@ -384,17 +365,11 @@ class ListSupplierPage extends StatelessWidget {
                     fillColor: Colors.white,
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                        color: Colors.brown.shade300,
-                        width: 1.2,
-                      ),
+                      borderSide: BorderSide(color: Colors.brown.shade300, width: 1.2),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                        color: Colors.brown.shade700,
-                        width: 2,
-                      ),
+                      borderSide: BorderSide(color: Colors.brown.shade700, width: 2),
                     ),
                   ),
                 ),
@@ -406,33 +381,21 @@ class ListSupplierPage extends StatelessWidget {
               final selId = c.selectedSupplierId.value;
               if (selId == null) return const SizedBox.shrink();
 
-              final sup = c.suppliers.firstWhereOrNull(
-                (s) => s['id_supplier'] == selId,
-              );
+              final sup = c.suppliers.firstWhereOrNull((s) => s['id_supplier'] == selId);
               if (sup == null) return const SizedBox.shrink();
 
-              Widget row(
-                String label,
-                String? value, {
-                TextStyle? valueStyle,
-              }) => Padding(
+              Widget row(String label, String? value, {TextStyle? valueStyle}) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 2),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(
                       width: 130,
-                      child: Text(
-                        label,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
+                      child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
                     ),
                     const Text(" : "),
                     Expanded(
-                      child: Text(
-                        value?.trim().isEmpty == true ? "-" : (value ?? "-"),
-                        style: valueStyle,
-                      ),
+                      child: Text(value?.trim().isEmpty == true ? "-" : (value ?? "-"), style: valueStyle),
                     ),
                   ],
                 ),
@@ -448,34 +411,22 @@ class ListSupplierPage extends StatelessWidget {
                       row(
                         "Alamat",
                         sup['alamat'] as String?,
-                        valueStyle: const TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 14,
-                        ),
+                        valueStyle: const TextStyle(fontFamily: 'Poppins', fontSize: 14),
                       ),
                       row(
                         "No. Telp",
                         sup['telp'] as String?,
-                        valueStyle: const TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 14,
-                        ),
+                        valueStyle: const TextStyle(fontFamily: 'Poppins', fontSize: 14),
                       ),
                       row(
                         "Kota",
                         sup['kota'] as String?,
-                        valueStyle: const TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 14,
-                        ),
+                        valueStyle: const TextStyle(fontFamily: 'Poppins', fontSize: 14),
                       ),
                       row(
                         "Contact Person",
                         sup['contact_person'] as String?,
-                        valueStyle: const TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 14,
-                        ),
+                        valueStyle: const TextStyle(fontFamily: 'Poppins', fontSize: 14),
                       ),
                     ],
                   ),
@@ -486,15 +437,10 @@ class ListSupplierPage extends StatelessWidget {
             // Bar aksi & List Items
             Obx(() {
               final selected = c.selectedSupplierId.value;
-              final sup = c.suppliers.firstWhere(
-                (s) => s['id_supplier'] == selected,
-                orElse: () => {},
-              );
+              final sup = c.suppliers.firstWhere((s) => s['id_supplier'] == selected, orElse: () => {});
 
               if (selected == null || sup.isEmpty) {
-                return const Expanded(
-                  child: Center(child: Text("Pilih supplier terlebih dahulu")),
-                );
+                return const Expanded(child: Center(child: Text("Pilih supplier terlebih dahulu")));
               }
 
               String supplierName = "";
@@ -529,16 +475,12 @@ class ListSupplierPage extends StatelessWidget {
                             final name =
                                 (() {
                                   for (final s in c.suppliers) {
-                                    if (s['id_supplier'] == selected)
-                                      return s['nama_supplier'] as String;
+                                    if (s['id_supplier'] == selected) return s['nama_supplier'] as String;
                                   }
                                   return null;
                                 })();
 
-                            final ok = await c._confirmDeleteSupplier(
-                              context,
-                              supplierName: name,
-                            );
+                            final ok = await c._confirmDeleteSupplier(context, supplierName: name);
                             if (!ok) return;
 
                             try {
@@ -546,9 +488,7 @@ class ListSupplierPage extends StatelessWidget {
                               c.selectedSupplierId.value = null;
                               c.items.clear();
 
-                              CherryToast.success(
-                                title: const Text("Supplier dihapus"),
-                              ).show(context);
+                              CherryToast.success(title: const Text("Supplier dihapus")).show(context);
                             } on DioException catch (e) {
                               CherryToast.error(
                                 title: const Text("Gagal hapus supplier"),
@@ -568,8 +508,7 @@ class ListSupplierPage extends StatelessWidget {
 
                         const SizedBox(width: 8),
                         ElevatedButton(
-                          onPressed:
-                              () => _showAddItemDialog(context, selected),
+                          onPressed: () => _showAddItemDialog(context, selected),
                           child: const Text("Tambah Item"),
                         ),
                         const SizedBox(width: 20),
@@ -607,9 +546,7 @@ class ListSupplierPage extends StatelessWidget {
                         if (data.isEmpty) {
                           return Center(
                             child: Text(
-                              c.itemQuery.value.isEmpty
-                                  ? "Belum ada item"
-                                  : "Tidak ada item yang cocok",
+                              c.itemQuery.value.isEmpty ? "Belum ada item" : "Tidak ada item yang cocok",
                             ),
                           );
                         }
@@ -619,52 +556,36 @@ class ListSupplierPage extends StatelessWidget {
                             dividerColor: const Color(0xFFBCAAA4),
                             listTileTheme: ListTileThemeData(
                               tileColor: Colors.white,
-                              selectedTileColor: const Color(
-                                0xFF8D6E63,
-                              ).withOpacity(.12),
+                              selectedTileColor: const Color(0xFF8D6E63).withOpacity(.12),
                               iconColor: const Color(0xFF6D4C41),
                               textColor: const Color(0xFF3E2723),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 4,
-                              ),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                             ),
                           ),
                           child: ListView.separated(
                             physics: const BouncingScrollPhysics(),
                             padding: const EdgeInsets.all(8),
                             itemCount: data.length,
-                            separatorBuilder:
-                                (_, __) => const SizedBox(height: 8),
+                            separatorBuilder: (_, __) => const SizedBox(height: 8),
                             itemBuilder: (_, i) {
                               final it = data[i];
                               return ListTile(
-                                title: Text(
-                                  it['nama_item'],
-                                  style: const TextStyle(fontFamily: 'Poppins'),
-                                ),
+                                title: Text(it['nama_item'], style: const TextStyle(fontFamily: 'Poppins')),
                                 subtitle: Text(
                                   NumberFormat.currency(
                                     locale: 'id_ID',
                                     symbol: 'Rp ',
                                     decimalDigits: 0,
                                   ).format(it['harga_item']),
-                                  style: const TextStyle(
-                                    color: Color(0xFF6D4C41),
-                                    fontFamily: 'Poppins',
-                                  ),
+                                  style: const TextStyle(color: Color(0xFF6D4C41), fontFamily: 'Poppins'),
                                 ),
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     IconButton(
                                       icon: const Icon(Icons.edit),
-                                      onPressed:
-                                          () =>
-                                              _showEditItemDialog(context, it),
+                                      onPressed: () => _showEditItemDialog(context, it),
                                     ),
                                     IconButton(
                                       icon: const Icon(Icons.delete),
@@ -675,9 +596,7 @@ class ListSupplierPage extends StatelessWidget {
                                         );
                                         if (!ok) return;
                                         await c.deleteItem(it['id']);
-                                        CherryToast.success(
-                                          title: const Text("Item dihapus"),
-                                        ).show(context);
+                                        CherryToast.success(title: const Text("Item dihapus")).show(context);
                                       },
                                     ),
                                   ],
@@ -713,10 +632,7 @@ class ListSupplierPage extends StatelessWidget {
     Get.dialog(
       Obx(
         () => AlertDialog(
-          title: const Text(
-            "Tambah Supplier",
-            style: TextStyle(fontFamily: 'Poppins'),
-          ),
+          title: const Text("Tambah Supplier", style: TextStyle(fontFamily: 'Poppins')),
           content: SizedBox(
             width: Get.width * 0.5,
             child: SingleChildScrollView(
@@ -733,26 +649,17 @@ class ListSupplierPage extends StatelessWidget {
                   const SizedBox(height: 6),
                   TextField(
                     controller: alamatC,
-                    decoration: const InputDecoration(
-                      labelText: "Alamat",
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: const InputDecoration(labelText: "Alamat", border: OutlineInputBorder()),
                   ),
                   const SizedBox(height: 6),
                   TextField(
                     controller: telpC,
-                    decoration: const InputDecoration(
-                      labelText: "No. Telp",
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: const InputDecoration(labelText: "No. Telp", border: OutlineInputBorder()),
                   ),
                   const SizedBox(height: 6),
                   TextField(
                     controller: kotaC,
-                    decoration: const InputDecoration(
-                      labelText: "Kota",
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: const InputDecoration(labelText: "Kota", border: OutlineInputBorder()),
                   ),
                   const SizedBox(height: 6),
                   TextField(
@@ -764,63 +671,52 @@ class ListSupplierPage extends StatelessWidget {
                   ),
 
                   const SizedBox(height: 6),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "Item Awal (opsional)",
-                      style: Get.textTheme.labelLarge,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  for (int i = 0; i < rows.length; i++)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            flex: 2,
-                            child: TextField(
-                              controller: rows[i]["name"],
-                              decoration: const InputDecoration(
-                                labelText: "Nama Item",
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            flex: 1,
-                            child: TextField(
-                              controller: rows[i]["price"],
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                              decoration: const InputDecoration(
-                                labelText: "Harga",
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          IconButton(
-                            onPressed: () => rows.removeAt(i),
-                            icon: const Icon(
-                              Icons.remove_circle,
-                              color: Colors.red,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+
+                  // Align(
+                  //   alignment: Alignment.centerLeft,
+                  //   child: Text("Item Awal (opsional)", style: Get.textTheme.labelLarge),
+                  // ),
+                  // const SizedBox(height: 6),
+                  // for (int i = 0; i < rows.length; i++)
+                  //   Padding(
+                  //     padding: const EdgeInsets.only(bottom: 8),
+                  //     child: Row(
+                  //       children: [
+                  //         Expanded(
+                  //           flex: 2,
+                  //           child: TextField(
+                  //             controller: rows[i]["name"],
+                  //             decoration: const InputDecoration(
+                  //               labelText: "Nama Item",
+                  //               border: OutlineInputBorder(),
+                  //             ),
+                  //           ),
+                  //         ),
+                  //         const SizedBox(width: 8),
+                  //         Expanded(
+                  //           flex: 1,
+                  //           child: TextField(
+                  //             controller: rows[i]["price"],
+                  //             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  //             decoration: const InputDecoration(
+                  //               labelText: "Harga",
+                  //               border: OutlineInputBorder(),
+                  //             ),
+                  //           ),
+                  //         ),
+                  //         const SizedBox(width: 8),
+                  //         IconButton(
+                  //           onPressed: () => rows.removeAt(i),
+                  //           icon: const Icon(Icons.remove_circle, color: Colors.red),
+                  //         ),
+                  //       ],
+                  //     ),
+                  //   ),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton.icon(
                       onPressed:
-                          () => rows.add({
-                            "name": TextEditingController(),
-                            "price": TextEditingController(),
-                          }),
+                          () => rows.add({"name": TextEditingController(), "price": TextEditingController()}),
                       icon: const Icon(Icons.add),
                       label: const Text("Tambah Baris"),
                     ),
@@ -830,10 +726,7 @@ class ListSupplierPage extends StatelessWidget {
             ),
           ),
           actions: [
-            TextButton(
-              onPressed: saving.value ? null : () => Get.back(),
-              child: const Text("Batal"),
-            ),
+            TextButton(onPressed: saving.value ? null : () => Get.back(), child: const Text("Batal")),
             ElevatedButton(
               onPressed:
                   saving.value
@@ -841,11 +734,9 @@ class ListSupplierPage extends StatelessWidget {
                       : () async {
                         final nama = nameC.text.trim();
                         if (nama.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("Nama supplier wajib diisi"),
-                            ),
-                          );
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(const SnackBar(content: Text("Nama supplier wajib diisi")));
                           return;
                         }
                         final payload = <Map<String, dynamic>>[];
@@ -854,22 +745,16 @@ class ListSupplierPage extends StatelessWidget {
                           final p = r["price"]!.text.trim();
                           if (n.isEmpty && p.isEmpty) continue;
                           if (n.isEmpty || p.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Nama & harga item wajib diisi"),
-                              ),
-                            );
+                            ScaffoldMessenger.of(
+                              context,
+                            ).showSnackBar(const SnackBar(content: Text("Nama & harga item wajib diisi")));
                             return;
                           }
-                          final harga = double.tryParse(
-                            p.replaceAll('.', '').replaceAll(',', '.'),
-                          );
+                          final harga = double.tryParse(p.replaceAll('.', '').replaceAll(',', '.'));
                           if (harga == null || harga < 0) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text("Harga tidak valid untuk $n"),
-                              ),
-                            );
+                            ScaffoldMessenger.of(
+                              context,
+                            ).showSnackBar(SnackBar(content: Text("Harga tidak valid untuk $n")));
                             return;
                           }
                           payload.add({"nama_item": n, "harga_item": harga});
@@ -900,9 +785,7 @@ class ListSupplierPage extends StatelessWidget {
                           saving.value = false;
                           CherryToast.error(
                             title: const Text("Gagal tambah supplier"),
-                            description: Text(
-                              "${e.response?.statusCode} ${e.response?.data ?? e.message}",
-                            ),
+                            description: Text("${e.response?.statusCode} ${e.response?.data ?? e.message}"),
                           ).show(context);
                         } catch (e) {
                           saving.value = false;
@@ -933,7 +816,11 @@ class ListSupplierPage extends StatelessWidget {
     // Struktur baris: nameSel untuk pilihan dropdown, price untuk harga
     final rows =
         <Map<String, dynamic>>[
-          {"nameSel": RxnString(), "price": TextEditingController()},
+          {
+            "nameSel": RxnString(),
+            "satuanSel": RxnString(c.masterSatuan[0]),
+            "price": TextEditingController(),
+          },
         ].obs;
     final saving = false.obs;
 
@@ -959,44 +846,54 @@ class ListSupplierPage extends StatelessWidget {
                               () => DropdownSearch<String>(
                                 items: c.masterNama,
                                 selectedItem: rows[i]["nameSel"].value,
-                                onChanged:
-                                    (val) => rows[i]["nameSel"].value = val,
-                                popupProps: const PopupProps.menu(
-                                  showSearchBox: true,
-                                  fit: FlexFit.loose,
+                                onChanged: (val) => rows[i]["nameSel"].value = val,
+                                popupProps: const PopupProps.menu(showSearchBox: true, fit: FlexFit.loose),
+                                dropdownDecoratorProps: const DropDownDecoratorProps(
+                                  dropdownSearchDecoration: InputDecoration(
+                                    labelText: 'Nama Item',
+                                    border: OutlineInputBorder(),
+                                  ),
                                 ),
-                                dropdownDecoratorProps:
-                                    const DropDownDecoratorProps(
-                                      dropdownSearchDecoration: InputDecoration(
-                                        labelText: 'Nama Item',
-                                        border: OutlineInputBorder(),
-                                      ),
-                                    ),
                               ),
                             ),
                           ),
                           const SizedBox(width: 8),
+
                           Expanded(
                             flex: 1,
+                            child: Obx(
+                              () => DropdownSearch<String>(
+                                items: c.masterSatuan,
+                                selectedItem: c.masterSatuan[0],
+                                onChanged: (val) => rows[i]["satuanSel"].value = val,
+                                popupProps: const PopupProps.menu(showSearchBox: true, fit: FlexFit.loose),
+                                dropdownDecoratorProps: const DropDownDecoratorProps(
+                                  dropdownSearchDecoration: InputDecoration(
+                                    labelText: 'Satuan',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+
+                          Expanded(
+                            flex: 2,
                             child: TextField(
                               controller: rows[i]["price"],
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                              decoration: const InputDecoration(
-                                labelText: "Harga",
+                              inputFormatters: <TextInputFormatter>[RupiahInputFormatter()], //
+                              decoration: InputDecoration(
                                 border: OutlineInputBorder(),
+                                hintText: "Harga (Rp. ) ",
                               ),
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
                             ),
                           ),
                           const SizedBox(width: 8),
                           IconButton(
                             onPressed: () => rows.removeAt(i),
-                            icon: const Icon(
-                              Icons.remove_circle,
-                              color: Colors.red,
-                            ),
+                            icon: const Icon(Icons.remove_circle, color: Colors.red),
                           ),
                         ],
                       ),
@@ -1004,11 +901,7 @@ class ListSupplierPage extends StatelessWidget {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton.icon(
-                      onPressed:
-                          () => rows.add({
-                            "nameSel": RxnString(),
-                            "price": TextEditingController(),
-                          }),
+                      onPressed: () => rows.add({"nameSel": RxnString(), "price": TextEditingController()}),
                       icon: const Icon(Icons.add),
                       label: const Text("Tambah Baris"),
                     ),
@@ -1018,69 +911,50 @@ class ListSupplierPage extends StatelessWidget {
             ),
           ),
           actions: [
-            TextButton(
-              onPressed: saving.value ? null : () => Get.back(),
-              child: const Text("Batal"),
-            ),
+            TextButton(onPressed: saving.value ? null : () => Get.back(), child: const Text("Batal")),
             ElevatedButton(
               onPressed:
                   saving.value
                       ? null
                       : () async {
                         if (rows.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Minimal 1 item")),
-                          );
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(const SnackBar(content: Text("Minimal 1 item")));
                           return;
                         }
                         final payload = <Map<String, dynamic>>[];
                         for (final r in rows) {
                           final String? n = (r["nameSel"] as RxnString).value;
-                          final String p =
-                              (r["price"] as TextEditingController).text.trim();
+                          final String? unit = (r["satuanSel"] as RxnString).value;
+                          final String p = (r["price"] as TextEditingController).text.trim();
                           if ((n == null || n.trim().isEmpty) || p.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Nama & harga wajib diisi"),
-                              ),
-                            );
+                            ScaffoldMessenger.of(
+                              context,
+                            ).showSnackBar(const SnackBar(content: Text("Nama & harga wajib diisi")));
                             return;
                           }
-                          final harga = double.tryParse(
-                            p.replaceAll('.', '').replaceAll(',', ''),
-                          );
+                          final harga = double.tryParse(p.replaceAll('.', '').replaceAll(',', ''));
                           if (harga == null || harga < 0) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text("Harga tidak valid untuk $n"),
-                              ),
-                            );
+                            ScaffoldMessenger.of(
+                              context,
+                            ).showSnackBar(SnackBar(content: Text("Harga tidak valid untuk $n")));
                             return;
                           }
-                          payload.add({
-                            "nama_item": n.trim(),
-                            "harga_item": harga,
-                          });
+                          payload.add({"nama_item": n.trim(), "satuan": unit!, "harga_item": harga});
                         }
 
                         saving.value = true;
                         try {
                           final ctrl = Get.find<SupplierController>();
-                          await ctrl.addItemsToSupplier(
-                            idSupplier,
-                            payload,
-                          ); // <-- AUTO REFRESH
-                          CherryToast.success(
-                            title: const Text("Item ditambahkan"),
-                          ).show(context);
+                          await ctrl.addItemsToSupplier(idSupplier, payload); // <-- AUTO REFRESH
+                          CherryToast.success(title: const Text("Item ditambahkan")).show(context);
                           Get.back();
                         } on DioException catch (e) {
                           saving.value = false;
                           CherryToast.error(
                             title: const Text("Gagal tambah item"),
-                            description: Text(
-                              "${e.response?.statusCode} ${e.response?.data ?? e.message}",
-                            ),
+                            description: Text("${e.response?.statusCode} ${e.response?.data ?? e.message}"),
                           ).show(context);
                         } catch (e) {
                           saving.value = false;
@@ -1132,35 +1006,23 @@ class ListSupplierPage extends StatelessWidget {
               children: [
                 TextField(
                   controller: nameC,
-                  decoration: const InputDecoration(
-                    labelText: "Nama Supplier",
-                    border: OutlineInputBorder(),
-                  ),
+                  decoration: const InputDecoration(labelText: "Nama Supplier", border: OutlineInputBorder()),
                 ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: alamatC,
                   maxLines: 2,
-                  decoration: const InputDecoration(
-                    labelText: "Alamat",
-                    border: OutlineInputBorder(),
-                  ),
+                  decoration: const InputDecoration(labelText: "Alamat", border: OutlineInputBorder()),
                 ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: telpC,
-                  decoration: const InputDecoration(
-                    labelText: "No. Telp",
-                    border: OutlineInputBorder(),
-                  ),
+                  decoration: const InputDecoration(labelText: "No. Telp", border: OutlineInputBorder()),
                 ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: kotaC,
-                  decoration: const InputDecoration(
-                    labelText: "Kota",
-                    border: OutlineInputBorder(),
-                  ),
+                  decoration: const InputDecoration(labelText: "Kota", border: OutlineInputBorder()),
                 ),
                 const SizedBox(height: 8),
                 TextField(
@@ -1180,9 +1042,7 @@ class ListSupplierPage extends StatelessWidget {
             onPressed: () async {
               final namaBaru = nameC.text.trim();
               if (namaBaru.isEmpty) {
-                CherryToast.error(
-                  title: const Text("Nama tidak boleh kosong"),
-                ).show(context);
+                CherryToast.error(title: const Text("Nama tidak boleh kosong")).show(context);
                 return;
               }
               try {
@@ -1195,17 +1055,13 @@ class ListSupplierPage extends StatelessWidget {
                   kota: kotaC.text.trim(),
                   contactPerson: cpC.text.trim(),
                 );
-                CherryToast.success(
-                  title: const Text("Supplier diupdate"),
-                ).show(context);
+                CherryToast.success(title: const Text("Supplier diupdate")).show(context);
                 c.fetchSuppliers();
                 Get.back();
               } on DioException catch (e) {
                 CherryToast.error(
                   title: const Text("Gagal update supplier"),
-                  description: Text(
-                    "${e.response?.statusCode} ${e.response?.data ?? e.message}",
-                  ),
+                  description: Text("${e.response?.statusCode} ${e.response?.data ?? e.message}"),
                 ).show(context);
               } catch (e) {
                 CherryToast.error(
@@ -1223,14 +1079,13 @@ class ListSupplierPage extends StatelessWidget {
 
   void _showEditItemDialog(BuildContext context, Map<String, dynamic> item) {
     final nameC = TextEditingController(text: item['nama_item']);
+    final unitC = TextEditingController(text: item['satuan']);
 
     // tampilkan harga tanpa .0
     final harga = item['harga_item'];
     final priceC = TextEditingController(
       text:
-          (harga is int)
-              ? harga.toString()
-              : (harga is double ? harga.toStringAsFixed(0) : harga.toString()),
+          (harga is int) ? harga.toString() : (harga is double ? harga.toStringAsFixed(0) : harga.toString()),
     );
 
     Get.dialog(
@@ -1241,21 +1096,29 @@ class ListSupplierPage extends StatelessWidget {
           children: [
             TextField(
               controller: nameC,
-              decoration: const InputDecoration(
-                labelText: "Nama Item",
-                border: OutlineInputBorder(),
+              decoration: const InputDecoration(labelText: "Nama Item", border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 8),
+            Obx(
+              () => DropdownSearch<String>(
+                items: c.masterSatuan,
+                selectedItem: c.masterSatuan[0],
+                onChanged: (val) => unitC.text = val!,
+                popupProps: const PopupProps.menu(showSearchBox: true, fit: FlexFit.loose),
+                dropdownDecoratorProps: const DropDownDecoratorProps(
+                  dropdownSearchDecoration: InputDecoration(
+                    labelText: 'Satuan',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: priceC,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              decoration: const InputDecoration(
-                labelText: "Harga",
-                border: OutlineInputBorder(),
-              ),
+              inputFormatters: <TextInputFormatter>[RupiahInputFormatter()], //
+              decoration: InputDecoration(border: OutlineInputBorder(), hintText: "Harga (Rp. ) "),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
             ),
           ],
         ),
@@ -1264,33 +1127,28 @@ class ListSupplierPage extends StatelessWidget {
           ElevatedButton(
             onPressed: () async {
               final nama = nameC.text.trim();
+              final unit = unitC.text.trim();
               final harga = double.tryParse(priceC.text.trim());
               if (nama.isEmpty || harga == null || harga < 0) {
-                CherryToast.error(
-                  title: const Text("Input tidak valid"),
-                ).show(context);
+                CherryToast.error(title: const Text("Input tidak valid")).show(context);
                 return;
               }
               try {
                 final ctrl = Get.find<SupplierController>();
                 final idSup = item['id_supplier'].toString();
-                await ctrl.updateItem(item['id'] as int, idSup, nama, harga);
-                CherryToast.success(
-                  title: const Text("Item diupdate"),
-                ).show(context);
+                await ctrl.updateItem(item['id'] as int, idSup, nama, unit, harga);
+                CherryToast.success(title: const Text("Item diupdate")).show(Get.context!);
                 ctrl.fetchItems(idSup);
               } on DioException catch (e) {
                 CherryToast.error(
                   title: const Text("Gagal update item"),
-                  description: Text(
-                    "${e.response?.statusCode} ${e.response?.data ?? e.message}",
-                  ),
-                ).show(context);
+                  description: Text("${e.response?.statusCode} ${e.response?.data ?? e.message}"),
+                ).show(Get.context!);
               } catch (e) {
                 CherryToast.error(
                   title: const Text("Gagal update item"),
                   description: Text("$e"),
-                ).show(context);
+                ).show(Get.context!);
               }
             },
             child: const Text("Update"),
