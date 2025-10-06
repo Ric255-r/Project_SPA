@@ -34,11 +34,13 @@ class HistoryPembelianController extends GetxController {
 
   RxBool isDetailLoading = false.obs;
   RxList<Map<String, dynamic>> detailFakturItems = <Map<String, dynamic>>[].obs;
+  Rx<num> totalHargaDetailFaktur = Rx<num>(0);
 
   Future<void> showDetailDialog(Map<String, dynamic> faktur) async {
     // 1. Set loading jadi true dan kosongkan list lama
     isDetailLoading.value = true;
     detailFakturItems.clear();
+    totalHargaDetailFaktur.value = 0;
 
     // 2. Tampilkan dialog SEGERA. Isinya akan reaktif.
     Get.dialog(
@@ -47,7 +49,18 @@ class HistoryPembelianController extends GetxController {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Detail Faktur", style: TextStyle(fontWeight: FontWeight.bold)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("Detail Faktur", style: TextStyle(fontWeight: FontWeight.bold)),
+                Obx(
+                  () => Text(
+                    "Total: ${formatrupiah(totalHargaDetailFaktur.value)}",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  ),
+                ),
+              ],
+            ),
             Text(
               // ignore: prefer_interpolation_to_compose_strings
               "No Faktur Supplier: " + faktur['no_faktur'],
@@ -80,7 +93,7 @@ class HistoryPembelianController extends GetxController {
                   margin: const EdgeInsets.symmetric(vertical: 4),
                   child: ListTile(
                     title: Text(
-                      "ID Item: ${item['id_item'] ?? '-'}",
+                      "${item['id_item'] ?? '-'} - ${item['nama_item'] ?? '-'}",
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text(
@@ -108,7 +121,11 @@ class HistoryPembelianController extends GetxController {
       final response = await dio.get('${myIpAddr()}/pembelian/detail_faktur_pembelian?id_form=$idForm');
 
       final List<dynamic> responseData = response.data;
+
       detailFakturItems.assignAll(responseData.map((e) => e as Map<String, dynamic>).toList());
+      for (var i = 0; i < detailFakturItems.length; i++) {
+        totalHargaDetailFaktur.value += detailFakturItems[i]['total'];
+      }
     } catch (e) {
       log("Gagal mengambil detail faktur: $e");
       // Opsional: Tampilkan pesan error dengan Get.snackbar
@@ -133,6 +150,9 @@ class HistoryPembelianController extends GetxController {
     } catch (_) {}
     try {
       uiSelectedSupplier.close();
+    } catch (_) {}
+    try {
+      totalHargaDetailFaktur.close();
     } catch (_) {}
     super.onClose();
   }
