@@ -1,10 +1,12 @@
 import 'dart:developer';
 
 import 'package:Project_SPA/function/ip_address.dart';
+import 'package:Project_SPA/function/rupiah_formatter.dart';
 import 'package:Project_SPA/resepsionis/detail_food_n_beverages.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
@@ -31,10 +33,22 @@ class HistoryPembelianController extends GetxController {
   RxBool hasSearched = false.obs; // flag untuk trigger pas pencet btn tampil
 
   // --- TAMBAHANB VARIABEL BARU UNTUK MENAMPILKAN DIALOG ---
-
   RxBool isDetailLoading = false.obs;
   RxList<Map<String, dynamic>> detailFakturItems = <Map<String, dynamic>>[].obs;
   Rx<num> totalHargaDetailFaktur = Rx<num>(0);
+
+  // Variabel untuk menyimpan TextController agar tidak hilang saat di-scroll
+  List<TextEditingController> qtyControllers = [];
+  List<TextEditingController> hargaControllers = [];
+
+  // --- FUNGSI BARU UNTUK MENGHITUNG ULANG TOTAL ---
+  void recalculateTotal() {
+    double total = 0;
+    for (var item in detailFakturItems) {
+      total += (item['total'] ?? 0);
+    }
+    totalHargaDetailFaktur.value = total;
+  }
 
   Future<void> showDetailDialog(Map<String, dynamic> faktur) async {
     // 1. Set loading jadi true dan kosongkan list lama
@@ -123,9 +137,7 @@ class HistoryPembelianController extends GetxController {
       final List<dynamic> responseData = response.data;
 
       detailFakturItems.assignAll(responseData.map((e) => e as Map<String, dynamic>).toList());
-      for (var i = 0; i < detailFakturItems.length; i++) {
-        totalHargaDetailFaktur.value += detailFakturItems[i]['total'];
-      }
+      recalculateTotal();
     } catch (e) {
       log("Gagal mengambil detail faktur: $e");
       // Opsional: Tampilkan pesan error dengan Get.snackbar
@@ -133,6 +145,224 @@ class HistoryPembelianController extends GetxController {
     } finally {
       // 4. Pastikan loading disetel ke false setelah selesai
       isDetailLoading.value = false;
+    }
+  }
+
+  // --- FUNGSI BARU: DIALOG VERSI EDIT ---
+  Future<void> showEditDialog(Map<String, dynamic> faktur) async {
+    isDetailLoading.value = true;
+    detailFakturItems.clear();
+    totalHargaDetailFaktur.value = 0;
+
+    // Bersihkan controller lama sebelum digunakan lagi
+    for (var controller in qtyControllers) {
+      controller.dispose();
+    }
+    for (var controller in hargaControllers) {
+      controller.dispose();
+    }
+    qtyControllers.clear();
+    hargaControllers.clear();
+
+    Get.dialog(
+      AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("Detail Faktur", style: TextStyle(fontWeight: FontWeight.bold)),
+                Obx(
+                  () => Text(
+                    "Total: ${formatrupiah(totalHargaDetailFaktur.value)}",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  ),
+                ),
+              ],
+            ),
+            Text(
+              // ignore: prefer_interpolation_to_compose_strings
+              "No Faktur Supplier: " + faktur['no_faktur'],
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+            ),
+          ],
+        ),
+        content: Obx(() {
+          if (isDetailLoading.isTrue) {
+            return SizedBox(height: 100, child: Center(child: CircularProgressIndicator()));
+          }
+          if (detailFakturItems.isEmpty) {
+            return Text("Tidak ada item detail.");
+          }
+
+          return SizedBox(
+            width: Get.width * 0.8,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: detailFakturItems.length,
+              itemBuilder: (context, index) {
+                final item = detailFakturItems[index];
+                final currencyFormat = NumberFormat.decimalPattern('id_ID');
+
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 6),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "${item['id_item']} - ${item['nama_item']}",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(height: 8),
+                        Row(
+                          children: [
+                            // TextField untuk Qty
+                            Expanded(
+                              child: TextField(
+                                controller: qtyControllers[index],
+                                keyboardType: TextInputType.number,
+                                decoration: InputDecoration(
+                                  labelText: 'Qty',
+                                  border: OutlineInputBorder(),
+                                  isDense: true,
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            // TextField untuk Harga Beli
+                            Expanded(
+                              flex: 2,
+                              child: TextField(
+                                controller: hargaControllers[index],
+                                keyboardType: TextInputType.number,
+                                inputFormatters: <TextInputFormatter>[RupiahInputFormatter()],
+                                decoration: InputDecoration(
+                                  labelText: 'Harga Beli',
+                                  prefixText: 'Rp ',
+                                  border: OutlineInputBorder(),
+                                  isDense: true,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            "Total: Rp ${currencyFormat.format(item['total'] ?? 0)}",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.deepPurple,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          );
+        }),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: Text("BATAL")),
+          ElevatedButton(
+            onPressed: () {
+              // Panggil fungsi simpan
+              saveFakturChanges(faktur['id_form']);
+            },
+            child: Text("SIMPAN"),
+          ),
+        ],
+      ),
+      barrierDismissible: false,
+    );
+
+    // --- Ambil data dan BUAT TEXTEDITINGCONTROLLER ---
+    try {
+      final idForm = faktur['id_form'];
+      final response = await dio.get('${myIpAddr()}/pembelian/detail_faktur_pembelian?id_form=$idForm');
+      final List<dynamic> responseData = response.data;
+
+      for (var data in responseData) {
+        final itemMap = data as Map<String, dynamic>;
+
+        // Buat controller untuk setiap item
+        final qtyController = TextEditingController(text: itemMap['qty'].toString());
+        final hargaController = TextEditingController(text: itemMap['harga_beli'].toString());
+
+        // Tambahkan listener untuk update otomatis
+        void updateItemTotal() {
+          // 1. Ambil teks mentah dari controller
+          final rawQtyText = qtyController.text;
+          final rawHargaText = hargaController.text;
+
+          // 2. Bersihkan teks dari karakter non-digit (titik, koma, dll.)
+          final cleanQtyString = rawQtyText.replaceAll(RegExp(r'[^0-9]'), '');
+          final cleanHargaString = rawHargaText.replaceAll(RegExp(r'[^0-9]'), '');
+
+          // 3. Parsing string yang sudah bersih. Jika gagal, hasilnya 0.
+          final qty = int.tryParse(cleanQtyString) ?? 0;
+          final harga = int.tryParse(cleanHargaString) ?? 0;
+          // --- AKHIR PERUBAHAN ---
+
+          itemMap['qty'] = qty;
+          itemMap['harga_beli'] = harga;
+          itemMap['total'] = qty * harga;
+          // Refresh list agar UI terupdate & hitung ulang grand total
+          detailFakturItems.refresh();
+          recalculateTotal();
+        }
+
+        qtyController.addListener(updateItemTotal);
+        hargaController.addListener(updateItemTotal);
+
+        qtyControllers.add(qtyController);
+        hargaControllers.add(hargaController);
+        detailFakturItems.add(itemMap);
+      }
+      recalculateTotal();
+    } catch (e) {
+      log("Gagal mengambil detail faktur: $e");
+      Get.snackbar('Error', 'Gagal memuat detail data.');
+    } finally {
+      isDetailLoading.value = false;
+    }
+  }
+
+  // --- FUNGSI BARU UNTUK MENGIRIM PERUBAHAN KE API ---
+  Future<void> saveFakturChanges(String idForm) async {
+    try {
+      // Tampilkan loading overlay
+      Get.dialog(Center(child: CircularProgressIndicator()), barrierDismissible: false);
+
+      // Siapkan data untuk dikirim
+      final List<Map<String, dynamic>> updatedItems = [];
+      for (var item in detailFakturItems) {
+        updatedItems.add({"id_item": item['id_item'], "qty": item['qty'], "harga_beli": item['harga_beli']});
+      }
+
+      final payload = {"id_form": idForm, "items": updatedItems};
+
+      // Kirim ke API
+      await dio.post('${myIpAddr()}/pembelian/update_detail_faktur', data: payload);
+
+      Get.back(); // Tutup loading overlay
+      Get.back(); // Tutup dialog edit
+      Get.snackbar('Sukses', 'Data faktur berhasil diperbarui!');
+
+      // Refresh data di halaman utama
+      fetchFakturPembelian();
+    } catch (e) {
+      Get.back(); // Tutup loading overlay
+      log("Gagal menyimpan perubahan: $e");
+      Get.snackbar('Error', 'Gagal menyimpan perubahan.');
     }
   }
 
@@ -153,6 +383,15 @@ class HistoryPembelianController extends GetxController {
     } catch (_) {}
     try {
       totalHargaDetailFaktur.close();
+    } catch (_) {}
+
+    try {
+      for (var controller in qtyControllers) {
+        controller.dispose();
+      }
+      for (var controller in hargaControllers) {
+        controller.dispose();
+      }
     } catch (_) {}
     super.onClose();
   }
@@ -748,7 +987,9 @@ class ContainerDataFaktur extends StatelessWidget {
                         message: 'Edit',
                         waitDuration: const Duration(milliseconds: 400),
                         child: ElevatedButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            c.showEditDialog(item);
+                          },
                           style: ElevatedButton.styleFrom(
                             minimumSize: const Size(40, 40),
                             padding: EdgeInsets.zero,
