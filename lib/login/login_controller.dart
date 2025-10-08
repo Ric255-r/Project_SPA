@@ -22,7 +22,13 @@ class LoginController extends GetxController {
   final firstFocus = FocusNode();
   final secondFocus = FocusNode();
 
-  final dio = Dio();
+  final dio = Dio(
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 6),
+      receiveTimeout: const Duration(seconds: 10),
+      sendTimeout: const Duration(seconds: 10),
+    ),
+  );
 
   Future<void> login(BuildContext context) async {
     log("Login WOi");
@@ -82,6 +88,13 @@ class LoginController extends GetxController {
       }
     } catch (e) {
       if (e is DioException) {
+        if (e.type == DioExceptionType.connectionTimeout ||
+            e.type == DioExceptionType.receiveTimeout ||
+            e.type == DioExceptionType.sendTimeout) {
+          CherryToast.warning(title: const Text('Koneksi timeout')).show(context);
+          return;
+        }
+
         final code = e.response?.statusCode;
         if (code == 401) {
           CherryToast.warning(title: const Text('Username Atau Password Tidak sesuai')).show(context);
