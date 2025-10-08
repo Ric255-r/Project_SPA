@@ -1334,11 +1334,15 @@ class WidgetListPekerjaMobile extends StatefulWidget {
 
 class _WidgetListPekerjaMobileState extends State<WidgetListPekerjaMobile> {
   late final Dio dio;
+  String? selectedagency;
 
   @override
   void initState() {
     super.initState();
     dio = Dio();
+
+    getdataagency();
+
     futureData = fetchData();
     futureData.then((data) {
       setState(() {
@@ -1355,6 +1359,21 @@ class _WidgetListPekerjaMobileState extends State<WidgetListPekerjaMobile> {
       dataList = updatedData;
       filteredList = dataList; // Ensures UI updates with fresh data
     });
+  }
+
+  RxList<Map<String, dynamic>> data_agency = <Map<String, String>>[].obs;
+
+  Future<void> getdataagency() async {
+    try {
+      var response2 = await dio.get('${myIpAddr()}/agency/getagency');
+
+      data_agency.value =
+          (response2.data as List)
+              .map((item) => Map<String, String>.from(item))
+              .toList();
+    } catch (e) {
+      log("error: ${e.toString()}");
+    }
   }
 
   Timer? _debounce;
@@ -1428,6 +1447,17 @@ class _WidgetListPekerjaMobileState extends State<WidgetListPekerjaMobile> {
     List<String> oldFileNames = [];
     oldFileNames = item['kontrak_img']?.split(',') ?? [];
     List<PlatformFile> selectedFiles = [];
+
+    selectedagency = item['agency'];
+
+    final uniqueAgencies =
+        {
+          for (var agency in data_agency)
+            agency['nama_agency']?.toString(): agency,
+        }.values.toList();
+
+    // Validate selected value
+
     Get.dialog(
       StatefulBuilder(
         builder: (context, setState) {
@@ -1448,7 +1478,7 @@ class _WidgetListPekerjaMobileState extends State<WidgetListPekerjaMobile> {
             content: SingleChildScrollView(
               child: Container(
                 width: Get.width - 100,
-                height: Get.height - 200,
+                height: Get.height - 250,
                 child: ListView(
                   children: [
                     Row(
@@ -1538,7 +1568,7 @@ class _WidgetListPekerjaMobileState extends State<WidgetListPekerjaMobile> {
                         Padding(
                           padding: const EdgeInsets.only(top: 55),
                           child: Container(
-                            height: 370,
+                            height: 400,
                             width: 500,
                             child: Padding(
                               padding: EdgeInsets.only(left: 10),
@@ -1757,7 +1787,7 @@ class _WidgetListPekerjaMobileState extends State<WidgetListPekerjaMobile> {
                                       color: Colors.grey[300],
                                     ),
                                     child: DropdownButton<String>(
-                                      value: dropdownStatus,
+                                      value: selectedagency,
                                       isExpanded: true,
                                       icon: const Icon(Icons.arrow_drop_down),
                                       elevation: 14,
@@ -1770,19 +1800,26 @@ class _WidgetListPekerjaMobileState extends State<WidgetListPekerjaMobile> {
                                       ),
                                       onChanged: (String? value) {
                                         setState(() {
-                                          dropdownStatus = value;
+                                          selectedagency = value;
+                                          print(
+                                            'selected agency : $selectedagency',
+                                          );
                                         });
                                       },
                                       items:
-                                          listStatus.map<
+                                          uniqueAgencies.map<
                                             DropdownMenuItem<String>
-                                          >((String value) {
+                                          >((agency) {
+                                            final namaagency =
+                                                agency['nama_agency']
+                                                    ?.toString() ??
+                                                '';
                                             return DropdownMenuItem<String>(
-                                              value: value,
+                                              value: namaagency,
                                               child: Align(
                                                 alignment: Alignment.centerLeft,
                                                 child: Text(
-                                                  value,
+                                                  namaagency,
                                                   style: TextStyle(
                                                     fontSize: 14,
                                                     fontFamily: 'Poppins',
@@ -1863,6 +1900,8 @@ class _WidgetListPekerjaMobileState extends State<WidgetListPekerjaMobile> {
                                                       alamatController.text,
                                                   "jk": dropdownJK,
                                                   "status": dropdownStatus,
+
+                                                  "kode_agency": selectedagency,
                                                   "kontrak_img":
                                                       selectedFiles.map((file) {
                                                         return MultipartFile.fromBytes(
@@ -2258,7 +2297,7 @@ class _WidgetListPekerjaMobileState extends State<WidgetListPekerjaMobile> {
                                           MainAxisAlignment.start,
                                       children: [
                                         Container(
-                                          width: 100,
+                                          width: 80,
                                           margin: EdgeInsets.only(
                                             left: 20,
                                             bottom: 0,
@@ -2267,17 +2306,17 @@ class _WidgetListPekerjaMobileState extends State<WidgetListPekerjaMobile> {
                                           child: Text(
                                             'Agency ',
                                             style: TextStyle(
-                                              fontSize: 20,
+                                              fontSize: 15,
                                               fontFamily: 'Poppins',
                                             ),
                                           ),
                                         ),
                                         Container(
-                                          width: 370,
+                                          width: 250,
                                           child: Text(
                                             item['agency'] ?? "Unknown",
                                             style: TextStyle(
-                                              fontSize: 20,
+                                              fontSize: 15,
                                               fontFamily: 'Poppins',
                                             ),
                                           ),

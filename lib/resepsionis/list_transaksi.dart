@@ -2563,14 +2563,12 @@ class ListTransaksiController extends GetxController {
 }
 
 class ListTransaksi extends StatelessWidget {
-  ListTransaksi({super.key}) {
-    Get.lazyPut<ListTransaksiController>(() => ListTransaksiController(), fenix: false);
-  }
+  ListTransaksi({super.key});
+
+  final c = Get.put(ListTransaksiController());
 
   @override
   Widget build(BuildContext context) {
-    final c = Get.find<ListTransaksiController>();
-
     // LOGIKA YANG DIPERBAIKI: Gunakan 'shortestSide' untuk deteksi tipe perangkat
     // Ini tidak akan terpengaruh oleh rotasi layar.
     final bool isMobile = MediaQuery.of(context).size.shortestSide < 600;

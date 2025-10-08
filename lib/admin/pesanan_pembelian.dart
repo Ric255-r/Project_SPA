@@ -1,6 +1,8 @@
 import 'package:Project_SPA/function/ip_address.dart';
+import 'package:Project_SPA/function/rupiah_formatter.dart';
 import 'package:cherry_toast/cherry_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:dio/dio.dart';
@@ -13,8 +15,7 @@ class POPemasokController extends GetxController {
   final RxnString selectedSupplierId = RxnString();
 
   // Item milik supplier terpilih (dari /supplier/{id}/items)
-  final RxList<Map<String, dynamic>> supplierItems =
-      <Map<String, dynamic>>[].obs;
+  final RxList<Map<String, dynamic>> supplierItems = <Map<String, dynamic>>[].obs;
 
   // Baris input item yang akan dibeli
   final RxList<Map<String, dynamic>> itemRows = <Map<String, dynamic>>[].obs;
@@ -46,6 +47,9 @@ class POPemasokController extends GetxController {
       (r['qty'] as TextEditingController).dispose();
       (r['price'] as TextEditingController).dispose();
     }
+    try {
+      selectedSupplierId.close();
+    } catch (_) {}
     super.onClose();
   }
 
@@ -62,10 +66,7 @@ class POPemasokController extends GetxController {
   // ================= SUPPLIERS =================
   Future<void> fetchSuppliers() async {
     try {
-      final res = await dio.get(
-        '$_base/supplier/listsupplier?_ts=${_ts()}',
-        options: _noCache,
-      );
+      final res = await dio.get('$_base/supplier/listsupplier?_ts=${_ts()}', options: _noCache);
       if (res.data is! List) {
         suppliers.assignAll([]);
         return;
@@ -113,10 +114,7 @@ class POPemasokController extends GetxController {
     supplierItems.clear();
     if (idSupplier == null || idSupplier.isEmpty) return;
     try {
-      final res = await dio.get(
-        '$_base/supplier/$idSupplier/items?_ts=${_ts()}',
-        options: _noCache,
-      );
+      final res = await dio.get('$_base/supplier/$idSupplier/items?_ts=${_ts()}', options: _noCache);
       if (res.data is List) {
         // ekspektasi backend: [{id, id_supplier, nama_item, harga_item}, ...]
         supplierItems.assignAll(List<Map<String, dynamic>>.from(res.data));
@@ -136,11 +134,7 @@ class POPemasokController extends GetxController {
 
   // ================= ROWS =================
   void addItemRow() {
-    itemRows.add({
-      'itemId': null,
-      'qty': TextEditingController(),
-      'price': TextEditingController(),
-    });
+    itemRows.add({'itemId': null, 'qty': TextEditingController(), 'price': TextEditingController()});
   }
 
   void removeItemRow(int index) {
@@ -167,8 +161,7 @@ class POPemasokController extends GetxController {
 
   String _priceString(dynamic harga) {
     if (harga == null) return '';
-    final s = harga.toString();
-    return s.replaceAll(RegExp(r'(\.0+)$'), '');
+    return NumberFormat.decimalPattern('id').format(harga);
   }
 
   num lineTotal(Map<String, dynamic> r) {
@@ -187,11 +180,7 @@ class POPemasokController extends GetxController {
 
   num get grandTotal => subtotal;
 
-  String money(num n) => NumberFormat.currency(
-    locale: 'id_ID',
-    symbol: 'Rp ',
-    decimalDigits: 0,
-  ).format(n);
+  String money(num n) => NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(n);
 
   // ================= SIMPAN =================
   Future<void> simpanPembelian({
@@ -201,17 +190,12 @@ class POPemasokController extends GetxController {
   }) async {
     // >>> VALIDASI: no faktur wajib
     if (noFaktur.trim().isEmpty) {
-      CherryToast.error(
-        title: const Text("No Faktur Supplier wajib diisi"),
-      ).show(context);
+      CherryToast.error(title: const Text("No Faktur Supplier wajib diisi")).show(context);
       return;
     }
 
-    if (selectedSupplierId.value == null ||
-        selectedSupplierId.value!.trim().isEmpty) {
-      CherryToast.error(
-        title: const Text("Pilih pemasok terlebih dahulu"),
-      ).show(context);
+    if (selectedSupplierId.value == null || selectedSupplierId.value!.trim().isEmpty) {
+      CherryToast.error(title: const Text("Pilih pemasok terlebih dahulu")).show(context);
       return;
     }
     if (itemRows.isEmpty) {
@@ -222,36 +206,24 @@ class POPemasokController extends GetxController {
     final detail = <Map<String, dynamic>>[];
     for (final r in itemRows) {
       final idStr = r['itemId'] as String?;
-      final qty =
-          int.tryParse((r['qty'] as TextEditingController).text.trim()) ?? 0;
+      final qty = int.tryParse((r['qty'] as TextEditingController).text.trim()) ?? 0;
       final harga =
           int.tryParse(
-            (r['price'] as TextEditingController).text
-                .trim()
-                .replaceAll('.', '')
-                .replaceAll(',', ''),
+            (r['price'] as TextEditingController).text.trim().replaceAll('.', '').replaceAll(',', ''),
           ) ??
           0;
       if (idStr == null || idStr.isEmpty || qty <= 0 || harga < 0) {
         CherryToast.error(
-          title: const Text(
-            "Cek lagi baris item. Ada yang belum lengkap/valid.",
-          ),
+          title: const Text("Cek lagi baris item. Ada yang belum lengkap/valid."),
         ).show(context);
         return;
       }
       final supplierItemId = int.tryParse(idStr) ?? -1; // supplier_items.id
       if (supplierItemId <= 0) {
-        CherryToast.error(
-          title: const Text("ID item tidak valid"),
-        ).show(context);
+        CherryToast.error(title: const Text("ID item tidak valid")).show(context);
         return;
       }
-      detail.add({
-        "supplier_item_id": supplierItemId,
-        "qty": qty,
-        "harga_beli": harga,
-      });
+      detail.add({"supplier_item_id": supplierItemId, "qty": qty, "harga_beli": harga});
     }
 
     final body = {
@@ -273,15 +245,10 @@ class POPemasokController extends GetxController {
     } on DioException catch (e) {
       CherryToast.error(
         title: const Text("Gagal simpan"),
-        description: Text(
-          "${e.response?.statusCode} ${e.response?.data ?? e.message}",
-        ),
+        description: Text("${e.response?.statusCode} ${e.response?.data ?? e.message}"),
       ).show(context);
     } catch (e) {
-      CherryToast.error(
-        title: const Text("Gagal simpan"),
-        description: Text("$e"),
-      ).show(context);
+      CherryToast.error(title: const Text("Gagal simpan"), description: Text("$e")).show(context);
     }
   }
 
@@ -354,10 +321,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Pesanan Pembelian',
-          style: TextStyle(fontFamily: 'Poppins', fontSize: 40),
-        ),
+        title: const Text('Pesanan Pembelian', style: TextStyle(fontFamily: 'Poppins', fontSize: 40)),
         centerTitle: true,
         backgroundColor: const Color(0XFFFFE0B2),
       ),
@@ -387,10 +351,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
                                   labelStyle: labelStyle,
                                   border: OutlineInputBorder(),
                                   enabledBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color: Colors.grey,
-                                      width: 1.5,
-                                    ),
+                                    borderSide: BorderSide(color: Colors.grey, width: 1.5),
                                   ),
                                   filled: true,
                                   fillColor: Colors.white,
@@ -408,10 +369,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
                                 labelStyle: labelStyle,
                                 border: OutlineInputBorder(),
                                 enabledBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: Colors.grey,
-                                    width: 1.5,
-                                  ),
+                                  borderSide: BorderSide(color: Colors.grey, width: 1.5),
                                 ),
                                 filled: true,
                                 fillColor: Colors.white,
@@ -437,10 +395,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
                                   border: OutlineInputBorder(),
                                   suffixIcon: Icon(Icons.calendar_today),
                                   enabledBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color: Colors.grey,
-                                      width: 1.5,
-                                    ),
+                                    borderSide: BorderSide(color: Colors.grey, width: 1.5),
                                   ),
                                   filled: true,
                                   fillColor: Colors.white,
@@ -461,10 +416,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
                                   labelStyle: labelStyle,
                                   border: OutlineInputBorder(),
                                   enabledBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color: Colors.grey,
-                                      width: 1.5,
-                                    ),
+                                    borderSide: BorderSide(color: Colors.grey, width: 1.5),
                                   ),
                                   filled: true,
                                   fillColor: Colors.white,
@@ -481,8 +433,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
                                           ),
                                         )
                                         .toList(),
-                                onChanged:
-                                    (v) async => await c.onSupplierChanged(v),
+                                onChanged: (v) async => await c.onSupplierChanged(v),
                               ),
                             ),
                           ),
@@ -522,17 +473,8 @@ class _PesananPembelianState extends State<PesananPembelian> {
                           mainAxisAlignment: MainAxisAlignment.start,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Padding(
-                              padding: EdgeInsets.only(top: 10),
-                              child: Icon(Icons.save, size: 80),
-                            ),
-                            Text(
-                              'Simpan',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontFamily: 'Poppins',
-                              ),
-                            ),
+                            Padding(padding: EdgeInsets.only(top: 10), child: Icon(Icons.save, size: 80)),
+                            Text('Simpan', style: TextStyle(fontSize: 15, fontFamily: 'Poppins')),
                           ],
                         ),
                       ),
@@ -561,11 +503,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
                       children: [
                         const Text(
                           "Daftar Item Dibeli",
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
-                          ),
+                          style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, fontSize: 16),
                         ),
                         const SizedBox(height: 8),
 
@@ -577,10 +515,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
                               child: Text(
                                 "No",
                                 textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
                               ),
                             ),
                             SizedBox(width: 8),
@@ -588,10 +523,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
                               flex: 4,
                               child: Text(
                                 "Nama Item",
-                                style: TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
                               ),
                             ),
                             SizedBox(width: 8),
@@ -599,10 +531,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
                               flex: 2,
                               child: Text(
                                 "Qty",
-                                style: TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
                               ),
                             ),
                             SizedBox(width: 8),
@@ -610,10 +539,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
                               flex: 3,
                               child: Text(
                                 "Harga",
-                                style: TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
                               ),
                             ),
                             SizedBox(width: 8),
@@ -621,10 +547,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
                               flex: 3,
                               child: Text(
                                 "Total",
-                                style: TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
                               ),
                             ),
                             SizedBox(width: 8),
@@ -649,8 +572,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
                             children: List.generate(c.itemRows.length, (i) {
                               final r = c.itemRows[i];
                               final qtyC = r['qty'] as TextEditingController;
-                              final priceC =
-                                  r['price'] as TextEditingController;
+                              final priceC = r['price'] as TextEditingController;
                               final selItemId = r['itemId'] as String?;
                               final total = c.lineTotal(r);
 
@@ -664,9 +586,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
                                       child: Text(
                                         '${i + 1}',
                                         textAlign: TextAlign.center,
-                                        style: const TextStyle(
-                                          fontFamily: 'Poppins',
-                                        ),
+                                        style: const TextStyle(fontFamily: 'Poppins'),
                                       ),
                                     ),
                                     const SizedBox(width: 8),
@@ -686,27 +606,19 @@ class _PesananPembelianState extends State<PesananPembelian> {
                                           items:
                                               c.supplierItems
                                                   .map(
-                                                    (it) => DropdownMenuItem<
-                                                      String
-                                                    >(
-                                                      value:
-                                                          it['id']?.toString(),
+                                                    (it) => DropdownMenuItem<String>(
+                                                      value: it['id']?.toString(),
                                                       child: Text(
-                                                        '${it['nama_item'] ?? '-'}',
-                                                        overflow:
-                                                            TextOverflow
-                                                                .ellipsis,
+                                                        '${it['nama_item'] ?? '-'} - ${it['satuan'] ?? '-'}',
+                                                        overflow: TextOverflow.ellipsis,
                                                       ),
                                                     ),
                                                   )
                                                   .toList(),
                                           onChanged: (val) {
-                                            if (c.selectedSupplierId.value ==
-                                                null) {
+                                            if (c.selectedSupplierId.value == null) {
                                               CherryToast.error(
-                                                title: const Text(
-                                                  "Pilih pemasok terlebih dahulu",
-                                                ),
+                                                title: const Text("Pilih pemasok terlebih dahulu"),
                                               ).show(Get.context!);
                                               return;
                                             }
@@ -715,9 +627,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
                                             // auto set harga dari supplier_items
                                             final item = c.itemById(val);
                                             if (item != null) {
-                                              priceC.text = c._priceString(
-                                                item['harga_item'],
-                                              );
+                                              priceC.text = c._priceString(item['harga_item']);
                                             }
                                             c.itemRows.refresh();
                                           },
@@ -732,10 +642,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
                                       child: TextField(
                                         controller: qtyC,
                                         onChanged: (_) => c.itemRows.refresh(),
-                                        keyboardType:
-                                            const TextInputType.numberWithOptions(
-                                              decimal: false,
-                                            ),
+                                        keyboardType: const TextInputType.numberWithOptions(decimal: false),
                                         decoration: const InputDecoration(
                                           isDense: true,
                                           labelText: "Qty",
@@ -751,14 +658,12 @@ class _PesananPembelianState extends State<PesananPembelian> {
                                       child: TextField(
                                         controller: priceC,
                                         onChanged: (_) => c.itemRows.refresh(),
-                                        keyboardType:
-                                            const TextInputType.numberWithOptions(
-                                              decimal: false,
-                                            ),
-                                        decoration: const InputDecoration(
-                                          isDense: true,
-                                          labelText: "Harga",
+                                        keyboardType: const TextInputType.numberWithOptions(decimal: false),
+                                        inputFormatters: <TextInputFormatter>[RupiahInputFormatter()], //
+                                        decoration: InputDecoration(
                                           border: OutlineInputBorder(),
+                                          hintText: "Harga ",
+                                          isDense: true,
                                         ),
                                       ),
                                     ),
@@ -769,9 +674,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
                                       flex: 3,
                                       child: TextField(
                                         readOnly: true,
-                                        controller: TextEditingController(
-                                          text: c.money(total),
-                                        ),
+                                        controller: TextEditingController(text: c.money(total)),
                                         decoration: const InputDecoration(
                                           isDense: true,
                                           labelText: "Total",
@@ -786,10 +689,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
                                       width: 40,
                                       child: IconButton(
                                         tooltip: 'Hapus baris',
-                                        icon: const Icon(
-                                          Icons.remove_circle,
-                                          color: Colors.red,
-                                        ),
+                                        icon: const Icon(Icons.remove_circle, color: Colors.red),
                                         onPressed: () => c.removeItemRow(i),
                                       ),
                                     ),
@@ -807,27 +707,20 @@ class _PesananPembelianState extends State<PesananPembelian> {
                             onPressed: () {
                               if (c.selectedSupplierId.value == null) {
                                 CherryToast.error(
-                                  title: const Text(
-                                    "Pilih pemasok terlebih dahulu",
-                                  ),
+                                  title: const Text("Pilih pemasok terlebih dahulu"),
                                 ).show(context);
                                 return;
                               }
                               if (c.supplierItems.isEmpty) {
                                 CherryToast.error(
-                                  title: const Text(
-                                    "Pemasok tidak memiliki item",
-                                  ),
+                                  title: const Text("Pemasok tidak memiliki item"),
                                 ).show(context);
                                 return;
                               }
                               c.addItemRow();
                             },
                             icon: const Icon(Icons.add),
-                            label: const Text(
-                              "Tambah Baris",
-                              style: TextStyle(fontFamily: 'Poppins'),
-                            ),
+                            label: const Text("Tambah Baris", style: TextStyle(fontFamily: 'Poppins')),
                           ),
                         ),
 
@@ -842,10 +735,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
                               children: [
                                 Text(
                                   "Subtotal: ${c.money(c.subtotal)}",
-                                  style: const TextStyle(
-                                    fontFamily: 'Poppins',
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                  style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(

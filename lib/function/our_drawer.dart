@@ -47,9 +47,9 @@ class _OurDrawerState extends State<OurDrawer> {
   void dispose() {
     // TODO: implement dispose
     _scrollBarController.dispose();
-    if (Get.currentRoute != "/ListTransaksi") {
-      Get.delete<ListTransaksiController>();
-    }
+    // if (Get.currentRoute != "/ListTransaksi") {
+    //   Get.delete<ListTransaksiController>();
+    // }
     super.dispose();
   }
 
@@ -214,7 +214,7 @@ class _OurDrawerState extends State<OurDrawer> {
                         leading: const Icon(Icons.admin_panel_settings_rounded),
                         title: const Text('Owner', style: TextStyle(fontFamily: 'Poppins')),
                         onTap: () {
-                          Get.to(() => OwnerPage());
+                          Get.off(() => OwnerPage());
                         },
                       ),
                       ListTile(
@@ -228,14 +228,14 @@ class _OurDrawerState extends State<OurDrawer> {
                         leading: const Icon(Icons.list_rounded),
                         title: const Text('List Transaksi', style: TextStyle(fontFamily: 'Poppins')),
                         onTap: () {
-                          Get.offAll(() => ListTransaksi());
+                          Get.off(() => ListTransaksi());
                         },
                       ),
                       ListTile(
                         leading: const Icon(Icons.safety_check),
                         title: const Text('Komisi', style: TextStyle(fontFamily: 'Poppins')),
                         onTap: () {
-                          Get.offAll(() => laporankomisi());
+                          Get.off(() => laporankomisi());
                         },
                       ),
                     ],
@@ -247,7 +247,7 @@ class _OurDrawerState extends State<OurDrawer> {
             Expanded(child: Container()), // Pushes the Log Out ListTile to the bottom
             InkWell(
               child: Container(
-                padding: const EdgeInsets.only(bottom: 20, left: 20),
+                padding: const EdgeInsets.only(bottom: 10, left: 20),
                 child: Row(
                   children: [
                     const Icon(Icons.logout),

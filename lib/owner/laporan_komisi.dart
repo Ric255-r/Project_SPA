@@ -32,8 +32,7 @@ class laporankomisi extends StatefulWidget {
   State<laporankomisi> createState() => _laporankomisiState();
 }
 
-class _laporankomisiState extends State<laporankomisi>
-    with SingleTickerProviderStateMixin {
+class _laporankomisiState extends State<laporankomisi> with SingleTickerProviderStateMixin {
   RxString selectedvalue = DateTime.now().month.toString().obs;
   RxString selectedyearvalue = DateTime.now().year.toString().obs;
   RxList<Map<String, dynamic>> datakomisi = <Map<String, dynamic>>[].obs;
@@ -64,15 +63,9 @@ class _laporankomisiState extends State<laporankomisi>
   Future<void> getdataagency() async {
     try {
       var response2 = await dio.get('${myIpAddr()}/listagency/getdataagency');
-      data_agency.value =
-          (response2.data as List)
-              .map((item) => Map<String, dynamic>.from(item))
-              .toList();
+      data_agency.value = (response2.data as List).map((item) => Map<String, dynamic>.from(item)).toList();
 
-      data_agency.insert(0, {
-        'id_agency': '0',
-        'nama_agency': 'All Terapis & GRO',
-      });
+      data_agency.insert(0, {'id_agency': '0', 'nama_agency': 'All Terapis & GRO'});
       log(data_agency.toString());
     } catch (e) {
       log("error di getdataagency: ${e.toString()}");
@@ -115,15 +108,8 @@ class _laporankomisiState extends State<laporankomisi>
       var response = await dio.download(
         url,
         filepath,
-        queryParameters: {
-          'month': bulan,
-          'year': tahun,
-          'nama_agency': namaagency,
-        },
-        options: Options(
-          responseType: ResponseType.bytes,
-          headers: {'Accept': 'application/pdf'},
-        ),
+        queryParameters: {'month': bulan, 'year': tahun, 'nama_agency': namaagency},
+        options: Options(responseType: ResponseType.bytes, headers: {'Accept': 'application/pdf'}),
       );
 
       Get.back();
@@ -142,17 +128,13 @@ class _laporankomisiState extends State<laporankomisi>
       print('ini jalan');
       Get.dialog(const DownloadSplash(), barrierDismissible: false);
       final dir = await getDownloadsDirectory();
-      final filepath =
-          '${dir!.path}/data komisi terapis bulan $bulan tahun $tahun.pdf';
+      final filepath = '${dir!.path}/data komisi gro bulan $bulan tahun $tahun.pdf';
       String url = '${myIpAddr()}/main_owner/export_excel_komisi_bulanan_gro';
       var response = await dio.download(
         url,
         filepath,
         queryParameters: {'month': bulan, 'year': tahun},
-        options: Options(
-          responseType: ResponseType.bytes,
-          headers: {'Accept': 'application/pdf'},
-        ),
+        options: Options(responseType: ResponseType.bytes, headers: {'Accept': 'application/pdf'}),
       );
 
       Get.back();
@@ -203,10 +185,7 @@ class _laporankomisiState extends State<laporankomisi>
         url,
         filepath,
         queryParameters: {'year': tahun, 'nama_agency': namaagency},
-        options: Options(
-          responseType: ResponseType.bytes,
-          headers: {'Accept': 'application/pdf'},
-        ),
+        options: Options(responseType: ResponseType.bytes, headers: {'Accept': 'application/pdf'}),
       );
 
       Get.back();
@@ -225,16 +204,13 @@ class _laporankomisiState extends State<laporankomisi>
       print('ini jalan');
       Get.dialog(const DownloadSplash(), barrierDismissible: false);
       final dir = await getDownloadsDirectory();
-      final filepath = '${dir!.path}/data komisi terapis Tahun $tahun.pdf';
+      final filepath = '${dir!.path}/data komisi gro Tahun $tahun.pdf';
       String url = '${myIpAddr()}/main_owner/export_excel_komisi_tahunan_gro';
       var response = await dio.download(
         url,
         filepath,
         queryParameters: {'year': tahun},
-        options: Options(
-          responseType: ResponseType.bytes,
-          headers: {'Accept': 'application/pdf'},
-        ),
+        options: Options(responseType: ResponseType.bytes, headers: {'Accept': 'application/pdf'}),
       );
 
       Get.back();
@@ -248,20 +224,12 @@ class _laporankomisiState extends State<laporankomisi>
     }
   }
 
-  Future<void> getdatakomisiharian(
-    tanggalawal,
-    tanggalakhir,
-    namaagency,
-  ) async {
+  Future<void> getdatakomisiharian(tanggalawal, tanggalakhir, namaagency) async {
     try {
       print('ini jalan');
       var response = await dio.get(
         '${myIpAddr()}/cekkomisi/listkomisiownerharian',
-        data: {
-          'startdate': tanggalawal,
-          'enddate': tanggalakhir,
-          'nama_agency': namaagency,
-        },
+        data: {'startdate': tanggalawal, 'enddate': tanggalakhir, 'nama_agency': namaagency},
       );
       List<Map<String, dynamic>> fetcheddata =
           (response.data as List).map((item) {
@@ -287,21 +255,13 @@ class _laporankomisiState extends State<laporankomisi>
       print('ini jalan');
       Get.dialog(const DownloadSplash(), barrierDismissible: false);
       final dir = await getDownloadsDirectory();
-      final filepath =
-          '${dir!.path}/data komisi tanggal $strdate - tanggal $enddate.pdf';
+      final filepath = '${dir!.path}/data komisi tanggal $strdate - tanggal $enddate.pdf';
       String url = '${myIpAddr()}/main_owner/export_excel_komisi_harian';
       var response = await dio.download(
         url,
         filepath,
-        queryParameters: {
-          'strdate': strdate,
-          'enddate': enddate,
-          'nama_agency': namaagency,
-        },
-        options: Options(
-          responseType: ResponseType.bytes,
-          headers: {'Accept': 'application/pdf'},
-        ),
+        queryParameters: {'strdate': strdate, 'enddate': enddate, 'nama_agency': namaagency},
+        options: Options(responseType: ResponseType.bytes, headers: {'Accept': 'application/pdf'}),
       );
 
       Get.back();
@@ -320,17 +280,13 @@ class _laporankomisiState extends State<laporankomisi>
       print('ini jalan');
       Get.dialog(const DownloadSplash(), barrierDismissible: false);
       final dir = await getDownloadsDirectory();
-      final filepath =
-          '${dir!.path}/data komisi terapis Tanggal $strdate tahun $endddate.pdf';
+      final filepath = '${dir!.path}/data komisi gro Tanggal $strdate tahun $endddate.pdf';
       String url = '${myIpAddr()}/main_owner/export_excel_komisi_harian_gro';
       var response = await dio.download(
         url,
         filepath,
         queryParameters: {'strdate': strdate, 'enddate': endddate},
-        options: Options(
-          responseType: ResponseType.bytes,
-          headers: {'Accept': 'application/pdf'},
-        ),
+        options: Options(responseType: ResponseType.bytes, headers: {'Accept': 'application/pdf'}),
       );
 
       Get.back();
@@ -415,13 +371,9 @@ class _laporankomisiState extends State<laporankomisi>
 
     // 3. Hitung designSize yang efektif berdasarkan tipe perangkat
     final double effectiveDesignWidth =
-        isMobile
-            ? tabletDesignWidth * mobileAdjustmentFactor
-            : tabletDesignWidth;
+        isMobile ? tabletDesignWidth * mobileAdjustmentFactor : tabletDesignWidth;
     final double effectiveDesignHeight =
-        isMobile
-            ? tabletDesignHeight * mobileAdjustmentFactor
-            : tabletDesignHeight;
+        isMobile ? tabletDesignHeight * mobileAdjustmentFactor : tabletDesignHeight;
 
     return ScreenUtilInit(
       designSize: Size(effectiveDesignWidth, effectiveDesignHeight),
@@ -485,33 +437,20 @@ class _laporankomisiState extends State<laporankomisi>
                                   height: 55.w,
                                   child: DropdownButtonFormField<String>(
                                     decoration: InputDecoration(
-                                      contentPadding: EdgeInsets.only(
-                                        top: 0.w,
-                                        bottom: 0.w,
-                                        left: 10.w,
-                                      ),
+                                      contentPadding: EdgeInsets.only(top: 0.w, bottom: 0.w, left: 10.w),
                                       enabledBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                          color: Colors.blue,
-                                          width: 2,
-                                        ),
+                                        borderSide: BorderSide(color: Colors.blue, width: 2),
                                         borderRadius: BorderRadius.circular(10),
                                       ),
                                       focusedBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                          color: Colors.red,
-                                          width: 2,
-                                        ),
+                                        borderSide: BorderSide(color: Colors.red, width: 2),
                                         borderRadius: BorderRadius.circular(10),
                                       ),
                                       filled: true,
                                       fillColor: Colors.grey[200],
                                     ),
                                     value: selectedvalue.value,
-                                    style: TextStyle(
-                                      fontSize: 15.w,
-                                      color: Colors.black,
-                                    ),
+                                    style: TextStyle(fontSize: 15.w, color: Colors.black),
                                     items:
                                         <String>[
                                           '1',
@@ -586,33 +525,20 @@ class _laporankomisiState extends State<laporankomisi>
                                   height: 55.w,
                                   child: DropdownButtonFormField<String>(
                                     decoration: InputDecoration(
-                                      contentPadding: EdgeInsets.only(
-                                        top: 0.w,
-                                        bottom: 0.w,
-                                        left: 10.w,
-                                      ),
+                                      contentPadding: EdgeInsets.only(top: 0.w, bottom: 0.w, left: 10.w),
                                       enabledBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                          color: Colors.blue,
-                                          width: 2,
-                                        ),
+                                        borderSide: BorderSide(color: Colors.blue, width: 2),
                                         borderRadius: BorderRadius.circular(10),
                                       ),
                                       focusedBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                          color: Colors.red,
-                                          width: 2,
-                                        ),
+                                        borderSide: BorderSide(color: Colors.red, width: 2),
                                         borderRadius: BorderRadius.circular(10),
                                       ),
                                       filled: true,
                                       fillColor: Colors.grey[200],
                                     ),
                                     value: selectedyearvalue.value,
-                                    style: TextStyle(
-                                      fontSize: 15.w,
-                                      color: Colors.black,
-                                    ),
+                                    style: TextStyle(fontSize: 15.w, color: Colors.black),
                                     items:
                                         List.generate(
                                           DateTime.now().year - 2000 + 1,
@@ -638,25 +564,16 @@ class _laporankomisiState extends State<laporankomisi>
                                 height: 35.w,
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    getdatakomisi(
-                                      pilihanbulan,
-                                      pilihantahun,
-                                      selectedagencybulanan,
-                                    );
+                                    getdatakomisi(pilihanbulan, pilihantahun, selectedagencybulanan);
                                     log(selectedtabindex.toString());
                                   },
                                   child: Text(
                                     'Cek Komisi',
-                                    style: TextStyle(
-                                      fontSize: 13.w,
-                                      color: Colors.black,
-                                    ),
+                                    style: TextStyle(fontSize: 13.w, color: Colors.black),
                                   ),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Color(0xFFFCEFCB),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                   ),
                                 ),
                               ),
@@ -669,9 +586,7 @@ class _laporankomisiState extends State<laporankomisi>
                               height: 25.w,
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(10),
-                                ),
+                                borderRadius: BorderRadius.all(Radius.circular(10)),
                                 border: Border.all(width: 1),
                               ),
                               margin: EdgeInsets.only(left: 10, top: 5.w),
@@ -681,41 +596,26 @@ class _laporankomisiState extends State<laporankomisi>
                                 isExpanded: true,
                                 icon: const Icon(Icons.arrow_drop_down),
                                 elevation: 14,
-                                style: const TextStyle(
-                                  color: Colors.deepPurple,
-                                ),
+                                style: const TextStyle(color: Colors.deepPurple),
                                 underline: SizedBox(),
                                 padding: EdgeInsets.symmetric(horizontal: 10),
                                 onChanged: (String? value) {
                                   setState(() {
                                     selectedagencybulanan = value;
-                                    getdatakomisi(
-                                      pilihanbulan,
-                                      pilihantahun,
-                                      selectedagencybulanan,
-                                    );
+                                    getdatakomisi(pilihanbulan, pilihantahun, selectedagencybulanan);
                                   });
                                 },
                                 items:
-                                    data_agency.map<DropdownMenuItem<String>>((
-                                      agency,
-                                    ) {
-                                      final namaagency =
-                                          agency['nama_agency']?.toString() ??
-                                          '';
-                                      final kodeagency =
-                                          agency['kode_agency']?.toString() ??
-                                          '';
+                                    data_agency.map<DropdownMenuItem<String>>((agency) {
+                                      final namaagency = agency['nama_agency']?.toString() ?? '';
+                                      final kodeagency = agency['kode_agency']?.toString() ?? '';
                                       return DropdownMenuItem<String>(
                                         value: namaagency,
                                         child: Align(
                                           alignment: Alignment.centerLeft,
                                           child: Text(
                                             namaagency,
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontFamily: 'Poppins',
-                                            ),
+                                            style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
                                           ),
                                         ),
                                       );
@@ -735,24 +635,15 @@ class _laporankomisiState extends State<laporankomisi>
                                 height: 35.w,
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    exportkomisibulanan(
-                                      pilihanbulan,
-                                      pilihantahun,
-                                      selectedagencybulanan,
-                                    );
+                                    exportkomisibulanan(pilihanbulan, pilihantahun, selectedagencybulanan);
                                   },
                                   child: Text(
                                     'Cetak Komisi Terapis',
-                                    style: TextStyle(
-                                      fontSize: 15.w,
-                                      color: Colors.black,
-                                    ),
+                                    style: TextStyle(fontSize: 15.w, color: Colors.black),
                                   ),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Color(0xFFFCEFCB),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                   ),
                                 ),
                               ),
@@ -763,23 +654,15 @@ class _laporankomisiState extends State<laporankomisi>
                                 height: 35.w,
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    exportkomisigrobulanan(
-                                      pilihanbulan,
-                                      pilihantahun,
-                                    );
+                                    exportkomisigrobulanan(pilihanbulan, pilihantahun);
                                   },
                                   child: Text(
                                     'Cetak Komisi Gro',
-                                    style: TextStyle(
-                                      fontSize: 15.w,
-                                      color: Colors.black,
-                                    ),
+                                    style: TextStyle(fontSize: 15.w, color: Colors.black),
                                   ),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Color(0xFFFCEFCB),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                   ),
                                 ),
                               ),
@@ -801,74 +684,42 @@ class _laporankomisiState extends State<laporankomisi>
                                   final results = await showDialog(
                                     context: context,
                                     builder: (context) {
-                                      List<DateTime?> tempdate = List.from(
-                                        _rangedatepickervalue,
-                                      );
+                                      List<DateTime?> tempdate = List.from(_rangedatepickervalue);
                                       return Dialog(
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            15,
-                                          ),
+                                          borderRadius: BorderRadius.circular(15),
                                         ),
                                         child: SingleChildScrollView(
                                           child: Padding(
-                                            padding: EdgeInsets.symmetric(
-                                              vertical: 16.w,
-                                              horizontal: 16.w,
-                                            ),
+                                            padding: EdgeInsets.symmetric(vertical: 16.w, horizontal: 16.w),
                                             child: Column(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
-                                                const Text(
-                                                  'Silahkan pilih rentang tanggal',
-                                                ),
+                                                const Text('Silahkan pilih rentang tanggal'),
                                                 SizedBox(height: 15.w),
                                                 CalendarDatePicker2(
                                                   config: CalendarDatePicker2Config(
-                                                    calendarType:
-                                                        CalendarDatePicker2Type
-                                                            .range,
-                                                    selectedDayHighlightColor:
-                                                        Colors.deepPurple,
-                                                    dayTextStyle: TextStyle(
-                                                      fontSize: 15.w,
-                                                    ),
+                                                    calendarType: CalendarDatePicker2Type.range,
+                                                    selectedDayHighlightColor: Colors.deepPurple,
+                                                    dayTextStyle: TextStyle(fontSize: 15.w),
                                                   ),
                                                   value: tempdate,
                                                   onValueChanged: (dates) {
-                                                    tempdate =
-                                                        dates
-                                                            .map(
-                                                              (d) =>
-                                                                  _getdateonly(
-                                                                    d,
-                                                                  ),
-                                                            )
-                                                            .toList();
+                                                    tempdate = dates.map((d) => _getdateonly(d)).toList();
                                                   },
                                                 ),
                                                 SizedBox(height: 15.w),
                                                 Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.end,
+                                                  mainAxisAlignment: MainAxisAlignment.end,
                                                   children: [
                                                     TextButton(
-                                                      child: const Text(
-                                                        'Cancel',
-                                                      ),
-                                                      onPressed:
-                                                          () =>
-                                                              Navigator.of(
-                                                                context,
-                                                              ).pop(),
+                                                      child: const Text('Cancel'),
+                                                      onPressed: () => Navigator.of(context).pop(),
                                                     ),
                                                     const SizedBox(width: 8),
                                                     TextButton(
                                                       child: const Text('OK'),
-                                                      onPressed:
-                                                          () => Navigator.of(
-                                                            context,
-                                                          ).pop(tempdate),
+                                                      onPressed: () => Navigator.of(context).pop(tempdate),
                                                     ),
                                                   ],
                                                 ),
@@ -882,23 +733,13 @@ class _laporankomisiState extends State<laporankomisi>
                                     if (results != null) {
                                       final List<DateTime?> cleanedResults =
                                           (results as List)
-                                              .map(
-                                                (date) =>
-                                                    _getdateonly(date)
-                                                        as DateTime?,
-                                              )
+                                              .map((date) => _getdateonly(date) as DateTime?)
                                               .toList();
 
-                                      _rangedatepickervalue.assignAll(
-                                        cleanedResults,
-                                      );
+                                      _rangedatepickervalue.assignAll(cleanedResults);
 
                                       startdate =
-                                          _rangedatepickervalue[0]
-                                              ?.toIso8601String()
-                                              .split('T')
-                                              .first ??
-                                          '';
+                                          _rangedatepickervalue[0]?.toIso8601String().split('T').first ?? '';
                                       enddate =
                                           _rangedatepickervalue.length > 1
                                               ? _rangedatepickervalue[1]
@@ -908,22 +749,13 @@ class _laporankomisiState extends State<laporankomisi>
                                                   ''
                                               : startdate;
 
-                                      getdatakomisiharian(
-                                        startdate,
-                                        enddate,
-                                        selectedagencyharian,
-                                      );
+                                      getdatakomisiharian(startdate, enddate, selectedagencyharian);
 
-                                      print(
-                                        'ini adalah isi data harian $datakomisiharian',
-                                      );
+                                      print('ini adalah isi data harian $datakomisiharian');
                                     }
                                   });
                                 },
-                                child: Text(
-                                  'Pilih Tanggal',
-                                  style: TextStyle(fontSize: 15.w),
-                                ),
+                                child: Text('Pilih Tanggal', style: TextStyle(fontSize: 15.w)),
                               ),
                               SizedBox(width: 20),
                               Obx(
@@ -945,9 +777,7 @@ class _laporankomisiState extends State<laporankomisi>
                               height: 25.w,
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(10),
-                                ),
+                                borderRadius: BorderRadius.all(Radius.circular(10)),
                                 border: Border.all(width: 1),
                               ),
                               margin: EdgeInsets.only(left: 10, top: 5.w),
@@ -957,41 +787,26 @@ class _laporankomisiState extends State<laporankomisi>
                                 isExpanded: true,
                                 icon: const Icon(Icons.arrow_drop_down),
                                 elevation: 14,
-                                style: const TextStyle(
-                                  color: Colors.deepPurple,
-                                ),
+                                style: const TextStyle(color: Colors.deepPurple),
                                 underline: SizedBox(),
                                 padding: EdgeInsets.symmetric(horizontal: 10),
                                 onChanged: (String? value) {
                                   setState(() {
                                     selectedagencyharian = value;
-                                    getdatakomisiharian(
-                                      startdate,
-                                      enddate,
-                                      selectedagencyharian,
-                                    );
+                                    getdatakomisiharian(startdate, enddate, selectedagencyharian);
                                   });
                                 },
                                 items:
-                                    data_agency.map<DropdownMenuItem<String>>((
-                                      agency,
-                                    ) {
-                                      final namaagency =
-                                          agency['nama_agency']?.toString() ??
-                                          '';
-                                      final kodeagency =
-                                          agency['kode_agency']?.toString() ??
-                                          '';
+                                    data_agency.map<DropdownMenuItem<String>>((agency) {
+                                      final namaagency = agency['nama_agency']?.toString() ?? '';
+                                      final kodeagency = agency['kode_agency']?.toString() ?? '';
                                       return DropdownMenuItem<String>(
                                         value: namaagency,
                                         child: Align(
                                           alignment: Alignment.centerLeft,
                                           child: Text(
                                             namaagency,
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontFamily: 'Poppins',
-                                            ),
+                                            style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
                                           ),
                                         ),
                                       );
@@ -1010,24 +825,15 @@ class _laporankomisiState extends State<laporankomisi>
                                 height: 35.w,
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    exportkomisiharian(
-                                      startdate,
-                                      enddate,
-                                      selectedagencyharian,
-                                    );
+                                    exportkomisiharian(startdate, enddate, selectedagencyharian);
                                   },
                                   child: Text(
                                     'Cetak Komisi Terapis',
-                                    style: TextStyle(
-                                      fontSize: 15.w,
-                                      color: Colors.black,
-                                    ),
+                                    style: TextStyle(fontSize: 15.w, color: Colors.black),
                                   ),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Color(0xFFFCEFCB),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                   ),
                                 ),
                               ),
@@ -1042,16 +848,11 @@ class _laporankomisiState extends State<laporankomisi>
                                   },
                                   child: Text(
                                     'Cetak Komisi Gro',
-                                    style: TextStyle(
-                                      fontSize: 15.w,
-                                      color: Colors.black,
-                                    ),
+                                    style: TextStyle(fontSize: 15.w, color: Colors.black),
                                   ),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Color(0xFFFCEFCB),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                   ),
                                 ),
                               ),
@@ -1090,33 +891,20 @@ class _laporankomisiState extends State<laporankomisi>
                                   height: 55.w,
                                   child: DropdownButtonFormField<String>(
                                     decoration: InputDecoration(
-                                      contentPadding: EdgeInsets.only(
-                                        top: 0.w,
-                                        bottom: 0.w,
-                                        left: 10.w,
-                                      ),
+                                      contentPadding: EdgeInsets.only(top: 0.w, bottom: 0.w, left: 10.w),
                                       enabledBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                          color: Colors.blue,
-                                          width: 2.w,
-                                        ),
+                                        borderSide: BorderSide(color: Colors.blue, width: 2.w),
                                         borderRadius: BorderRadius.circular(10),
                                       ),
                                       focusedBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                          color: Colors.red,
-                                          width: 2.w,
-                                        ),
+                                        borderSide: BorderSide(color: Colors.red, width: 2.w),
                                         borderRadius: BorderRadius.circular(10),
                                       ),
                                       filled: true,
                                       fillColor: Colors.grey[200],
                                     ),
                                     value: selectedyearvalue.value,
-                                    style: TextStyle(
-                                      fontSize: 15.w,
-                                      color: Colors.black,
-                                    ),
+                                    style: TextStyle(fontSize: 15.w, color: Colors.black),
                                     items:
                                         List.generate(
                                           DateTime.now().year - 2000 + 1,
@@ -1142,24 +930,16 @@ class _laporankomisiState extends State<laporankomisi>
                                 height: 35.w,
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    getdatakomisitahunan(
-                                      pilihantahun,
-                                      selectedagencytahunan,
-                                    );
+                                    getdatakomisitahunan(pilihantahun, selectedagencytahunan);
                                     log(datakomisitahunan.toString());
                                   },
                                   child: Text(
                                     'Cek Komisi',
-                                    style: TextStyle(
-                                      fontSize: 15.w,
-                                      color: Colors.black,
-                                    ),
+                                    style: TextStyle(fontSize: 15.w, color: Colors.black),
                                   ),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Color(0xFFFCEFCB),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                   ),
                                 ),
                               ),
@@ -1171,9 +951,7 @@ class _laporankomisiState extends State<laporankomisi>
                               height: 25.w,
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(10),
-                                ),
+                                borderRadius: BorderRadius.all(Radius.circular(10)),
                                 border: Border.all(width: 1),
                               ),
                               margin: EdgeInsets.only(left: 10, top: 5.w),
@@ -1183,40 +961,26 @@ class _laporankomisiState extends State<laporankomisi>
                                 isExpanded: true,
                                 icon: const Icon(Icons.arrow_drop_down),
                                 elevation: 14,
-                                style: const TextStyle(
-                                  color: Colors.deepPurple,
-                                ),
+                                style: const TextStyle(color: Colors.deepPurple),
                                 underline: SizedBox(),
                                 padding: EdgeInsets.symmetric(horizontal: 10),
                                 onChanged: (String? value) {
                                   setState(() {
                                     selectedagencytahunan = value;
-                                    getdatakomisitahunan(
-                                      pilihantahun,
-                                      selectedagencytahunan,
-                                    );
+                                    getdatakomisitahunan(pilihantahun, selectedagencytahunan);
                                   });
                                 },
                                 items:
-                                    data_agency.map<DropdownMenuItem<String>>((
-                                      agency,
-                                    ) {
-                                      final namaagency =
-                                          agency['nama_agency']?.toString() ??
-                                          '';
-                                      final kodeagency =
-                                          agency['kode_agency']?.toString() ??
-                                          '';
+                                    data_agency.map<DropdownMenuItem<String>>((agency) {
+                                      final namaagency = agency['nama_agency']?.toString() ?? '';
+                                      final kodeagency = agency['kode_agency']?.toString() ?? '';
                                       return DropdownMenuItem<String>(
                                         value: namaagency,
                                         child: Align(
                                           alignment: Alignment.centerLeft,
                                           child: Text(
                                             namaagency,
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontFamily: 'Poppins',
-                                            ),
+                                            style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
                                           ),
                                         ),
                                       );
@@ -1235,23 +999,15 @@ class _laporankomisiState extends State<laporankomisi>
                                 height: 35.w,
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    exportkomisitahunan(
-                                      pilihantahun,
-                                      selectedagencytahunan,
-                                    );
+                                    exportkomisitahunan(pilihantahun, selectedagencytahunan);
                                   },
                                   child: Text(
                                     'Cetak Komisi Terapis',
-                                    style: TextStyle(
-                                      fontSize: 15.w,
-                                      color: Colors.black,
-                                    ),
+                                    style: TextStyle(fontSize: 15.w, color: Colors.black),
                                   ),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Color(0xFFFCEFCB),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                   ),
                                 ),
                               ),
@@ -1266,16 +1022,11 @@ class _laporankomisiState extends State<laporankomisi>
                                   },
                                   child: Text(
                                     'Cetak Komisi Gro',
-                                    style: TextStyle(
-                                      fontSize: 15.w,
-                                      color: Colors.black,
-                                    ),
+                                    style: TextStyle(fontSize: 15.w, color: Colors.black),
                                   ),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Color(0xFFFCEFCB),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                   ),
                                 ),
                               ),
@@ -1302,11 +1053,7 @@ class _laporankomisiState extends State<laporankomisi>
                           height: 50.w,
                           child: TabBar(
                             controller: _tabController,
-                            tabs: [
-                              Tab(text: 'Harian'),
-                              Tab(text: 'Bulanan'),
-                              Tab(text: 'Tahunan'),
-                            ],
+                            tabs: [Tab(text: 'Harian'), Tab(text: 'Bulanan'), Tab(text: 'Tahunan')],
                           ),
                         ),
                         Container(
@@ -1319,11 +1066,7 @@ class _laporankomisiState extends State<laporankomisi>
                               // ini tab 1
                               datakomisiharian.isEmpty
                                   ? startdate == ''
-                                      ? Center(
-                                        child: Text(
-                                          'Silahkan pilih tanggal terlebih dahulu',
-                                        ),
-                                      )
+                                      ? Center(child: Text('Silahkan pilih tanggal terlebih dahulu'))
                                       : Center(
                                         child: Text(
                                           'Data komisi untuk tanggal $startdate sampai dengan $enddate tidak tersedia',
@@ -1334,82 +1077,55 @@ class _laporankomisiState extends State<laporankomisi>
                                     itemCount: datakomisiharian.length,
                                     itemBuilder: (context, index) {
                                       var item = datakomisiharian[index];
-                                      return Container(
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.start,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.start,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Container(
-                                                  margin: EdgeInsets.only(
-                                                    left: 20,
-                                                  ),
-                                                  width: 60,
-                                                  child: Text(
-                                                    item['id_karyawan'],
-                                                    textAlign: TextAlign.left,
-                                                    style: TextStyle(
-                                                      fontSize: 20,
-                                                      fontFamily: 'Poppins',
-                                                    ),
-                                                  ),
+                                      return Column(
+                                        mainAxisAlignment: MainAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Container(
+                                                margin: EdgeInsets.only(left: 20),
+                                                width: 60,
+                                                child: AutoSizeText(
+                                                  item['id_karyawan'],
+                                                  textAlign: TextAlign.left,
+                                                  style: TextStyle(fontFamily: 'Poppins'),
+                                                  minFontSize: 15,
+                                                  maxFontSize: 20,
+                                                  maxLines: 1,
                                                 ),
-                                                SizedBox(width: 5),
-                                                Container(
-                                                  child: Text(
-                                                    '-',
-                                                    style: TextStyle(
-                                                      fontSize: 20,
-                                                      fontFamily: 'Poppins',
-                                                    ),
-                                                  ),
+                                              ),
+                                              SizedBox(width: 5),
+                                              SizedBox(
+                                                child: Text(
+                                                  '-',
+                                                  style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
                                                 ),
-                                                SizedBox(width: 15),
-                                                Container(
-                                                  width: 75,
-                                                  child: Text(
-                                                    item['nama_karyawan'],
-                                                    textAlign: TextAlign.left,
-                                                    style: TextStyle(
-                                                      fontSize: 20,
-                                                      fontFamily: 'Poppins',
-                                                    ),
-                                                  ),
+                                              ),
+                                              SizedBox(width: 15),
+                                              Expanded(
+                                                child: AutoSizeText(
+                                                  item['nama_karyawan'],
+                                                  textAlign: TextAlign.left,
+                                                  style: TextStyle(fontFamily: 'Poppins'),
+                                                  minFontSize: 15,
+                                                  maxFontSize: 20,
+                                                  maxLines: 1,
                                                 ),
-                                                Expanded(
-                                                  child: Container(
-                                                    margin: EdgeInsets.only(
-                                                      left: 20,
-                                                      right: 10,
-                                                    ),
-                                                    width: 140,
-                                                    child: Text(
-                                                      formatnominal
-                                                          .format(
-                                                            item['total_komisi'],
-                                                          )
-                                                          .toString(),
-                                                      textAlign:
-                                                          TextAlign.right,
-                                                      style: TextStyle(
-                                                        fontSize: 20,
-                                                        fontFamily: 'Poppins',
-                                                      ),
-                                                    ),
-                                                  ),
+                                              ),
+                                              SizedBox(width: 15),
+                                              Expanded(
+                                                child: Text(
+                                                  formatnominal.format(item['total_komisi']).toString(),
+                                                  textAlign: TextAlign.right,
+                                                  style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
                                                 ),
-                                              ],
-                                            ),
-                                            Divider(color: Colors.black),
-                                          ],
-                                        ),
+                                              ),
+                                            ],
+                                          ),
+                                          Divider(color: Colors.black),
+                                        ],
                                       );
                                     },
                                   ),
@@ -1426,44 +1142,30 @@ class _laporankomisiState extends State<laporankomisi>
                                     itemCount: datakomisi.length,
                                     itemBuilder: (context, index) {
                                       var item = datakomisi[index];
-                                      sum += int.parse(
-                                        item['total_komisi'].toString(),
-                                      );
+                                      sum += int.parse(item['total_komisi'].toString());
                                       return Container(
                                         child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.start,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.start,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
+                                              mainAxisAlignment: MainAxisAlignment.start,
+                                              crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
                                                 Container(
-                                                  margin: EdgeInsets.only(
-                                                    left: 20,
-                                                  ),
+                                                  margin: EdgeInsets.only(left: 20),
                                                   width: 60,
                                                   child: Text(
                                                     item['id_karyawan'],
                                                     textAlign: TextAlign.left,
-                                                    style: TextStyle(
-                                                      fontSize: 20,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 SizedBox(width: 5),
                                                 Container(
                                                   child: Text(
                                                     '-',
-                                                    style: TextStyle(
-                                                      fontSize: 20,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 SizedBox(width: 15),
@@ -1472,31 +1174,17 @@ class _laporankomisiState extends State<laporankomisi>
                                                   child: Text(
                                                     item['nama_karyawan'],
                                                     textAlign: TextAlign.left,
-                                                    style: TextStyle(
-                                                      fontSize: 20,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 Expanded(
                                                   child: Container(
-                                                    margin: EdgeInsets.only(
-                                                      left: 20,
-                                                      right: 10,
-                                                    ),
+                                                    margin: EdgeInsets.only(left: 20, right: 10),
                                                     width: 140,
                                                     child: Text(
-                                                      formatnominal
-                                                          .format(
-                                                            item['total_komisi'],
-                                                          )
-                                                          .toString(),
-                                                      textAlign:
-                                                          TextAlign.right,
-                                                      style: TextStyle(
-                                                        fontSize: 20,
-                                                        fontFamily: 'Poppins',
-                                                      ),
+                                                      formatnominal.format(item['total_komisi']).toString(),
+                                                      textAlign: TextAlign.right,
+                                                      style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
                                                     ),
                                                   ),
                                                 ),
@@ -1512,9 +1200,7 @@ class _laporankomisiState extends State<laporankomisi>
                               // ini tab 3
                               datakomisitahunan.isEmpty
                                   ? Center(
-                                    child: Text(
-                                      'Data komisi untuk tahun $pilihantahun tidak tersedia',
-                                    ),
+                                    child: Text('Data komisi untuk tahun $pilihantahun tidak tersedia'),
                                   )
                                   : ListView.builder(
                                     padding: EdgeInsets.only(top: 10),
@@ -1523,39 +1209,27 @@ class _laporankomisiState extends State<laporankomisi>
                                       var item = datakomisitahunan[index];
                                       return Container(
                                         child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.start,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.start,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
+                                              mainAxisAlignment: MainAxisAlignment.start,
+                                              crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
                                                 Container(
-                                                  margin: EdgeInsets.only(
-                                                    left: 20,
-                                                  ),
+                                                  margin: EdgeInsets.only(left: 20),
                                                   width: 60,
                                                   child: Text(
                                                     item['id_karyawan'],
                                                     textAlign: TextAlign.left,
-                                                    style: TextStyle(
-                                                      fontSize: 20,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 SizedBox(width: 5),
                                                 Container(
                                                   child: Text(
                                                     '-',
-                                                    style: TextStyle(
-                                                      fontSize: 20,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 SizedBox(width: 15),
@@ -1564,31 +1238,17 @@ class _laporankomisiState extends State<laporankomisi>
                                                   child: Text(
                                                     item['nama_karyawan'],
                                                     textAlign: TextAlign.left,
-                                                    style: TextStyle(
-                                                      fontSize: 20,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 Expanded(
                                                   child: Container(
-                                                    margin: EdgeInsets.only(
-                                                      left: 20,
-                                                      right: 10,
-                                                    ),
+                                                    margin: EdgeInsets.only(left: 20, right: 10),
                                                     width: 140,
                                                     child: Text(
-                                                      formatnominal
-                                                          .format(
-                                                            item['total_komisi'],
-                                                          )
-                                                          .toString(),
-                                                      textAlign:
-                                                          TextAlign.right,
-                                                      style: TextStyle(
-                                                        fontSize: 20,
-                                                        fontFamily: 'Poppins',
-                                                      ),
+                                                      formatnominal.format(item['total_komisi']).toString(),
+                                                      textAlign: TextAlign.right,
+                                                      style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
                                                     ),
                                                   ),
                                                 ),
@@ -1605,10 +1265,7 @@ class _laporankomisiState extends State<laporankomisi>
                         ),
                         Container(
                           padding: EdgeInsets.only(left: 10, right: 10),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            border: Border.all(width: 1),
-                          ),
+                          decoration: BoxDecoration(color: Colors.grey[200], border: Border.all(width: 1)),
                           width: Get.width - 100,
                           height: 30.w,
                           child: Row(
@@ -1616,10 +1273,7 @@ class _laporankomisiState extends State<laporankomisi>
                             children: [
                               Center(
                                 child: Container(
-                                  child: Text(
-                                    'Total Komisi : ',
-                                    style: TextStyle(fontSize: 25),
-                                  ),
+                                  child: Text('Total Komisi : ', style: TextStyle(fontSize: 25)),
                                 ),
                               ),
                               Obx(

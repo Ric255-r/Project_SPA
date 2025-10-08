@@ -6,9 +6,10 @@ class ApiEndpointResolver {
   // Mainkan IP Kalian Disini
   static const String _localIp = "192.168.1.11";
   static const String _tailscaleIp = "100.90.36.28";
-  // End Cukup Mainkan Disini
 
-  static const String _localBase = "http://$_localIp:5500/api";
+  static const String _firstLocalBase = "http://$_mainLocalIp:5500/api";
+  static const String _secondLocalBase = "http://$_secondLocalIp:5500/api";
+  static const String _thirdLocalBase = "http://$_thirdLocalIp:5500/api";
   static const String _tailscaleBase = "http://$_tailscaleIp:5500/api";
 
   // Selalu punya nilai default → tidak akan null.
@@ -46,12 +47,23 @@ class ApiEndpointResolver {
     // 2) Kalau tidak, dan ada Wi-Fi + server lokal reachable → pakai lokal
     final connectivity = await Connectivity().checkConnectivity();
     final onWifi = connectivity == ConnectivityResult.wifi;
-    final bool localOk = await _canReach(_localIp, 5500);
-    if (onWifi && localOk) {
-      _cachedBase = _localBase;
+    List<bool> localOk = await Future.wait([
+      _canReach(_mainLocalIp, 5500),
+      _canReach(_secondLocalIp, 5500),
+      _canReach(_thirdLocalIp, 5500),
+    ]);
+    if (onWifi && localOk[0]) {
+      _cachedBase = _firstLocalBase;
       return;
     }
-
+    if (onWifi && localOk[1]) {
+      _cachedBase = _secondLocalBase;
+      return;
+    }
+    if (onWifi && localOk[2]) {
+      _cachedBase = _thirdLocalBase;
+      return;
+    }
     // 3) Kalau semua gagal, tetap Tailscale (biar “pulih sendiri” saat internet balik)
     _cachedBase = _tailscaleBase;
   }
