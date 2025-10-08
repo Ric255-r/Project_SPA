@@ -4,7 +4,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 
 class ApiEndpointResolver {
   // Mainkan IP Kalian Disini
-  static const String _localIp = "192.168.1.16";
+  static const String _localIp = "192.168.1.11";
   static const String _tailscaleIp = "100.90.36.28";
   // End Cukup Mainkan Disini
 
@@ -58,7 +58,11 @@ class ApiEndpointResolver {
 
   static Future<bool> _canReach(String host, int port) async {
     try {
-      final socket = await Socket.connect(host, port, timeout: const Duration(seconds: 2));
+      final socket = await Socket.connect(
+        host,
+        port,
+        timeout: const Duration(seconds: 2),
+      );
       socket.destroy();
       return true;
     } catch (_) {
