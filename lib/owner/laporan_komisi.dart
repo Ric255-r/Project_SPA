@@ -1279,56 +1279,55 @@ class _laporankomisiState extends State<laporankomisi> with SingleTickerProvider
                                     itemCount: datakomisiharian.length,
                                     itemBuilder: (context, index) {
                                       var item = datakomisiharian[index];
-                                      return Container(
-                                        child: Column(
-                                          mainAxisAlignment: MainAxisAlignment.start,
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.start,
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Container(
-                                                  margin: EdgeInsets.only(left: 20),
-                                                  width: 60,
-                                                  child: Text(
-                                                    item['id_karyawan'],
-                                                    textAlign: TextAlign.left,
-                                                    style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
-                                                  ),
+                                      return Column(
+                                        mainAxisAlignment: MainAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Container(
+                                                margin: EdgeInsets.only(left: 20),
+                                                width: 60,
+                                                child: AutoSizeText(
+                                                  item['id_karyawan'],
+                                                  textAlign: TextAlign.left,
+                                                  style: TextStyle(fontFamily: 'Poppins'),
+                                                  minFontSize: 15,
+                                                  maxFontSize: 20,
+                                                  maxLines: 1,
                                                 ),
-                                                SizedBox(width: 5),
-                                                Container(
-                                                  child: Text(
-                                                    '-',
-                                                    style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
-                                                  ),
+                                              ),
+                                              SizedBox(width: 5),
+                                              SizedBox(
+                                                child: Text(
+                                                  '-',
+                                                  style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
                                                 ),
-                                                SizedBox(width: 15),
-                                                Container(
-                                                  width: 75,
-                                                  child: Text(
-                                                    item['nama_karyawan'],
-                                                    textAlign: TextAlign.left,
-                                                    style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
-                                                  ),
+                                              ),
+                                              SizedBox(width: 15),
+                                              Expanded(
+                                                child: AutoSizeText(
+                                                  item['nama_karyawan'],
+                                                  textAlign: TextAlign.left,
+                                                  style: TextStyle(fontFamily: 'Poppins'),
+                                                  minFontSize: 15,
+                                                  maxFontSize: 20,
+                                                  maxLines: 1,
                                                 ),
-                                                Expanded(
-                                                  child: Container(
-                                                    margin: EdgeInsets.only(left: 20, right: 10),
-                                                    width: 140,
-                                                    child: Text(
-                                                      formatnominal.format(item['total_komisi']).toString(),
-                                                      textAlign: TextAlign.right,
-                                                      style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
-                                                    ),
-                                                  ),
+                                              ),
+                                              SizedBox(width: 15),
+                                              Expanded(
+                                                child: Text(
+                                                  formatnominal.format(item['total_komisi']).toString(),
+                                                  textAlign: TextAlign.right,
+                                                  style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
                                                 ),
-                                              ],
-                                            ),
-                                            Divider(color: Colors.black),
-                                          ],
-                                        ),
+                                              ),
+                                            ],
+                                          ),
+                                          Divider(color: Colors.black),
+                                        ],
                                       );
                                     },
                                   ),

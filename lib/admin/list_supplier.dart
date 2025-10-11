@@ -45,6 +45,9 @@ class SupplierController extends GetxController {
   @override
   void onClose() {
     itemSearchC.dispose();
+    try {
+      selectedSupplierId.close();
+    } catch (_) {}
     super.onClose();
   }
 
@@ -54,8 +57,9 @@ class SupplierController extends GetxController {
     if (q.isEmpty) return items;
     return items.where((it) {
       final name = (it['nama_item'] ?? '').toString().toLowerCase();
+      final unit = (it['satuan'] ?? '').toString().toLowerCase();
       final priceStr = (it['harga_item'] ?? '').toString().toLowerCase();
-      return name.contains(q) || priceStr.contains(q);
+      return name.contains(q) || unit.contains(q) || priceStr.contains(q);
     }).toList();
   }
 
@@ -110,6 +114,7 @@ class SupplierController extends GetxController {
           "id": e["id"],
           "id_supplier": e["id_supplier"],
           "nama_item": e["nama_item"],
+          "satuan": e["satuan"],
           "harga_item": e["harga_item"],
         },
       ),
@@ -139,8 +144,6 @@ class SupplierController extends GetxController {
     // Pisahkan string menjadi List berdasarkan koma
     final List<String> satuanList = cleanedString.split(',');
     masterSatuan.assignAll(satuanList);
-
-    log("Isi Master nama ${masterNama}");
   }
 
   /// Re-fetch suppliers & keep selection (atau pilih pertama jika hilang)
@@ -571,7 +574,10 @@ class ListSupplierPage extends StatelessWidget {
                             itemBuilder: (_, i) {
                               final it = data[i];
                               return ListTile(
-                                title: Text(it['nama_item'], style: const TextStyle(fontFamily: 'Poppins')),
+                                title: Text(
+                                  "${it['nama_item']} - (${it['satuan'] ?? "-"})",
+                                  style: const TextStyle(fontFamily: 'Poppins'),
+                                ),
                                 subtitle: Text(
                                   NumberFormat.currency(
                                     locale: 'id_ID',

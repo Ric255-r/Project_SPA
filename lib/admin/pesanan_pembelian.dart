@@ -47,6 +47,9 @@ class POPemasokController extends GetxController {
       (r['qty'] as TextEditingController).dispose();
       (r['price'] as TextEditingController).dispose();
     }
+    try {
+      selectedSupplierId.close();
+    } catch (_) {}
     super.onClose();
   }
 

@@ -3,13 +3,13 @@ import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 class ApiEndpointResolver {
-  // Note. Ip Mereka 192.168.1.55 Platinum System 2
-  // Mainkan IP Kalian di MainLocalIp
+  // Note. Ip Mereka 192.168.1.55 Platinum System 2. taruh di MainlocalIp
+  // Start. Mainkan IP Kalian di MainLocalIp
   static const String _mainLocalIp = "192.168.1.55";
+  // End. Cukup Mainkan Disini
   static const String _secondLocalIp = "192.168.1.25";
   static const String _thirdLocalIp = "192.168.100.130";
   static const String _tailscaleIp = "100.90.36.28";
-  // End Cukup Mainkan Disini
 
   static const String _firstLocalBase = "http://$_mainLocalIp:5500/api";
   static const String _secondLocalBase = "http://$_secondLocalIp:5500/api";
@@ -22,7 +22,7 @@ class ApiEndpointResolver {
 
   /// Panggil sekali saat app start (di main()).
   static Future<void> init() async {
-    // Resolve awal secara sinkron ke default, lalu coba “p erbaiki” via probe async
+    // Resolve awal secara sinkron ke default, lalu coba “perbaiki” via probe async
     _cachedBase = _tailscaleBase;
     await _refresh(); // pastikan di-try resolve di awal
     _isInitialized = true;

@@ -1,3 +1,4 @@
+import 'package:Project_SPA/login/login_page.dart';
 import 'package:dio/dio.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 import 'package:Project_SPA/function/token.dart';
@@ -11,7 +12,10 @@ Future<Map<String, dynamic>> getMyData(jwt) async {
   var dio = Dio();
 
   try {
-    var response = await dio.get('${myIpAddr()}/user', options: Options(headers: {"Authorization": "Bearer $jwt"}));
+    var response = await dio.get(
+      '${myIpAddr()}/user',
+      options: Options(headers: {"Authorization": "Bearer $jwt"}),
+    );
 
     responseData = response.data;
 
