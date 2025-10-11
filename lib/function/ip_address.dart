@@ -74,11 +74,7 @@ class ApiEndpointResolver {
 
   static Future<bool> _canReach(String host, int port) async {
     try {
-      final socket = await Socket.connect(
-        host,
-        port,
-        timeout: const Duration(seconds: 2),
-      );
+      final socket = await Socket.connect(host, port, timeout: const Duration(seconds: 2));
       socket.destroy();
       return true;
     } catch (_) {
