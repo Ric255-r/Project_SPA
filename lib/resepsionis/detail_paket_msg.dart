@@ -141,40 +141,61 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
         dataJual.add({...newItem, 'harga_total': newItem['harga_paket_msg']});
       }
 
-      // checkpaketadapromoitem(newItem['id_paket_msg']);
+      log('isi data jual : $dataJual');
 
-      // log(Listbonusitem.toString());
-      // if (Listbonusitem.isNotEmpty) {
-      //   dataJual.add({
-      //     'nama_paket_msg': Listbonusitem[0]['nama_fnb'],
-      //     'jlh': Listbonusitem[0]['qty'],
-      //     'satuan': 'Pcs',
-      //     'harga_paket_msg': 0,
-      //     'harga_total': 0,
-      //   });
-      // }
+      checkpaketadapromoitem(newItem['id_paket_msg']).then((_) {
+        log(Listbonusitem.toString());
+        if (Listbonusitem.isNotEmpty) {
+          final existbonusitemidx = dataJual.indexWhere(
+            (item) => item['nama_paket_msg'] == Listbonusitem[0]['nama_fnb'],
+          );
 
-      log(dataJual.toString());
+          if (existbonusitemidx != -1) {
+            dataJual[existbonusitemidx]['jlh'] =
+                (dataJual[existbonusitemidx]['jlh'] as num).toInt() + Listbonusitem[0]['qty'];
+          } else {
+            dataJual.add({
+              "id_paket_msg": Listbonusitem[0]['id_fnb'],
+              'nama_paket_msg': Listbonusitem[0]['nama_fnb'],
+              'jlh': Listbonusitem[0]['qty'],
+              'satuan': 'Paket',
+              'durasi_awal': 0,
+              'harga_paket_msg': 0,
+              'harga_total': 0,
+              'is_addon': false,
+              'detail_paket': '',
+            });
+          }
+        }
+      });
     });
   }
 
-  // Future<void> checkpaketadapromoitem(id_paket) async {
-  //   try {
-  //     var response = await dio.get(
-  //       '${myIpAddr()}/massages/checkpaketadapromoitem',
-  //       data: {"id_paket_msg": id_paket},
-  //     );
+  Future<void> checkpaketadapromoitem(id_paket) async {
+    try {
+      var response = await dio.get(
+        '${myIpAddr()}/massages/checkpaketadapromoitem',
+        data: {"id_paket_msg": id_paket},
+      );
 
-  //     setState(() {
-  //       Listbonusitem =
-  //           (response.data as List).map((item) {
-  //             return {"nama_fnb": item["nama_fnb"], "qty": item["qty"]};
-  //           }).toList();
-  //     });
-  //   } catch (e) {
-  //     log("Error di fn Get Data Terapis $e");
-  //   }
-  // }
+      List<Map<String, dynamic>> fetcheddata =
+          (response.data as List).map((item) {
+            return {
+              "id_fnb": item["id_fnb"],
+              "id_paket_msg": item["id_paket"],
+              "nama_fnb": item["nama_fnb"],
+              "qty": item["qty"],
+            };
+          }).toList();
+
+      log('ini fetchnya : $fetcheddata');
+      setState(() {
+        Listbonusitem.assignAll(fetcheddata);
+      });
+    } catch (e) {
+      log("Error di fn Get Data Terapis $e");
+    }
+  }
 
   final formatCurrency = new NumberFormat.currency(locale: "id_ID", decimalDigits: 0, symbol: 'Rp. ');
 
@@ -1912,6 +1933,24 @@ class DataTransaksiMassages extends StatefulWidget {
 class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
   final formatCurrency = new NumberFormat.currency(locale: "id_ID", decimalDigits: 0, symbol: 'Rp. ');
 
+  Future<void> checkpaketadapromoitem(id_paket) async {
+    try {
+      var response = await dio.get(
+        '${myIpAddr()}/massages/checkpaketadapromoitem',
+        data: {"id_paket_msg": id_paket},
+      );
+
+      setState(() {
+        Listbonusitem =
+            (response.data as List).map((item) {
+              return {"id_fnb": item["id_fnb"], "nama_fnb": item["nama_fnb"], "qty": item["qty"]};
+            }).toList();
+      });
+    } catch (e) {
+      log("Error di fn check paket ada promo $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -1998,11 +2037,34 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                               log('tapped : $itemTapCounts');
                             }
                           }
-                          if (widget.dataJual[index]['jlh'] > 1) {
-                            widget.dataJual[index]['jlh']--;
-                            // Update Harga Total Juga
-                            widget.dataJual[index]['harga_total'] =
-                                widget.dataJual[index]['harga_paket_msg'] * widget.dataJual[index]['jlh'];
+                          if (widget.dataJual[index]['id_paket_msg'][0] == 'F') {
+                            CherryToast.error(
+                              title: Text('Error'),
+                              description: Text('Item bonus tidak dapat dikurangkan manual'),
+                            ).show(context);
+                          } else {
+                            checkpaketadapromoitem(widget.dataJual[index]['id_paket_msg']).then((_) {
+                              if (Listbonusitem.isNotEmpty) {
+                                final existbonusitemidx = widget.dataJual.indexWhere(
+                                  (item) => item['nama_paket_msg'] == Listbonusitem[0]['nama_fnb'],
+                                );
+
+                                if (existbonusitemidx != -1) {
+                                  if (widget.dataJual[existbonusitemidx]['jlh'] > Listbonusitem[0]['qty'] &&
+                                      widget.dataJual[index]['jlh'] > 1) {
+                                    widget.dataJual[existbonusitemidx]['jlh'] =
+                                        (widget.dataJual[existbonusitemidx]['jlh'] as num).toInt() -
+                                        Listbonusitem[0]['qty'];
+                                  }
+                                }
+                              }
+                              if (widget.dataJual[index]['jlh'] > 1) {
+                                widget.dataJual[index]['jlh']--;
+                                // Update Harga Total Juga
+                                widget.dataJual[index]['harga_total'] =
+                                    widget.dataJual[index]['harga_paket_msg'] * widget.dataJual[index]['jlh'];
+                              }
+                            });
                           }
                         });
 
@@ -2090,12 +2152,34 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                                 }
                               }
                             } else {
-                              widget.dataJual[index]['jlh']++;
-                              // Update Harga Total Juga
-                              widget.dataJual[index]['harga_total'] =
-                                  widget.dataJual[index]['harga_paket_msg'] * widget.dataJual[index]['jlh'];
+                              if (widget.dataJual[index]['id_paket_msg'][0] == 'F') {
+                                CherryToast.error(
+                                  title: Text('Error'),
+                                  description: Text('Item bonus tidak dapat ditambahkan manual'),
+                                ).show(context);
+                              } else {
+                                checkpaketadapromoitem(widget.dataJual[index]['id_paket_msg']).then((_) {
+                                  if (Listbonusitem.isNotEmpty) {
+                                    final existbonusitemidx = widget.dataJual.indexWhere(
+                                      (item) => item['nama_paket_msg'] == Listbonusitem[0]['nama_fnb'],
+                                    );
+
+                                    if (existbonusitemidx != -1) {
+                                      widget.dataJual[existbonusitemidx]['jlh'] =
+                                          (widget.dataJual[existbonusitemidx]['jlh'] as num).toInt() +
+                                          Listbonusitem[0]['qty'];
+                                    }
+                                  }
+                                  widget.dataJual[index]['jlh']++;
+                                  // Update Harga Total Juga
+                                  widget.dataJual[index]['harga_total'] =
+                                      widget.dataJual[index]['harga_paket_msg'] *
+                                      widget.dataJual[index]['jlh'];
+                                });
+                              }
                             }
                           }
+
                           log(promoExists.toString());
                           log('tapped : $itemTapCounts');
                         });
@@ -2156,7 +2240,36 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                                 itemTapCounts[retrieveindex!] = 0;
                               }
                             }
-                            widget.dataJual.removeAt(index);
+                            if (widget.dataJual[index]['id_paket_msg'][0] == 'F') {
+                              CherryToast.error(
+                                title: Text('Error'),
+                                description: Text('Item bonus tidak dapat dihapus manual'),
+                              ).show(context);
+                            } else {
+                              checkpaketadapromoitem(widget.dataJual[index]['id_paket_msg']).then((_) {
+                                if (Listbonusitem.isNotEmpty) {
+                                  final existbonusitemidx = widget.dataJual.indexWhere(
+                                    (item) => item['nama_paket_msg'] == Listbonusitem[0]['nama_fnb'],
+                                  );
+
+                                  if (existbonusitemidx != -1) {
+                                    if (widget.dataJual[existbonusitemidx]['jlh'] > Listbonusitem[0]['qty'] &&
+                                        widget.dataJual[index]['jlh'] > 1) {
+                                      log(widget.dataJual[index]['jlh'].toString());
+                                      widget.dataJual[existbonusitemidx]['jlh'] =
+                                          (widget.dataJual[existbonusitemidx]['jlh'] as num).toInt() -
+                                          Listbonusitem[0]['qty'] * widget.dataJual[index]['jlh'];
+                                    }
+
+                                    if (widget.dataJual[existbonusitemidx]['jlh'] < Listbonusitem[0]['qty']) {
+                                      widget.dataJual.removeAt(existbonusitemidx);
+                                    }
+                                  }
+                                }
+
+                                widget.dataJual.removeAt(index);
+                              });
+                            }
                           });
 
                           widget.onChangeHrg();
