@@ -1636,7 +1636,7 @@ void showGantiPaket() {
   var controller = Get.put(GantiPaketController());
   // get current paket dlu br tembak ke btn gantipaket
   controller
-      ._getCurrentPaket()
+      .getCurrentPaket()
       .then((_) {
         controller.buttongantipaket();
       })
@@ -1654,7 +1654,7 @@ class GantiPaketController extends GetxController {
   RxList<Map<String, dynamic>> _listCurrentPaket = <Map<String, dynamic>>[].obs;
   RxList<Map<String, dynamic>> _listAllPaket = <Map<String, dynamic>>[].obs;
 
-  Future<void> _getCurrentPaket() async {
+  Future<void> getCurrentPaket() async {
     try {
       String idTrans = _kamarTerapisMgr.getData()['idTransaksi'];
       var token = await getTokenSharedPref();
