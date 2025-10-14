@@ -66,25 +66,21 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
   }
 
   Future<void> _initializeTimer() async {
-    if (_isRefreshed.value) return;
+    // This part is for the initial load, which is correct.
+    if (!_istimerunning.value) {
+      int sumDurasi = _kamarTerapisMgr.getData()['sumDurasi'];
+      _prefs = await SharedPreferences.getInstance();
+      bool apiLoaded = await _loadRemainingTimer();
+
+      if (!apiLoaded) {
+        durasi?.value = 60 * sumDurasi;
+        savedMinutes.value = sumDurasi;
+      }
+      _startNewTimer();
+      return;
+    }
 
     try {
-      _isRefreshed.value = true;
-
-      // This part is for the initial load, which is correct.
-      if (!_istimerunning.value) {
-        int sumDurasi = _kamarTerapisMgr.getData()['sumDurasi'];
-        _prefs = await SharedPreferences.getInstance();
-        bool apiLoaded = await _loadRemainingTimer();
-
-        if (!apiLoaded) {
-          durasi?.value = 60 * sumDurasi;
-          savedMinutes.value = sumDurasi;
-        }
-        _startNewTimer();
-        return;
-      }
-
       // --- FINAL REFRESH LOGIC (Prevents Exploit and Allows Sync) ---
       final int clientCeilMinutes = (durasi!.value / 60).ceil();
 
@@ -108,9 +104,6 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
       }
     } catch (e) {
       log("Error during refresh: $e.");
-    } finally {
-      await Future.delayed(Duration(seconds: 1));
-      _isRefreshed.value = false;
     }
   }
   //Kalo ingin load data dari container yhang kita pilih sebelumnya
@@ -1280,8 +1273,15 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
                         AutoSizeText('Sisa Waktu', style: TextStyle(fontSize: 60, fontFamily: 'Poppins')),
                         const SizedBox(width: 10),
                         InkWell(
-                          onTap: () async {
-                            await _initializeTimer();
+                          onTap: () {
+                            if (_isRefreshed.value) return;
+                            _isRefreshed.value = true;
+
+                            Future fetchTimer = _initializeTimer();
+                            Future minDelay = Future.delayed(Duration(seconds: 1));
+
+                            // Jika Kedua Proses ini Selesai, bikin refresh Value jd false
+                            Future.wait([fetchTimer, minDelay]).then((_) => _isRefreshed.value = false);
                           },
                           child: Obx(
                             () =>

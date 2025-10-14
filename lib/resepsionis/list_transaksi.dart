@@ -54,6 +54,46 @@ class ListTransaksiController extends GetxController {
   RxString namaterapis3 = ''.obs;
   String idterapis2 = '';
   String idterapis3 = '';
+  final Map<String, Map<String, dynamic>> _detailCache = {};
+
+  // utang yg msh blm dilunasin
+  RxInt _sisaBayar = 0.obs;
+  TextEditingController _txtSisaBayar = TextEditingController();
+  // bentuk int dan bentuk controller utk formatting
+  RxInt _jlhBayar = 0.obs;
+  TextEditingController _txtJlhBayar = TextEditingController();
+  // kembalian
+  RxInt _kembalian = 0.obs;
+  TextEditingController _txtKembalian = TextEditingController();
+  // List Metode Bayar
+  RxList<String> _metodeByr = <String>['cash', 'debit', 'kredit', 'qris'].obs;
+  RxnString? _selectedMetode = RxnString(null);
+  // data utk metode bank / qris
+  TextEditingController _namaAkun = TextEditingController();
+  TextEditingController _noRek = TextEditingController();
+  TextEditingController _namaBank = TextEditingController();
+  RxString selectedBank = ''.obs;
+  final List<String> bankList = ['BCA', 'BNI', 'BRI', 'Mandiri'];
+
+  var dio = Dio();
+  RxInt omsetCash = 0.obs;
+  RxInt omsetDebit = 0.obs;
+  RxInt omsetKredit = 0.obs;
+  RxInt omsetQris = 0.obs;
+  RxList<Map<String, dynamic>> dataCash = <Map<String, dynamic>>[].obs;
+  RxList<Map<String, dynamic>> dataDebit = <Map<String, dynamic>>[].obs;
+  RxList<Map<String, dynamic>> dataKredit = <Map<String, dynamic>>[].obs;
+  RxList<Map<String, dynamic>> dataQris = <Map<String, dynamic>>[].obs;
+  RxString tglNow = "".obs;
+  RxDouble pajakMsg = 0.0.obs;
+  RxDouble pajakFnb = 0.0.obs;
+  RxString _hakAkses = "".obs;
+  RxBool _isNotFound = false.obs;
+  List<String> listJenisRuang = <String>['Fasilitas', 'Reguler', 'VIP'];
+  String? dropdownValue;
+  final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp. ', decimalDigits: 0);
+
+  List<dynamic>? allDataOmset;
 
   void showDialogTgl() {
     rangeDatePickerOmset.clear();
@@ -180,17 +220,6 @@ class ListTransaksiController extends GetxController {
     }
   }
 
-  var dio = Dio();
-  RxInt omsetCash = 0.obs;
-  RxInt omsetDebit = 0.obs;
-  RxInt omsetKredit = 0.obs;
-  RxInt omsetQris = 0.obs;
-  RxList<Map<String, dynamic>> dataCash = <Map<String, dynamic>>[].obs;
-  RxList<Map<String, dynamic>> dataDebit = <Map<String, dynamic>>[].obs;
-  RxList<Map<String, dynamic>> dataKredit = <Map<String, dynamic>>[].obs;
-  RxList<Map<String, dynamic>> dataQris = <Map<String, dynamic>>[].obs;
-  RxString tglNow = "".obs;
-
   Future<List<Map<String, dynamic>>> fetchData({bool isOwner = false}) async {
     try {
       String myUrl = '${myIpAddr()}/listtrans/datatrans?hak_akses=${_hakAkses.value}';
@@ -235,9 +264,6 @@ class ListTransaksiController extends GetxController {
     }
   }
 
-  RxDouble pajakMsg = 0.0.obs;
-  RxDouble pajakFnb = 0.0.obs;
-
   Future<void> _getPajak() async {
     try {
       var response = await dio.get('${myIpAddr()}/pajak/getpajak');
@@ -261,8 +287,6 @@ class ListTransaksiController extends GetxController {
       throw Exception("Error Get Pajak $e");
     }
   }
-
-  RxString _hakAkses = "".obs;
 
   Future<void> _profileUser() async {
     try {
@@ -305,7 +329,6 @@ class ListTransaksiController extends GetxController {
     print("Fungsi refreshData Dipanggil oninit");
   }
 
-  RxBool _isNotFound = false.obs;
   void fnFilterList(String query) {
     if (query.isEmpty) {
       // reset balik ke full list pas empty
@@ -333,22 +356,28 @@ class ListTransaksiController extends GetxController {
     });
   }
 
-  List<String> listJenisRuang = <String>['Fasilitas', 'Reguler', 'VIP'];
-  String? dropdownValue;
-
   String capitalize(String? text) {
     if (text == null || text.isEmpty) return "Unknown"; // Handle null or empty
     return text[0].toUpperCase() + text.substring(1);
   }
 
-  final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp. ', decimalDigits: 0);
-
   Future<Map<String, dynamic>> getDetailTrans(String idTrans) async {
+    // Get From Cache
+    if (_detailCache.containsKey(idTrans)) {
+      return _detailCache[idTrans]!;
+    }
+
+    // If not in cache, get from API
     try {
       final response = await dio.get('${myIpAddr()}/listtrans/detailtrans/${idTrans}');
 
       if (response.statusCode == 200) {
         Map<String, dynamic> responseData = response.data;
+
+        // STORE THE NEW DATA IN THE CACHE
+        // Before returning, save the result so we don't have to fetch it again.
+        _detailCache[idTrans] = responseData;
+
         return responseData;
       } else {
         throw Exception("Failed to load data detail: ${response.statusCode}");
@@ -380,7 +409,6 @@ class ListTransaksiController extends GetxController {
     }
   }
 
-  List<dynamic>? allDataOmset;
   void showDialogOmset(String mode) {
     if (mode == "cash") {
       allDataOmset = dataCash;
@@ -745,26 +773,6 @@ class ListTransaksiController extends GetxController {
       selection: TextSelection.collapsed(offset: formattedKembali.length),
     );
   }
-
-  // utang yg msh blm dilunasin
-  RxInt _sisaBayar = 0.obs;
-  TextEditingController _txtSisaBayar = TextEditingController();
-  // bentuk int dan bentuk controller utk formatting
-  RxInt _jlhBayar = 0.obs;
-  TextEditingController _txtJlhBayar = TextEditingController();
-  // kembalian
-  RxInt _kembalian = 0.obs;
-  TextEditingController _txtKembalian = TextEditingController();
-  // List Metode Bayar
-  RxList<String> _metodeByr = <String>['cash', 'debit', 'kredit', 'qris'].obs;
-  RxnString? _selectedMetode = RxnString(null);
-  // data utk metode bank / qris
-  TextEditingController _namaAkun = TextEditingController();
-  TextEditingController _noRek = TextEditingController();
-  TextEditingController _namaBank = TextEditingController();
-
-  RxString selectedBank = ''.obs;
-  final List<String> bankList = ['BCA', 'BNI', 'BRI', 'Mandiri'];
 
   void dialogPelunasan(String idTrans, int grandTotal, int jumlahBayar, int kembalian, String status) async {
     _selectedMetode?.value = _metodeByr.first;
