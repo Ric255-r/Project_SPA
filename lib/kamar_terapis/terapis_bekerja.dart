@@ -109,6 +109,7 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
     } catch (e) {
       log("Error during refresh: $e.");
     } finally {
+      await Future.delayed(Duration(seconds: 1));
       _isRefreshed.value = false;
     }
   }
