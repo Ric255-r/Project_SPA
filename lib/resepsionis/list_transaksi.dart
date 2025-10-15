@@ -45,7 +45,7 @@ class ListTransaksiController extends GetxController {
   RxList<Map<String, dynamic>> filteredList = <Map<String, dynamic>>[].obs;
   Timer? _debounce;
   Timer? _refreshTimer;
-  ScrollController _scrollTglController = ScrollController();
+  ScrollController scrollTglController = ScrollController();
   ScrollController singleChildController = ScrollController();
 
   RxList<DateTime?> rangeDatePickerOmset = <DateTime?>[].obs;
@@ -117,11 +117,11 @@ class ListTransaksiController extends GetxController {
               width: dialogWidth,
               height: dialogHeight, // <- TIGHT! tidak ada intrinsic ke anak
               child: Scrollbar(
-                controller: _scrollTglController,
+                controller: scrollTglController,
                 thumbVisibility: true,
                 child: ListView(
                   // Penting: biarkan default (shrinkWrap: false)
-                  controller: _scrollTglController,
+                  controller: scrollTglController,
                   padding: const EdgeInsets.only(right: 4, bottom: 8),
                   children: [
                     const Text(
@@ -204,7 +204,7 @@ class ListTransaksiController extends GetxController {
     _namaBank.dispose();
     _debounce?.cancel();
     _refreshTimer?.cancel();
-    _scrollTglController.dispose();
+    scrollTglController.dispose();
     singleChildController.dispose();
     super.onClose();
   }
@@ -319,6 +319,7 @@ class ListTransaksiController extends GetxController {
     try {
       final data = await fetchData(isOwner: _hakAkses.value == "owner" || _hakAkses.value == "admin");
       // assign data yang sama utk dataList dengan filteredList
+      _detailCache.clear();
       dataList.assignAll(data);
       filteredList.assignAll(data);
     } catch (e) {
@@ -369,7 +370,7 @@ class ListTransaksiController extends GetxController {
 
     // If not in cache, get from API
     try {
-      final response = await dio.get('${myIpAddr()}/listtrans/detailtrans/${idTrans}');
+      final response = await dio.get('${myIpAddr()}/listtrans/detailtrans/$idTrans');
 
       if (response.statusCode == 200) {
         Map<String, dynamic> responseData = response.data;
@@ -2617,17 +2618,17 @@ class ListTransaksi extends StatelessWidget {
             centerTitle: true,
             backgroundColor: Color(0XFFFFE0B2),
           ),
-          body: Container(
-            decoration: BoxDecoration(color: Color(0XFFFFE0B2)),
-            width: double.infinity,
-            height: MediaQuery.of(context).size.height,
+          backgroundColor: Color(0XFFFFE0B2),
+          body: RefreshIndicator(
+            onRefresh: () => c.refreshData(),
             child: Scrollbar(
               thumbVisibility: true,
               thickness: 5.0.w,
               radius: Radius.circular(10),
-              // controller: c.singleChildController,
+              controller: c.singleChildController,
               child: SingleChildScrollView(
-                // controller: c.singleChildController,
+                physics: const AlwaysScrollableScrollPhysics(),
+                controller: c.singleChildController,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
