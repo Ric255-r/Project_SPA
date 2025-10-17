@@ -160,8 +160,7 @@ class SupplierController extends GetxController {
 
   /// ---------- Supplier CRUD ----------
   Future<void> addSupplier(
-    String nama,
-    List<Map<String, dynamic>> initialItems, {
+    String nama, {
     required String alamat,
     required String telp,
     required String kota,
@@ -176,7 +175,6 @@ class SupplierController extends GetxController {
           "telp": telp, // biarkan string (bisa +62, spasi, dll.)
           "kota": kota,
           "contact_person": contactPerson,
-          "items": initialItems,
         },
         options: Options(contentType: Headers.jsonContentType),
       );
@@ -718,15 +716,15 @@ class ListSupplierPage extends StatelessWidget {
                   //       ],
                   //     ),
                   //   ),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton.icon(
-                      onPressed:
-                          () => rows.add({"name": TextEditingController(), "price": TextEditingController()}),
-                      icon: const Icon(Icons.add),
-                      label: const Text("Tambah Baris"),
-                    ),
-                  ),
+                  // Align(
+                  //   alignment: Alignment.centerLeft,
+                  //   child: TextButton.icon(
+                  //     onPressed:
+                  //         () => rows.add({"name": TextEditingController(), "price": TextEditingController()}),
+                  //     icon: const Icon(Icons.add),
+                  //     label: const Text("Tambah Baris"),
+                  //   ),
+                  // ),
                 ],
               ),
             ),
@@ -772,7 +770,7 @@ class ListSupplierPage extends StatelessWidget {
 
                           await ctrl.addSupplier(
                             nama,
-                            payload,
+
                             alamat: alamatC.text.trim(),
                             telp: telpC.text.trim(),
                             kota: kotaC.text.trim(),
