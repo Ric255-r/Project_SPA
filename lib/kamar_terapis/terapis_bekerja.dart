@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
 
+import 'package:Project_SPA/function/authorize_spv_dialog.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 import 'package:Project_SPA/function/token.dart';
 import 'package:Project_SPA/kamar_terapis/addon_food.dart';
@@ -29,40 +30,13 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 // import 'package:idle_detector_wrapper/idle_detector_wrapper.dart';
 
 class TerapisBekerja extends StatefulWidget {
-  // final String roomTitle;
-  // tes Komen argumen dari bawah
-  // final String idTransaksi;
-  // final String idDetailTransaksi;
-  // final String kodeRuangan;
-  // final int sumDurasi;
-  // final String namaRuangan;
-  // final String namaTerapis;
-  // final List<dynamic> dataProduk;
-  // final List<dynamic> dataPaket;
-
-  TerapisBekerja({
-    super.key,
-    // required this.idTransaksi,
-    // required this.idDetailTransaksi,
-    // required this.kodeRuangan,
-    // required this.sumDurasi,
-    // required this.namaRuangan,
-    // required this.namaTerapis,
-    // required this.dataProduk,
-    // required this.dataPaket,
-  });
+  const TerapisBekerja({super.key});
 
   @override
   State<TerapisBekerja> createState() => _TerapisBekerjaState();
 }
 
 class _TerapisBekerjaState extends State<TerapisBekerja> {
-  // final List<String> items = [
-  //   'Pijit Kepala',
-  //   'Pijit Kaki',
-  //   'Pijit Pantat',
-  //   'Pijit Biji',
-  // ];
   // tipe yang berbentuk .obs, ga perlu di dispose, klo yg d bwh ini didispose
   final RxInt? durasi = RxInt(0); // Make it RxInt
   final RxInt jam = RxInt(0);
@@ -71,6 +45,7 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
   final RxBool _istimerunning = RxBool(false);
   final RxBool _triggerAddOnWktSlesai = RxBool(false);
   final RxBool _isFinished = false.obs;
+  final RxBool _isRefreshed = false.obs;
 
   Timer? _timer;
   Timer? _apiSyncTimer;
@@ -91,21 +66,46 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
   }
 
   Future<void> _initializeTimer() async {
-    int sumDurasi = _kamarTerapisMgr.getData()['sumDurasi'];
-    _prefs = await SharedPreferences.getInstance();
+    // This part is for the initial load, which is correct.
+    if (!_istimerunning.value) {
+      int sumDurasi = _kamarTerapisMgr.getData()['sumDurasi'];
+      _prefs = await SharedPreferences.getInstance();
+      bool apiLoaded = await _loadRemainingTimer();
 
-    // Try to load from API first
-    bool apiLoaded = await _loadRemainingTimer();
-
-    // Fallback to default if API fails
-    if (!apiLoaded) {
-      durasi?.value = 60 * sumDurasi;
-      // durasi?.value = 60 * widget.sumDurasi;
+      if (!apiLoaded) {
+        durasi?.value = 60 * sumDurasi;
+        savedMinutes.value = sumDurasi;
+      }
+      _startNewTimer();
+      return;
     }
 
-    _startNewTimer();
-  }
+    try {
+      // --- FINAL REFRESH LOGIC (Prevents Exploit and Allows Sync) ---
+      final int clientCeilMinutes = (durasi!.value / 60).ceil();
 
+      String idTransaksi = _kamarTerapisMgr.getData()['idTransaksi'];
+      final response = await dio.get(
+        '${myIpAddr()}/kamar_terapis/get_remaining_time',
+        queryParameters: {"id_transaksi": idTransaksi},
+      );
+
+      if (response.statusCode == 200 && (response.data as List).isNotEmpty) {
+        final int serverMinutes = response.data[0];
+
+        // THE KEY: Only sync if the minutes are actually different.
+        if (clientCeilMinutes != serverMinutes) {
+          log("Change detected! Client: $clientCeilMinutes min, Server: $serverMinutes min. Syncing.");
+          durasi?.value = serverMinutes * 60; // This reset is now intentional
+          savedMinutes.value = serverMinutes;
+        } else {
+          log("No change detected. Client and server are in sync. Refresh blocked.");
+        }
+      }
+    } catch (e) {
+      log("Error during refresh: $e.");
+    }
+  }
   //Kalo ingin load data dari container yhang kita pilih sebelumnya
 
   // void _loaddata() async {
@@ -267,9 +267,7 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
         // Utk Set Waktu Selesai
         _triggerAddOnWktSlesai.value = true;
 
-        log(
-          "🕒 fixedTime updated from API: ${fixedTime.value.toIso8601String()}",
-        );
+        log("🕒 fixedTime updated from API: ${fixedTime.value.toIso8601String()}");
 
         durasi?.value = savedMinutes.value * 60;
         return true;
@@ -325,28 +323,6 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
     }
   }
 
-  // Future<void> _checkAndNavigate() async {
-  //   if (durasi?.value != null && durasi!.value > 600) {
-  //     Get.offAll(() => CustEndSblmWaktunya());
-  //     _timer?.cancel();
-  //     _apiSyncTimer?.cancel();
-  //     _istimerunning.value = false;
-  //   } else {
-  //     bool result = await _kamarTerapisMgr.setSelesai();
-  //     if (result) {
-  //       // Get.offAll(() => TerapisConfirm());
-  //       _timer?.cancel();
-  //       _istimerunning.value = false;
-  //       _apiSyncTimer?.cancel();
-
-  //       // panggil api utk delete waktu sementara disini.
-  //       // _deleteWaktuTemp();
-  //     } else {
-  //       log("Error di fn _checkAndNavigate");
-  //     }
-  //   }
-  // }
-
   Future<void> _checkAndNavigate() async {
     // 1) Stop semua aktivitas periodik dulu supaya tidak overlap
     _timer?.cancel();
@@ -384,9 +360,7 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
 
       List<dynamic> responseTerapis = response3.data;
 
-      dataterapistambahan.assignAll(
-        responseTerapis.map((e) => Map<String, dynamic>.from(e)).toList(),
-      );
+      dataterapistambahan.assignAll(responseTerapis.map((e) => Map<String, dynamic>.from(e)).toList());
 
       log(dataterapistambahan[0].toString());
       if (idTransaksi != '') {
@@ -426,10 +400,7 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
     try {
       var response = await dio.put(
         '${myIpAddr()}/kamar_terapis/setstatusterapistambahan',
-        data: {
-          "namaterapis2": namaterapis2.value,
-          "namaterapis3": namaterapis3.value,
-        },
+        data: {"namaterapis2": namaterapis2.value, "namaterapis3": namaterapis3.value},
       );
     } catch (e) {
       if (e is DioException) {
@@ -438,30 +409,6 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
     }
   }
 
-  // Future<void> _deleteWaktuTemp() async {
-  //   try {
-  //     String idTransaksi = _kamarTerapisMgr.getData()['idTransaksi'];
-
-  //     var response = await dio.delete('${myIpAddr()}/kamar_terapis/delete_waktu', data: {"id_transaksi": idTransaksi});
-
-  //     if (response.statusCode == 200) {
-  //       log("Berhasil Delete waktu di db");
-
-  //       await Future.delayed(Duration(seconds: 1));
-  //       // if (Get.isRegistered<MainResepsionisController>()) {
-  //       //   Get.delete<MainResepsionisController>();
-  //       // }
-  //       // Get.put(MainResepsionisController());
-
-  //       Get.offAll(() => MainKamarTerapis());
-  //     }
-  //   } catch (e) {
-  //     if (e is DioException) {
-  //       log("Error di deletewaktutemp ${e.response!.data}");
-  //     }
-  //   }
-  // }
-
   RxBool progressinputkomisi = false.obs;
 
   Future<void> inputkomisi() async {
@@ -469,11 +416,7 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
     Get.dialog(
       AlertDialog(
         title: Center(child: Text('Proccessing...')),
-        content: Container(
-          width: 500,
-          height: 350,
-          child: Center(child: CircularProgressIndicator()),
-        ),
+        content: Container(width: 500, height: 350, child: Center(child: CircularProgressIndicator())),
       ),
     );
     String idTransaksi = _kamarTerapisMgr.getData()['idTransaksi'];
@@ -487,17 +430,13 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
     Response response2;
     Response response2produk;
     log(dataproduk.toString());
-    List<String> namapaketlist =
-        datapaket!.map((item) => item['nama_paket_msg'].toString()).toList();
+    List<String> namapaketlist = datapaket!.map((item) => item['nama_paket_msg'].toString()).toList();
 
-    List<String> namaproduklist =
-        dataproduk!.map((item) => item['nama_produk'].toString()).toList();
+    List<String> namaproduklist = dataproduk!.map((item) => item['nama_produk'].toString()).toList();
 
-    List<String> idproduklist =
-        dataproduk!.map((item) => item['id_produk'].toString()).toList();
+    List<String> idproduklist = dataproduk!.map((item) => item['id_produk'].toString()).toList();
 
-    List<String> idpaketlist =
-        datapaket!.map((item) => item['id_paket'].toString()).toList();
+    List<String> idpaketlist = datapaket!.map((item) => item['id_paket'].toString()).toList();
 
     if (namapaketlist.length > 0) {
       for (int i = 0; i < namapaketlist.length; i++) {
@@ -526,19 +465,13 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
           log(agency_karyawan);
           response2 = await dio.get(
             '${myIpAddr()}/komisi/getkomisiagency',
-            data: {
-              "id_paket_msg": idpaketlist[i],
-              "nama_agency": agency_karyawan,
-            },
+            data: {"id_paket_msg": idpaketlist[i], "nama_agency": agency_karyawan},
           );
 
           if (response2.data.isEmpty) {
             response2 = await dio.get(
               '${myIpAddr()}/komisi/getkomisiextendagency',
-              data: {
-                "id_paket_msg": idpaketlist[i],
-                "nama_agency": agency_karyawan,
-              },
+              data: {"id_paket_msg": idpaketlist[i], "nama_agency": agency_karyawan},
             );
           }
         }
@@ -635,19 +568,14 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
           log(agency_karyawan);
           response2produk = await dio.get(
             '${myIpAddr()}/komisi/getkomisiprodukagency',
-            data: {
-              "id_paket_msg": idproduklist[i],
-              "nama_agency": agency_karyawan,
-            },
+            data: {"id_paket_msg": idproduklist[i], "nama_agency": agency_karyawan},
           );
         }
 
         var datanominalkomisiproduk = response2produk.data[0]['nominal_komisi'];
         var datatipekomisiproduk = response2produk.data[0]['tipe_komisi'];
-        var datanominalkomisiprodukgro =
-            response2produk.data[0]['nominal_komisi_gro'];
-        var datatipekomisiprodukgro =
-            response2produk.data[0]['tipe_komisi_gro'];
+        var datanominalkomisiprodukgro = response2produk.data[0]['nominal_komisi_gro'];
+        var datatipekomisiprodukgro = response2produk.data[0]['tipe_komisi_gro'];
         var datahargaproduk = response2produk.data[0]['harga_produk'];
 
         var response4 = await dio.get(
@@ -682,8 +610,7 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
 
             if (status == 0) {
               if (datatipekomisiprodukgro == 0) {
-                komisigro +=
-                    datahargaproduk * qty * datanominalkomisiprodukgro / 100;
+                komisigro += datahargaproduk * qty * datanominalkomisiprodukgro / 100;
               } else {
                 komisigro += qty * datanominalkomisiprodukgro;
               }
@@ -699,10 +626,7 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
         data: {"nama_karyawan": namaTerapis},
       );
 
-      var response6 = await dio.get(
-        '${myIpAddr()}/komisi/getidgro',
-        data: {"id_transaksi": idTransaksi},
-      );
+      var response6 = await dio.get('${myIpAddr()}/komisi/getidgro', data: {"id_transaksi": idTransaksi});
 
       var idTerapis = response5.data[0]['id_karyawan'];
 
@@ -711,11 +635,7 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
       try {
         var response = await dio.post(
           '${myIpAddr()}/komisi/daftarkomisipekerja',
-          data: {
-            "id_karyawan": idTerapis,
-            "id_transaksi": idTransaksi,
-            "nominal_komisi": komisi,
-          },
+          data: {"id_karyawan": idTerapis, "id_transaksi": idTransaksi, "nominal_komisi": komisi},
         );
 
         log(idterapis2.toString());
@@ -724,32 +644,20 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
         if (idterapis2 != '') {
           var komisiterapis2 = await dio.post(
             '${myIpAddr()}/komisi/daftarkomisipekerja',
-            data: {
-              "id_karyawan": idterapis2,
-              "id_transaksi": idTransaksi,
-              "nominal_komisi": komisi,
-            },
+            data: {"id_karyawan": idterapis2, "id_transaksi": idTransaksi, "nominal_komisi": komisi},
           );
         }
 
         if (idterapis3 != '') {
           var komisiterapis3 = await dio.post(
             '${myIpAddr()}/komisi/daftarkomisipekerja',
-            data: {
-              "id_karyawan": idterapis3,
-              "id_transaksi": idTransaksi,
-              "nominal_komisi": komisi,
-            },
+            data: {"id_karyawan": idterapis3, "id_transaksi": idTransaksi, "nominal_komisi": komisi},
           );
         }
 
         var responsee = await dio.post(
           '${myIpAddr()}/komisi/daftarkomisipekerja',
-          data: {
-            "id_karyawan": idGro,
-            "id_transaksi": idTransaksi,
-            "nominal_komisi": komisigro,
-          },
+          data: {"id_karyawan": idGro, "id_transaksi": idTransaksi, "nominal_komisi": komisigro},
         );
 
         progressinputkomisi.value = true;
@@ -824,12 +732,7 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
     }
   }
 
-  Future<void> daftarruangtunggu(
-    idtransaksi,
-    namaruangan,
-    idterapis,
-    namaterapis,
-  ) async {
+  Future<void> daftarruangtunggu(idtransaksi, namaruangan, idterapis, namaterapis) async {
     try {
       var response = await dio.post(
         '${myIpAddr()}/spv/daftarruangtunggu',
@@ -885,12 +788,7 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
 
     Get.dialog(
       AlertDialog(
-        title: const Center(
-          child: Text(
-            "List Room Tersedia",
-            style: TextStyle(fontFamily: 'Poppins'),
-          ),
-        ),
+        title: const Center(child: Text("List Room Tersedia", style: TextStyle(fontFamily: 'Poppins'))),
         content: SizedBox(
           height: Get.height - 200,
           width: Get.width,
@@ -911,9 +809,7 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
                     var data = _listRuangan[index];
                     // int noRoom = index + 1;
                     // Kondisi Ecek2 buat room penuh
-                    bool isFull =
-                        data['status'] == "maintenance" ||
-                        data['status'] == "occupied";
+                    bool isFull = data['status'] == "maintenance" || data['status'] == "occupied";
 
                     return InkWell(
                       onTap: () async {
@@ -927,9 +823,7 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
                                 fontFamily: 'Poppins',
                               ),
                             ),
-                            animationDuration: const Duration(
-                              milliseconds: 1500,
-                            ),
+                            animationDuration: const Duration(milliseconds: 1500),
                             autoDismiss: true,
                           ).show(Get.context!); // Use Get.context!
                         } else {
@@ -961,28 +855,15 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(
-                              Icons.door_back_door,
-                              size: 50,
-                              color: Colors.white,
-                            ),
+                            Icon(Icons.door_back_door, size: 50, color: Colors.white),
                             Text(
                               "Room ${data['nama_ruangan']}",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontFamily: 'Poppins',
-                              ),
+                              style: TextStyle(color: Colors.white, fontSize: 16, fontFamily: 'Poppins'),
                             ),
-                            if (_kamarTerapisMgr.getData()['kodeRuangan'] ==
-                                data['id_karyawan'])
+                            if (_kamarTerapisMgr.getData()['kodeRuangan'] == data['id_karyawan'])
                               Text(
                                 "(Saat Ini)",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontFamily: 'Poppins',
-                                ),
+                                style: TextStyle(color: Colors.white, fontSize: 16, fontFamily: 'Poppins'),
                               ),
                           ],
                         ),
@@ -1002,9 +883,7 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
     try {
       String idTransaksi = _kamarTerapisMgr.getData()['idTransaksi'];
 
-      var response = await dio.get(
-        '${myIpAddr()}/revisi/transaksi?id_transaksi=$idTransaksi',
-      );
+      var response = await dio.get('${myIpAddr()}/revisi/transaksi?id_transaksi=$idTransaksi');
 
       Map<String, dynamic> responseData = response.data;
 
@@ -1022,10 +901,7 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
 
       var response = await dio.put(
         '${myIpAddr()}/revisi/terapis?id_transaksi=$idTransaksi',
-        data: {
-          "current_terapis": _idCurrentTerapis.value,
-          "new_terapis": _idTargetTerapis.value,
-        },
+        data: {"current_terapis": _idCurrentTerapis.value, "new_terapis": _idTargetTerapis.value},
       );
 
       if (response.statusCode == 200) {
@@ -1066,12 +942,7 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
 
     Get.dialog(
       AlertDialog(
-        title: Center(
-          child: Text(
-            "Choose Therapist",
-            style: TextStyle(fontFamily: 'Poppins'),
-          ),
-        ),
+        title: Center(child: Text("Choose Therapist", style: TextStyle(fontFamily: 'Poppins'))),
         content: Container(
           width: Get.width,
           height: Get.height - 200,
@@ -1091,8 +962,7 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
                   var data = _listTerapis[index];
                   bool isOccupied = data['is_occupied'] == 1;
                   String idroom = _kamarTerapisMgr.getData()['namaRuangan'];
-                  String idtransaksi =
-                      _kamarTerapisMgr.getData()['idTransaksi'];
+                  String idtransaksi = _kamarTerapisMgr.getData()['idTransaksi'];
 
                   return InkWell(
                     highlightColor: Colors.transparent,
@@ -1116,10 +986,7 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
                           _idTargetTerapis.value = data['id_karyawan'];
                           await _updateTerapis();
 
-                          daftapanggilankerja(
-                            "Room " + idroom,
-                            data['nama_karyawan'],
-                          );
+                          daftapanggilankerja("Room " + idroom, data['nama_karyawan']);
 
                           if (Get.isRegistered<ControllerPanggilanKerja>()) {
                             Get.delete<ControllerPanggilanKerja>();
@@ -1153,15 +1020,8 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             Container(
-                              margin: const EdgeInsets.only(
-                                top: 20,
-                                left: 12,
-                                right: 12,
-                              ),
-                              child: Text(
-                                '${data['id_karyawan']}',
-                                style: TextStyle(fontSize: 30),
-                              ),
+                              margin: const EdgeInsets.only(top: 20, left: 12, right: 12),
+                              child: Text('${data['id_karyawan']}', style: TextStyle(fontSize: 30)),
                             ),
                             Expanded(
                               child: Column(
@@ -1170,19 +1030,12 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
                                   SizedBox(height: 10),
                                   Text(
                                     "${data['nama_karyawan']}",
-                                    style: TextStyle(
-                                      fontSize: 30,
-                                      fontFamily: 'Poppins',
-                                    ),
+                                    style: TextStyle(fontSize: 30, fontFamily: 'Poppins'),
                                   ),
-                                  if (data['id_karyawan'] ==
-                                      _idCurrentTerapis.value)
+                                  if (data['id_karyawan'] == _idCurrentTerapis.value)
                                     Text(
                                       "(Saat ini)",
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontFamily: 'Poppins',
-                                      ),
+                                      style: TextStyle(fontSize: 12, fontFamily: 'Poppins'),
                                       textAlign: TextAlign.center,
                                     ),
                                 ],
@@ -1224,76 +1077,103 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
                       if (permit) {
                         _showdialogterapis();
                       } else {
-                        Get.snackbar(
-                          'Error',
-                          'Lewat 15 Menit. tidak Bisa Lagi',
-                        );
+                        showCancelTransactionDialog(context, (password) async {
+                          // Do validation with the password
+                          print("Password entered: $password");
+                          // You can now validate password and cancel transaction here
+                          try {
+                            bool? acc = await _kamarTerapisMgr.askSpvForChanges(password, Get.context);
+
+                            if (acc != null) {
+                              if (acc) {
+                                Get.back();
+                                _showdialogterapis();
+                              } else {
+                                CherryToast.error(
+                                  title: Text("Password SPV Salah"),
+                                  toastDuration: Duration(seconds: 3),
+                                ).show(Get.context!);
+                              }
+                            }
+                          } catch (e) {
+                            log("Error di Button ShowCancelTransaction showDialogTerapis $e");
+                          }
+                        });
                       }
                     },
-                    child: iconaction(
-                      icon: Icons.person,
-                      title: 'Ganti Terapis',
-                    ),
-                  ),
-                  InkWell(
-                    onTap: () {
-                      _showDialogRoom();
-                    },
-                    child: iconaction(
-                      icon: Icons.production_quantity_limits,
-                      title: 'Ganti Ruangan',
-                    ),
+                    child: iconaction(icon: Icons.person, title: 'Ganti Terapis'),
                   ),
                   InkWell(
                     onTap: () {
                       var permit = _kamarTerapisMgr.getLimitChange();
                       if (permit) {
-                        // jika controller sudah diregister, maka delete. supaya instanceny fresh
-                        if (Get.isRegistered<GantiPaketController>()) {
-                          Get.delete<GantiPaketController>();
-                        }
-                        // Put ulang
-                        var controller = Get.put(
-                          GantiPaketController(timeSpent: timeSpent.value),
-                        );
-                        // get current paket dlu br tembak ke btn gantipaket
-                        controller
-                            ._getCurrentPaket()
-                            .then((_) {
-                              controller.buttongantipaket();
-                            })
-                            .catchError((onError) {
-                              log("Error di getcurrentpaket $onError");
-                            });
+                        _showDialogRoom();
                       } else {
-                        Get.snackbar(
-                          'Error',
-                          'Lewat 15 Menit. tidak Bisa Lagi',
-                        );
+                        showCancelTransactionDialog(context, (password) async {
+                          // Do validation with the password
+                          print("Password entered: $password");
+                          // You can now validate password and cancel transaction here
+                          try {
+                            bool? acc = await _kamarTerapisMgr.askSpvForChanges(password, Get.context);
+
+                            if (acc != null) {
+                              if (acc) {
+                                Get.back();
+                                _showDialogRoom();
+                              } else {
+                                CherryToast.error(
+                                  title: Text("Password SPV Salah"),
+                                  toastDuration: Duration(seconds: 3),
+                                ).show(Get.context!);
+                              }
+                            }
+                          } catch (e) {
+                            log("Error di Button ShowCancelTransaction showDialogRoom $e");
+                          }
+                        });
                       }
                     },
-                    child: iconaction(
-                      icon: Icons.menu_book_outlined,
-                      title: 'Ganti Paket',
-                    ),
+                    child: iconaction(icon: Icons.production_quantity_limits, title: 'Ganti Ruangan'),
                   ),
                   InkWell(
                     onTap: () {
-                      String idTransaksi =
-                          _kamarTerapisMgr.getData()['idTransaksi'];
-                      String namaRuangan =
-                          _kamarTerapisMgr.getData()['namaRuangan'];
-                      Get.to(
-                        () => AddonPaketProduk(
-                          idTrans: idTransaksi,
-                          namaRuangan: namaRuangan,
-                        ),
-                      );
+                      var permit = _kamarTerapisMgr.getLimitChange();
+                      if (permit) {
+                        showGantiPaket();
+                      } else {
+                        showCancelTransactionDialog(context, (password) async {
+                          // Do validation with the password
+                          print("Password entered: $password");
+                          // You can now validate password and cancel transaction here
+                          try {
+                            bool? acc = await _kamarTerapisMgr.askSpvForChanges(password, Get.context);
+
+                            if (acc != null) {
+                              if (acc) {
+                                Get.back();
+                                showGantiPaket();
+                              } else {
+                                CherryToast.error(
+                                  title: Text("Password SPV Salah"),
+                                  toastDuration: Duration(seconds: 3),
+                                ).show(Get.context!);
+                              }
+                            }
+                          } catch (e) {
+                            log("Error di Button ShowCancelTransaction showGantiPaket $e");
+                          }
+                        });
+                      }
                     },
-                    child: iconaction(
-                      icon: Icons.meeting_room,
-                      title: 'Tambah Paket / Produk',
-                    ),
+                    child: iconaction(icon: Icons.menu_book_outlined, title: 'Ganti Paket'),
+                  ),
+                  InkWell(
+                    onTap: () {
+                      String idTransaksi = _kamarTerapisMgr.getData()['idTransaksi'];
+                      String namaRuangan = _kamarTerapisMgr.getData()['namaRuangan'];
+                      Get.to(() => AddonPaketProduk(idTrans: idTransaksi, namaRuangan: namaRuangan));
+                    },
+                    child: iconaction(icon: Icons.meeting_room, title: 'Tambah Paket / Produk'),
                   ),
                 ],
               ),
@@ -1333,6 +1213,7 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
     var globalData = _kamarTerapisMgr.getData();
 
     return Scaffold(
+      backgroundColor: Color(0XFFFFE0B2),
       body: WillPopScope(
         onWillPop: () async {
           // bool? result = await Get.dialog(
@@ -1371,67 +1252,64 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
           // return result ?? false;
           return false;
         },
-        child: Container(
-          color: Color(0XFFFFE0B2),
-          width: Get.width,
-          height: Get.height,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                height: Get.height * 0.15,
+                padding: const EdgeInsets.only(top: 20, left: 20, right: 20),
                 width: Get.width,
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      margin: EdgeInsets.only(top: 25, left: 30, right: 100),
-                      child: ElevatedButton(
-                        onPressed: panggilob,
-                        child: Text(
-                          'Panggil OB',
-                          style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
-                        ),
-                      ),
+                    ElevatedButton(
+                      onPressed: panggilob,
+                      child: Text('Panggil OB', style: TextStyle(fontSize: 20, fontFamily: 'Poppins')),
                     ),
-                    Expanded(
-                      child: Container(
-                        margin: EdgeInsets.only(left: 100),
-                        alignment: Alignment.center,
-                        child: AutoSizeText(
-                          'Sisa Waktu',
-                          style: TextStyle(fontSize: 60, fontFamily: 'Poppins'),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Container(
-                        alignment: Alignment.topRight,
-                        padding: EdgeInsets.only(right: 10, top: 10),
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.all(Radius.circular(100)),
-                        ),
-                        child: ClipOval(
-                          child: Image.asset(
-                            'assets/spa.jpg',
-                            fit: BoxFit.cover,
+                    Row(
+                      children: [
+                        AutoSizeText('Sisa Waktu', style: TextStyle(fontSize: 60, fontFamily: 'Poppins')),
+                        const SizedBox(width: 10),
+                        InkWell(
+                          onTap: () {
+                            if (_isRefreshed.value) return;
+                            _isRefreshed.value = true;
+
+                            Future fetchTimer = _initializeTimer();
+                            Future minDelay = Future.delayed(Duration(seconds: 1));
+
+                            // Jika Kedua Proses ini Selesai, bikin refresh Value jd false
+                            Future.wait([fetchTimer, minDelay]).then((_) => _isRefreshed.value = false);
+                          },
+                          child: Obx(
+                            () =>
+                                _isRefreshed.value
+                                    ? CircularProgressIndicator()
+                                    : Icon(Icons.refresh, size: 60),
                           ),
                         ),
-                      ),
+                      ],
+                    ),
+                    Container(
+                      alignment: Alignment.topRight,
+                      padding: EdgeInsets.only(right: 10, top: 10),
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(100))),
+                      child: ClipOval(child: Image.asset('assets/spa.jpg', fit: BoxFit.cover)),
                     ),
                   ],
                 ),
               ),
               Center(
                 child: Container(
+                  margin: const EdgeInsets.only(left: 80),
                   height: 180,
                   child: Obx(
                     () => AutoSizeText(
-                      _istimerunning.value
-                          ? '${jam.value} : ${menit.value.toString().padLeft(2, '0')} : ${detik.value.toString().padLeft(2, '0')} '
-                          : '${jam.value} : ${menit.value.toString().padLeft(2, '0')} : ${detik.value.toString().padLeft(2, '0')} ',
+                      '${jam.value} : ${menit.value.toString().padLeft(2, '0')} : ${detik.value.toString().padLeft(2, '0')} ',
                       style: TextStyle(fontSize: 180, fontFamily: 'Poppins'),
                     ),
                   ),
@@ -1451,28 +1329,19 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
                           ),
                         );
                       },
-                      child: iconaction(
-                        icon: Icons.timer,
-                        title: 'Extends Jam',
-                      ),
+                      child: iconaction(icon: Icons.timer, title: 'Extends Jam'),
                     ),
                     InkWell(
                       onTap: () {
                         Get.to(FoodAddOn());
                       },
-                      child: iconaction(
-                        icon: Icons.local_dining_rounded,
-                        title: 'Food & Beverages',
-                      ),
+                      child: iconaction(icon: Icons.local_dining_rounded, title: 'Food & Beverages'),
                     ),
                     InkWell(
                       onTap: () {
                         _showdialogrevisi();
                       },
-                      child: iconaction(
-                        icon: Icons.meeting_room,
-                        title: 'Revisi',
-                      ),
+                      child: iconaction(icon: Icons.meeting_room, title: 'Revisi'),
                     ),
                     InkWell(
                       onTap: () {
@@ -1487,10 +1356,7 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
                                     if (_isFinished.value) return;
                                     Get.back();
                                   },
-                                  child:
-                                      _isFinished.value
-                                          ? CircularProgressIndicator()
-                                          : Text('Cancel'),
+                                  child: _isFinished.value ? CircularProgressIndicator() : Text('Cancel'),
                                 ),
                               ),
                               Obx(
@@ -1504,8 +1370,7 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
                                     try {
                                       await inputkomisi();
 
-                                      if (namaterapis2.value != '' ||
-                                          namaterapis3.value != '') {
+                                      if (namaterapis2.value != '' || namaterapis3.value != '') {
                                         await setstatusterapisttambahan();
                                         log('jalankan');
                                       }
@@ -1521,10 +1386,7 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
                                       _isFinished.value = false;
                                     }
                                   },
-                                  child:
-                                      _isFinished.value
-                                          ? CircularProgressIndicator()
-                                          : Text('Confirm'),
+                                  child: _isFinished.value ? CircularProgressIndicator() : Text('Confirm'),
                                 ),
                               ),
                             ],
@@ -1554,21 +1416,12 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
                                 padding: EdgeInsets.only(left: 10),
                                 child: Text(
                                   'Waktu Mulai',
-                                  style: TextStyle(
-                                    fontSize: 30,
-                                    fontFamily: 'Poppins',
-                                  ),
+                                  style: TextStyle(fontSize: 30, fontFamily: 'Poppins'),
                                 ),
                               ),
                               SizedBox(width: 10),
                               Container(
-                                child: Text(
-                                  '-',
-                                  style: TextStyle(
-                                    fontSize: 30,
-                                    fontFamily: 'Poppins',
-                                  ),
-                                ),
+                                child: Text('-', style: TextStyle(fontSize: 30, fontFamily: 'Poppins')),
                               ),
                               SizedBox(width: 15),
                               Container(
@@ -1581,10 +1434,7 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
 
                                   return Text(
                                     '$formattedTime',
-                                    style: TextStyle(
-                                      fontSize: 30,
-                                      fontFamily: 'Poppins',
-                                    ),
+                                    style: TextStyle(fontSize: 30, fontFamily: 'Poppins'),
                                   );
                                 }),
                               ),
@@ -1601,36 +1451,26 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
                                 padding: EdgeInsets.only(left: 10),
                                 child: Text(
                                   'Waktu Selesai',
-                                  style: TextStyle(
-                                    fontSize: 30,
-                                    fontFamily: 'Poppins',
-                                  ),
+                                  style: TextStyle(fontSize: 30, fontFamily: 'Poppins'),
                                 ),
                               ),
                               SizedBox(width: 10),
                               Container(
-                                child: Text(
-                                  '-',
-                                  style: TextStyle(
-                                    fontSize: 30,
-                                    fontFamily: 'Poppins',
-                                  ),
-                                ),
+                                child: Text('-', style: TextStyle(fontSize: 30, fontFamily: 'Poppins')),
                               ),
                               SizedBox(width: 15),
                               Container(
                                 width: 160,
                                 child: Obx(() {
-                                  final DateTime FixedTimeEnd = fixedTime.value
-                                      .add(
-                                        Duration(
-                                          minutes:
-                                              _triggerAddOnWktSlesai.isTrue
-                                                  ? savedMinutes.value
-                                                  : globalData['sumDurasi'],
-                                          // minutes: widget.sumDurasi,
-                                        ),
-                                      );
+                                  final DateTime FixedTimeEnd = fixedTime.value.add(
+                                    Duration(
+                                      minutes:
+                                          _triggerAddOnWktSlesai.isTrue
+                                              ? savedMinutes.value
+                                              : globalData['sumDurasi'],
+                                      // minutes: widget.sumDurasi,
+                                    ),
+                                  );
 
                                   String formattedTimeEnd =
                                       "${FixedTimeEnd.hour.toString().padLeft(2, '0')} :"
@@ -1639,10 +1479,7 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
 
                                   return Text(
                                     '$formattedTimeEnd',
-                                    style: TextStyle(
-                                      fontSize: 30,
-                                      fontFamily: 'Poppins',
-                                    ),
+                                    style: TextStyle(fontSize: 30, fontFamily: 'Poppins'),
                                   );
                                 }),
                               ),
@@ -1657,45 +1494,27 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
                               height: 90,
                               decoration: BoxDecoration(
                                 color: Color(0xFF333333).withOpacity(0.4),
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(10),
-                                ),
+                                borderRadius: BorderRadius.all(Radius.circular(10)),
                               ),
                               child: Container(
                                 padding: EdgeInsets.only(left: 20),
                                 child: Row(
                                   children: [
                                     Container(
-                                      decoration: BoxDecoration(
-                                        border: Border.all(),
-                                        shape: BoxShape.circle,
-                                      ),
+                                      decoration: BoxDecoration(border: Border.all(), shape: BoxShape.circle),
                                       width: 70,
                                       height: 70,
-                                      child: CircleAvatar(
-                                        child: Text(
-                                          'Y',
-                                          style: TextStyle(fontSize: 25),
-                                        ),
-                                      ),
+                                      child: CircleAvatar(child: Text('Y', style: TextStyle(fontSize: 25))),
                                     ),
                                     Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.start,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisAlignment: MainAxisAlignment.start,
                                       children: [
                                         Padding(
-                                          padding: EdgeInsets.only(
-                                            top: 7,
-                                            left: 20,
-                                          ),
+                                          padding: EdgeInsets.only(top: 7, left: 20),
                                           child: Text(
                                             'Room ${globalData['namaRuangan']}',
-                                            style: TextStyle(
-                                              fontSize: 25,
-                                              fontFamily: 'Poppins',
-                                            ),
+                                            style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
                                           ),
                                         ),
                                         Padding(
@@ -1703,10 +1522,7 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
                                           child: Obx(
                                             () => Text(
                                               'Terapis : ${_namaTerapis.value} ${namaterapis2.value == '' ? '' : ','} ${namaterapis2.value} ${namaterapis3.value == '' ? '' : ','} ${namaterapis3.value}',
-                                              style: TextStyle(
-                                                fontSize: 20,
-                                                fontFamily: 'Poppins',
-                                              ),
+                                              style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
                                             ),
                                           ),
                                         ),
@@ -1735,11 +1551,7 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
                           children: [
                             Text(
                               'List Orderan :',
-                              style: TextStyle(
-                                height: 1,
-                                fontSize: 30,
-                                fontFamily: 'Poppins',
-                              ),
+                              style: TextStyle(height: 1, fontSize: 30, fontFamily: 'Poppins'),
                             ),
                             SizedBox(
                               height: 120,
@@ -1751,32 +1563,22 @@ class _TerapisBekerjaState extends State<TerapisBekerja> {
                                 controller: scrollListOrderan,
                                 child: ListView(
                                   controller: scrollListOrderan,
-                                  physics:
-                                      const AlwaysScrollableScrollPhysics(),
+                                  physics: const AlwaysScrollableScrollPhysics(),
                                   children: [
-                                    if ((globalData['dataPaket'] as List)
-                                        .isNotEmpty) ...[
-                                      for (var (i, item)
-                                          in (globalData['dataPaket'] as List)
-                                              .indexed)
+                                    if ((globalData['dataPaket'] as List).isNotEmpty) ...[
+                                      for (var (i, item) in (globalData['dataPaket'] as List).indexed)
                                         isitekslist(
                                           '${i + 1}. ${item['nama_paket_msg']} ${item['is_addon'] == 1 ? '+ (${item['total_durasi']})' : ''}',
                                         ),
                                     ],
-                                    if ((globalData['dataProduk'] as List)
-                                        .isNotEmpty) ...[
-                                      for (var (i, item)
-                                          in (globalData['dataProduk'] as List)
-                                              .indexed)
+                                    if ((globalData['dataProduk'] as List).isNotEmpty) ...[
+                                      for (var (i, item) in (globalData['dataProduk'] as List).indexed)
                                         isitekslist(
                                           '${i + 1 + (globalData['dataPaket'] as List).length}. ${item['nama_produk']} ${item['is_addon'] == 1 ? '+ (${item['total_durasi']})' : ''}',
                                         ),
                                     ],
-                                    if ((globalData['dataFood'] as List)
-                                        .isNotEmpty) ...[
-                                      for (var (i, item)
-                                          in (globalData['dataFood'] as List)
-                                              .indexed)
+                                    if ((globalData['dataFood'] as List).isNotEmpty) ...[
+                                      for (var (i, item) in (globalData['dataFood'] as List).indexed)
                                         isitekslist(
                                           '${i + 1 + (globalData['dataPaket'] as List).length + (globalData['dataProduk'] as List).length}. ${item['nama_fnb']} ${item['is_addon'] == 1 ? '+ (${item['qty']} Pcs)' : ''}',
                                         ),
@@ -1819,32 +1621,41 @@ class iconaction extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Container(child: Icon(icon, size: 150)),
-          Container(
-            child: Text(title, style: TextStyle(fontFamily: 'Poppins')),
-          ),
+          Container(child: Text(title, style: TextStyle(fontFamily: 'Poppins'))),
         ],
       ),
     );
   }
 }
 
-class GantiPaketController extends GetxController {
-  final int timeSpent;
-  GantiPaketController({required this.timeSpent});
+void showGantiPaket() {
+  // jika controller sudah diregister, maka delete. supaya instanceny fresh
+  if (Get.isRegistered<GantiPaketController>()) {
+    Get.delete<GantiPaketController>();
+  }
+  // Put ulang
+  var controller = Get.put(GantiPaketController());
+  // get current paket dlu br tembak ke btn gantipaket
+  controller
+      .getCurrentPaket()
+      .then((_) {
+        controller.buttongantipaket();
+      })
+      .catchError((onError) {
+        log("Error di getcurrentpaket $onError");
+      });
+}
 
+class GantiPaketController extends GetxController {
   var dio = Dio();
   KamarTerapisMgr _kamarTerapisMgr = KamarTerapisMgr();
 
-  var formatter = NumberFormat.currency(
-    locale: "en_ID",
-    symbol: "Rp. ",
-    decimalDigits: 0,
-  );
+  var formatter = NumberFormat.currency(locale: "en_ID", symbol: "Rp. ", decimalDigits: 0);
 
   RxList<Map<String, dynamic>> _listCurrentPaket = <Map<String, dynamic>>[].obs;
   RxList<Map<String, dynamic>> _listAllPaket = <Map<String, dynamic>>[].obs;
 
-  Future<void> _getCurrentPaket() async {
+  Future<void> getCurrentPaket() async {
     try {
       String idTrans = _kamarTerapisMgr.getData()['idTransaksi'];
       var token = await getTokenSharedPref();
@@ -1857,9 +1668,7 @@ class GantiPaketController extends GetxController {
       List<dynamic> responsePaket = response.data['data_paket'];
       // log("Isi Response Paket $responsePaket");
 
-      _listCurrentPaket.assignAll(
-        responsePaket.map((el) => Map<String, dynamic>.from(el)).toList(),
-      );
+      _listCurrentPaket.assignAll(responsePaket.map((el) => Map<String, dynamic>.from(el)).toList());
 
       log("Isi List Current Paket $_listCurrentPaket");
     } catch (e) {
@@ -1875,9 +1684,7 @@ class GantiPaketController extends GetxController {
 
       List<dynamic> responsePaket = response.data;
 
-      _listAllPaket.assignAll(
-        responsePaket.map((el) => Map<String, dynamic>.from(el)).toList(),
-      );
+      _listAllPaket.assignAll(responsePaket.map((el) => Map<String, dynamic>.from(el)).toList());
     } catch (e) {
       if (e is DioException) {
         throw Exception("Error pas GetAllPaket ${e.response!.data}");
@@ -1888,22 +1695,18 @@ class GantiPaketController extends GetxController {
   RxString _currentIdDetail = "".obs;
   Future<void> _storeGantiPaket(String newIdPaket) async {
     String idTransaksi = _kamarTerapisMgr.getData()['idTransaksi'];
-    var newData =
-        _listAllPaket.where((el) => el['id_paket_msg'] == newIdPaket).toList();
+    var newData = _listAllPaket.where((el) => el['id_paket_msg'] == newIdPaket).toList();
 
     var data = {
       "id_transaksi": idTransaksi,
       "id_detail_diretur": _currentIdDetail.value,
       "alasan_retur": "ganti_paket",
-      "time_spent": timeSpent,
+      // "time_spent": timeSpent,
       "item_pengganti": {...newData[0]},
     };
 
     try {
-      var response = await dio.put(
-        '${myIpAddr()}/kamar_terapis/retur_paket',
-        data: data,
-      );
+      var response = await dio.put('${myIpAddr()}/kamar_terapis/retur_paket', data: data);
 
       if (response.statusCode == 200) {
         print("Bla sukses");
@@ -1931,10 +1734,7 @@ class GantiPaketController extends GetxController {
                   Center(
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 20),
-                      child: Text(
-                        'Paket Awal Anda',
-                        style: TextStyle(fontSize: 30),
-                      ),
+                      child: Text('Paket Awal Anda', style: TextStyle(fontSize: 30)),
                     ),
                   ),
                   Obx(
@@ -2004,9 +1804,7 @@ class GantiPaketController extends GetxController {
               width: 600,
               child:
                   is_addon
-                      ? isitekslist(
-                        tekspaket + " (${total_durasi} Menit) AddOn",
-                      )
+                      ? isitekslist(tekspaket + " (${total_durasi} Menit) AddOn")
                       : isitekslist(tekspaket),
             ),
             InkWell(
@@ -2038,9 +1836,7 @@ class GantiPaketController extends GetxController {
                   color: Colors.green.withOpacity(0.3),
                 ),
                 width: 200,
-                child: Center(
-                  child: Text('Ganti Paket', style: TextStyle(fontSize: 30)),
-                ),
+                child: Center(child: Text('Ganti Paket', style: TextStyle(fontSize: 30))),
               ),
             ),
           ],
@@ -2073,44 +1869,30 @@ class GantiPaketController extends GetxController {
                       // Ambil Current Data dlu, Cocokkan dgn IdDetail Current
                       var currDetail =
                           _listCurrentPaket
-                              .where(
-                                (el) =>
-                                    el['id_detail_transaksi'] ==
-                                    _currentIdDetail.value,
-                              )
+                              .where((el) => el['id_detail_transaksi'] == _currentIdDetail.value)
                               .toList();
 
                       // Ambil data paket kaya harga dll di listAllPaket
                       var currPaket =
                           _listAllPaket
-                              .where(
-                                (el) =>
-                                    el['id_paket_msg'] ==
-                                    currDetail[0]['id_paket'],
-                              )
+                              .where((el) => el['id_paket_msg'] == currDetail[0]['id_paket'])
                               .toList();
 
                       // kemudian filter paket yg lebih mahal dr paket sblmny
                       var lebihMahal =
                           _listAllPaket
-                              .where(
-                                (el) =>
-                                    el['harga_paket_msg'] >=
-                                    currPaket[0]['harga_paket_msg'],
-                              )
+                              .where((el) => el['harga_paket_msg'] >= currPaket[0]['harga_paket_msg'])
                               .toList();
 
                       return GridView.builder(
                         controller: _scrollController,
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 3, // 3 item 1 row
-                              crossAxisSpacing:
-                                  60, // space horizontal tiap item
-                              mainAxisSpacing: 25, // space vertical tiap item
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3, // 3 item 1 row
+                          crossAxisSpacing: 60, // space horizontal tiap item
+                          mainAxisSpacing: 25, // space vertical tiap item
 
-                              childAspectRatio: 20 / 12,
-                            ),
+                          childAspectRatio: 20 / 12,
+                        ),
                         // awalnya berdasarkan _listAllPaket
                         itemCount: lebihMahal.length,
                         itemBuilder: (context, idx) {
@@ -2139,34 +1921,21 @@ class GantiPaketController extends GetxController {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(
-                                    Icons.feed_outlined,
-                                    size: 40,
-                                    color: Colors.white,
-                                  ),
+                                  Icon(Icons.feed_outlined, size: 40, color: Colors.white),
                                   Text(
                                     "${data['nama_paket_msg']}",
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                    ),
+                                    style: const TextStyle(color: Colors.white, fontSize: 16),
                                     textAlign: TextAlign.center,
                                   ),
                                   Text(
                                     "${formatter.format(data['harga_paket_msg'])}\n ${data['durasi']} Menit",
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                    ),
+                                    style: const TextStyle(color: Colors.white, fontSize: 16),
                                     textAlign: TextAlign.center,
                                   ),
                                   if (current)
                                     Text(
                                       "(Saat Ini)",
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                      ),
+                                      style: const TextStyle(color: Colors.white, fontSize: 16),
                                     ),
                                 ],
                               ),

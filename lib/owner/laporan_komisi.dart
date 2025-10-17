@@ -1,3 +1,5 @@
+// ignore_for_file: sort_child_properties_last, curly_braces_in_flow_control_structures
+
 import 'dart:async';
 import 'dart:math' hide log;
 import 'package:Project_SPA/owner/download_splash.dart';
@@ -58,6 +60,9 @@ class _laporankomisiState extends State<laporankomisi> with SingleTickerProvider
   String? selectedagencybulanan;
   String? selectedagencytahunan;
   String? selectedagencyharian;
+  String isitekscetakkomisibulanan = 'Cetak Komisi Gro';
+  String isitekscetakkomisiharian = 'Cetak Komisi Gro';
+  String isitekscetakkomisitahunan = 'Cetak Komisi Gro';
   RxList<Map<String, dynamic>> data_agency = <Map<String, dynamic>>[].obs;
 
   Future<void> getdataagency() async {
@@ -98,17 +103,32 @@ class _laporankomisiState extends State<laporankomisi> with SingleTickerProvider
     }
   }
 
-  Future<void> exportkomisibulanan(bulan, tahun, namaagency) async {
+  Future<void> exportkomisibulanan(bulan, tahun, namaagency, komisidicetak) async {
     try {
       print('ini jalan');
       Get.dialog(const DownloadSplash(), barrierDismissible: false);
+      final filepath;
       final dir = await getDownloadsDirectory();
-      final filepath = '${dir!.path}/data komisi bulan $bulan tahun $tahun.pdf';
+      if (namaagency == 'All Terapis & GRO') {
+        filepath = '${dir!.path}/data komisi All Terapis bulan $bulan tahun $tahun.pdf';
+      } else {
+        if (komisidicetak == 'Terapis') {
+          filepath = '${dir!.path}/data komisi terapis agency $namaagency bulan $bulan tahun $tahun.pdf';
+        } else {
+          filepath = '${dir!.path}/data komisi agency $namaagency bulan $bulan tahun $tahun.pdf';
+        }
+      }
+
       String url = '${myIpAddr()}/main_owner/export_excel_komisi_bulanan';
       var response = await dio.download(
         url,
         filepath,
-        queryParameters: {'month': bulan, 'year': tahun, 'nama_agency': namaagency},
+        queryParameters: {
+          'month': bulan,
+          'year': tahun,
+          'nama_agency': namaagency,
+          'komisi_dicetak': komisidicetak,
+        },
         options: Options(responseType: ResponseType.bytes, headers: {'Accept': 'application/pdf'}),
       );
 
@@ -123,17 +143,22 @@ class _laporankomisiState extends State<laporankomisi> with SingleTickerProvider
     }
   }
 
-  Future<void> exportkomisigrobulanan(bulan, tahun) async {
+  Future<void> exportkomisigrobulanan(bulan, tahun, selectedagency) async {
     try {
       print('ini jalan');
       Get.dialog(const DownloadSplash(), barrierDismissible: false);
       final dir = await getDownloadsDirectory();
-      final filepath = '${dir!.path}/data komisi gro bulan $bulan tahun $tahun.pdf';
+      final filepath;
+      if (selectedagency == 'All Terapis & GRO') {
+        filepath = '${dir!.path}/data komisi gro bulan $bulan tahun $tahun.pdf';
+      } else {
+        filepath = '${dir!.path}/data komisi terapis + agency $selectedagency bulan $bulan tahun $tahun.pdf';
+      }
       String url = '${myIpAddr()}/main_owner/export_excel_komisi_bulanan_gro';
       var response = await dio.download(
         url,
         filepath,
-        queryParameters: {'month': bulan, 'year': tahun},
+        queryParameters: {'month': bulan, 'year': tahun, 'nama_agency': selectedagency},
         options: Options(responseType: ResponseType.bytes, headers: {'Accept': 'application/pdf'}),
       );
 
@@ -174,17 +199,28 @@ class _laporankomisiState extends State<laporankomisi> with SingleTickerProvider
     }
   }
 
-  Future<void> exportkomisitahunan(tahun, namaagency) async {
+  Future<void> exportkomisitahunan(tahun, namaagency, komisidicetak) async {
     try {
       print('ini jalan');
       Get.dialog(const DownloadSplash(), barrierDismissible: false);
+      final filepath;
       final dir = await getDownloadsDirectory();
-      final filepath = '${dir!.path}/data komisi Tahun $tahun.pdf';
+      if (namaagency == 'All Terapis & GRO') {
+        filepath = '${dir!.path}/data komisi All Terapis tahun $tahun.pdf';
+      } else {
+        if (komisidicetak == 'Terapis') {
+          filepath = '${dir!.path}/data komisi terapis agency $namaagency tahun $tahun.pdf';
+        } else {
+          filepath = '${dir!.path}/data komisi agency $namaagency tahun $tahun.pdf';
+        }
+      }
+      ;
+
       String url = '${myIpAddr()}/main_owner/export_excel_komisi_tahunan';
       var response = await dio.download(
         url,
         filepath,
-        queryParameters: {'year': tahun, 'nama_agency': namaagency},
+        queryParameters: {'year': tahun, 'nama_agency': namaagency, 'komisi_dicetak': komisidicetak},
         options: Options(responseType: ResponseType.bytes, headers: {'Accept': 'application/pdf'}),
       );
 
@@ -199,17 +235,22 @@ class _laporankomisiState extends State<laporankomisi> with SingleTickerProvider
     }
   }
 
-  Future<void> exportkomisigrotahunan(tahun) async {
+  Future<void> exportkomisigrotahunan(tahun, namaagency) async {
     try {
       print('ini jalan');
       Get.dialog(const DownloadSplash(), barrierDismissible: false);
+      final filepath;
       final dir = await getDownloadsDirectory();
-      final filepath = '${dir!.path}/data komisi gro Tahun $tahun.pdf';
+      if (namaagency == 'All Terapis & GRO') {
+        filepath = '${dir!.path}/data komisi gro tahun $tahun.pdf';
+      } else {
+        filepath = '${dir!.path}/data komisi terapis + agency $namaagency tahun $tahun.pdf';
+      }
       String url = '${myIpAddr()}/main_owner/export_excel_komisi_tahunan_gro';
       var response = await dio.download(
         url,
         filepath,
-        queryParameters: {'year': tahun},
+        queryParameters: {'year': tahun, 'nama_agency': namaagency},
         options: Options(responseType: ResponseType.bytes, headers: {'Accept': 'application/pdf'}),
       );
 
@@ -250,17 +291,33 @@ class _laporankomisiState extends State<laporankomisi> with SingleTickerProvider
     }
   }
 
-  Future<void> exportkomisiharian(strdate, enddate, namaagency) async {
+  Future<void> exportkomisiharian(strdate, enddate, namaagency, komisidicetak) async {
     try {
       print('ini jalan');
       Get.dialog(const DownloadSplash(), barrierDismissible: false);
+      final filepath;
       final dir = await getDownloadsDirectory();
-      final filepath = '${dir!.path}/data komisi tanggal $strdate - tanggal $enddate.pdf';
+      if (namaagency == 'All Terapis & GRO') {
+        filepath = '${dir!.path}/data komisi All Terapis tanggal $strdate - tanggal $enddate.pdf';
+      } else {
+        if (komisidicetak == 'Terapis') {
+          filepath =
+              '${dir!.path}/data komisi terapis agency $namaagency tanggal $strdate - tanggal $enddate.pdf';
+        } else {
+          filepath = '${dir!.path}/data komisi agency $namaagency tanggal $strdate - tanggal $enddate.pdf';
+        }
+      }
+
       String url = '${myIpAddr()}/main_owner/export_excel_komisi_harian';
       var response = await dio.download(
         url,
         filepath,
-        queryParameters: {'strdate': strdate, 'enddate': enddate, 'nama_agency': namaagency},
+        queryParameters: {
+          'strdate': strdate,
+          'enddate': enddate,
+          'nama_agency': namaagency,
+          'komisi_dicetak': komisidicetak,
+        },
         options: Options(responseType: ResponseType.bytes, headers: {'Accept': 'application/pdf'}),
       );
 
@@ -275,17 +332,23 @@ class _laporankomisiState extends State<laporankomisi> with SingleTickerProvider
     }
   }
 
-  Future<void> exportkomisigroharian(strdate, endddate) async {
+  Future<void> exportkomisigroharian(strdate, endddate, namaagency) async {
     try {
       print('ini jalan');
       Get.dialog(const DownloadSplash(), barrierDismissible: false);
+      final filepath;
       final dir = await getDownloadsDirectory();
-      final filepath = '${dir!.path}/data komisi gro Tanggal $strdate tahun $endddate.pdf';
+      if (namaagency == 'All Terapis & GRO') {
+        filepath = '${dir!.path}/data komisi gro Tanggal $strdate tahun $endddate.pdf';
+      } else {
+        filepath =
+            '${dir!.path}/data komisi terapis + agency $namaagency Tanggal $strdate tahun $endddate.pdf';
+      }
       String url = '${myIpAddr()}/main_owner/export_excel_komisi_harian_gro';
       var response = await dio.download(
         url,
         filepath,
-        queryParameters: {'strdate': strdate, 'enddate': endddate},
+        queryParameters: {'strdate': strdate, 'enddate': endddate, 'nama_agency': namaagency},
         options: Options(responseType: ResponseType.bytes, headers: {'Accept': 'application/pdf'}),
       );
 
@@ -603,6 +666,13 @@ class _laporankomisiState extends State<laporankomisi> with SingleTickerProvider
                                   setState(() {
                                     selectedagencybulanan = value;
                                     getdatakomisi(pilihanbulan, pilihantahun, selectedagencybulanan);
+
+                                    if (selectedagencybulanan == 'All Terapis & GRO' ||
+                                        selectedagencybulanan == 'No Agency') {
+                                      isitekscetakkomisibulanan = 'Cetak Komisi Gro';
+                                    } else {
+                                      isitekscetakkomisibulanan = 'Terapis & Agency';
+                                    }
                                   });
                                 },
                                 items:
@@ -629,18 +699,59 @@ class _laporankomisiState extends State<laporankomisi> with SingleTickerProvider
                             crossAxisAlignment: CrossAxisAlignment.center,
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
+                              selectedagencybulanan != 'All Terapis & GRO'
+                                  ? Container(
+                                    margin: EdgeInsets.only(top: 0.w),
+                                    width: 120.w,
+                                    height: 35.w,
+                                    child: ElevatedButton(
+                                      onPressed: () {
+                                        String komisi_dicetak = 'Terapis';
+                                        exportkomisibulanan(
+                                          pilihanbulan,
+                                          pilihantahun,
+                                          selectedagencybulanan,
+                                          komisi_dicetak,
+                                        );
+                                      },
+                                      child: Text(
+                                        'Terapis',
+                                        style: TextStyle(fontSize: 15.w, color: Colors.black),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Color(0xFFFCEFCB),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                  : SizedBox.shrink(),
+                              SizedBox(width: 10),
                               Container(
                                 margin: EdgeInsets.only(top: 0.w),
-                                width: 220.w,
+                                width: 120.w,
                                 height: 35.w,
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    exportkomisibulanan(pilihanbulan, pilihantahun, selectedagencybulanan);
+                                    String komisi_dicetak = 'Agency';
+                                    exportkomisibulanan(
+                                      pilihanbulan,
+                                      pilihantahun,
+                                      selectedagencybulanan,
+                                      komisi_dicetak,
+                                    );
                                   },
-                                  child: Text(
-                                    'Cetak Komisi Terapis',
-                                    style: TextStyle(fontSize: 15.w, color: Colors.black),
-                                  ),
+                                  child:
+                                      selectedagencybulanan == 'All Terapis & GRO'
+                                          ? Text(
+                                            'All Terapis',
+                                            style: TextStyle(fontSize: 15.w, color: Colors.black),
+                                          )
+                                          : Text(
+                                            'Agency',
+                                            style: TextStyle(fontSize: 15.w, color: Colors.black),
+                                          ),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Color(0xFFFCEFCB),
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -650,19 +761,19 @@ class _laporankomisiState extends State<laporankomisi> with SingleTickerProvider
                               SizedBox(width: 10),
                               Container(
                                 margin: EdgeInsets.only(top: 0.w),
-                                width: 220.w,
+                                width: 160.w,
                                 height: 35.w,
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    exportkomisigrobulanan(pilihanbulan, pilihantahun);
+                                    exportkomisigrobulanan(pilihanbulan, pilihantahun, selectedagencybulanan);
                                   },
-                                  child: Text(
-                                    'Cetak Komisi Gro',
-                                    style: TextStyle(fontSize: 15.w, color: Colors.black),
-                                  ),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Color(0xFFFCEFCB),
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  ),
+                                  child: Text(
+                                    isitekscetakkomisibulanan,
+                                    style: TextStyle(fontSize: 15.w, color: Colors.black),
                                   ),
                                 ),
                               ),
@@ -793,7 +904,15 @@ class _laporankomisiState extends State<laporankomisi> with SingleTickerProvider
                                 onChanged: (String? value) {
                                   setState(() {
                                     selectedagencyharian = value;
+
                                     getdatakomisiharian(startdate, enddate, selectedagencyharian);
+
+                                    if (selectedagencyharian == 'All Terapis & GRO' ||
+                                        selectedagencyharian == 'No Agency') {
+                                      isitekscetakkomisiharian = 'Cetak Komisi Gro';
+                                    } else {
+                                      isitekscetakkomisiharian = 'Terapis & Agency';
+                                    }
                                   });
                                 },
                                 items:
@@ -819,18 +938,59 @@ class _laporankomisiState extends State<laporankomisi> with SingleTickerProvider
                             crossAxisAlignment: CrossAxisAlignment.center,
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
+                              selectedagencyharian != 'All Terapis & GRO'
+                                  ? Container(
+                                    margin: EdgeInsets.only(top: 0.w),
+                                    width: 120.w,
+                                    height: 35.w,
+                                    child: ElevatedButton(
+                                      onPressed: () {
+                                        String komisi_dicetak = 'Terapis';
+                                        exportkomisiharian(
+                                          startdate,
+                                          enddate,
+                                          selectedagencyharian,
+                                          komisi_dicetak,
+                                        );
+                                      },
+                                      child: Text(
+                                        'Terapis',
+                                        style: TextStyle(fontSize: 15.w, color: Colors.black),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Color(0xFFFCEFCB),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                  : SizedBox.shrink(),
+                              SizedBox(width: 10),
                               Container(
                                 margin: EdgeInsets.only(top: 0.w),
-                                width: 220.w,
+                                width: 120.w,
                                 height: 35.w,
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    exportkomisiharian(startdate, enddate, selectedagencyharian);
+                                    String komisi_dicetak = 'Agency';
+                                    exportkomisiharian(
+                                      startdate,
+                                      enddate,
+                                      selectedagencyharian,
+                                      komisi_dicetak,
+                                    );
                                   },
-                                  child: Text(
-                                    'Cetak Komisi Terapis',
-                                    style: TextStyle(fontSize: 15.w, color: Colors.black),
-                                  ),
+                                  child:
+                                      selectedagencyharian == 'All Terapis & GRO'
+                                          ? Text(
+                                            'All Terapis',
+                                            style: TextStyle(fontSize: 15.w, color: Colors.black),
+                                          )
+                                          : Text(
+                                            'Agency',
+                                            style: TextStyle(fontSize: 15.w, color: Colors.black),
+                                          ),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Color(0xFFFCEFCB),
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -840,14 +1000,14 @@ class _laporankomisiState extends State<laporankomisi> with SingleTickerProvider
                               SizedBox(width: 10),
                               Container(
                                 margin: EdgeInsets.only(top: 0.w),
-                                width: 220.w,
+                                width: 160.w,
                                 height: 35.w,
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    exportkomisigroharian(startdate, enddate);
+                                    exportkomisigroharian(startdate, enddate, selectedagencyharian);
                                   },
                                   child: Text(
-                                    'Cetak Komisi Gro',
+                                    isitekscetakkomisiharian,
                                     style: TextStyle(fontSize: 15.w, color: Colors.black),
                                   ),
                                   style: ElevatedButton.styleFrom(
@@ -968,6 +1128,13 @@ class _laporankomisiState extends State<laporankomisi> with SingleTickerProvider
                                   setState(() {
                                     selectedagencytahunan = value;
                                     getdatakomisitahunan(pilihantahun, selectedagencytahunan);
+
+                                    if (selectedagencytahunan == 'All Terapis & GRO' ||
+                                        selectedagencytahunan == 'No Agency') {
+                                      isitekscetakkomisitahunan = 'Cetak Komisi Gro';
+                                    } else {
+                                      isitekscetakkomisitahunan = 'Terapis & Agency';
+                                    }
                                   });
                                 },
                                 items:
@@ -993,18 +1160,53 @@ class _laporankomisiState extends State<laporankomisi> with SingleTickerProvider
                             crossAxisAlignment: CrossAxisAlignment.center,
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
+                              selectedagencytahunan != 'All Terapis & GRO'
+                                  ? Container(
+                                    margin: EdgeInsets.only(top: 0.w),
+                                    width: 120.w,
+                                    height: 35.w,
+                                    child: ElevatedButton(
+                                      onPressed: () {
+                                        String komisi_dicetak = 'Terapis';
+                                        exportkomisitahunan(
+                                          pilihantahun,
+                                          selectedagencytahunan,
+                                          komisi_dicetak,
+                                        );
+                                      },
+                                      child: Text(
+                                        'Terapis',
+                                        style: TextStyle(fontSize: 15.w, color: Colors.black),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Color(0xFFFCEFCB),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                  : SizedBox.shrink(),
+                              SizedBox(width: 10.w),
                               Container(
                                 margin: EdgeInsets.only(top: 0.w),
-                                width: 220.w,
+                                width: 120.w,
                                 height: 35.w,
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    exportkomisitahunan(pilihantahun, selectedagencytahunan);
+                                    String komisi_dicetak = 'Agency';
+                                    exportkomisitahunan(pilihantahun, selectedagencytahunan, komisi_dicetak);
                                   },
-                                  child: Text(
-                                    'Cetak Komisi Terapis',
-                                    style: TextStyle(fontSize: 15.w, color: Colors.black),
-                                  ),
+                                  child:
+                                      selectedagencytahunan == 'All Terapis & GRO'
+                                          ? Text(
+                                            'All Terapis',
+                                            style: TextStyle(fontSize: 15.w, color: Colors.black),
+                                          )
+                                          : Text(
+                                            'Agency',
+                                            style: TextStyle(fontSize: 15.w, color: Colors.black),
+                                          ),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Color(0xFFFCEFCB),
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -1014,14 +1216,14 @@ class _laporankomisiState extends State<laporankomisi> with SingleTickerProvider
                               SizedBox(width: 10),
                               Container(
                                 margin: EdgeInsets.only(top: 0.w),
-                                width: 220.w,
+                                width: 160.w,
                                 height: 35.w,
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    exportkomisigrotahunan(pilihantahun);
+                                    exportkomisigrotahunan(pilihantahun, selectedagencytahunan);
                                   },
                                   child: Text(
-                                    'Cetak Komisi Gro',
+                                    isitekscetakkomisitahunan,
                                     style: TextStyle(fontSize: 15.w, color: Colors.black),
                                   ),
                                   style: ElevatedButton.styleFrom(
@@ -1170,8 +1372,8 @@ class _laporankomisiState extends State<laporankomisi> with SingleTickerProvider
                                                 ),
                                                 SizedBox(width: 15),
                                                 Container(
-                                                  width: 75,
-                                                  child: Text(
+                                                  width: 200,
+                                                  child: AutoSizeText(
                                                     item['nama_karyawan'],
                                                     textAlign: TextAlign.left,
                                                     style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),

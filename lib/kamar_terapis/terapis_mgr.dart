@@ -1,9 +1,11 @@
 // Singleton instance
 
 import 'dart:developer';
+import 'package:cherry_toast/cherry_toast.dart';
 import 'package:dio/dio.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 import 'package:Project_SPA/function/token.dart';
+import 'package:flutter/material.dart';
 
 class KamarTerapisMgr {
   // single instance
@@ -105,7 +107,10 @@ class KamarTerapisMgr {
     try {
       final prefs = await getTokenSharedPref();
 
-      var response = await Dio().get('${myIpAddr()}/fnb/selected_food?id_trans=$idTrans', options: Options(headers: {"Authorization": "bearer " + prefs!}));
+      var response = await Dio().get(
+        '${myIpAddr()}/fnb/selected_food?id_trans=$idTrans',
+        options: Options(headers: {"Authorization": "bearer " + prefs!}),
+      );
 
       List<dynamic> responseData = response.data;
 
@@ -192,5 +197,30 @@ class KamarTerapisMgr {
 
   void resetLimitChange() {
     limitMenitChange = 15;
+    print("Sisa resetMenitChange Menit Utk Ganti Paket dll $limitMenitChange");
+  }
+
+  Future<bool?> askSpvForChanges(String password, context) async {
+    try {
+      var response = await Dio().put(
+        '${myIpAddr()}/kamar_terapis/ask_spv_approval',
+        data: {"passwd": password},
+        options: Options(contentType: Headers.jsonContentType, responseType: ResponseType.json),
+      );
+
+      return (response.data as bool);
+    } catch (e) {
+      if (e is DioException) {
+        if (e.response!.statusCode == 401) {
+          CherryToast.error(
+            title: Text("Password SPV Salah"),
+            toastDuration: Duration(seconds: 3),
+          ).show(context);
+        }
+      }
+      log("Error di fn CancelTransaksi ${e}");
+
+      return null;
+    }
   }
 }

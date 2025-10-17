@@ -351,7 +351,7 @@ class HistoryPembelianController extends GetxController {
       final payload = {"id_form": idForm, "items": updatedItems};
 
       // Kirim ke API
-      await dio.post('${myIpAddr()}/pembelian/update_detail_faktur', data: payload);
+      await dio.put('${myIpAddr()}/pembelian/update_detail_faktur', data: payload);
 
       Get.back(); // Tutup loading overlay
       Get.back(); // Tutup dialog edit

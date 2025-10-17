@@ -12,6 +12,7 @@ import 'package:Project_SPA/admin/regis_promo.dart';
 import 'package:Project_SPA/admin/regis_room.dart';
 import 'package:Project_SPA/admin/regis_users.dart';
 import 'package:Project_SPA/function/admin_drawer.dart';
+import 'package:Project_SPA/function/authorize_spv_dialog.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 import 'package:Project_SPA/function/our_drawer.dart';
 import 'package:Project_SPA/owner/download_splash.dart';
@@ -44,7 +45,7 @@ class ListTransaksiController extends GetxController {
   RxList<Map<String, dynamic>> filteredList = <Map<String, dynamic>>[].obs;
   Timer? _debounce;
   Timer? _refreshTimer;
-  ScrollController _scrollTglController = ScrollController();
+  ScrollController scrollTglController = ScrollController();
   ScrollController singleChildController = ScrollController();
 
   RxList<DateTime?> rangeDatePickerOmset = <DateTime?>[].obs;
@@ -53,6 +54,46 @@ class ListTransaksiController extends GetxController {
   RxString namaterapis3 = ''.obs;
   String idterapis2 = '';
   String idterapis3 = '';
+  final Map<String, Map<String, dynamic>> _detailCache = {};
+
+  // utang yg msh blm dilunasin
+  RxInt _sisaBayar = 0.obs;
+  TextEditingController _txtSisaBayar = TextEditingController();
+  // bentuk int dan bentuk controller utk formatting
+  RxInt _jlhBayar = 0.obs;
+  TextEditingController _txtJlhBayar = TextEditingController();
+  // kembalian
+  RxInt _kembalian = 0.obs;
+  TextEditingController _txtKembalian = TextEditingController();
+  // List Metode Bayar
+  RxList<String> _metodeByr = <String>['cash', 'debit', 'kredit', 'qris'].obs;
+  RxnString? _selectedMetode = RxnString(null);
+  // data utk metode bank / qris
+  TextEditingController _namaAkun = TextEditingController();
+  TextEditingController _noRek = TextEditingController();
+  TextEditingController _namaBank = TextEditingController();
+  RxString selectedBank = ''.obs;
+  final List<String> bankList = ['BCA', 'BNI', 'BRI', 'Mandiri'];
+
+  var dio = Dio();
+  RxInt omsetCash = 0.obs;
+  RxInt omsetDebit = 0.obs;
+  RxInt omsetKredit = 0.obs;
+  RxInt omsetQris = 0.obs;
+  RxList<Map<String, dynamic>> dataCash = <Map<String, dynamic>>[].obs;
+  RxList<Map<String, dynamic>> dataDebit = <Map<String, dynamic>>[].obs;
+  RxList<Map<String, dynamic>> dataKredit = <Map<String, dynamic>>[].obs;
+  RxList<Map<String, dynamic>> dataQris = <Map<String, dynamic>>[].obs;
+  RxString tglNow = "".obs;
+  RxDouble pajakMsg = 0.0.obs;
+  RxDouble pajakFnb = 0.0.obs;
+  RxString _hakAkses = "".obs;
+  RxBool _isNotFound = false.obs;
+  List<String> listJenisRuang = <String>['Fasilitas', 'Reguler', 'VIP'];
+  String? dropdownValue;
+  final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp. ', decimalDigits: 0);
+
+  List<dynamic>? allDataOmset;
 
   void showDialogTgl() {
     rangeDatePickerOmset.clear();
@@ -76,11 +117,11 @@ class ListTransaksiController extends GetxController {
               width: dialogWidth,
               height: dialogHeight, // <- TIGHT! tidak ada intrinsic ke anak
               child: Scrollbar(
-                controller: _scrollTglController,
+                controller: scrollTglController,
                 thumbVisibility: true,
                 child: ListView(
                   // Penting: biarkan default (shrinkWrap: false)
-                  controller: _scrollTglController,
+                  controller: scrollTglController,
                   padding: const EdgeInsets.only(right: 4, bottom: 8),
                   children: [
                     const Text(
@@ -163,7 +204,7 @@ class ListTransaksiController extends GetxController {
     _namaBank.dispose();
     _debounce?.cancel();
     _refreshTimer?.cancel();
-    _scrollTglController.dispose();
+    scrollTglController.dispose();
     singleChildController.dispose();
     super.onClose();
   }
@@ -178,17 +219,6 @@ class ListTransaksiController extends GetxController {
       return '';
     }
   }
-
-  var dio = Dio();
-  RxInt omsetCash = 0.obs;
-  RxInt omsetDebit = 0.obs;
-  RxInt omsetKredit = 0.obs;
-  RxInt omsetQris = 0.obs;
-  RxList<Map<String, dynamic>> dataCash = <Map<String, dynamic>>[].obs;
-  RxList<Map<String, dynamic>> dataDebit = <Map<String, dynamic>>[].obs;
-  RxList<Map<String, dynamic>> dataKredit = <Map<String, dynamic>>[].obs;
-  RxList<Map<String, dynamic>> dataQris = <Map<String, dynamic>>[].obs;
-  RxString tglNow = "".obs;
 
   Future<List<Map<String, dynamic>>> fetchData({bool isOwner = false}) async {
     try {
@@ -234,9 +264,6 @@ class ListTransaksiController extends GetxController {
     }
   }
 
-  RxDouble pajakMsg = 0.0.obs;
-  RxDouble pajakFnb = 0.0.obs;
-
   Future<void> _getPajak() async {
     try {
       var response = await dio.get('${myIpAddr()}/pajak/getpajak');
@@ -260,8 +287,6 @@ class ListTransaksiController extends GetxController {
       throw Exception("Error Get Pajak $e");
     }
   }
-
-  RxString _hakAkses = "".obs;
 
   Future<void> _profileUser() async {
     try {
@@ -294,6 +319,7 @@ class ListTransaksiController extends GetxController {
     try {
       final data = await fetchData(isOwner: _hakAkses.value == "owner" || _hakAkses.value == "admin");
       // assign data yang sama utk dataList dengan filteredList
+      _detailCache.clear();
       dataList.assignAll(data);
       filteredList.assignAll(data);
     } catch (e) {
@@ -304,7 +330,6 @@ class ListTransaksiController extends GetxController {
     print("Fungsi refreshData Dipanggil oninit");
   }
 
-  RxBool _isNotFound = false.obs;
   void fnFilterList(String query) {
     if (query.isEmpty) {
       // reset balik ke full list pas empty
@@ -332,22 +357,28 @@ class ListTransaksiController extends GetxController {
     });
   }
 
-  List<String> listJenisRuang = <String>['Fasilitas', 'Reguler', 'VIP'];
-  String? dropdownValue;
-
   String capitalize(String? text) {
     if (text == null || text.isEmpty) return "Unknown"; // Handle null or empty
     return text[0].toUpperCase() + text.substring(1);
   }
 
-  final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp. ', decimalDigits: 0);
-
   Future<Map<String, dynamic>> getDetailTrans(String idTrans) async {
+    // Get From Cache
+    if (_detailCache.containsKey(idTrans)) {
+      return _detailCache[idTrans]!;
+    }
+
+    // If not in cache, get from API
     try {
-      final response = await dio.get('${myIpAddr()}/listtrans/detailtrans/${idTrans}');
+      final response = await dio.get('${myIpAddr()}/listtrans/detailtrans/$idTrans');
 
       if (response.statusCode == 200) {
         Map<String, dynamic> responseData = response.data;
+
+        // STORE THE NEW DATA IN THE CACHE
+        // Before returning, save the result so we don't have to fetch it again.
+        _detailCache[idTrans] = responseData;
+
         return responseData;
       } else {
         throw Exception("Failed to load data detail: ${response.statusCode}");
@@ -379,7 +410,6 @@ class ListTransaksiController extends GetxController {
     }
   }
 
-  List<dynamic>? allDataOmset;
   void showDialogOmset(String mode) {
     if (mode == "cash") {
       allDataOmset = dataCash;
@@ -744,26 +774,6 @@ class ListTransaksiController extends GetxController {
       selection: TextSelection.collapsed(offset: formattedKembali.length),
     );
   }
-
-  // utang yg msh blm dilunasin
-  RxInt _sisaBayar = 0.obs;
-  TextEditingController _txtSisaBayar = TextEditingController();
-  // bentuk int dan bentuk controller utk formatting
-  RxInt _jlhBayar = 0.obs;
-  TextEditingController _txtJlhBayar = TextEditingController();
-  // kembalian
-  RxInt _kembalian = 0.obs;
-  TextEditingController _txtKembalian = TextEditingController();
-  // List Metode Bayar
-  RxList<String> _metodeByr = <String>['cash', 'debit', 'kredit', 'qris'].obs;
-  RxnString? _selectedMetode = RxnString(null);
-  // data utk metode bank / qris
-  TextEditingController _namaAkun = TextEditingController();
-  TextEditingController _noRek = TextEditingController();
-  TextEditingController _namaBank = TextEditingController();
-
-  RxString selectedBank = ''.obs;
-  final List<String> bankList = ['BCA', 'BNI', 'BRI', 'Mandiri'];
 
   void dialogPelunasan(String idTrans, int grandTotal, int jumlahBayar, int kembalian, String status) async {
     _selectedMetode?.value = _metodeByr.first;
@@ -2608,17 +2618,17 @@ class ListTransaksi extends StatelessWidget {
             centerTitle: true,
             backgroundColor: Color(0XFFFFE0B2),
           ),
-          body: Container(
-            decoration: BoxDecoration(color: Color(0XFFFFE0B2)),
-            width: double.infinity,
-            height: MediaQuery.of(context).size.height,
+          backgroundColor: Color(0XFFFFE0B2),
+          body: RefreshIndicator(
+            onRefresh: () => c.refreshData(),
             child: Scrollbar(
               thumbVisibility: true,
               thickness: 5.0.w,
               radius: Radius.circular(10),
-              // controller: c.singleChildController,
+              controller: c.singleChildController,
               child: SingleChildScrollView(
-                // controller: c.singleChildController,
+                physics: const AlwaysScrollableScrollPhysics(),
+                controller: c.singleChildController,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
@@ -3472,218 +3482,3 @@ class ListTransaksi extends StatelessWidget {
     );
   }
 }
-
-void showCancelTransactionDialog(BuildContext context, void Function(String) onConfirm) async {
-  final TextEditingController passwordController = TextEditingController();
-  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-
-  // Use an RxBool for reactive state management with GetX
-  final RxBool isPasswordVisible = false.obs;
-
-  Get.dialog(
-    AlertDialog(
-      title: const Text("Batal Transaksi"),
-      content: Form(
-        key: formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text("Masukkan Password untuk membatalkan transaksi"),
-            const SizedBox(height: 10),
-            Obx(
-              // Obx listens to changes in observable variables
-              () => TextFormField(
-                controller: passwordController,
-                obscureText: !isPasswordVisible.value, // Access value with .value
-                decoration: InputDecoration(
-                  border: const OutlineInputBorder(),
-                  labelText: "Password",
-                  suffixIcon: IconButton(
-                    icon: Icon(isPasswordVisible.value ? Icons.visibility : Icons.visibility_off),
-                    onPressed: () {
-                      isPasswordVisible.toggle(); // Toggle the RxBool value
-                    },
-                  ),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Password tidak boleh kosong';
-                  }
-                  return null;
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Get.back(), // Use Get.back() to close dialog
-          child: const Text("Cancel"),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            if (formKey.currentState!.validate()) {
-              Get.back(); // Close dialog
-              onConfirm(passwordController.text); // Handle password
-            }
-          },
-          child: const Text("Confirm"),
-        ),
-      ],
-    ),
-  );
-}
-
-
-  // Cara Caching. Minusnya Ntr Klo Update tktny g fungsi
-  // Expanded(
-  //   // Use a single FutureBuilder to fetch the data once.
-  //   child: Builder(
-  //     builder: (context) {
-  //       // Gunakan data yang sudah di-cache
-  //       final dataOri = c.detailTrans[item['id_transaksi']] ?? {};
-  //       List<dynamic> dataAddOn = dataOri['all_addon'] ?? [];
-  //       int totalAddOnAll = 0;
-
-  //       // Calculate the total for all add-ons with tax, performed only once.
-  //       if (item['total_addon'] != 0) {
-  //         for (var addon in dataAddOn) {
-  //           double pajak = addon['type'] == 'fnb' ? c.pajakFnb.value : c.pajakMsg.value;
-  //           double nominalPjk = addon['harga_total'] * pajak;
-  //           double addOnSblmBulat = addon['harga_total'] + nominalPjk;
-  //           totalAddOnAll += (addOnSblmBulat / 1000).round() * 1000;
-  //         }
-  //       }
-
-  //       // Build the Row with the calculated data.
-  //       return Row(
-  //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //         children: [
-  //           // First child: Conditionally display the "Unpaid" status.
-  //           if (item['status'] == "unpaid" ||
-  //               item['status'] == 'done-unpaid' ||
-  //               item['status'] == 'done-unpaid-addon' ||
-  //               item['total_addon'] != 0) ...[
-  //             Builder(
-  //               builder: (context) {
-  //                 String teks;
-  //                 int totalDanAddon = item['gtotal_stlh_pajak'] + totalAddOnAll;
-  //                 int jlhBayar = item['jumlah_bayar'] - item['jumlah_kembalian'];
-
-  //                 if (item['status'] == "done-unpaid" || item['status'] == "unpaid") {
-  //                   teks = "Belum Lunas: ${c.currencyFormatter.format(totalDanAddon - jlhBayar)}";
-  //                 } else {
-  //                   teks = "Belum Lunas: ${c.currencyFormatter.format(totalAddOnAll)}";
-  //                 }
-
-  //                 return Text(
-  //                   teks,
-  //                   style: TextStyle(
-  //                     fontFamily: 'Poppins',
-  //                     fontSize: 16,
-  //                     fontWeight: FontWeight.bold,
-  //                     color: Colors.red.shade700,
-  //                   ),
-  //                 );
-  //               },
-  //             ),
-  //           ] else ...[
-  //             // Render an empty Text to maintain space if the condition is false.
-  //             Text(""),
-  //           ],
-
-  //           // Second child: Always display the final total.
-  //           Text(
-  //             'Total: ${c.currencyFormatter.format(item['gtotal_stlh_pajak'] + totalAddOnAll)}',
-  //             style: TextStyle(
-  //               fontFamily: 'Poppins',
-  //               fontSize: 16,
-  //               fontWeight: FontWeight.bold,
-  //               color: Colors.blue.shade700,
-  //             ),
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   ),
-  // ),
-  //  Cara Awal
-  // Expanded(
-  //   child: Row(
-  //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //     children: [
-  //       if (item['status'] == "unpaid" ||
-  //           item['status'] == 'done-unpaid' ||
-  //           item['status'] == 'done-unpaid-addon' ||
-  //           item['total_addon'] != 0) ...[
-
-  //         // Pake widget builder buat bs anok fungsi
-  //         Builder(
-  //           builder: (context) {
-  //             var teks = "";
-
-  //             int totalAddOnOri = item['total_addon'];
-  //             var totalAddOnAll = 0;
-  //             if (item['total_addon'] != 0) {
-  //               double desimalPjk = item['pajak'];
-  //               double nominalPjk = totalAddOnOri * desimalPjk;
-  //               // Pembulatan 1000
-  //               double addOnSblmBulat = totalAddOnOri + nominalPjk;
-  //               totalAddOnAll = (addOnSblmBulat / 1000).round() * 1000;
-  //             }
-
-  //             int totalDanAddon = item['gtotal_stlh_pajak'] + totalAddOnAll;
-  //             int jlhBayar = item['jumlah_bayar'] - item['jumlah_kembalian'];
-
-  //             if (item['status'] == "done-unpaid" || item['status'] == "unpaid") {
-  //               teks = "Belum Lunas: ${c.currencyFormatter.format(totalDanAddon - jlhBayar)}";
-
-  //               // Case kalo dia udh bayar, tp ganti paket yg lebih mahal
-  //               // if (totalDanAddon > jlhBayar) {
-  //               //   teks = "Belum Lunas: ${c.currencyFormatter.format(totalDanAddon - jlhBayar)}";
-  //               // }
-  //             } else {
-  //               teks = "Belum Lunas: ${c.currencyFormatter.format(totalAddOnAll)}";
-  //             }
-  //             return Text(
-  //               teks,
-  //               style: TextStyle(
-  //                 fontFamily: 'Poppins',
-  //                 fontSize: 16,
-  //                 fontWeight: FontWeight.bold,
-  //                 color: Colors.red.shade700,
-  //               ),
-  //             );
-  //           },
-  //         ),
-  //       ] else ...[
-  //         Text(""),
-  //       ],
-
-  //       Builder(
-  //         builder: (context) {
-  //           int totalAddOnOri = item['total_addon'];
-  //           var totalAddOnAll = 0;
-  //           if (item['total_addon'] != 0) {
-  //             double desimalPjk = item['pajak'];
-  //             double nominalPjk = totalAddOnOri * desimalPjk;
-  //             // Pembulatan 1000
-  //             double addOnSblmBulat = totalAddOnOri + nominalPjk;
-  //             totalAddOnAll = (addOnSblmBulat / 1000).round() * 1000;
-  //           }
-
-  //           return Text(
-  //             'Total: ${c.currencyFormatter.format(item['gtotal_stlh_pajak'] + totalAddOnAll)}',
-  //             style: TextStyle(
-  //               fontFamily: 'Poppins',
-  //               fontSize: 16,
-  //               fontWeight: FontWeight.bold,
-  //               color: Colors.blue.shade700,
-  //             ),
-  //           );
-  //         },
-  //       ),
-  //     ],
-  //   ),
-  // ),

@@ -47,6 +47,8 @@ class _ListpaketState extends State<Listpaket> {
   TextEditingController controller_edit_detail_paket = TextEditingController();
   TextEditingController controller_nominal_komisi_terapis =
       TextEditingController();
+  TextEditingController controller_nominal_komisi_terapis_agency =
+      TextEditingController();
   TextEditingController controller_nominal_komisi_gro = TextEditingController();
   TextEditingController controller_edit_durasi = TextEditingController();
 
@@ -150,6 +152,7 @@ class _ListpaketState extends State<Listpaket> {
   @override
   void initState() {
     super.initState();
+    selectedagency = 'No Agency';
     refreshData();
     refreshDataProduk();
     refreshDatafnb();
@@ -346,13 +349,21 @@ class _ListpaketState extends State<Listpaket> {
                                     ),
                                   ),
                                   SizedBox(height: 15),
-                                  Text(
-                                    'Komisi :',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 18,
-                                    ),
-                                  ),
+                                  selectedagency != 'No Agency'
+                                      ? Text(
+                                        'Komisi Agency :',
+                                        style: TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontSize: 18,
+                                        ),
+                                      )
+                                      : Text(
+                                        'Komisi :',
+                                        style: TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontSize: 18,
+                                        ),
+                                      ),
                                   SizedBox(height: 15),
                                   Text(
                                     'Stok :',
@@ -1301,7 +1312,7 @@ class _ListpaketState extends State<Listpaket> {
                           padding: EdgeInsets.zero,
                           child: Container(
                             margin: EdgeInsets.only(top: 40),
-                            height: 290,
+                            height: 330,
                             width: 200,
                             child: Padding(
                               padding: EdgeInsets.only(right: 10),
@@ -1349,13 +1360,21 @@ class _ListpaketState extends State<Listpaket> {
                                     ),
                                   ),
                                   SizedBox(height: 15),
-                                  Text(
-                                    'Komisi :',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 18,
-                                    ),
-                                  ),
+                                  selectedagency != 'No Agency'
+                                      ? Text(
+                                        'Komisi Agency :',
+                                        style: TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontSize: 18,
+                                        ),
+                                      )
+                                      : Text(
+                                        'Komisi :',
+                                        style: TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontSize: 18,
+                                        ),
+                                      ),
                                   SizedBox(height: 15),
                                   Text(
                                     'Detail Paket :',
@@ -1372,7 +1391,7 @@ class _ListpaketState extends State<Listpaket> {
                         Padding(
                           padding: const EdgeInsets.only(top: 40),
                           child: Container(
-                            height: 370,
+                            height: 400,
                             width: 500,
                             child: Padding(
                               padding: EdgeInsets.only(left: 10),
@@ -1636,7 +1655,7 @@ class _ListpaketState extends State<Listpaket> {
                                               ],
                                             ),
                                   ),
-                                  SizedBox(height: 4),
+                                  SizedBox(height: 10),
                                   //INI STACK DIBAWAH RADIOBUTTON
                                   Obx(
                                     () =>
@@ -2232,6 +2251,8 @@ class _ListpaketState extends State<Listpaket> {
               "durasi": item['durasi'],
               "tipe_komisi": item['tipe_komisi'],
               "nominal_komisi": item['nominal_komisi'],
+              "tipe_komisi_terapis": item['tipe_komisi_terapis'],
+              "komisi_terapis": item['komisi_terapis'],
               "detail_paket": item['detail_paket'],
               "tipe_komisi_gro": item['tipe_komisi_gro'],
               "nominal_komisi_gro": item['nominal_komisi_gro'],
@@ -2420,6 +2441,8 @@ class _ListpaketState extends State<Listpaket> {
               "durasi": item['durasi'],
               "tipe_komisi": item['tipe_komisi'],
               "nominal_komisi": item['nominal_komisi'],
+              "tipe_komisi_terapis": item['tipe_komisi_terapis'],
+              "komisi_terapis": item['komisi_terapis'],
               "tipe_komisi_gro": item['tipe_komisi_gro'],
               "nominal_komisi_gro": item['nominal_komisi_gro'],
             };
@@ -3206,16 +3229,101 @@ class _ListpaketState extends State<Listpaket> {
                                                     ),
                                                   ],
                                                 ),
+                                                selectedagency != 'No Agency' ||
+                                                        selectedagency == null
+                                                    ? Row(
+                                                      children: [
+                                                        Container(
+                                                          child: Text(
+                                                            'Komisi Terapis:',
+                                                            style: TextStyle(
+                                                              fontSize: 15,
+                                                              fontFamily:
+                                                                  'Poppins',
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        SizedBox(width: 10),
+                                                        Visibility(
+                                                          visible:
+                                                              item['tipe_komisi_terapis'] ==
+                                                              0,
+                                                          child: Row(
+                                                            children: [
+                                                              Container(
+                                                                child: Text(
+                                                                  item['komisi_terapis']
+                                                                      .toString(),
+                                                                  style: TextStyle(
+                                                                    fontSize:
+                                                                        15,
+                                                                    fontFamily:
+                                                                        'Poppins',
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                              SizedBox(
+                                                                width: 4,
+                                                              ),
+                                                              Container(
+                                                                child: Text(
+                                                                  '%',
+                                                                  style: TextStyle(
+                                                                    fontSize:
+                                                                        15,
+                                                                    fontFamily:
+                                                                        'Poppins',
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                        Visibility(
+                                                          visible:
+                                                              item['tipe_komisi_terapis'] ==
+                                                              1,
+                                                          child: Container(
+                                                            child: Text(
+                                                              currencyFormat
+                                                                  .format(
+                                                                    item['komisi_terapis'] ??
+                                                                        0,
+                                                                  )
+                                                                  .toString(),
+                                                              style: TextStyle(
+                                                                fontSize: 15,
+                                                                fontFamily:
+                                                                    'Poppins',
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    )
+                                                    : SizedBox.shrink(),
                                                 Row(
                                                   children: [
                                                     Container(
-                                                      child: Text(
-                                                        'Komisi Terapis:',
-                                                        style: TextStyle(
-                                                          fontSize: 15,
-                                                          fontFamily: 'Poppins',
-                                                        ),
-                                                      ),
+                                                      child:
+                                                          selectedagency !=
+                                                                  'No Agency'
+                                                              ? Text(
+                                                                'Komisi Agency:',
+                                                                style: TextStyle(
+                                                                  fontSize: 15,
+                                                                  fontFamily:
+                                                                      'Poppins',
+                                                                ),
+                                                              )
+                                                              : Text(
+                                                                'Komisi Terapis:',
+                                                                style: TextStyle(
+                                                                  fontSize: 15,
+                                                                  fontFamily:
+                                                                      'Poppins',
+                                                                ),
+                                                              ),
                                                     ),
                                                     SizedBox(width: 10),
                                                     Visibility(
@@ -3327,6 +3435,10 @@ class _ListpaketState extends State<Listpaket> {
                                                         controller_nominal_komisi_terapis
                                                                 .text =
                                                             item['nominal_komisi']
+                                                                .toString();
+                                                        controller_nominal_komisi_terapis_agency
+                                                                .text =
+                                                            item['komisi_terapis']
                                                                 .toString();
                                                         controller_edit_detail_paket
                                                                 .text =
@@ -3963,16 +4075,100 @@ class _ListpaketState extends State<Listpaket> {
                                                     ),
                                                   ],
                                                 ),
+                                                selectedagency != 'No Agency'
+                                                    ? Row(
+                                                      children: [
+                                                        Container(
+                                                          child: const Text(
+                                                            'Komisi Terapis :',
+                                                            style: TextStyle(
+                                                              fontSize: 15,
+                                                              fontFamily:
+                                                                  'Poppins',
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        SizedBox(width: 10),
+                                                        Visibility(
+                                                          visible:
+                                                              item['tipe_komisi_terapis'] ==
+                                                              0,
+                                                          child: Row(
+                                                            children: [
+                                                              Container(
+                                                                child: Text(
+                                                                  item['komisi_terapis']
+                                                                      .toString(),
+                                                                  style: TextStyle(
+                                                                    fontSize:
+                                                                        15,
+                                                                    fontFamily:
+                                                                        'Poppins',
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                              SizedBox(
+                                                                width: 4,
+                                                              ),
+                                                              Container(
+                                                                child: Text(
+                                                                  '%',
+                                                                  style: TextStyle(
+                                                                    fontSize:
+                                                                        15,
+                                                                    fontFamily:
+                                                                        'Poppins',
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                        Visibility(
+                                                          visible:
+                                                              item['tipe_komisi_terapis'] ==
+                                                              1,
+                                                          child: Container(
+                                                            child: Text(
+                                                              currencyFormat
+                                                                  .format(
+                                                                    item['komisi_terapis'] ??
+                                                                        0,
+                                                                  )
+                                                                  .toString(),
+                                                              style: TextStyle(
+                                                                fontSize: 15,
+                                                                fontFamily:
+                                                                    'Poppins',
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    )
+                                                    : SizedBox.shrink(),
                                                 Row(
                                                   children: [
                                                     Container(
-                                                      child: const Text(
-                                                        'Komisi Terapis :',
-                                                        style: TextStyle(
-                                                          fontSize: 15,
-                                                          fontFamily: 'Poppins',
-                                                        ),
-                                                      ),
+                                                      child:
+                                                          selectedagency ==
+                                                                  'No Agency'
+                                                              ? const Text(
+                                                                'Komisi Terapis :',
+                                                                style: TextStyle(
+                                                                  fontSize: 15,
+                                                                  fontFamily:
+                                                                      'Poppins',
+                                                                ),
+                                                              )
+                                                              : const Text(
+                                                                'Komisi Agency :',
+                                                                style: TextStyle(
+                                                                  fontSize: 15,
+                                                                  fontFamily:
+                                                                      'Poppins',
+                                                                ),
+                                                              ),
                                                     ),
                                                     SizedBox(width: 10),
                                                     Visibility(
@@ -4025,6 +4221,10 @@ class _ListpaketState extends State<Listpaket> {
                                                         ),
                                                       ),
                                                     ),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  children: [
                                                     Spacer(),
                                                     Container(
                                                       child: Text(
@@ -4571,6 +4771,7 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
   @override
   void initState() {
     super.initState();
+    selectedagency = 'No Agency';
     refreshData();
     refreshDataProduk();
     refreshDatafnb();
@@ -4767,13 +4968,21 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                     ),
                                   ),
                                   SizedBox(height: 15),
-                                  Text(
-                                    'Komisi :',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 18,
-                                    ),
-                                  ),
+                                  selectedagency != 'No Agency'
+                                      ? Text(
+                                        'Komisi :',
+                                        style: TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontSize: 18,
+                                        ),
+                                      )
+                                      : Text(
+                                        'Komisi Agency :',
+                                        style: TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontSize: 18,
+                                        ),
+                                      ),
                                   SizedBox(height: 15),
                                   Text(
                                     'Stok :',
@@ -5773,13 +5982,23 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                     ),
                                   ),
                                   SizedBox(height: 15),
-                                  Text(
-                                    'Komisi :',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 18,
-                                    ),
-                                  ),
+                                  selectedagency != 'No Agency'
+                                      ? Text(
+                                        'Komisi Agency :',
+
+                                        style: TextStyle(
+                                          fontFamily: 'Poppins',
+
+                                          fontSize: 18,
+                                        ),
+                                      )
+                                      : Text(
+                                        'Komisi :',
+                                        style: TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontSize: 18,
+                                        ),
+                                      ),
                                   SizedBox(height: 15),
                                   Text(
                                     'Detail Paket :',
@@ -6657,6 +6876,8 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
               "durasi": item['durasi'],
               "tipe_komisi": item['tipe_komisi'],
               "nominal_komisi": item['nominal_komisi'],
+              "tipe_komisi_terapis": item['tipe_komisi_terapis'],
+              "komisi_terapis": item['komisi_terapis'],
               "detail_paket": item['detail_paket'],
               "tipe_komisi_gro": item['tipe_komisi_gro'],
               "nominal_komisi_gro": item['nominal_komisi_gro'],
@@ -6666,7 +6887,7 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
         datapaketmassage.assignAll(fetcheddata);
       });
     } catch (e) {
-      log("Error di fn getdatapaketmassageagency : $e");
+      log("Error di fn Getdatapaketmassageagency : $e");
     }
   }
 
@@ -7678,16 +7899,96 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                                 ),
                                               ],
                                             ),
+                                            selectedagency != 'No Agency' ||
+                                                    selectedagency == null
+                                                ? Row(
+                                                  children: [
+                                                    Container(
+                                                      child: Text(
+                                                        'Komisi Terapis:',
+                                                        style: TextStyle(
+                                                          fontSize: 15,
+                                                          fontFamily: 'Poppins',
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    SizedBox(width: 10),
+                                                    Visibility(
+                                                      visible:
+                                                          item['tipe_komisi_terapis'] ==
+                                                          0,
+                                                      child: Row(
+                                                        children: [
+                                                          Container(
+                                                            child: Text(
+                                                              item['komisi_terapis']
+                                                                  .toString(),
+                                                              style: TextStyle(
+                                                                fontSize: 15,
+                                                                fontFamily:
+                                                                    'Poppins',
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          SizedBox(width: 4),
+                                                          Container(
+                                                            child: Text(
+                                                              '%',
+                                                              style: TextStyle(
+                                                                fontSize: 15,
+                                                                fontFamily:
+                                                                    'Poppins',
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                    Visibility(
+                                                      visible:
+                                                          item['tipe_komisi_terapis'] ==
+                                                          1,
+                                                      child: Container(
+                                                        child: Text(
+                                                          currencyFormat
+                                                              .format(
+                                                                item['komisi_terapis'] ??
+                                                                    0,
+                                                              )
+                                                              .toString(),
+                                                          style: TextStyle(
+                                                            fontSize: 15,
+                                                            fontFamily:
+                                                                'Poppins',
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                )
+                                                : SizedBox.shrink(),
                                             Row(
                                               children: [
                                                 Container(
-                                                  child: Text(
-                                                    'Komisi Terapis:',
-                                                    style: TextStyle(
-                                                      fontSize: 15,
-                                                      fontFamily: 'Poppins',
-                                                    ),
-                                                  ),
+                                                  child:
+                                                      selectedagency !=
+                                                              'No Agency'
+                                                          ? Text(
+                                                            'Komisi Agency:',
+                                                            style: TextStyle(
+                                                              fontSize: 15,
+                                                              fontFamily:
+                                                                  'Poppins',
+                                                            ),
+                                                          )
+                                                          : Text(
+                                                            'Komisi Terapis:',
+                                                            style: TextStyle(
+                                                              fontSize: 15,
+                                                              fontFamily:
+                                                                  'Poppins',
+                                                            ),
+                                                          ),
                                                 ),
                                                 SizedBox(width: 10),
                                                 Visibility(
@@ -8424,16 +8725,95 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                                 ),
                                               ],
                                             ),
+                                            selectedagency != 'No Agency'
+                                                ? Row(
+                                                  children: [
+                                                    Container(
+                                                      child: const Text(
+                                                        'Komisi Terapis :',
+                                                        style: TextStyle(
+                                                          fontSize: 15,
+                                                          fontFamily: 'Poppins',
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    SizedBox(width: 10),
+                                                    Visibility(
+                                                      visible:
+                                                          item['tipe_komisi_terapis'] ==
+                                                          0,
+                                                      child: Row(
+                                                        children: [
+                                                          Container(
+                                                            child: Text(
+                                                              item['komisi_terapis']
+                                                                  .toString(),
+                                                              style: TextStyle(
+                                                                fontSize: 15,
+                                                                fontFamily:
+                                                                    'Poppins',
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          SizedBox(width: 4),
+                                                          Container(
+                                                            child: Text(
+                                                              '%',
+                                                              style: TextStyle(
+                                                                fontSize: 15,
+                                                                fontFamily:
+                                                                    'Poppins',
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                    Visibility(
+                                                      visible:
+                                                          item['tipe_komisi_terapis'] ==
+                                                          1,
+                                                      child: Container(
+                                                        child: Text(
+                                                          currencyFormat
+                                                              .format(
+                                                                item['komisi_terapis'] ??
+                                                                    0,
+                                                              )
+                                                              .toString(),
+                                                          style: TextStyle(
+                                                            fontSize: 15,
+                                                            fontFamily:
+                                                                'Poppins',
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                )
+                                                : SizedBox.shrink(),
                                             Row(
                                               children: [
                                                 Container(
-                                                  child: const Text(
-                                                    'Komisi Terapis :',
-                                                    style: TextStyle(
-                                                      fontSize: 15,
-                                                      fontFamily: 'Poppins',
-                                                    ),
-                                                  ),
+                                                  child:
+                                                      selectedagency ==
+                                                              'No Agency'
+                                                          ? const Text(
+                                                            'Komisi Terapis :',
+                                                            style: TextStyle(
+                                                              fontSize: 15,
+                                                              fontFamily:
+                                                                  'Poppins',
+                                                            ),
+                                                          )
+                                                          : const Text(
+                                                            'Komisi Agency :',
+                                                            style: TextStyle(
+                                                              fontSize: 15,
+                                                              fontFamily:
+                                                                  'Poppins',
+                                                            ),
+                                                          ),
                                                 ),
                                                 SizedBox(width: 10),
                                                 Visibility(
@@ -8483,6 +8863,10 @@ class _WidgetListPaketMobileState extends State<WidgetListPaketMobile> {
                                                     ),
                                                   ),
                                                 ),
+                                              ],
+                                            ),
+                                            Row(
+                                              children: [
                                                 Spacer(),
                                                 Container(
                                                   child: Text(

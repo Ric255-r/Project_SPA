@@ -40,40 +40,31 @@ class _ListpromoState extends State<Listpromo> {
   TextEditingController textSearchHappyHour = TextEditingController();
   TextEditingController textsearchkunjungan = TextEditingController();
   TextEditingController textsearchtahunan = TextEditingController();
+  TextEditingController textsearchbonusitem = TextEditingController();
 
-  TextEditingController controller_edit_nama_promo_happyhour =
-      TextEditingController();
-  TextEditingController controller_edit_jam_mulai_happyhour =
-      TextEditingController();
-  TextEditingController controller_edit_jam_selesai_happyhour =
-      TextEditingController();
-  TextEditingController controller_edit_menit_mulai_happyhour =
-      TextEditingController();
-  TextEditingController controller_edit_menit_selesai_happyhour =
-      TextEditingController();
-  TextEditingController controller_edit_disc_happyhour =
-      TextEditingController();
+  TextEditingController controller_edit_nama_promo_happyhour = TextEditingController();
+  TextEditingController controller_edit_jam_mulai_happyhour = TextEditingController();
+  TextEditingController controller_edit_jam_selesai_happyhour = TextEditingController();
+  TextEditingController controller_edit_menit_mulai_happyhour = TextEditingController();
+  TextEditingController controller_edit_menit_selesai_happyhour = TextEditingController();
+  TextEditingController controller_edit_disc_happyhour = TextEditingController();
 
-  TextEditingController controller_edit_nama_promo_kunjungan =
-      TextEditingController();
-  TextEditingController controller_edit_kode_promo_kunjungan =
-      TextEditingController();
-  TextEditingController controller_edit_limit_promo_kunjungan =
-      TextEditingController();
-  TextEditingController controller_edit_harga_promo_kunjungan =
-      TextEditingController();
+  TextEditingController controller_edit_nama_promo_kunjungan = TextEditingController();
+  TextEditingController controller_edit_kode_promo_kunjungan = TextEditingController();
+  TextEditingController controller_edit_limit_promo_kunjungan = TextEditingController();
+  TextEditingController controller_edit_harga_promo_kunjungan = TextEditingController();
   TextEditingController controller_edit_diskon_paket = TextEditingController();
   TextEditingController controller_edit_hargasatuan = TextEditingController();
   TextEditingController controller_edit_limit_promo = TextEditingController();
 
-  TextEditingController controller_edit_nama_promo_tahunan =
-      TextEditingController();
-  TextEditingController controller_edit_jangka_waktu_promo_tahunan =
-      TextEditingController();
-  TextEditingController controller_edit_harga_promo_tahunan =
-      TextEditingController();
+  TextEditingController controller_edit_nama_promo_tahunan = TextEditingController();
+  TextEditingController controller_edit_jangka_waktu_promo_tahunan = TextEditingController();
+  TextEditingController controller_edit_harga_promo_tahunan = TextEditingController();
+  TextEditingController controller_edit_nama_promo_bonus_item = TextEditingController();
+  TextEditingController controller_edit_qty_bonus_item = TextEditingController();
 
   List<Map<String, dynamic>> _listNamaPaket = [];
+  List<Map<String, dynamic>> _listfnb = [];
   String? dropdownNamaPaket;
 
   bool _isSecondContainerOnTop = false;
@@ -113,19 +104,16 @@ class _ListpromoState extends State<Listpromo> {
   int valuevip = 0;
   int valuemember = 0;
 
-  NumberFormat currencyFormat = NumberFormat.currency(
-    locale: 'id_ID',
-    symbol: 'Rp. ',
-    decimalDigits: 0,
-  );
+  NumberFormat currencyFormat = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp. ', decimalDigits: 0);
 
   var dio = Dio();
 
-  RxList<Map<String, dynamic>> datapromohappyhour =
-      <Map<String, dynamic>>[].obs;
-  RxList<Map<String, dynamic>> datapromokunjungan =
-      <Map<String, dynamic>>[].obs;
+  RxList<Map<String, dynamic>> datapromohappyhour = <Map<String, dynamic>>[].obs;
+  RxList<Map<String, dynamic>> datapromokunjungan = <Map<String, dynamic>>[].obs;
   RxList<Map<String, dynamic>> datapromotahunan = <Map<String, dynamic>>[].obs;
+  RxList<Map<String, dynamic>> datapromobonusitem = <Map<String, dynamic>>[].obs;
+  String? dropdownnamapaketbonusitem;
+  String? selecteditem;
 
   @override
   void dispose() {
@@ -152,6 +140,8 @@ class _ListpromoState extends State<Listpromo> {
     refreshDataHappyHour();
     refreshDataPromoKunjungan();
     refreshDataPromoTahunan();
+    refreshDataPromoBonusItem();
+    refreshdatapaketmassageandfnb();
   }
 
   void _moveSecondContainerToTop() {
@@ -178,70 +168,102 @@ class _ListpromoState extends State<Listpromo> {
     });
   }
 
+  void _moveFourthContainerToTop() {
+    setState(() {
+      _isSecondContainerOnTop = false;
+      _isThirdContainerOntop = false;
+      _isFourthContainerOnTop = true;
+    });
+  }
+
   void _toggleButtonColors({
     required bool isFirstButtonPressed,
     isThirdButtonPressed,
+    isSecondButtonPressed,
+    isFourthButtonPressed,
   }) {
     setState(() {
       if (isFirstButtonPressed) {
         _FirstbuttonColor = Colors.blue;
         _SecondbuttonColor = Colors.white;
         _ThirdbuttonColor = Colors.white;
+        _FourthbuttonColor = Colors.white;
       } else if (isThirdButtonPressed) {
         _FirstbuttonColor = Colors.white;
         _SecondbuttonColor = Colors.white;
         _ThirdbuttonColor = Colors.blue;
-      } else {
+        _FourthbuttonColor = Colors.white;
+      } else if (isSecondButtonPressed) {
         _FirstbuttonColor = Colors.white;
         _SecondbuttonColor = Colors.blue;
         _ThirdbuttonColor = Colors.white;
+        _FourthbuttonColor = Colors.white;
+      } else if (isFourthButtonPressed) {
+        _FirstbuttonColor = Colors.white;
+        _SecondbuttonColor = Colors.white;
+        _ThirdbuttonColor = Colors.white;
+        _FourthbuttonColor = Colors.blue;
       }
     });
   }
 
   void selectInputPromo() {
-    if (_isSecondContainerOnTop == false && _isThirdContainerOntop == false) {
+    if (_isSecondContainerOnTop == false && _isThirdContainerOntop == false && _isFourthContainerOnTop) {
       textsearchtahunan.clear();
       textsearchkunjungan.clear();
+      textsearchbonusitem.clear();
       textinputan = textSearchHappyHour;
     } else if (_isSecondContainerOnTop == true &&
-        _isThirdContainerOntop == false) {
+        _isThirdContainerOntop == false &&
+        _isFourthContainerOnTop == false) {
       textSearchHappyHour.clear();
       textsearchtahunan.clear();
+      textsearchbonusitem.clear();
       textinputan = textsearchkunjungan;
     } else if (_isSecondContainerOnTop == false &&
-        _isThirdContainerOntop == true) {
+        _isThirdContainerOntop == true &&
+        _isFourthContainerOnTop == false) {
       textSearchHappyHour.clear();
       textsearchkunjungan.clear();
+      textsearchbonusitem.clear();
       textinputan = textsearchtahunan;
+    } else if (_isSecondContainerOnTop == false &&
+        _isThirdContainerOntop == false &&
+        _isFourthContainerOnTop == true) {
+      textSearchHappyHour.clear();
+      textsearchtahunan.clear();
+      textsearchkunjungan.clear();
+      textinputan = textsearchbonusitem;
     }
   }
 
   void selectSearchPromo() {
-    if (_isSecondContainerOnTop == false && _isThirdContainerOntop == false) {
+    if (_isSecondContainerOnTop == false &&
+        _isThirdContainerOntop == false &&
+        _isFourthContainerOnTop == false) {
       searchpromohappyhour();
     } else if (_isSecondContainerOnTop == true &&
-        _isThirdContainerOntop == false) {
+        _isThirdContainerOntop == false &&
+        _isFourthContainerOnTop == false) {
       searchpromokunjungan();
     } else if (_isSecondContainerOnTop == false &&
-        _isThirdContainerOntop == true) {
+        _isThirdContainerOntop == true &&
+        _isFourthContainerOnTop == false) {
       searchpromotahunan();
+    } else if (_isSecondContainerOnTop == false &&
+        _isThirdContainerOntop == false &&
+        _isFourthContainerOnTop == true) {
+      searchpromobonusitem();
     }
   }
 
   void calculateHargaPromo() {
     hargaPromo.value =
-        hargaPromo.value =
-            (hargaSatuan.value * limitKunjungan.value) *
-            (1 - (diskonPaket.value / 100));
+        hargaPromo.value = (hargaSatuan.value * limitKunjungan.value) * (1 - (diskonPaket.value / 100));
     controller_edit_harga_promo_kunjungan.text = hargaPromo.value.toString();
   }
 
-  final currencyFormatter = NumberFormat.currency(
-    locale: 'id_ID',
-    symbol: 'Rp ',
-    decimalDigits: 0,
-  );
+  final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
   void isibuttoneditpromotahunan(kode_promo, detail_kode_promo) {
     Get.dialog(
@@ -273,28 +295,16 @@ class _ListpromoState extends State<Listpromo> {
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   SizedBox(height: 15),
-                                  Text(
-                                    'Nama Promo :',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 18,
-                                    ),
-                                  ),
+                                  Text('Nama Promo :', style: TextStyle(fontFamily: 'Poppins', fontSize: 18)),
                                   SizedBox(height: 15),
                                   Text(
                                     'Jangka Waktu :',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 18,
-                                    ),
+                                    style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
                                   ),
                                   SizedBox(height: 15),
                                   Text(
                                     'Harga Promo :',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 18,
-                                    ),
+                                    style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
                                   ),
                                 ],
                               ),
@@ -321,19 +331,12 @@ class _ListpromoState extends State<Listpromo> {
                                     color: Colors.grey[300],
                                   ),
                                   child: TextField(
-                                    controller:
-                                        controller_edit_nama_promo_tahunan,
+                                    controller: controller_edit_nama_promo_tahunan,
                                     decoration: InputDecoration(
                                       border: InputBorder.none,
-                                      contentPadding: EdgeInsets.symmetric(
-                                        vertical: 13.5,
-                                        horizontal: 10,
-                                      ),
+                                      contentPadding: EdgeInsets.symmetric(vertical: 13.5, horizontal: 10),
                                     ),
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontFamily: 'Poppins',
-                                    ),
+                                    style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                   ),
                                 ),
                                 SizedBox(height: 12),
@@ -348,8 +351,7 @@ class _ListpromoState extends State<Listpromo> {
                                         color: Colors.grey[300],
                                       ),
                                       child: TextField(
-                                        controller:
-                                            controller_edit_jangka_waktu_promo_tahunan,
+                                        controller: controller_edit_jangka_waktu_promo_tahunan,
                                         decoration: InputDecoration(
                                           border: InputBorder.none,
                                           contentPadding: EdgeInsets.symmetric(
@@ -357,20 +359,14 @@ class _ListpromoState extends State<Listpromo> {
                                             horizontal: 10,
                                           ),
                                         ),
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontFamily: 'Poppins',
-                                        ),
+                                        style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                       ),
                                     ),
                                     Padding(
                                       padding: EdgeInsets.only(left: 10),
                                       child: Text(
                                         'Tahun',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontFamily: 'Poppins',
-                                        ),
+                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                       ),
                                     ),
                                   ],
@@ -385,19 +381,12 @@ class _ListpromoState extends State<Listpromo> {
                                     color: Colors.grey[300],
                                   ),
                                   child: TextField(
-                                    controller:
-                                        controller_edit_harga_promo_tahunan,
+                                    controller: controller_edit_harga_promo_tahunan,
                                     decoration: InputDecoration(
                                       border: InputBorder.none,
-                                      contentPadding: EdgeInsets.symmetric(
-                                        vertical: 13.5,
-                                        horizontal: 10,
-                                      ),
+                                      contentPadding: EdgeInsets.symmetric(vertical: 13.5, horizontal: 10),
                                     ),
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontFamily: 'Poppins',
-                                    ),
+                                    style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                   ),
                                 ),
                                 SizedBox(height: 20),
@@ -407,20 +396,228 @@ class _ListpromoState extends State<Listpromo> {
                                     height: 35,
                                     width: 100,
                                     child: TextButton(
-                                      style: TextButton.styleFrom(
-                                        backgroundColor: Colors.green,
-                                      ),
+                                      style: TextButton.styleFrom(backgroundColor: Colors.green),
                                       onPressed: () {
-                                        updatedatapromotahunan(
-                                          kode_promo,
-                                          detail_kode_promo,
-                                        );
+                                        updatedatapromotahunan(kode_promo, detail_kode_promo);
                                         datapromohappyhour.isEmpty
-                                            ? Center(
-                                              child:
-                                                  CircularProgressIndicator(),
-                                            )
+                                            ? Center(child: CircularProgressIndicator())
                                             : refreshDataPromoTahunan();
+                                        Get.back();
+                                        CherryToast.success(
+                                          title: Text('Data Berhasil DiUpdate'),
+                                        ).show(context);
+                                      },
+                                      child: Text(
+                                        'Save',
+                                        style: TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontSize: 14,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: 10),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void isibuttoneditpromobonusitem(kode_promo, detail_kode_promo) {
+    Get.dialog(
+      StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            content: SingleChildScrollView(
+              child: Container(
+                height: 300,
+                width: Get.width,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.zero,
+                          child: Container(
+                            margin: EdgeInsets.only(top: 50),
+                            height: 235,
+                            width: 200,
+                            decoration: BoxDecoration(color: Colors.white),
+                            child: Padding(
+                              padding: EdgeInsets.only(right: 10),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  SizedBox(height: 15),
+                                  Text('Nama Promo :', style: TextStyle(fontFamily: 'Poppins', fontSize: 18)),
+                                  SizedBox(height: 15),
+                                  Text('Nama Paket :', style: TextStyle(fontFamily: 'Poppins', fontSize: 18)),
+                                  SizedBox(height: 15),
+                                  Text('Bonus Item :', style: TextStyle(fontFamily: 'Poppins', fontSize: 18)),
+                                  SizedBox(height: 15),
+                                  Text('Qty :', style: TextStyle(fontFamily: 'Poppins', fontSize: 18)),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        Container(
+                          margin: EdgeInsets.only(top: 50),
+                          height: 235,
+                          width: 745,
+                          decoration: BoxDecoration(color: Colors.white),
+                          child: Padding(
+                            padding: EdgeInsets.only(left: 10),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(height: 12),
+                                Container(
+                                  alignment: Alignment.centerLeft,
+                                  width: 700,
+                                  height: 30,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10),
+                                    color: Colors.grey[300],
+                                  ),
+                                  child: TextField(
+                                    controller: controller_edit_nama_promo_bonus_item,
+                                    decoration: InputDecoration(
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(vertical: 13.5, horizontal: 10),
+                                    ),
+                                    style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
+                                  ),
+                                ),
+                                SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    Container(
+                                      alignment: Alignment.centerLeft,
+                                      width: 700,
+                                      height: 30,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10),
+                                        color: Colors.grey[300],
+                                      ),
+                                      child: DropdownButton<String>(
+                                        value: dropdownnamapaketbonusitem,
+                                        isExpanded: true,
+                                        icon: const Icon(Icons.arrow_drop_down),
+                                        elevation: 16,
+                                        style: const TextStyle(color: Colors.deepPurple),
+                                        underline: SizedBox(),
+                                        padding: EdgeInsets.symmetric(horizontal: 10),
+                                        onChanged: (String? value) {
+                                          setState(() {
+                                            dropdownnamapaketbonusitem = value;
+                                          });
+                                        },
+                                        items:
+                                            _listNamaPaket.map<DropdownMenuItem<String>>((item) {
+                                              return DropdownMenuItem<String>(
+                                                value: item['id_paket_msg'], // Use ID as value
+                                                child: Align(
+                                                  alignment: Alignment.centerLeft,
+                                                  child: Text(
+                                                    item['nama_paket_msg']
+                                                        .toString(), // Display category name
+                                                    style: const TextStyle(
+                                                      fontSize: 18,
+                                                      fontFamily: 'Poppins',
+                                                    ),
+                                                  ),
+                                                ),
+                                              );
+                                            }).toList(),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 12),
+                                Container(
+                                  alignment: Alignment.centerLeft,
+                                  width: 700,
+                                  height: 30,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10),
+                                    color: Colors.grey[300],
+                                  ),
+                                  child: DropdownButton<String>(
+                                    value: selecteditem,
+                                    isExpanded: true,
+                                    icon: const Icon(Icons.arrow_drop_down),
+                                    elevation: 16,
+                                    style: const TextStyle(color: Colors.deepPurple),
+                                    underline: SizedBox(),
+                                    padding: EdgeInsets.symmetric(horizontal: 10),
+                                    onChanged: (String? value) {
+                                      setState(() {
+                                        selecteditem = value;
+                                      });
+                                    },
+                                    items:
+                                        _listfnb.map<DropdownMenuItem<String>>((item) {
+                                          return DropdownMenuItem<String>(
+                                            value: item['id_fnb'], // Use ID as value
+                                            child: Align(
+                                              alignment: Alignment.centerLeft,
+                                              child: Text(
+                                                item['nama_fnb'].toString(), // Display category name
+                                                style: const TextStyle(fontSize: 18, fontFamily: 'Poppins'),
+                                              ),
+                                            ),
+                                          );
+                                        }).toList(),
+                                  ),
+                                ),
+                                SizedBox(height: 12),
+                                Container(
+                                  alignment: Alignment.centerLeft,
+                                  width: 700,
+                                  height: 30,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10),
+                                    color: Colors.grey[300],
+                                  ),
+                                  child: TextField(
+                                    controller: controller_edit_qty_bonus_item,
+                                    decoration: InputDecoration(
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(vertical: 13.5, horizontal: 10),
+                                    ),
+                                    style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
+                                  ),
+                                ),
+                                SizedBox(height: 20),
+                                Center(
+                                  child: Container(
+                                    margin: EdgeInsets.only(right: 120),
+                                    height: 35,
+                                    width: 100,
+                                    child: TextButton(
+                                      style: TextButton.styleFrom(backgroundColor: Colors.green),
+                                      onPressed: () {
+                                        updatedatapromobonusitem(kode_promo, detail_kode_promo);
+                                        datapromobonusitem.isEmpty
+                                            ? Center(child: CircularProgressIndicator())
+                                            : refreshDataPromoBonusItem();
                                         Get.back();
                                         CherryToast.success(
                                           title: Text('Data Berhasil DiUpdate'),
@@ -484,36 +681,21 @@ class _ListpromoState extends State<Listpromo> {
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   SizedBox(height: 15),
-                                  Text(
-                                    'Nama Paket :',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 18,
-                                    ),
-                                  ),
+                                  Text('Nama Paket :', style: TextStyle(fontFamily: 'Poppins', fontSize: 18)),
                                   SizedBox(height: 15),
                                   Text(
                                     'Limit Promo :',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 18,
-                                    ),
+                                    style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
                                   ),
                                   SizedBox(height: 15),
                                   Text(
                                     'Limit Kunjungan :',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 18,
-                                    ),
+                                    style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
                                   ),
                                   SizedBox(height: 15),
                                   Text(
                                     'Harga Promo :',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 18,
-                                    ),
+                                    style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
                                   ),
                                 ],
                               ),
@@ -540,20 +722,13 @@ class _ListpromoState extends State<Listpromo> {
                                     color: Colors.grey[300],
                                   ),
                                   child: TextField(
-                                    controller:
-                                        controller_edit_nama_promo_kunjungan,
+                                    controller: controller_edit_nama_promo_kunjungan,
                                     readOnly: true,
                                     decoration: InputDecoration(
                                       border: InputBorder.none,
-                                      contentPadding: EdgeInsets.symmetric(
-                                        vertical: 13.5,
-                                        horizontal: 10,
-                                      ),
+                                      contentPadding: EdgeInsets.symmetric(vertical: 13.5, horizontal: 10),
                                     ),
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontFamily: 'Poppins',
-                                    ),
+                                    style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                   ),
                                 ),
                                 SizedBox(height: 12),
@@ -576,20 +751,14 @@ class _ListpromoState extends State<Listpromo> {
                                             horizontal: 10,
                                           ),
                                         ),
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontFamily: 'Poppins',
-                                        ),
+                                        style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                       ),
                                     ),
                                     Padding(
                                       padding: EdgeInsets.only(left: 10),
                                       child: Text(
                                         'Tahun',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontFamily: 'Poppins',
-                                        ),
+                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                       ),
                                     ),
                                   ],
@@ -606,8 +775,7 @@ class _ListpromoState extends State<Listpromo> {
                                         color: Colors.grey[300],
                                       ),
                                       child: TextField(
-                                        controller:
-                                            controller_edit_limit_promo_kunjungan,
+                                        controller: controller_edit_limit_promo_kunjungan,
                                         decoration: InputDecoration(
                                           border: InputBorder.none,
                                           contentPadding: EdgeInsets.symmetric(
@@ -616,24 +784,17 @@ class _ListpromoState extends State<Listpromo> {
                                           ),
                                         ),
                                         onChanged: (value) {
-                                          limitKunjungan.value =
-                                              int.tryParse(value) ?? 1;
+                                          limitKunjungan.value = int.tryParse(value) ?? 1;
                                           calculateHargaPromo();
                                         },
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontFamily: 'Poppins',
-                                        ),
+                                        style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                       ),
                                     ),
                                     Padding(
                                       padding: EdgeInsets.only(left: 10),
                                       child: Text(
                                         'Discount :',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontFamily: 'Poppins',
-                                        ),
+                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                       ),
                                     ),
                                     Padding(
@@ -643,43 +804,29 @@ class _ListpromoState extends State<Listpromo> {
                                         width: 70,
                                         height: 30,
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
+                                          borderRadius: BorderRadius.circular(10),
                                           color: Colors.grey[300],
                                         ),
                                         child: TextField(
-                                          controller:
-                                              controller_edit_diskon_paket,
+                                          controller: controller_edit_diskon_paket,
                                           decoration: InputDecoration(
                                             border: InputBorder.none,
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                  vertical: 13.5,
-                                                  horizontal: 10,
-                                                ),
+                                            contentPadding: EdgeInsets.symmetric(
+                                              vertical: 13.5,
+                                              horizontal: 10,
+                                            ),
                                           ),
                                           onChanged: (value) {
-                                            diskonPaket.value =
-                                                double.tryParse(value) ?? 0.0;
+                                            diskonPaket.value = double.tryParse(value) ?? 0.0;
                                             calculateHargaPromo();
                                           },
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontFamily: 'Poppins',
-                                          ),
+                                          style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                         ),
                                       ),
                                     ),
                                     Padding(
                                       padding: EdgeInsets.only(left: 10),
-                                      child: Text(
-                                        '%',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontFamily: 'Poppins',
-                                        ),
-                                      ),
+                                      child: Text('%', style: TextStyle(fontSize: 18, fontFamily: 'Poppins')),
                                     ),
                                   ],
                                 ),
@@ -696,20 +843,12 @@ class _ListpromoState extends State<Listpromo> {
                                     () => TextField(
                                       decoration: InputDecoration(
                                         border: InputBorder.none,
-                                        contentPadding: EdgeInsets.symmetric(
-                                          vertical: 13.5,
-                                          horizontal: 10,
-                                        ),
+                                        contentPadding: EdgeInsets.symmetric(vertical: 13.5, horizontal: 10),
                                       ),
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontFamily: 'Poppins',
-                                      ),
+                                      style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                       readOnly: true,
                                       controller: TextEditingController(
-                                        text: currencyFormatter.format(
-                                          hargaPromo.value,
-                                        ), // Auto-update
+                                        text: currencyFormatter.format(hargaPromo.value), // Auto-update
                                       ),
                                     ),
                                   ),
@@ -726,29 +865,18 @@ class _ListpromoState extends State<Listpromo> {
                         height: 35,
                         width: 100,
                         child: TextButton(
-                          style: TextButton.styleFrom(
-                            backgroundColor: Colors.green,
-                          ),
+                          style: TextButton.styleFrom(backgroundColor: Colors.green),
                           onPressed: () {
-                            updatedatapromokunjungan(
-                              kode_promo,
-                              detail_kode_promo,
-                            );
+                            updatedatapromokunjungan(kode_promo, detail_kode_promo);
                             datapromohappyhour.isEmpty
                                 ? Center(child: CircularProgressIndicator())
                                 : refreshDataPromoKunjungan();
                             Get.back();
-                            CherryToast.success(
-                              title: Text('Data Berhasil DiUpdate'),
-                            ).show(context);
+                            CherryToast.success(title: Text('Data Berhasil DiUpdate')).show(context);
                           },
                           child: Text(
                             'Save',
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
+                            style: TextStyle(fontFamily: 'Poppins', fontSize: 14, color: Colors.white),
                           ),
                         ),
                       ),
@@ -797,42 +925,27 @@ class _ListpromoState extends State<Listpromo> {
                                       SizedBox(height: 15),
                                       Text(
                                         'Nama Promo :',
-                                        style: TextStyle(
-                                          fontFamily: 'Poppins',
-                                          fontSize: 18,
-                                        ),
+                                        style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
                                       ),
                                       SizedBox(height: 15),
                                       Text(
                                         'Discount Promo :',
-                                        style: TextStyle(
-                                          fontFamily: 'Poppins',
-                                          fontSize: 18,
-                                        ),
+                                        style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
                                       ),
                                       SizedBox(height: 15),
                                       Text(
                                         'Hari Berlaku :',
-                                        style: TextStyle(
-                                          fontFamily: 'Poppins',
-                                          fontSize: 18,
-                                        ),
+                                        style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
                                       ),
                                       SizedBox(height: 15),
                                       Text(
                                         'Jam Berlaku :',
-                                        style: TextStyle(
-                                          fontFamily: 'Poppins',
-                                          fontSize: 18,
-                                        ),
+                                        style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
                                       ),
                                       SizedBox(height: 15),
                                       Text(
                                         'Berlaku Untuk :',
-                                        style: TextStyle(
-                                          fontFamily: 'Poppins',
-                                          fontSize: 18,
-                                        ),
+                                        style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
                                       ),
                                     ],
                                   ),
@@ -860,19 +973,12 @@ class _ListpromoState extends State<Listpromo> {
                                       color: Colors.grey[300],
                                     ),
                                     child: TextField(
-                                      controller:
-                                          controller_edit_nama_promo_happyhour,
+                                      controller: controller_edit_nama_promo_happyhour,
                                       decoration: InputDecoration(
                                         border: InputBorder.none,
-                                        contentPadding: EdgeInsets.symmetric(
-                                          vertical: 13.5,
-                                          horizontal: 10,
-                                        ),
+                                        contentPadding: EdgeInsets.symmetric(vertical: 13.5, horizontal: 10),
                                       ),
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontFamily: 'Poppins',
-                                      ),
+                                      style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                     ),
                                   ),
                                   SizedBox(height: 12),
@@ -883,36 +989,26 @@ class _ListpromoState extends State<Listpromo> {
                                         width: 270,
                                         height: 30,
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
+                                          borderRadius: BorderRadius.circular(10),
                                           color: Colors.grey[300],
                                         ),
                                         child: TextField(
-                                          controller:
-                                              controller_edit_disc_happyhour,
+                                          controller: controller_edit_disc_happyhour,
                                           decoration: InputDecoration(
                                             border: InputBorder.none,
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                  vertical: 13.5,
-                                                  horizontal: 10,
-                                                ),
+                                            contentPadding: EdgeInsets.symmetric(
+                                              vertical: 13.5,
+                                              horizontal: 10,
+                                            ),
                                           ),
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontFamily: 'Poppins',
-                                          ),
+                                          style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                         ),
                                       ),
                                       Padding(
                                         padding: EdgeInsets.only(left: 10),
                                         child: Text(
                                           '% Dari Total Transaksi',
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontFamily: 'Poppins',
-                                          ),
+                                          style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                         ),
                                       ),
                                     ],
@@ -935,13 +1031,7 @@ class _ListpromoState extends State<Listpromo> {
                                           },
                                         ),
                                       ),
-                                      Text(
-                                        'Senin',
-                                        style: TextStyle(
-                                          fontSize: 17,
-                                          fontFamily: 'Poppins',
-                                        ),
-                                      ),
+                                      Text('Senin', style: TextStyle(fontSize: 17, fontFamily: 'Poppins')),
                                       Padding(
                                         padding: const EdgeInsets.only(left: 5),
                                         child: Center(
@@ -949,8 +1039,7 @@ class _ListpromoState extends State<Listpromo> {
                                             value: isSelasaChecked,
                                             onChanged: (bool? value) {
                                               setState(() {
-                                                isSelasaChecked =
-                                                    value ?? false;
+                                                isSelasaChecked = value ?? false;
                                               });
                                               if (isSelasaChecked == true) {
                                                 valueselasa = 1;
@@ -961,13 +1050,7 @@ class _ListpromoState extends State<Listpromo> {
                                           ),
                                         ),
                                       ),
-                                      Text(
-                                        'Selasa',
-                                        style: TextStyle(
-                                          fontSize: 17,
-                                          fontFamily: 'Poppins',
-                                        ),
-                                      ),
+                                      Text('Selasa', style: TextStyle(fontSize: 17, fontFamily: 'Poppins')),
                                       Center(
                                         child: Checkbox(
                                           value: isRabuChecked,
@@ -983,13 +1066,7 @@ class _ListpromoState extends State<Listpromo> {
                                           },
                                         ),
                                       ),
-                                      Text(
-                                        'Rabu',
-                                        style: TextStyle(
-                                          fontSize: 17,
-                                          fontFamily: 'Poppins',
-                                        ),
-                                      ),
+                                      Text('Rabu', style: TextStyle(fontSize: 17, fontFamily: 'Poppins')),
                                       Center(
                                         child: Checkbox(
                                           value: isKamisChecked,
@@ -1005,13 +1082,7 @@ class _ListpromoState extends State<Listpromo> {
                                           },
                                         ),
                                       ),
-                                      Text(
-                                        'Kamis',
-                                        style: TextStyle(
-                                          fontSize: 17,
-                                          fontFamily: 'Poppins',
-                                        ),
-                                      ),
+                                      Text('Kamis', style: TextStyle(fontSize: 17, fontFamily: 'Poppins')),
                                       Center(
                                         child: Checkbox(
                                           value: isJumatChecked,
@@ -1027,13 +1098,7 @@ class _ListpromoState extends State<Listpromo> {
                                           },
                                         ),
                                       ),
-                                      Text(
-                                        'Jumat',
-                                        style: TextStyle(
-                                          fontSize: 17,
-                                          fontFamily: 'Poppins',
-                                        ),
-                                      ),
+                                      Text('Jumat', style: TextStyle(fontSize: 17, fontFamily: 'Poppins')),
                                       Center(
                                         child: Checkbox(
                                           value: isSabtuChecked,
@@ -1049,13 +1114,7 @@ class _ListpromoState extends State<Listpromo> {
                                           },
                                         ),
                                       ),
-                                      Text(
-                                        'Sabtu',
-                                        style: TextStyle(
-                                          fontSize: 17,
-                                          fontFamily: 'Poppins',
-                                        ),
-                                      ),
+                                      Text('Sabtu', style: TextStyle(fontSize: 17, fontFamily: 'Poppins')),
                                       Center(
                                         child: Checkbox(
                                           value: isMingguChecked,
@@ -1071,13 +1130,7 @@ class _ListpromoState extends State<Listpromo> {
                                           },
                                         ),
                                       ),
-                                      Text(
-                                        'Minggu',
-                                        style: TextStyle(
-                                          fontSize: 17,
-                                          fontFamily: 'Poppins',
-                                        ),
-                                      ),
+                                      Text('Minggu', style: TextStyle(fontSize: 17, fontFamily: 'Poppins')),
                                     ],
                                   ),
                                   Row(
@@ -1087,39 +1140,26 @@ class _ListpromoState extends State<Listpromo> {
                                         width: 50,
                                         height: 30,
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
+                                          borderRadius: BorderRadius.circular(10),
                                           color: Colors.grey[300],
                                         ),
                                         child: TextField(
-                                          controller:
-                                              controller_edit_jam_mulai_happyhour,
+                                          controller: controller_edit_jam_mulai_happyhour,
                                           decoration: InputDecoration(
                                             border: InputBorder.none,
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                  vertical: 13.5,
-                                                  horizontal: 10,
-                                                ),
+                                            contentPadding: EdgeInsets.symmetric(
+                                              vertical: 13.5,
+                                              horizontal: 10,
+                                            ),
                                           ),
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontFamily: 'Poppins',
-                                          ),
+                                          style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                         ),
                                       ),
                                       Padding(
-                                        padding: EdgeInsets.only(
-                                          left: 5,
-                                          right: 5,
-                                        ),
+                                        padding: EdgeInsets.only(left: 5, right: 5),
                                         child: Text(
                                           ':',
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontFamily: 'Poppins',
-                                          ),
+                                          style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                         ),
                                       ),
                                       Container(
@@ -1127,39 +1167,26 @@ class _ListpromoState extends State<Listpromo> {
                                         width: 50,
                                         height: 30,
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
+                                          borderRadius: BorderRadius.circular(10),
                                           color: Colors.grey[300],
                                         ),
                                         child: TextField(
-                                          controller:
-                                              controller_edit_menit_mulai_happyhour,
+                                          controller: controller_edit_menit_mulai_happyhour,
                                           decoration: InputDecoration(
                                             border: InputBorder.none,
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                  vertical: 13.5,
-                                                  horizontal: 10,
-                                                ),
+                                            contentPadding: EdgeInsets.symmetric(
+                                              vertical: 13.5,
+                                              horizontal: 10,
+                                            ),
                                           ),
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontFamily: 'Poppins',
-                                          ),
+                                          style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                         ),
                                       ),
                                       Padding(
-                                        padding: EdgeInsets.only(
-                                          left: 10,
-                                          right: 10,
-                                        ),
+                                        padding: EdgeInsets.only(left: 10, right: 10),
                                         child: Text(
                                           'Sampai',
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontFamily: 'Poppins',
-                                          ),
+                                          style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                         ),
                                       ),
                                       Container(
@@ -1167,39 +1194,26 @@ class _ListpromoState extends State<Listpromo> {
                                         width: 50,
                                         height: 30,
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
+                                          borderRadius: BorderRadius.circular(10),
                                           color: Colors.grey[300],
                                         ),
                                         child: TextField(
-                                          controller:
-                                              controller_edit_jam_selesai_happyhour,
+                                          controller: controller_edit_jam_selesai_happyhour,
                                           decoration: InputDecoration(
                                             border: InputBorder.none,
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                  vertical: 13.5,
-                                                  horizontal: 10,
-                                                ),
+                                            contentPadding: EdgeInsets.symmetric(
+                                              vertical: 13.5,
+                                              horizontal: 10,
+                                            ),
                                           ),
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontFamily: 'Poppins',
-                                          ),
+                                          style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                         ),
                                       ),
                                       Padding(
-                                        padding: EdgeInsets.only(
-                                          left: 5,
-                                          right: 5,
-                                        ),
+                                        padding: EdgeInsets.only(left: 5, right: 5),
                                         child: Text(
                                           ':',
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontFamily: 'Poppins',
-                                          ),
+                                          style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                         ),
                                       ),
                                       Container(
@@ -1207,26 +1221,19 @@ class _ListpromoState extends State<Listpromo> {
                                         width: 50,
                                         height: 30,
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
+                                          borderRadius: BorderRadius.circular(10),
                                           color: Colors.grey[300],
                                         ),
                                         child: TextField(
-                                          controller:
-                                              controller_edit_menit_selesai_happyhour,
+                                          controller: controller_edit_menit_selesai_happyhour,
                                           decoration: InputDecoration(
                                             border: InputBorder.none,
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                  vertical: 13.5,
-                                                  horizontal: 10,
-                                                ),
+                                            contentPadding: EdgeInsets.symmetric(
+                                              vertical: 13.5,
+                                              horizontal: 10,
+                                            ),
                                           ),
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontFamily: 'Poppins',
-                                          ),
+                                          style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                         ),
                                       ),
                                     ],
@@ -1249,17 +1256,9 @@ class _ListpromoState extends State<Listpromo> {
                                           },
                                         ),
                                       ),
-                                      Text(
-                                        'Umum',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontFamily: 'Poppins',
-                                        ),
-                                      ),
+                                      Text('Umum', style: TextStyle(fontSize: 18, fontFamily: 'Poppins')),
                                       Padding(
-                                        padding: const EdgeInsets.only(
-                                          left: 30,
-                                        ),
+                                        padding: const EdgeInsets.only(left: 30),
                                         child: Checkbox(
                                           value: isMemberChecked,
                                           onChanged: (bool? value) {
@@ -1274,17 +1273,9 @@ class _ListpromoState extends State<Listpromo> {
                                           },
                                         ),
                                       ),
-                                      Text(
-                                        'Member',
-                                        style: TextStyle(
-                                          fontSize: 17,
-                                          fontFamily: 'Poppins',
-                                        ),
-                                      ),
+                                      Text('Member', style: TextStyle(fontSize: 17, fontFamily: 'Poppins')),
                                       Padding(
-                                        padding: const EdgeInsets.only(
-                                          left: 30,
-                                        ),
+                                        padding: const EdgeInsets.only(left: 30),
                                         child: Center(
                                           child: Checkbox(
                                             value: isVIPChecked,
@@ -1301,13 +1292,7 @@ class _ListpromoState extends State<Listpromo> {
                                           ),
                                         ),
                                       ),
-                                      Text(
-                                        'VIP',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontFamily: 'Poppins',
-                                        ),
-                                      ),
+                                      Text('VIP', style: TextStyle(fontSize: 18, fontFamily: 'Poppins')),
                                     ],
                                   ),
                                   Center(
@@ -1316,25 +1301,15 @@ class _ListpromoState extends State<Listpromo> {
                                       height: 35,
                                       width: 100,
                                       child: TextButton(
-                                        style: TextButton.styleFrom(
-                                          backgroundColor: Colors.green,
-                                        ),
+                                        style: TextButton.styleFrom(backgroundColor: Colors.green),
                                         onPressed: () {
-                                          updatepromohappyhour(
-                                            kode_promo,
-                                            detail_kode_promo,
-                                          );
+                                          updatepromohappyhour(kode_promo, detail_kode_promo);
                                           datapromohappyhour.isEmpty
-                                              ? Center(
-                                                child:
-                                                    CircularProgressIndicator(),
-                                              )
+                                              ? Center(child: CircularProgressIndicator())
                                               : refreshDataHappyHour();
                                           Get.back();
                                           CherryToast.success(
-                                            title: Text(
-                                              'Data Berhasil DiUpdate',
-                                            ),
+                                            title: Text('Data Berhasil DiUpdate'),
                                           ).show(context);
                                         },
                                         child: Text(
@@ -1367,9 +1342,7 @@ class _ListpromoState extends State<Listpromo> {
 
   Future<void> getdatahappyhour() async {
     try {
-      var response = await dio.get(
-        '${myIpAddr()}/listpromo/getdatapromohappyhour',
-      );
+      var response = await dio.get('${myIpAddr()}/listpromo/getdatapromohappyhour');
       List<Map<String, dynamic>> fetcheddata =
           (response.data as List).map((item) {
             return {
@@ -1444,9 +1417,7 @@ class _ListpromoState extends State<Listpromo> {
 
   Future<void> getdatapromokunjungan() async {
     try {
-      var response = await dio.get(
-        '${myIpAddr()}/listpromo/getdatapromokunjungan',
-      );
+      var response = await dio.get('${myIpAddr()}/listpromo/getdatapromokunjungan');
       List<Map<String, dynamic>> fetcheddata =
           (response.data as List).map((item) {
             return {
@@ -1505,9 +1476,7 @@ class _ListpromoState extends State<Listpromo> {
 
   Future<void> getdatapromotahunan() async {
     try {
-      var response = await dio.get(
-        '${myIpAddr()}/listpromo/getdatapromotahunan',
-      );
+      var response = await dio.get('${myIpAddr()}/listpromo/getdatapromotahunan');
       List<Map<String, dynamic>> fetcheddata =
           (response.data as List).map((item) {
             return {
@@ -1556,9 +1525,103 @@ class _ListpromoState extends State<Listpromo> {
     }
   }
 
+  Future<void> getdatapromobonusitem() async {
+    try {
+      var response = await dio.get('${myIpAddr()}/listpromo/getdatapromobonusitem');
+      List<Map<String, dynamic>> fetcheddata =
+          (response.data as List).map((item) {
+            return {
+              "kode_promo": item['kode_promo'],
+              "nama_promo": item['nama_promo'],
+              "detail_kode_promo": item['detail_kode_promo'],
+              "nama_paket_msg": item['nama_paket_msg'],
+              "nama_fnb": item['nama_fnb'],
+              "id_paket_msg": item['id_paket'],
+              "id_fnb": item['id_fnb'],
+              "qty": item['qty'],
+            };
+          }).toList();
+      setState(() {
+        datapromobonusitem.clear();
+        datapromobonusitem.assignAll(fetcheddata);
+        datapromobonusitem.refresh();
+      });
+    } catch (e) {
+      log("Error di fn Getdapaketmassage : $e");
+    }
+  }
+
+  Future<void> updatedatapromobonusitem(kode_promo, detail_kode_promo) async {
+    try {
+      var response = await dio.put(
+        '${myIpAddr()}/listpromo/updatepromobonusitem',
+        data: {
+          "nama_promo": controller_edit_nama_promo_bonus_item.text,
+          "id_paket": dropdownnamapaketbonusitem,
+          "id_fnb": selecteditem,
+          "qty": controller_edit_qty_bonus_item.text,
+          "kode_promo": kode_promo,
+          "detail_kode_promo": detail_kode_promo,
+        },
+      );
+    } catch (e) {
+      log("Error di fn updatedatapromobonusitem : $e");
+    }
+  }
+
+  Future<void> deletepromobonusitem(kode_promo) async {
+    try {
+      var response = await dio.delete(
+        '${myIpAddr()}/listpromo/deletepromobonusitem',
+        data: {"kode_promo": kode_promo},
+      );
+    } catch (e) {
+      log("Error di fn deletepromobonusitem : $e");
+    }
+  }
+
+  Future<void> getDataPaket() async {
+    try {
+      var response = await dio.get('${myIpAddr()}/listmassage/getdatapaketmassage');
+      setState(() {
+        _listNamaPaket =
+            (response.data as List).map((item) {
+              return {
+                "id_paket_msg": item["id_paket_msg"],
+                "nama_paket_msg": item["nama_paket_msg"],
+                "harga_paket_msg": item["harga_paket_msg"],
+                "durasi": item["durasi"],
+              };
+            }).toList();
+      });
+    } catch (e) {
+      log("Error di fn Get Data Paket $e");
+    }
+  }
+
+  Future<void> getDataFnb() async {
+    try {
+      var response = await dio.get('${myIpAddr()}/listfnb/getdatafnb');
+      setState(() {
+        _listfnb =
+            (response.data as List).map((item) {
+              return {"id_fnb": item["id_fnb"], "nama_fnb": item["nama_fnb"]};
+            }).toList();
+      });
+    } catch (e) {
+      log("Error di fn Get Data Fnb $e");
+    }
+  }
+
   Future<void> refreshDataHappyHour() async {
     await Future.delayed(Duration(seconds: 1));
     await getdatahappyhour();
+  }
+
+  Future<void> refreshdatapaketmassageandfnb() async {
+    await Future.delayed(Duration(seconds: 1));
+    await getDataPaket();
+    await getDataFnb();
   }
 
   Future<void> refreshDataPromoKunjungan() async {
@@ -1569,6 +1632,11 @@ class _ListpromoState extends State<Listpromo> {
   Future<void> refreshDataPromoTahunan() async {
     await Future.delayed(Duration(seconds: 1));
     await getdatapromotahunan();
+  }
+
+  Future<void> refreshDataPromoBonusItem() async {
+    await Future.delayed(Duration(seconds: 1));
+    await getdatapromobonusitem();
   }
 
   Future<void> searchpromohappyhour() async {
@@ -1663,6 +1731,35 @@ class _ListpromoState extends State<Listpromo> {
     }
   }
 
+  Future<void> searchpromobonusitem() async {
+    try {
+      var response = await dio.get(
+        '${myIpAddr()}/searchpromo/searchpromobonusitem',
+        data: {"nama_promo": textinputan.text},
+      );
+      List<Map<String, dynamic>> fetcheddata =
+          (response.data as List).map((item) {
+            return {
+              "kode_promo": item['kode_promo'],
+              "nama_promo": item['nama_promo'],
+              "detail_kode_promo": item['detail_kode_promo'],
+              "nama_paket_msg": item['nama_paket_msg'],
+              "nama_fnb": item['nama_fnb'],
+              "id_paket_msg": item['id_paket'],
+              "id_fnb": item['id_fnb'],
+              "qty": item['qty'],
+            };
+          }).toList();
+      setState(() {
+        datapromobonusitem.clear();
+        datapromobonusitem.assignAll(fetcheddata);
+        datapromobonusitem.refresh();
+      });
+    } catch (e) {
+      log("Error di fn searchpromobonusitem : $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final shortest = MediaQuery.of(context).size.shortestSide;
@@ -1680,13 +1777,9 @@ class _ListpromoState extends State<Listpromo> {
 
     // 3. Hitung designSize yang efektif berdasarkan tipe perangkat
     final double effectiveDesignWidth =
-        isMobile
-            ? tabletDesignWidth * mobileAdjustmentFactor
-            : tabletDesignWidth;
+        isMobile ? tabletDesignWidth * mobileAdjustmentFactor : tabletDesignWidth;
     final double effectiveDesignHeight =
-        isMobile
-            ? tabletDesignHeight * mobileAdjustmentFactor
-            : tabletDesignHeight;
+        isMobile ? tabletDesignHeight * mobileAdjustmentFactor : tabletDesignHeight;
     return isMobile
         ? WidgetListPromoMobile()
         : Scaffold(
@@ -1714,11 +1807,7 @@ class _ListpromoState extends State<Listpromo> {
                     padding: EdgeInsets.only(top: 20),
                     child: Text(
                       'List Promo',
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: TextStyle(fontFamily: 'Poppins', fontSize: 30, fontWeight: FontWeight.bold),
                     ),
                   ),
                   Container(
@@ -1734,12 +1823,9 @@ class _ListpromoState extends State<Listpromo> {
                               if (debounce?.isActive ?? false) {
                                 debounce!.cancel();
                               }
-                              debounce = Timer(
-                                Duration(milliseconds: 1000),
-                                () {
-                                  selectSearchPromo();
-                                },
-                              );
+                              debounce = Timer(Duration(milliseconds: 1000), () {
+                                selectSearchPromo();
+                              });
                             },
                             decoration: InputDecoration(
                               border: OutlineInputBorder(),
@@ -1764,24 +1850,18 @@ class _ListpromoState extends State<Listpromo> {
                             _moveFirstContainerToTop();
                             _toggleButtonColors(
                               isFirstButtonPressed: true,
+                              isSecondButtonPressed: false,
                               isThirdButtonPressed: false,
+                              isFourthButtonPressed: false,
                             );
                           },
                           style: ElevatedButton.styleFrom(
-                            foregroundColor:
-                                _FirstbuttonColor == Colors.blue
-                                    ? Colors.white
-                                    : Colors.black,
+                            foregroundColor: _FirstbuttonColor == Colors.blue ? Colors.white : Colors.black,
                             backgroundColor: _FirstbuttonColor,
                             minimumSize: Size(150, 45),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.zero,
-                            ),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
                           ),
-                          child: Text(
-                            'Promo Happy Hour',
-                            style: TextStyle(color: Colors.black),
-                          ),
+                          child: Text('Promo Happy Hour', style: TextStyle(color: Colors.black)),
                         ),
                       ),
                       Padding(
@@ -1796,23 +1876,17 @@ class _ListpromoState extends State<Listpromo> {
                             _toggleButtonColors(
                               isFirstButtonPressed: false,
                               isThirdButtonPressed: false,
+                              isSecondButtonPressed: true,
+                              isFourthButtonPressed: false,
                             );
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _SecondbuttonColor,
-                            foregroundColor:
-                                _FirstbuttonColor == Colors.blue
-                                    ? Colors.white
-                                    : Colors.black,
+                            foregroundColor: _FirstbuttonColor == Colors.blue ? Colors.white : Colors.black,
                             minimumSize: Size(150, 45),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.zero,
-                            ),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
                           ),
-                          child: Text(
-                            'Promo Paketan',
-                            style: TextStyle(color: Colors.black),
-                          ),
+                          child: Text('Promo Paketan', style: TextStyle(color: Colors.black)),
                         ),
                       ),
                       Padding(
@@ -1827,27 +1901,47 @@ class _ListpromoState extends State<Listpromo> {
                             _toggleButtonColors(
                               isFirstButtonPressed: false,
                               isThirdButtonPressed: true,
+                              isSecondButtonPressed: false,
+                              isFourthButtonPressed: false,
                             );
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _ThirdbuttonColor,
-                            foregroundColor:
-                                _FirstbuttonColor == Colors.blue
-                                    ? Colors.white
-                                    : Colors.black,
+                            foregroundColor: _FirstbuttonColor == Colors.blue ? Colors.white : Colors.black,
                             minimumSize: Size(150, 45),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.zero,
-                            ),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
                           ),
-                          child: Text(
-                            'Promo Tahunan',
-                            style: TextStyle(color: Colors.black),
+                          child: Text('Promo Tahunan', style: TextStyle(color: Colors.black)),
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(top: 20, left: 10),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            if (textsearchbonusitem.text == "") {
+                              refreshDataPromoBonusItem();
+                            }
+                            selectInputPromo();
+                            _moveFourthContainerToTop();
+                            _toggleButtonColors(
+                              isFirstButtonPressed: false,
+                              isSecondButtonPressed: false,
+                              isThirdButtonPressed: false,
+                              isFourthButtonPressed: true,
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _FourthbuttonColor,
+                            foregroundColor: _FirstbuttonColor == Colors.blue ? Colors.white : Colors.black,
+                            minimumSize: Size(150, 45),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
                           ),
+                          child: Text('Promo Bonus Item', style: TextStyle(color: Colors.black)),
                         ),
                       ),
                     ],
                   ),
+
                   Stack(
                     children: [
                       if (!_isSecondContainerOnTop)
@@ -1860,11 +1954,7 @@ class _ListpromoState extends State<Listpromo> {
                           ),
                           child:
                               datapromohappyhour.isEmpty
-                                  ? Center(
-                                    child: Text(
-                                      'Data Promo Happy Hour Tidak Ada',
-                                    ),
-                                  )
+                                  ? Center(child: Text('Data Promo Happy Hour Tidak Ada'))
                                   : Obx(
                                     () => ListView.builder(
                                       padding: EdgeInsets.zero,
@@ -1875,9 +1965,7 @@ class _ListpromoState extends State<Listpromo> {
                                           margin: EdgeInsets.all(10),
                                           decoration: BoxDecoration(
                                             border: Border.all(width: 1),
-                                            borderRadius: BorderRadius.all(
-                                              Radius.circular(10),
-                                            ),
+                                            borderRadius: BorderRadius.all(Radius.circular(10)),
                                           ),
                                           child: Container(
                                             width: 400,
@@ -1890,20 +1978,14 @@ class _ListpromoState extends State<Listpromo> {
                                                     Container(
                                                       child: Text(
                                                         item['kode_promo'],
-                                                        style: TextStyle(
-                                                          fontSize: 25,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                     SizedBox(width: 10),
                                                     Container(
                                                       child: Text(
                                                         item['nama_promo'],
-                                                        style: TextStyle(
-                                                          fontSize: 25,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                   ],
@@ -1913,30 +1995,21 @@ class _ListpromoState extends State<Listpromo> {
                                                     Container(
                                                       child: Text(
                                                         'Diskon :',
-                                                        style: TextStyle(
-                                                          fontSize: 15,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        style: TextStyle(fontSize: 15, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                     SizedBox(width: 10),
                                                     Container(
                                                       child: Text(
                                                         item['disc'].toString(),
-                                                        style: TextStyle(
-                                                          fontSize: 15,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        style: TextStyle(fontSize: 15, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                     SizedBox(width: 4),
                                                     Container(
                                                       child: Text(
                                                         '%',
-                                                        style: TextStyle(
-                                                          fontSize: 15,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        style: TextStyle(fontSize: 15, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                   ],
@@ -1946,41 +2019,25 @@ class _ListpromoState extends State<Listpromo> {
                                                     Container(
                                                       child: Text(
                                                         'Hari Berlaku :',
-                                                        style: TextStyle(
-                                                          fontSize: 15,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        style: TextStyle(fontSize: 15, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                     Center(
                                                       child: Checkbox(
-                                                        value:
-                                                            item['valuesenin'] ==
-                                                            1,
-                                                        onChanged:
-                                                            (bool? value) {},
+                                                        value: item['valuesenin'] == 1,
+                                                        onChanged: (bool? value) {},
                                                       ),
                                                     ),
                                                     Text(
                                                       'Senin',
-                                                      style: TextStyle(
-                                                        fontSize: 18,
-                                                        fontFamily: 'Poppins',
-                                                      ),
+                                                      style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                     ),
                                                     Padding(
-                                                      padding:
-                                                          const EdgeInsets.only(
-                                                            left: 5,
-                                                          ),
+                                                      padding: const EdgeInsets.only(left: 5),
                                                       child: Center(
                                                         child: Checkbox(
-                                                          value:
-                                                              item['valueselasa'] ==
-                                                              1,
-                                                          onChanged: (
-                                                            bool? value,
-                                                          ) {
+                                                          value: item['valueselasa'] == 1,
+                                                          onChanged: (bool? value) {
                                                             setState(() {});
                                                           },
                                                         ),
@@ -1988,90 +2045,57 @@ class _ListpromoState extends State<Listpromo> {
                                                     ),
                                                     Text(
                                                       'Selasa',
-                                                      style: TextStyle(
-                                                        fontSize: 18,
-                                                        fontFamily: 'Poppins',
-                                                      ),
+                                                      style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                     ),
                                                     Center(
                                                       child: Checkbox(
-                                                        value:
-                                                            item['valuerabu'] ==
-                                                            1,
-                                                        onChanged:
-                                                            (bool? value) {},
+                                                        value: item['valuerabu'] == 1,
+                                                        onChanged: (bool? value) {},
                                                       ),
                                                     ),
                                                     Text(
                                                       'Rabu',
-                                                      style: TextStyle(
-                                                        fontSize: 18,
-                                                        fontFamily: 'Poppins',
-                                                      ),
+                                                      style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                     ),
                                                     Center(
                                                       child: Checkbox(
-                                                        value:
-                                                            item['valuekamis'] ==
-                                                            1,
-                                                        onChanged:
-                                                            (bool? value) {},
+                                                        value: item['valuekamis'] == 1,
+                                                        onChanged: (bool? value) {},
                                                       ),
                                                     ),
                                                     Text(
                                                       'Kamis',
-                                                      style: TextStyle(
-                                                        fontSize: 18,
-                                                        fontFamily: 'Poppins',
-                                                      ),
+                                                      style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                     ),
                                                     Center(
                                                       child: Checkbox(
-                                                        value:
-                                                            item['valuejumat'] ==
-                                                            1,
-                                                        onChanged:
-                                                            (bool? value) {},
+                                                        value: item['valuejumat'] == 1,
+                                                        onChanged: (bool? value) {},
                                                       ),
                                                     ),
                                                     Text(
                                                       'Jumat',
-                                                      style: TextStyle(
-                                                        fontSize: 18,
-                                                        fontFamily: 'Poppins',
-                                                      ),
+                                                      style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                     ),
                                                     Center(
                                                       child: Checkbox(
-                                                        value:
-                                                            item['valuesabtu'] ==
-                                                            1,
-                                                        onChanged:
-                                                            (bool? value) {},
+                                                        value: item['valuesabtu'] == 1,
+                                                        onChanged: (bool? value) {},
                                                       ),
                                                     ),
                                                     Text(
                                                       'Sabtu',
-                                                      style: TextStyle(
-                                                        fontSize: 18,
-                                                        fontFamily: 'Poppins',
-                                                      ),
+                                                      style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                     ),
                                                     Center(
                                                       child: Checkbox(
-                                                        value:
-                                                            item['valueminggu'] ==
-                                                            1,
-                                                        onChanged:
-                                                            (bool? value) {},
+                                                        value: item['valueminggu'] == 1,
+                                                        onChanged: (bool? value) {},
                                                       ),
                                                     ),
                                                     Text(
                                                       'Minggu',
-                                                      style: TextStyle(
-                                                        fontSize: 18,
-                                                        fontFamily: 'Poppins',
-                                                      ),
+                                                      style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                     ),
                                                   ],
                                                 ),
@@ -2081,39 +2105,25 @@ class _ListpromoState extends State<Listpromo> {
                                                     Container(
                                                       child: Text(
                                                         'Jam Berlaku : ',
-                                                        style: TextStyle(
-                                                          fontSize: 15,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        style: TextStyle(fontSize: 15, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                     Container(
                                                       child: Text(
-                                                        item['jam_mulai']
-                                                            .toString(),
-                                                        style: TextStyle(
-                                                          fontSize: 15,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        item['jam_mulai'].toString(),
+                                                        style: TextStyle(fontSize: 15, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                     Container(
                                                       child: Text(
                                                         ' - ',
-                                                        style: TextStyle(
-                                                          fontSize: 15,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        style: TextStyle(fontSize: 15, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                     Container(
                                                       child: Text(
-                                                        item['jam_selesai']
-                                                            .toString(),
-                                                        style: TextStyle(
-                                                          fontSize: 15,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        item['jam_selesai'].toString(),
+                                                        style: TextStyle(fontSize: 15, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                   ],
@@ -2123,172 +2133,81 @@ class _ListpromoState extends State<Listpromo> {
                                                     Container(
                                                       child: Text(
                                                         'Berlaku Untuk : ',
-                                                        style: TextStyle(
-                                                          fontSize: 15,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        style: TextStyle(fontSize: 15, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                     Center(
                                                       child: Checkbox(
-                                                        value:
-                                                            item['valueumum'] ==
-                                                            1,
-                                                        onChanged:
-                                                            (bool? value) {},
+                                                        value: item['valueumum'] == 1,
+                                                        onChanged: (bool? value) {},
                                                       ),
                                                     ),
                                                     Text(
                                                       'Umum',
-                                                      style: TextStyle(
-                                                        fontSize: 18,
-                                                        fontFamily: 'Poppins',
-                                                      ),
+                                                      style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                     ),
                                                     Padding(
-                                                      padding:
-                                                          const EdgeInsets.only(
-                                                            left: 30,
-                                                          ),
+                                                      padding: const EdgeInsets.only(left: 30),
                                                       child: Checkbox(
-                                                        value:
-                                                            item['valuemember'] ==
-                                                            1,
-                                                        onChanged:
-                                                            (bool? value) {},
+                                                        value: item['valuemember'] == 1,
+                                                        onChanged: (bool? value) {},
                                                       ),
                                                     ),
                                                     Text(
                                                       'Member',
-                                                      style: TextStyle(
-                                                        fontSize: 18,
-                                                        fontFamily: 'Poppins',
-                                                      ),
+                                                      style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                     ),
                                                     Padding(
-                                                      padding:
-                                                          const EdgeInsets.only(
-                                                            left: 30,
-                                                          ),
+                                                      padding: const EdgeInsets.only(left: 30),
                                                       child: Center(
                                                         child: Checkbox(
-                                                          value:
-                                                              item['valuevip'] ==
-                                                              1,
-                                                          onChanged:
-                                                              (bool? value) {},
+                                                          value: item['valuevip'] == 1,
+                                                          onChanged: (bool? value) {},
                                                         ),
                                                       ),
                                                     ),
                                                     Text(
                                                       'VIP',
-                                                      style: TextStyle(
-                                                        fontSize: 18,
-                                                        fontFamily: 'Poppins',
-                                                      ),
+                                                      style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                     ),
                                                     Spacer(),
 
                                                     SizedBox(width: 10),
                                                     ElevatedButton(
                                                       onPressed: () {
-                                                        isSeninChecked =
-                                                            item['valuesenin'] ==
-                                                            1;
-                                                        isSelasaChecked =
-                                                            item['valueselasa'] ==
-                                                            1;
-                                                        isRabuChecked =
-                                                            item['valuerabu'] ==
-                                                            1;
-                                                        isKamisChecked =
-                                                            item['valuekamis'] ==
-                                                            1;
-                                                        isJumatChecked =
-                                                            item['valuejumat'] ==
-                                                            1;
-                                                        isSabtuChecked =
-                                                            item['valuesabtu'] ==
-                                                            1;
-                                                        isMingguChecked =
-                                                            item['valueminggu'] ==
-                                                            1;
-                                                        isUmumChecked =
-                                                            item['valueumum'] ==
-                                                            1;
-                                                        isVIPChecked =
-                                                            item['valuevip'] ==
-                                                            1;
-                                                        isMemberChecked =
-                                                            item['valuemember'] ==
-                                                            1;
-                                                        valuesenin =
-                                                            isSeninChecked
-                                                                ? 1
-                                                                : 0;
-                                                        valueselasa =
-                                                            isSelasaChecked
-                                                                ? 1
-                                                                : 0;
-                                                        valuerabu =
-                                                            isRabuChecked
-                                                                ? 1
-                                                                : 0;
-                                                        valuekamis =
-                                                            isKamisChecked
-                                                                ? 1
-                                                                : 0;
-                                                        valuejumat =
-                                                            isJumatChecked
-                                                                ? 1
-                                                                : 0;
-                                                        valuesabtu =
-                                                            isSabtuChecked
-                                                                ? 1
-                                                                : 0;
-                                                        valueminggu =
-                                                            isMingguChecked
-                                                                ? 1
-                                                                : 0;
-                                                        valueumum =
-                                                            isUmumChecked
-                                                                ? 1
-                                                                : 0;
-                                                        valuevip =
-                                                            isVIPChecked
-                                                                ? 1
-                                                                : 0;
-                                                        valuemember =
-                                                            isMemberChecked
-                                                                ? 1
-                                                                : 0;
+                                                        isSeninChecked = item['valuesenin'] == 1;
+                                                        isSelasaChecked = item['valueselasa'] == 1;
+                                                        isRabuChecked = item['valuerabu'] == 1;
+                                                        isKamisChecked = item['valuekamis'] == 1;
+                                                        isJumatChecked = item['valuejumat'] == 1;
+                                                        isSabtuChecked = item['valuesabtu'] == 1;
+                                                        isMingguChecked = item['valueminggu'] == 1;
+                                                        isUmumChecked = item['valueumum'] == 1;
+                                                        isVIPChecked = item['valuevip'] == 1;
+                                                        isMemberChecked = item['valuemember'] == 1;
+                                                        valuesenin = isSeninChecked ? 1 : 0;
+                                                        valueselasa = isSelasaChecked ? 1 : 0;
+                                                        valuerabu = isRabuChecked ? 1 : 0;
+                                                        valuekamis = isKamisChecked ? 1 : 0;
+                                                        valuejumat = isJumatChecked ? 1 : 0;
+                                                        valuesabtu = isSabtuChecked ? 1 : 0;
+                                                        valueminggu = isMingguChecked ? 1 : 0;
+                                                        valueumum = isUmumChecked ? 1 : 0;
+                                                        valuevip = isVIPChecked ? 1 : 0;
+                                                        valuemember = isMemberChecked ? 1 : 0;
 
-                                                        controller_edit_nama_promo_happyhour
-                                                                .text =
+                                                        controller_edit_nama_promo_happyhour.text =
                                                             item['nama_promo'];
-                                                        controller_edit_disc_happyhour
-                                                            .text = item['disc']
-                                                                .toString();
-                                                        controller_edit_jam_mulai_happyhour
-                                                                .text =
-                                                            item['jam_mulai']
-                                                                .toString()
-                                                                .split(':')[0];
-                                                        controller_edit_menit_mulai_happyhour
-                                                                .text =
-                                                            item['jam_mulai']
-                                                                .toString()
-                                                                .split(':')[1];
-                                                        controller_edit_jam_selesai_happyhour
-                                                                .text =
-                                                            item['jam_selesai']
-                                                                .toString()
-                                                                .split(':')[0];
-                                                        controller_edit_menit_selesai_happyhour
-                                                                .text =
-                                                            item['jam_selesai']
-                                                                .toString()
-                                                                .split(':')[1];
+                                                        controller_edit_disc_happyhour.text =
+                                                            item['disc'].toString();
+                                                        controller_edit_jam_mulai_happyhour.text =
+                                                            item['jam_mulai'].toString().split(':')[0];
+                                                        controller_edit_menit_mulai_happyhour.text =
+                                                            item['jam_mulai'].toString().split(':')[1];
+                                                        controller_edit_jam_selesai_happyhour.text =
+                                                            item['jam_selesai'].toString().split(':')[0];
+                                                        controller_edit_menit_selesai_happyhour.text =
+                                                            item['jam_selesai'].toString().split(':')[1];
                                                         isibuttonedithappyhour(
                                                           item['kode_promo'],
                                                           item['detail_kode_promo'],
@@ -2296,10 +2215,7 @@ class _ListpromoState extends State<Listpromo> {
                                                       },
                                                       child: Text(
                                                         'Edit',
-                                                        style: TextStyle(
-                                                          fontSize: 25,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                     SizedBox(width: 10),
@@ -2307,23 +2223,14 @@ class _ListpromoState extends State<Listpromo> {
                                                       onPressed: () {
                                                         Get.dialog(
                                                           StatefulBuilder(
-                                                            builder: (
-                                                              context,
-                                                              setState,
-                                                            ) {
+                                                            builder: (context, setState) {
                                                               return AlertDialog(
                                                                 actions: [
                                                                   Center(
                                                                     child: Container(
-                                                                      margin:
-                                                                          EdgeInsets.only(
-                                                                            top:
-                                                                                20,
-                                                                          ),
-                                                                      height:
-                                                                          100,
-                                                                      width:
-                                                                          250,
+                                                                      margin: EdgeInsets.only(top: 20),
+                                                                      height: 100,
+                                                                      width: 250,
                                                                       child: Center(
                                                                         child: Column(
                                                                           crossAxisAlignment:
@@ -2334,26 +2241,19 @@ class _ListpromoState extends State<Listpromo> {
                                                                             Text(
                                                                               '${item['nama_promo']}',
                                                                               style: TextStyle(
-                                                                                fontSize:
-                                                                                    16,
-                                                                                fontFamily:
-                                                                                    'Poppins',
+                                                                                fontSize: 16,
+                                                                                fontFamily: 'Poppins',
                                                                               ),
                                                                             ),
                                                                             Text(
                                                                               'Yakin ingin delete ?',
                                                                               style: TextStyle(
-                                                                                fontSize:
-                                                                                    16,
-                                                                                fontFamily:
-                                                                                    'Poppins',
+                                                                                fontSize: 16,
+                                                                                fontFamily: 'Poppins',
                                                                               ),
                                                                             ),
 
-                                                                            SizedBox(
-                                                                              height:
-                                                                                  4,
-                                                                            ),
+                                                                            SizedBox(height: 4),
                                                                             Row(
                                                                               crossAxisAlignment:
                                                                                   CrossAxisAlignment.center,
@@ -2371,25 +2271,16 @@ class _ListpromoState extends State<Listpromo> {
                                                                                       title: Text(
                                                                                         'Data Berhasil DiHapus',
                                                                                       ),
-                                                                                    ).show(
-                                                                                      context,
-                                                                                    );
+                                                                                    ).show(context);
                                                                                   },
-                                                                                  child: Text(
-                                                                                    'Yes',
-                                                                                  ),
+                                                                                  child: Text('Yes'),
                                                                                 ),
-                                                                                SizedBox(
-                                                                                  width:
-                                                                                      20,
-                                                                                ),
+                                                                                SizedBox(width: 20),
                                                                                 ElevatedButton(
                                                                                   onPressed: () {
                                                                                     Get.back();
                                                                                   },
-                                                                                  child: Text(
-                                                                                    'No',
-                                                                                  ),
+                                                                                  child: Text('No'),
                                                                                 ),
                                                                               ],
                                                                             ),
@@ -2406,10 +2297,7 @@ class _ListpromoState extends State<Listpromo> {
                                                       },
                                                       child: Text(
                                                         'Delete',
-                                                        style: TextStyle(
-                                                          fontSize: 25,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                   ],
@@ -2432,9 +2320,7 @@ class _ListpromoState extends State<Listpromo> {
                           ),
                           child:
                               datapromokunjungan.isEmpty
-                                  ? Center(
-                                    child: Text('Data Promo Paketan Tidak Ada'),
-                                  )
+                                  ? Center(child: Text('Data Promo Paketan Tidak Ada'))
                                   : Obx(
                                     () => ListView.builder(
                                       padding: EdgeInsets.zero,
@@ -2445,9 +2331,7 @@ class _ListpromoState extends State<Listpromo> {
                                           margin: EdgeInsets.all(10),
                                           decoration: BoxDecoration(
                                             border: Border.all(width: 1),
-                                            borderRadius: BorderRadius.all(
-                                              Radius.circular(10),
-                                            ),
+                                            borderRadius: BorderRadius.all(Radius.circular(10)),
                                           ),
                                           child: Container(
                                             width: 400,
@@ -2459,20 +2343,14 @@ class _ListpromoState extends State<Listpromo> {
                                                     Container(
                                                       child: Text(
                                                         item['kode_promo'],
-                                                        style: TextStyle(
-                                                          fontSize: 25,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                     SizedBox(width: 10),
                                                     Container(
                                                       child: Text(
                                                         item['nama_promo'],
-                                                        style: TextStyle(
-                                                          fontSize: 25,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                   ],
@@ -2482,20 +2360,13 @@ class _ListpromoState extends State<Listpromo> {
                                                     Container(
                                                       child: Text(
                                                         'Limit Kunjungan : ',
-                                                        style: TextStyle(
-                                                          fontSize: 18,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                     Container(
                                                       child: Text(
-                                                        item['limit_kunjungan']
-                                                            .toString(),
-                                                        style: TextStyle(
-                                                          fontSize: 18,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        item['limit_kunjungan'].toString(),
+                                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                   ],
@@ -2506,29 +2377,19 @@ class _ListpromoState extends State<Listpromo> {
                                                     Container(
                                                       child: Text(
                                                         'Limit Promo : ',
-                                                        style: TextStyle(
-                                                          fontSize: 18,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                     Container(
                                                       child: Text(
-                                                        item['limit_promo']
-                                                            .toString(),
-                                                        style: TextStyle(
-                                                          fontSize: 18,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        item['limit_promo'].toString(),
+                                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                     Container(
                                                       child: Text(
                                                         ' Tahun',
-                                                        style: TextStyle(
-                                                          fontSize: 18,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                   ],
@@ -2539,29 +2400,19 @@ class _ListpromoState extends State<Listpromo> {
                                                     Container(
                                                       child: Text(
                                                         'Durasi Paket : ',
-                                                        style: TextStyle(
-                                                          fontSize: 18,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                     Container(
                                                       child: Text(
-                                                        item['durasi']
-                                                            .toString(),
-                                                        style: TextStyle(
-                                                          fontSize: 18,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        item['durasi'].toString(),
+                                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                     Container(
                                                       child: Text(
                                                         ' Menit',
-                                                        style: TextStyle(
-                                                          fontSize: 18,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                   ],
@@ -2571,75 +2422,46 @@ class _ListpromoState extends State<Listpromo> {
                                                     Container(
                                                       child: Text(
                                                         'Diskon : ',
-                                                        style: TextStyle(
-                                                          fontSize: 18,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                     Container(
                                                       child: Text(
-                                                        item['discount']
-                                                            .toString(),
-                                                        style: TextStyle(
-                                                          fontSize: 18,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        item['discount'].toString(),
+                                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                     Container(
                                                       child: Text(
                                                         '%',
-                                                        style: TextStyle(
-                                                          fontSize: 18,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                     Spacer(),
                                                     Container(
                                                       child: Text(
-                                                        currencyFormat
-                                                            .format(
-                                                              item['harga_promo'],
-                                                            )
-                                                            .toString(),
-                                                        style: TextStyle(
-                                                          fontSize: 22,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        currencyFormat.format(item['harga_promo']).toString(),
+                                                        style: TextStyle(fontSize: 22, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                     SizedBox(width: 10),
                                                     ElevatedButton(
                                                       onPressed: () {
-                                                        controller_edit_kode_promo_kunjungan
-                                                                .text =
+                                                        controller_edit_kode_promo_kunjungan.text =
                                                             item['kode_promo'];
-                                                        controller_edit_nama_promo_kunjungan
-                                                                .text =
+                                                        controller_edit_nama_promo_kunjungan.text =
                                                             item['nama_promo'];
-                                                        controller_edit_limit_promo_kunjungan
-                                                                .text =
-                                                            item['limit_kunjungan']
-                                                                .toString();
-                                                        controller_edit_limit_promo
-                                                                .text =
-                                                            item['limit_promo']
-                                                                .toString();
+                                                        controller_edit_limit_promo_kunjungan.text =
+                                                            item['limit_kunjungan'].toString();
+                                                        controller_edit_limit_promo.text =
+                                                            item['limit_promo'].toString();
                                                         hargaPromo.value =
-                                                            (item['harga_promo']
-                                                                    as num)
-                                                                .toDouble();
+                                                            (item['harga_promo'] as num).toDouble();
                                                         hargaSatuan.value =
-                                                            (item['harga_satuan']
-                                                                    as num)
-                                                                .toDouble();
+                                                            (item['harga_satuan'] as num).toDouble();
 
-                                                        controller_edit_diskon_paket
-                                                                .text =
-                                                            item['discount']
-                                                                .toString();
+                                                        controller_edit_diskon_paket.text =
+                                                            item['discount'].toString();
 
                                                         isibuttoneditpromokunjungan(
                                                           item['kode_promo'],
@@ -2648,10 +2470,7 @@ class _ListpromoState extends State<Listpromo> {
                                                       },
                                                       child: Text(
                                                         'Edit',
-                                                        style: TextStyle(
-                                                          fontSize: 25,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                     SizedBox(width: 10),
@@ -2659,23 +2478,14 @@ class _ListpromoState extends State<Listpromo> {
                                                       onPressed: () {
                                                         Get.dialog(
                                                           StatefulBuilder(
-                                                            builder: (
-                                                              context,
-                                                              setState,
-                                                            ) {
+                                                            builder: (context, setState) {
                                                               return AlertDialog(
                                                                 actions: [
                                                                   Center(
                                                                     child: Container(
-                                                                      margin:
-                                                                          EdgeInsets.only(
-                                                                            top:
-                                                                                20,
-                                                                          ),
-                                                                      height:
-                                                                          100,
-                                                                      width:
-                                                                          250,
+                                                                      margin: EdgeInsets.only(top: 20),
+                                                                      height: 100,
+                                                                      width: 250,
                                                                       child: Center(
                                                                         child: Column(
                                                                           crossAxisAlignment:
@@ -2686,26 +2496,19 @@ class _ListpromoState extends State<Listpromo> {
                                                                             Text(
                                                                               '${item['nama_promo']}',
                                                                               style: TextStyle(
-                                                                                fontSize:
-                                                                                    16,
-                                                                                fontFamily:
-                                                                                    'Poppins',
+                                                                                fontSize: 16,
+                                                                                fontFamily: 'Poppins',
                                                                               ),
                                                                             ),
                                                                             Text(
                                                                               'Yakin ingin delete ?',
                                                                               style: TextStyle(
-                                                                                fontSize:
-                                                                                    16,
-                                                                                fontFamily:
-                                                                                    'Poppins',
+                                                                                fontSize: 16,
+                                                                                fontFamily: 'Poppins',
                                                                               ),
                                                                             ),
 
-                                                                            SizedBox(
-                                                                              height:
-                                                                                  4,
-                                                                            ),
+                                                                            SizedBox(height: 4),
                                                                             Row(
                                                                               crossAxisAlignment:
                                                                                   CrossAxisAlignment.center,
@@ -2723,25 +2526,16 @@ class _ListpromoState extends State<Listpromo> {
                                                                                       title: Text(
                                                                                         'Data Berhasil DiHapus',
                                                                                       ),
-                                                                                    ).show(
-                                                                                      context,
-                                                                                    );
+                                                                                    ).show(context);
                                                                                   },
-                                                                                  child: Text(
-                                                                                    'Yes',
-                                                                                  ),
+                                                                                  child: Text('Yes'),
                                                                                 ),
-                                                                                SizedBox(
-                                                                                  width:
-                                                                                      20,
-                                                                                ),
+                                                                                SizedBox(width: 20),
                                                                                 ElevatedButton(
                                                                                   onPressed: () {
                                                                                     Get.back();
                                                                                   },
-                                                                                  child: Text(
-                                                                                    'No',
-                                                                                  ),
+                                                                                  child: Text('No'),
                                                                                 ),
                                                                               ],
                                                                             ),
@@ -2758,10 +2552,7 @@ class _ListpromoState extends State<Listpromo> {
                                                       },
                                                       child: Text(
                                                         'Delete',
-                                                        style: TextStyle(
-                                                          fontSize: 25,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                     SizedBox(width: 10),
@@ -2785,9 +2576,7 @@ class _ListpromoState extends State<Listpromo> {
                           ),
                           child:
                               datapromotahunan.isEmpty
-                                  ? Center(
-                                    child: Text('Data Promo Tahunan Tidak Ada'),
-                                  )
+                                  ? Center(child: Text('Data Promo Tahunan Tidak Ada'))
                                   : Obx(
                                     () => ListView.builder(
                                       padding: EdgeInsets.zero,
@@ -2798,9 +2587,7 @@ class _ListpromoState extends State<Listpromo> {
                                           margin: EdgeInsets.all(10),
                                           decoration: BoxDecoration(
                                             border: Border.all(width: 1),
-                                            borderRadius: BorderRadius.all(
-                                              Radius.circular(10),
-                                            ),
+                                            borderRadius: BorderRadius.all(Radius.circular(10)),
                                           ),
                                           child: Container(
                                             width: 400,
@@ -2812,20 +2599,14 @@ class _ListpromoState extends State<Listpromo> {
                                                     Container(
                                                       child: Text(
                                                         item['kode_promo'],
-                                                        style: TextStyle(
-                                                          fontSize: 25,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                     SizedBox(width: 10),
                                                     Container(
                                                       child: Text(
                                                         item['nama_promo'],
-                                                        style: TextStyle(
-                                                          fontSize: 25,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                   ],
@@ -2835,29 +2616,19 @@ class _ListpromoState extends State<Listpromo> {
                                                     Container(
                                                       child: Text(
                                                         'Jangka Waktu : ',
-                                                        style: TextStyle(
-                                                          fontSize: 18,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                     Container(
                                                       child: Text(
-                                                        item['jangka_tahun']
-                                                            .toString(),
-                                                        style: TextStyle(
-                                                          fontSize: 18,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        item['jangka_tahun'].toString(),
+                                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                     Container(
                                                       child: Text(
                                                         ' Tahun',
-                                                        style: TextStyle(
-                                                          fontSize: 18,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                     SizedBox(width: 10),
@@ -2865,30 +2636,20 @@ class _ListpromoState extends State<Listpromo> {
                                                     Container(
                                                       child: Text(
                                                         currencyFormat
-                                                            .format(
-                                                              item['harga_promo'],
-                                                            )
+                                                            .format(item['harga_promo'] ?? 0)
                                                             .toString(),
-                                                        style: TextStyle(
-                                                          fontSize: 25,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                     SizedBox(width: 10),
                                                     ElevatedButton(
                                                       onPressed: () {
-                                                        controller_edit_nama_promo_tahunan
-                                                                .text =
+                                                        controller_edit_nama_promo_tahunan.text =
                                                             item['nama_promo'];
-                                                        controller_edit_jangka_waktu_promo_tahunan
-                                                                .text =
-                                                            item['jangka_tahun']
-                                                                .toString();
-                                                        controller_edit_harga_promo_tahunan
-                                                                .text =
-                                                            item['harga_promo']
-                                                                .toString();
+                                                        controller_edit_jangka_waktu_promo_tahunan.text =
+                                                            item['jangka_tahun'].toString();
+                                                        controller_edit_harga_promo_tahunan.text =
+                                                            item['harga_promo'].toString();
                                                         isibuttoneditpromotahunan(
                                                           item['kode_promo'],
                                                           item['detail_kode_promo'],
@@ -2896,10 +2657,7 @@ class _ListpromoState extends State<Listpromo> {
                                                       },
                                                       child: Text(
                                                         'Edit',
-                                                        style: TextStyle(
-                                                          fontSize: 25,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                     SizedBox(width: 10),
@@ -2907,23 +2665,14 @@ class _ListpromoState extends State<Listpromo> {
                                                       onPressed: () {
                                                         Get.dialog(
                                                           StatefulBuilder(
-                                                            builder: (
-                                                              context,
-                                                              setState,
-                                                            ) {
+                                                            builder: (context, setState) {
                                                               return AlertDialog(
                                                                 actions: [
                                                                   Center(
                                                                     child: Container(
-                                                                      margin:
-                                                                          EdgeInsets.only(
-                                                                            top:
-                                                                                20,
-                                                                          ),
-                                                                      height:
-                                                                          100,
-                                                                      width:
-                                                                          250,
+                                                                      margin: EdgeInsets.only(top: 20),
+                                                                      height: 100,
+                                                                      width: 250,
                                                                       child: Center(
                                                                         child: Column(
                                                                           crossAxisAlignment:
@@ -2934,26 +2683,19 @@ class _ListpromoState extends State<Listpromo> {
                                                                             Text(
                                                                               '${item['nama_promo']}',
                                                                               style: TextStyle(
-                                                                                fontSize:
-                                                                                    16,
-                                                                                fontFamily:
-                                                                                    'Poppins',
+                                                                                fontSize: 16,
+                                                                                fontFamily: 'Poppins',
                                                                               ),
                                                                             ),
                                                                             Text(
                                                                               'Yakin ingin delete ?',
                                                                               style: TextStyle(
-                                                                                fontSize:
-                                                                                    16,
-                                                                                fontFamily:
-                                                                                    'Poppins',
+                                                                                fontSize: 16,
+                                                                                fontFamily: 'Poppins',
                                                                               ),
                                                                             ),
 
-                                                                            SizedBox(
-                                                                              height:
-                                                                                  4,
-                                                                            ),
+                                                                            SizedBox(height: 4),
                                                                             Row(
                                                                               crossAxisAlignment:
                                                                                   CrossAxisAlignment.center,
@@ -2971,25 +2713,16 @@ class _ListpromoState extends State<Listpromo> {
                                                                                       title: Text(
                                                                                         'Data Berhasil DiHapus',
                                                                                       ),
-                                                                                    ).show(
-                                                                                      context,
-                                                                                    );
+                                                                                    ).show(context);
                                                                                   },
-                                                                                  child: Text(
-                                                                                    'Yes',
-                                                                                  ),
+                                                                                  child: Text('Yes'),
                                                                                 ),
-                                                                                SizedBox(
-                                                                                  width:
-                                                                                      20,
-                                                                                ),
+                                                                                SizedBox(width: 20),
                                                                                 ElevatedButton(
                                                                                   onPressed: () {
                                                                                     Get.back();
                                                                                   },
-                                                                                  child: Text(
-                                                                                    'No',
-                                                                                  ),
+                                                                                  child: Text('No'),
                                                                                 ),
                                                                               ],
                                                                             ),
@@ -3006,10 +2739,231 @@ class _ListpromoState extends State<Listpromo> {
                                                       },
                                                       child: Text(
                                                         'Delete',
-                                                        style: TextStyle(
-                                                          fontSize: 25,
-                                                          fontFamily: 'Poppins',
-                                                        ),
+                                                        style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
+                                                      ),
+                                                    ),
+                                                    SizedBox(width: 10),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                        ),
+                      if (_isFourthContainerOnTop)
+                        Container(
+                          width: 900,
+                          height: 400,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.all(Radius.circular(20)),
+                            color: Colors.white,
+                          ),
+                          child:
+                              datapromobonusitem.isEmpty
+                                  ? Center(child: Text('Data Promo Bonus Item Tidak Ada'))
+                                  : Obx(
+                                    () => ListView.builder(
+                                      padding: EdgeInsets.zero,
+                                      itemCount: datapromobonusitem.length,
+                                      itemBuilder: (context, index) {
+                                        var item = datapromobonusitem[index];
+                                        return Container(
+                                          margin: EdgeInsets.all(10),
+                                          decoration: BoxDecoration(
+                                            border: Border.all(width: 1),
+                                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                                          ),
+                                          child: Container(
+                                            width: 400,
+                                            padding: EdgeInsets.only(left: 10),
+                                            child: Column(
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    Container(
+                                                      child: Text(
+                                                        item['kode_promo'],
+                                                        style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
+                                                      ),
+                                                    ),
+                                                    SizedBox(width: 10),
+                                                    Container(
+                                                      child: Text(
+                                                        item['nama_promo'],
+                                                        style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    Container(
+                                                      width: 120,
+                                                      child: Text(
+                                                        'Nama Paket',
+                                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
+                                                      ),
+                                                    ),
+                                                    SizedBox(width: 1),
+                                                    Container(
+                                                      child: Text(
+                                                        ':',
+                                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
+                                                      ),
+                                                    ),
+                                                    SizedBox(width: 5),
+                                                    Container(
+                                                      child: Text(
+                                                        item['nama_paket_msg'].toString(),
+                                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    Container(
+                                                      width: 120,
+                                                      child: Text(
+                                                        'Bonus Item',
+                                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
+                                                      ),
+                                                    ),
+                                                    SizedBox(width: 1),
+                                                    Container(
+                                                      child: Text(
+                                                        ':',
+                                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
+                                                      ),
+                                                    ),
+                                                    SizedBox(width: 5),
+                                                    Container(
+                                                      child: Text(
+                                                        item['nama_fnb'].toString(),
+                                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
+                                                      ),
+                                                    ),
+                                                    SizedBox(width: 10),
+                                                    Container(
+                                                      child: Text(
+                                                        item['qty'].toString(),
+                                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
+                                                      ),
+                                                    ),
+                                                    SizedBox(width: 10),
+                                                    Container(
+                                                      child: Text(
+                                                        'Pcs',
+                                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  mainAxisAlignment: MainAxisAlignment.end,
+                                                  children: [
+                                                    ElevatedButton(
+                                                      onPressed: () {
+                                                        controller_edit_nama_promo_bonus_item.text =
+                                                            item['nama_promo'].toString();
+                                                        dropdownnamapaketbonusitem =
+                                                            item['id_paket_msg'].toString();
+                                                        selecteditem = item['id_fnb'].toString();
+                                                        controller_edit_qty_bonus_item.text =
+                                                            item['qty'].toString();
+                                                        isibuttoneditpromobonusitem(
+                                                          item['kode_promo'].toString(),
+                                                          item['detail_kode_promo'].toString(),
+                                                        );
+                                                      },
+                                                      child: Text(
+                                                        'Edit',
+                                                        style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
+                                                      ),
+                                                    ),
+                                                    SizedBox(width: 10),
+                                                    ElevatedButton(
+                                                      onPressed: () {
+                                                        Get.dialog(
+                                                          StatefulBuilder(
+                                                            builder: (context, setState) {
+                                                              return AlertDialog(
+                                                                actions: [
+                                                                  Center(
+                                                                    child: Container(
+                                                                      margin: EdgeInsets.only(top: 20),
+                                                                      height: 100,
+                                                                      width: 250,
+                                                                      child: Center(
+                                                                        child: Column(
+                                                                          crossAxisAlignment:
+                                                                              CrossAxisAlignment.center,
+                                                                          mainAxisAlignment:
+                                                                              MainAxisAlignment.center,
+                                                                          children: [
+                                                                            Text(
+                                                                              '${item['nama_promo']}',
+                                                                              style: TextStyle(
+                                                                                fontSize: 16,
+                                                                                fontFamily: 'Poppins',
+                                                                              ),
+                                                                            ),
+                                                                            Text(
+                                                                              'Yakin ingin delete ?',
+                                                                              style: TextStyle(
+                                                                                fontSize: 16,
+                                                                                fontFamily: 'Poppins',
+                                                                              ),
+                                                                            ),
+
+                                                                            SizedBox(height: 4),
+                                                                            Row(
+                                                                              crossAxisAlignment:
+                                                                                  CrossAxisAlignment.center,
+                                                                              mainAxisAlignment:
+                                                                                  MainAxisAlignment.center,
+                                                                              children: [
+                                                                                ElevatedButton(
+                                                                                  onPressed: () {
+                                                                                    deletepromobonusitem(
+                                                                                      item['kode_promo'],
+                                                                                    );
+                                                                                    refreshDataPromoBonusItem();
+                                                                                    Get.back();
+                                                                                    CherryToast.success(
+                                                                                      title: Text(
+                                                                                        'Data Berhasil DiHapus',
+                                                                                      ),
+                                                                                    ).show(context);
+                                                                                  },
+                                                                                  child: Text('Yes'),
+                                                                                ),
+                                                                                SizedBox(width: 20),
+                                                                                ElevatedButton(
+                                                                                  onPressed: () {
+                                                                                    Get.back();
+                                                                                  },
+                                                                                  child: Text('No'),
+                                                                                ),
+                                                                              ],
+                                                                            ),
+                                                                          ],
+                                                                        ),
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              );
+                                                            },
+                                                          ),
+                                                        );
+                                                      },
+                                                      child: Text(
+                                                        'Delete',
+                                                        style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
                                                       ),
                                                     ),
                                                     SizedBox(width: 10),
@@ -3050,38 +3004,26 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
   TextEditingController textSearchHappyHour = TextEditingController();
   TextEditingController textsearchkunjungan = TextEditingController();
   TextEditingController textsearchtahunan = TextEditingController();
+  TextEditingController textsearchbonusitem = TextEditingController();
 
-  TextEditingController controller_edit_nama_promo_happyhour =
-      TextEditingController();
-  TextEditingController controller_edit_jam_mulai_happyhour =
-      TextEditingController();
-  TextEditingController controller_edit_jam_selesai_happyhour =
-      TextEditingController();
-  TextEditingController controller_edit_menit_mulai_happyhour =
-      TextEditingController();
-  TextEditingController controller_edit_menit_selesai_happyhour =
-      TextEditingController();
-  TextEditingController controller_edit_disc_happyhour =
-      TextEditingController();
+  TextEditingController controller_edit_nama_promo_happyhour = TextEditingController();
+  TextEditingController controller_edit_jam_mulai_happyhour = TextEditingController();
+  TextEditingController controller_edit_jam_selesai_happyhour = TextEditingController();
+  TextEditingController controller_edit_menit_mulai_happyhour = TextEditingController();
+  TextEditingController controller_edit_menit_selesai_happyhour = TextEditingController();
+  TextEditingController controller_edit_disc_happyhour = TextEditingController();
 
-  TextEditingController controller_edit_nama_promo_kunjungan =
-      TextEditingController();
-  TextEditingController controller_edit_kode_promo_kunjungan =
-      TextEditingController();
-  TextEditingController controller_edit_limit_promo_kunjungan =
-      TextEditingController();
-  TextEditingController controller_edit_harga_promo_kunjungan =
-      TextEditingController();
+  TextEditingController controller_edit_nama_promo_kunjungan = TextEditingController();
+  TextEditingController controller_edit_kode_promo_kunjungan = TextEditingController();
+  TextEditingController controller_edit_limit_promo_kunjungan = TextEditingController();
+  TextEditingController controller_edit_harga_promo_kunjungan = TextEditingController();
   TextEditingController controller_edit_diskon_paket = TextEditingController();
   TextEditingController controller_edit_hargasatuan = TextEditingController();
   TextEditingController controller_edit_limit_promo = TextEditingController();
 
-  TextEditingController controller_edit_nama_promo_tahunan =
-      TextEditingController();
-  TextEditingController controller_edit_jangka_waktu_promo_tahunan =
-      TextEditingController();
-  TextEditingController controller_edit_harga_promo_tahunan =
-      TextEditingController();
+  TextEditingController controller_edit_nama_promo_tahunan = TextEditingController();
+  TextEditingController controller_edit_jangka_waktu_promo_tahunan = TextEditingController();
+  TextEditingController controller_edit_harga_promo_tahunan = TextEditingController();
 
   List<Map<String, dynamic>> _listNamaPaket = [];
   String? dropdownNamaPaket;
@@ -3123,18 +3065,12 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
   int valuevip = 0;
   int valuemember = 0;
 
-  NumberFormat currencyFormat = NumberFormat.currency(
-    locale: 'id_ID',
-    symbol: 'Rp. ',
-    decimalDigits: 0,
-  );
+  NumberFormat currencyFormat = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp. ', decimalDigits: 0);
 
   var dio = Dio();
 
-  RxList<Map<String, dynamic>> datapromohappyhour =
-      <Map<String, dynamic>>[].obs;
-  RxList<Map<String, dynamic>> datapromokunjungan =
-      <Map<String, dynamic>>[].obs;
+  RxList<Map<String, dynamic>> datapromohappyhour = <Map<String, dynamic>>[].obs;
+  RxList<Map<String, dynamic>> datapromokunjungan = <Map<String, dynamic>>[].obs;
   RxList<Map<String, dynamic>> datapromotahunan = <Map<String, dynamic>>[].obs;
 
   @override
@@ -3188,10 +3124,7 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
     });
   }
 
-  void _toggleButtonColors({
-    required bool isFirstButtonPressed,
-    isThirdButtonPressed,
-  }) {
+  void _toggleButtonColors({required bool isFirstButtonPressed, isThirdButtonPressed}) {
     setState(() {
       if (isFirstButtonPressed) {
         _FirstbuttonColor = Colors.blue;
@@ -3214,13 +3147,11 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
       textsearchtahunan.clear();
       textsearchkunjungan.clear();
       textinputan = textSearchHappyHour;
-    } else if (_isSecondContainerOnTop == true &&
-        _isThirdContainerOntop == false) {
+    } else if (_isSecondContainerOnTop == true && _isThirdContainerOntop == false) {
       textSearchHappyHour.clear();
       textsearchtahunan.clear();
       textinputan = textsearchkunjungan;
-    } else if (_isSecondContainerOnTop == false &&
-        _isThirdContainerOntop == true) {
+    } else if (_isSecondContainerOnTop == false && _isThirdContainerOntop == true) {
       textSearchHappyHour.clear();
       textsearchkunjungan.clear();
       textinputan = textsearchtahunan;
@@ -3228,30 +3159,26 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
   }
 
   void selectSearchPromo() {
-    if (_isSecondContainerOnTop == false && _isThirdContainerOntop == false) {
+    if (_isSecondContainerOnTop == false &&
+        _isThirdContainerOntop == false &&
+        _isFourthContainerOnTop == false) {
       searchpromohappyhour();
     } else if (_isSecondContainerOnTop == true &&
-        _isThirdContainerOntop == false) {
+        _isThirdContainerOntop == false &&
+        _isFourthContainerOnTop == false) {
       searchpromokunjungan();
-    } else if (_isSecondContainerOnTop == false &&
-        _isThirdContainerOntop == true) {
+    } else if (_isSecondContainerOnTop == false && _isThirdContainerOntop == true) {
       searchpromotahunan();
-    }
+    } else {}
   }
 
   void calculateHargaPromo() {
     hargaPromo.value =
-        hargaPromo.value =
-            (hargaSatuan.value * limitKunjungan.value) *
-            (1 - (diskonPaket.value / 100));
+        hargaPromo.value = (hargaSatuan.value * limitKunjungan.value) * (1 - (diskonPaket.value / 100));
     controller_edit_harga_promo_kunjungan.text = hargaPromo.value.toString();
   }
 
-  final currencyFormatter = NumberFormat.currency(
-    locale: 'id_ID',
-    symbol: 'Rp ',
-    decimalDigits: 0,
-  );
+  final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
   void isibuttoneditpromotahunan(kode_promo, detail_kode_promo) {
     Get.dialog(
@@ -3283,28 +3210,16 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   SizedBox(height: 15),
-                                  Text(
-                                    'Nama Promo :',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 18,
-                                    ),
-                                  ),
+                                  Text('Nama Promo :', style: TextStyle(fontFamily: 'Poppins', fontSize: 18)),
                                   SizedBox(height: 15),
                                   Text(
                                     'Jangka Waktu :',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 18,
-                                    ),
+                                    style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
                                   ),
                                   SizedBox(height: 15),
                                   Text(
                                     'Harga Promo :',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 18,
-                                    ),
+                                    style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
                                   ),
                                 ],
                               ),
@@ -3331,19 +3246,12 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                     color: Colors.grey[300],
                                   ),
                                   child: TextField(
-                                    controller:
-                                        controller_edit_nama_promo_tahunan,
+                                    controller: controller_edit_nama_promo_tahunan,
                                     decoration: InputDecoration(
                                       border: InputBorder.none,
-                                      contentPadding: EdgeInsets.symmetric(
-                                        vertical: 13.5,
-                                        horizontal: 10,
-                                      ),
+                                      contentPadding: EdgeInsets.symmetric(vertical: 13.5, horizontal: 10),
                                     ),
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontFamily: 'Poppins',
-                                    ),
+                                    style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                   ),
                                 ),
                                 SizedBox(height: 12),
@@ -3358,8 +3266,7 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                         color: Colors.grey[300],
                                       ),
                                       child: TextField(
-                                        controller:
-                                            controller_edit_jangka_waktu_promo_tahunan,
+                                        controller: controller_edit_jangka_waktu_promo_tahunan,
                                         decoration: InputDecoration(
                                           border: InputBorder.none,
                                           contentPadding: EdgeInsets.symmetric(
@@ -3367,20 +3274,14 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                             horizontal: 10,
                                           ),
                                         ),
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontFamily: 'Poppins',
-                                        ),
+                                        style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                       ),
                                     ),
                                     Padding(
                                       padding: EdgeInsets.only(left: 10),
                                       child: Text(
                                         'Tahun',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontFamily: 'Poppins',
-                                        ),
+                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                       ),
                                     ),
                                   ],
@@ -3395,19 +3296,12 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                     color: Colors.grey[300],
                                   ),
                                   child: TextField(
-                                    controller:
-                                        controller_edit_harga_promo_tahunan,
+                                    controller: controller_edit_harga_promo_tahunan,
                                     decoration: InputDecoration(
                                       border: InputBorder.none,
-                                      contentPadding: EdgeInsets.symmetric(
-                                        vertical: 13.5,
-                                        horizontal: 10,
-                                      ),
+                                      contentPadding: EdgeInsets.symmetric(vertical: 13.5, horizontal: 10),
                                     ),
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontFamily: 'Poppins',
-                                    ),
+                                    style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                   ),
                                 ),
                                 SizedBox(height: 20),
@@ -3417,19 +3311,11 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                     height: 35,
                                     width: 100,
                                     child: TextButton(
-                                      style: TextButton.styleFrom(
-                                        backgroundColor: Colors.green,
-                                      ),
+                                      style: TextButton.styleFrom(backgroundColor: Colors.green),
                                       onPressed: () {
-                                        updatedatapromotahunan(
-                                          kode_promo,
-                                          detail_kode_promo,
-                                        );
+                                        updatedatapromotahunan(kode_promo, detail_kode_promo);
                                         datapromohappyhour.isEmpty
-                                            ? Center(
-                                              child:
-                                                  CircularProgressIndicator(),
-                                            )
+                                            ? Center(child: CircularProgressIndicator())
                                             : refreshDataPromoTahunan();
                                         Get.back();
                                         CherryToast.success(
@@ -3494,36 +3380,21 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   SizedBox(height: 15),
-                                  Text(
-                                    'Nama Paket :',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 18,
-                                    ),
-                                  ),
+                                  Text('Nama Paket :', style: TextStyle(fontFamily: 'Poppins', fontSize: 18)),
                                   SizedBox(height: 15),
                                   Text(
                                     'Limit Promo :',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 18,
-                                    ),
+                                    style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
                                   ),
                                   SizedBox(height: 15),
                                   Text(
                                     'Limit Kunjungan :',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 18,
-                                    ),
+                                    style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
                                   ),
                                   SizedBox(height: 15),
                                   Text(
                                     'Harga Promo :',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 18,
-                                    ),
+                                    style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
                                   ),
                                 ],
                               ),
@@ -3550,20 +3421,13 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                     color: Colors.grey[300],
                                   ),
                                   child: TextField(
-                                    controller:
-                                        controller_edit_nama_promo_kunjungan,
+                                    controller: controller_edit_nama_promo_kunjungan,
                                     readOnly: true,
                                     decoration: InputDecoration(
                                       border: InputBorder.none,
-                                      contentPadding: EdgeInsets.symmetric(
-                                        vertical: 13.5,
-                                        horizontal: 10,
-                                      ),
+                                      contentPadding: EdgeInsets.symmetric(vertical: 13.5, horizontal: 10),
                                     ),
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontFamily: 'Poppins',
-                                    ),
+                                    style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                   ),
                                 ),
                                 SizedBox(height: 12),
@@ -3586,20 +3450,14 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                             horizontal: 10,
                                           ),
                                         ),
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontFamily: 'Poppins',
-                                        ),
+                                        style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                       ),
                                     ),
                                     Padding(
                                       padding: EdgeInsets.only(left: 10),
                                       child: Text(
                                         'Tahun',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontFamily: 'Poppins',
-                                        ),
+                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                       ),
                                     ),
                                   ],
@@ -3616,8 +3474,7 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                         color: Colors.grey[300],
                                       ),
                                       child: TextField(
-                                        controller:
-                                            controller_edit_limit_promo_kunjungan,
+                                        controller: controller_edit_limit_promo_kunjungan,
                                         decoration: InputDecoration(
                                           border: InputBorder.none,
                                           contentPadding: EdgeInsets.symmetric(
@@ -3626,24 +3483,17 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                           ),
                                         ),
                                         onChanged: (value) {
-                                          limitKunjungan.value =
-                                              int.tryParse(value) ?? 1;
+                                          limitKunjungan.value = int.tryParse(value) ?? 1;
                                           calculateHargaPromo();
                                         },
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontFamily: 'Poppins',
-                                        ),
+                                        style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                       ),
                                     ),
                                     Padding(
                                       padding: EdgeInsets.only(left: 10),
                                       child: Text(
                                         'Discount :',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontFamily: 'Poppins',
-                                        ),
+                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                       ),
                                     ),
                                     Padding(
@@ -3653,43 +3503,29 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                         width: 70,
                                         height: 30,
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
+                                          borderRadius: BorderRadius.circular(10),
                                           color: Colors.grey[300],
                                         ),
                                         child: TextField(
-                                          controller:
-                                              controller_edit_diskon_paket,
+                                          controller: controller_edit_diskon_paket,
                                           decoration: InputDecoration(
                                             border: InputBorder.none,
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                  vertical: 13.5,
-                                                  horizontal: 10,
-                                                ),
+                                            contentPadding: EdgeInsets.symmetric(
+                                              vertical: 13.5,
+                                              horizontal: 10,
+                                            ),
                                           ),
                                           onChanged: (value) {
-                                            diskonPaket.value =
-                                                double.tryParse(value) ?? 0.0;
+                                            diskonPaket.value = double.tryParse(value) ?? 0.0;
                                             calculateHargaPromo();
                                           },
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontFamily: 'Poppins',
-                                          ),
+                                          style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                         ),
                                       ),
                                     ),
                                     Padding(
                                       padding: EdgeInsets.only(left: 10),
-                                      child: Text(
-                                        '%',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontFamily: 'Poppins',
-                                        ),
-                                      ),
+                                      child: Text('%', style: TextStyle(fontSize: 18, fontFamily: 'Poppins')),
                                     ),
                                   ],
                                 ),
@@ -3706,20 +3542,12 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                     () => TextField(
                                       decoration: InputDecoration(
                                         border: InputBorder.none,
-                                        contentPadding: EdgeInsets.symmetric(
-                                          vertical: 13.5,
-                                          horizontal: 10,
-                                        ),
+                                        contentPadding: EdgeInsets.symmetric(vertical: 13.5, horizontal: 10),
                                       ),
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontFamily: 'Poppins',
-                                      ),
+                                      style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                       readOnly: true,
                                       controller: TextEditingController(
-                                        text: currencyFormatter.format(
-                                          hargaPromo.value,
-                                        ), // Auto-update
+                                        text: currencyFormatter.format(hargaPromo.value), // Auto-update
                                       ),
                                     ),
                                   ),
@@ -3736,29 +3564,18 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                         height: 35,
                         width: 100,
                         child: TextButton(
-                          style: TextButton.styleFrom(
-                            backgroundColor: Colors.green,
-                          ),
+                          style: TextButton.styleFrom(backgroundColor: Colors.green),
                           onPressed: () {
-                            updatedatapromokunjungan(
-                              kode_promo,
-                              detail_kode_promo,
-                            );
+                            updatedatapromokunjungan(kode_promo, detail_kode_promo);
                             datapromohappyhour.isEmpty
                                 ? Center(child: CircularProgressIndicator())
                                 : refreshDataPromoKunjungan();
                             Get.back();
-                            CherryToast.success(
-                              title: Text('Data Berhasil DiUpdate'),
-                            ).show(context);
+                            CherryToast.success(title: Text('Data Berhasil DiUpdate')).show(context);
                           },
                           child: Text(
                             'Save',
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
+                            style: TextStyle(fontFamily: 'Poppins', fontSize: 14, color: Colors.white),
                           ),
                         ),
                       ),
@@ -3807,42 +3624,27 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                       SizedBox(height: 15),
                                       Text(
                                         'Nama Promo :',
-                                        style: TextStyle(
-                                          fontFamily: 'Poppins',
-                                          fontSize: 14,
-                                        ),
+                                        style: TextStyle(fontFamily: 'Poppins', fontSize: 14),
                                       ),
                                       SizedBox(height: 25),
                                       Text(
                                         'Discount Promo :',
-                                        style: TextStyle(
-                                          fontFamily: 'Poppins',
-                                          fontSize: 14,
-                                        ),
+                                        style: TextStyle(fontFamily: 'Poppins', fontSize: 14),
                                       ),
                                       SizedBox(height: 40),
                                       Text(
                                         'Hari Berlaku :',
-                                        style: TextStyle(
-                                          fontFamily: 'Poppins',
-                                          fontSize: 14,
-                                        ),
+                                        style: TextStyle(fontFamily: 'Poppins', fontSize: 14),
                                       ),
                                       SizedBox(height: 45),
                                       Text(
                                         'Jam Berlaku :',
-                                        style: TextStyle(
-                                          fontFamily: 'Poppins',
-                                          fontSize: 14,
-                                        ),
+                                        style: TextStyle(fontFamily: 'Poppins', fontSize: 14),
                                       ),
                                       SizedBox(height: 25),
                                       Text(
                                         'Berlaku Untuk :',
-                                        style: TextStyle(
-                                          fontFamily: 'Poppins',
-                                          fontSize: 14,
-                                        ),
+                                        style: TextStyle(fontFamily: 'Poppins', fontSize: 14),
                                       ),
                                     ],
                                   ),
@@ -3870,19 +3672,12 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                       color: Colors.grey[300],
                                     ),
                                     child: TextField(
-                                      controller:
-                                          controller_edit_nama_promo_happyhour,
+                                      controller: controller_edit_nama_promo_happyhour,
                                       decoration: InputDecoration(
                                         border: InputBorder.none,
-                                        contentPadding: EdgeInsets.symmetric(
-                                          vertical: 13.5,
-                                          horizontal: 10,
-                                        ),
+                                        contentPadding: EdgeInsets.symmetric(vertical: 13.5, horizontal: 10),
                                       ),
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontFamily: 'Poppins',
-                                      ),
+                                      style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                     ),
                                   ),
                                   SizedBox(height: 12),
@@ -3893,36 +3688,26 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                         width: 270,
                                         height: 30,
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
+                                          borderRadius: BorderRadius.circular(10),
                                           color: Colors.grey[300],
                                         ),
                                         child: TextField(
-                                          controller:
-                                              controller_edit_disc_happyhour,
+                                          controller: controller_edit_disc_happyhour,
                                           decoration: InputDecoration(
                                             border: InputBorder.none,
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                  vertical: 13.5,
-                                                  horizontal: 10,
-                                                ),
+                                            contentPadding: EdgeInsets.symmetric(
+                                              vertical: 13.5,
+                                              horizontal: 10,
+                                            ),
                                           ),
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontFamily: 'Poppins',
-                                          ),
+                                          style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                         ),
                                       ),
                                       Padding(
                                         padding: EdgeInsets.only(left: 10),
                                         child: Text(
                                           '% Dari Total Transaksi',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontFamily: 'Poppins',
-                                          ),
+                                          style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                         ),
                                       ),
                                     ],
@@ -3945,13 +3730,7 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                           },
                                         ),
                                       ),
-                                      Text(
-                                        'Senin',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontFamily: 'Poppins',
-                                        ),
-                                      ),
+                                      Text('Senin', style: TextStyle(fontSize: 14, fontFamily: 'Poppins')),
                                       Padding(
                                         padding: const EdgeInsets.only(left: 5),
                                         child: Center(
@@ -3959,8 +3738,7 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                             value: isSelasaChecked,
                                             onChanged: (bool? value) {
                                               setState(() {
-                                                isSelasaChecked =
-                                                    value ?? false;
+                                                isSelasaChecked = value ?? false;
                                               });
                                               if (isSelasaChecked == true) {
                                                 valueselasa = 1;
@@ -3971,13 +3749,7 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                           ),
                                         ),
                                       ),
-                                      Text(
-                                        'Selasa',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontFamily: 'Poppins',
-                                        ),
-                                      ),
+                                      Text('Selasa', style: TextStyle(fontSize: 14, fontFamily: 'Poppins')),
                                       Center(
                                         child: Checkbox(
                                           value: isRabuChecked,
@@ -3993,13 +3765,7 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                           },
                                         ),
                                       ),
-                                      Text(
-                                        'Rabu',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontFamily: 'Poppins',
-                                        ),
-                                      ),
+                                      Text('Rabu', style: TextStyle(fontSize: 14, fontFamily: 'Poppins')),
                                       Center(
                                         child: Checkbox(
                                           value: isKamisChecked,
@@ -4015,13 +3781,7 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                           },
                                         ),
                                       ),
-                                      Text(
-                                        'Kamis',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontFamily: 'Poppins',
-                                        ),
-                                      ),
+                                      Text('Kamis', style: TextStyle(fontSize: 14, fontFamily: 'Poppins')),
                                     ],
                                   ),
                                   Row(
@@ -4041,13 +3801,7 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                           },
                                         ),
                                       ),
-                                      Text(
-                                        'Jumat',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontFamily: 'Poppins',
-                                        ),
-                                      ),
+                                      Text('Jumat', style: TextStyle(fontSize: 14, fontFamily: 'Poppins')),
                                       Center(
                                         child: Checkbox(
                                           value: isSabtuChecked,
@@ -4063,13 +3817,7 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                           },
                                         ),
                                       ),
-                                      Text(
-                                        'Sabtu',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontFamily: 'Poppins',
-                                        ),
-                                      ),
+                                      Text('Sabtu', style: TextStyle(fontSize: 14, fontFamily: 'Poppins')),
                                       Center(
                                         child: Checkbox(
                                           value: isMingguChecked,
@@ -4085,13 +3833,7 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                           },
                                         ),
                                       ),
-                                      Text(
-                                        'Minggu',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontFamily: 'Poppins',
-                                        ),
-                                      ),
+                                      Text('Minggu', style: TextStyle(fontSize: 14, fontFamily: 'Poppins')),
                                     ],
                                   ),
                                   Row(
@@ -4101,39 +3843,26 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                         width: 50,
                                         height: 30,
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
+                                          borderRadius: BorderRadius.circular(10),
                                           color: Colors.grey[300],
                                         ),
                                         child: TextField(
-                                          controller:
-                                              controller_edit_jam_mulai_happyhour,
+                                          controller: controller_edit_jam_mulai_happyhour,
                                           decoration: InputDecoration(
                                             border: InputBorder.none,
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                  vertical: 13.5,
-                                                  horizontal: 10,
-                                                ),
+                                            contentPadding: EdgeInsets.symmetric(
+                                              vertical: 13.5,
+                                              horizontal: 10,
+                                            ),
                                           ),
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontFamily: 'Poppins',
-                                          ),
+                                          style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                         ),
                                       ),
                                       Padding(
-                                        padding: EdgeInsets.only(
-                                          left: 5,
-                                          right: 5,
-                                        ),
+                                        padding: EdgeInsets.only(left: 5, right: 5),
                                         child: Text(
                                           ':',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontFamily: 'Poppins',
-                                          ),
+                                          style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                         ),
                                       ),
                                       Container(
@@ -4141,39 +3870,26 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                         width: 50,
                                         height: 30,
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
+                                          borderRadius: BorderRadius.circular(10),
                                           color: Colors.grey[300],
                                         ),
                                         child: TextField(
-                                          controller:
-                                              controller_edit_menit_mulai_happyhour,
+                                          controller: controller_edit_menit_mulai_happyhour,
                                           decoration: InputDecoration(
                                             border: InputBorder.none,
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                  vertical: 13.5,
-                                                  horizontal: 10,
-                                                ),
+                                            contentPadding: EdgeInsets.symmetric(
+                                              vertical: 13.5,
+                                              horizontal: 10,
+                                            ),
                                           ),
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontFamily: 'Poppins',
-                                          ),
+                                          style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                         ),
                                       ),
                                       Padding(
-                                        padding: EdgeInsets.only(
-                                          left: 10,
-                                          right: 10,
-                                        ),
+                                        padding: EdgeInsets.only(left: 10, right: 10),
                                         child: Text(
                                           'Sampai',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontFamily: 'Poppins',
-                                          ),
+                                          style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                         ),
                                       ),
                                       Container(
@@ -4181,39 +3897,26 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                         width: 50,
                                         height: 30,
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
+                                          borderRadius: BorderRadius.circular(10),
                                           color: Colors.grey[300],
                                         ),
                                         child: TextField(
-                                          controller:
-                                              controller_edit_jam_selesai_happyhour,
+                                          controller: controller_edit_jam_selesai_happyhour,
                                           decoration: InputDecoration(
                                             border: InputBorder.none,
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                  vertical: 13.5,
-                                                  horizontal: 10,
-                                                ),
+                                            contentPadding: EdgeInsets.symmetric(
+                                              vertical: 13.5,
+                                              horizontal: 10,
+                                            ),
                                           ),
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontFamily: 'Poppins',
-                                          ),
+                                          style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                         ),
                                       ),
                                       Padding(
-                                        padding: EdgeInsets.only(
-                                          left: 5,
-                                          right: 5,
-                                        ),
+                                        padding: EdgeInsets.only(left: 5, right: 5),
                                         child: Text(
                                           ':',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontFamily: 'Poppins',
-                                          ),
+                                          style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                         ),
                                       ),
                                       Container(
@@ -4221,26 +3924,19 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                         width: 50,
                                         height: 30,
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
+                                          borderRadius: BorderRadius.circular(10),
                                           color: Colors.grey[300],
                                         ),
                                         child: TextField(
-                                          controller:
-                                              controller_edit_menit_selesai_happyhour,
+                                          controller: controller_edit_menit_selesai_happyhour,
                                           decoration: InputDecoration(
                                             border: InputBorder.none,
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                  vertical: 13.5,
-                                                  horizontal: 10,
-                                                ),
+                                            contentPadding: EdgeInsets.symmetric(
+                                              vertical: 13.5,
+                                              horizontal: 10,
+                                            ),
                                           ),
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontFamily: 'Poppins',
-                                          ),
+                                          style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                         ),
                                       ),
                                     ],
@@ -4263,17 +3959,9 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                           },
                                         ),
                                       ),
-                                      Text(
-                                        'Umum',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontFamily: 'Poppins',
-                                        ),
-                                      ),
+                                      Text('Umum', style: TextStyle(fontSize: 14, fontFamily: 'Poppins')),
                                       Padding(
-                                        padding: const EdgeInsets.only(
-                                          left: 30,
-                                        ),
+                                        padding: const EdgeInsets.only(left: 30),
                                         child: Checkbox(
                                           value: isMemberChecked,
                                           onChanged: (bool? value) {
@@ -4288,17 +3976,9 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                           },
                                         ),
                                       ),
-                                      Text(
-                                        'Member',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontFamily: 'Poppins',
-                                        ),
-                                      ),
+                                      Text('Member', style: TextStyle(fontSize: 14, fontFamily: 'Poppins')),
                                       Padding(
-                                        padding: const EdgeInsets.only(
-                                          left: 30,
-                                        ),
+                                        padding: const EdgeInsets.only(left: 30),
                                         child: Center(
                                           child: Checkbox(
                                             value: isVIPChecked,
@@ -4315,13 +3995,7 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                           ),
                                         ),
                                       ),
-                                      Text(
-                                        'VIP',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontFamily: 'Poppins',
-                                        ),
-                                      ),
+                                      Text('VIP', style: TextStyle(fontSize: 14, fontFamily: 'Poppins')),
                                     ],
                                   ),
                                   Center(
@@ -4330,25 +4004,15 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                       height: 35,
                                       width: 100,
                                       child: TextButton(
-                                        style: TextButton.styleFrom(
-                                          backgroundColor: Colors.green,
-                                        ),
+                                        style: TextButton.styleFrom(backgroundColor: Colors.green),
                                         onPressed: () {
-                                          updatepromohappyhour(
-                                            kode_promo,
-                                            detail_kode_promo,
-                                          );
+                                          updatepromohappyhour(kode_promo, detail_kode_promo);
                                           datapromohappyhour.isEmpty
-                                              ? Center(
-                                                child:
-                                                    CircularProgressIndicator(),
-                                              )
+                                              ? Center(child: CircularProgressIndicator())
                                               : refreshDataHappyHour();
                                           Get.back();
                                           CherryToast.success(
-                                            title: Text(
-                                              'Data Berhasil DiUpdate',
-                                            ),
+                                            title: Text('Data Berhasil DiUpdate'),
                                           ).show(context);
                                         },
                                         child: Text(
@@ -4381,9 +4045,7 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
 
   Future<void> getdatahappyhour() async {
     try {
-      var response = await dio.get(
-        '${myIpAddr()}/listpromo/getdatapromohappyhour',
-      );
+      var response = await dio.get('${myIpAddr()}/listpromo/getdatapromohappyhour');
       List<Map<String, dynamic>> fetcheddata =
           (response.data as List).map((item) {
             return {
@@ -4458,9 +4120,7 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
 
   Future<void> getdatapromokunjungan() async {
     try {
-      var response = await dio.get(
-        '${myIpAddr()}/listpromo/getdatapromokunjungan',
-      );
+      var response = await dio.get('${myIpAddr()}/listpromo/getdatapromokunjungan');
       List<Map<String, dynamic>> fetcheddata =
           (response.data as List).map((item) {
             return {
@@ -4519,9 +4179,7 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
 
   Future<void> getdatapromotahunan() async {
     try {
-      var response = await dio.get(
-        '${myIpAddr()}/listpromo/getdatapromotahunan',
-      );
+      var response = await dio.get('${myIpAddr()}/listpromo/getdatapromotahunan');
       List<Map<String, dynamic>> fetcheddata =
           (response.data as List).map((item) {
             return {
@@ -4704,11 +4362,7 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                 padding: EdgeInsets.only(top: 20),
                 child: Text(
                   'List Promo',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontFamily: 'Poppins', fontSize: 30, fontWeight: FontWeight.bold),
                 ),
               ),
               Container(
@@ -4729,10 +4383,7 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                             selectSearchPromo();
                           });
                         },
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(),
-                          labelText: 'Input Promo',
-                        ),
+                        decoration: InputDecoration(border: OutlineInputBorder(), labelText: 'Input Promo'),
                       ),
                     ),
                   ],
@@ -4751,26 +4402,15 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                         }
                         selectInputPromo();
                         _moveFirstContainerToTop();
-                        _toggleButtonColors(
-                          isFirstButtonPressed: true,
-                          isThirdButtonPressed: false,
-                        );
+                        _toggleButtonColors(isFirstButtonPressed: true, isThirdButtonPressed: false);
                       },
                       style: ElevatedButton.styleFrom(
-                        foregroundColor:
-                            _FirstbuttonColor == Colors.blue
-                                ? Colors.white
-                                : Colors.black,
+                        foregroundColor: _FirstbuttonColor == Colors.blue ? Colors.white : Colors.black,
                         backgroundColor: _FirstbuttonColor,
                         minimumSize: Size(150, 45),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero,
-                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
                       ),
-                      child: Text(
-                        'Promo Happy Hour',
-                        style: TextStyle(color: Colors.black),
-                      ),
+                      child: Text('Promo Happy Hour', style: TextStyle(color: Colors.black)),
                     ),
                   ),
                   Padding(
@@ -4782,26 +4422,15 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                         }
                         selectInputPromo();
                         _moveSecondContainerToTop();
-                        _toggleButtonColors(
-                          isFirstButtonPressed: false,
-                          isThirdButtonPressed: false,
-                        );
+                        _toggleButtonColors(isFirstButtonPressed: false, isThirdButtonPressed: false);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _SecondbuttonColor,
-                        foregroundColor:
-                            _FirstbuttonColor == Colors.blue
-                                ? Colors.white
-                                : Colors.black,
+                        foregroundColor: _FirstbuttonColor == Colors.blue ? Colors.white : Colors.black,
                         minimumSize: Size(150, 45),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero,
-                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
                       ),
-                      child: Text(
-                        'Promo Paketan',
-                        style: TextStyle(color: Colors.black),
-                      ),
+                      child: Text('Promo Paketan', style: TextStyle(color: Colors.black)),
                     ),
                   ),
                   Padding(
@@ -4813,26 +4442,15 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                         }
                         selectInputPromo();
                         _moveThirdContainerToTop();
-                        _toggleButtonColors(
-                          isFirstButtonPressed: false,
-                          isThirdButtonPressed: true,
-                        );
+                        _toggleButtonColors(isFirstButtonPressed: false, isThirdButtonPressed: true);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _ThirdbuttonColor,
-                        foregroundColor:
-                            _FirstbuttonColor == Colors.blue
-                                ? Colors.white
-                                : Colors.black,
+                        foregroundColor: _FirstbuttonColor == Colors.blue ? Colors.white : Colors.black,
                         minimumSize: Size(150, 45),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero,
-                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
                       ),
-                      child: Text(
-                        'Promo Tahunan',
-                        style: TextStyle(color: Colors.black),
-                      ),
+                      child: Text('Promo Tahunan', style: TextStyle(color: Colors.black)),
                     ),
                   ),
                 ],
@@ -4849,9 +4467,7 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                       ),
                       child:
                           datapromohappyhour.isEmpty
-                              ? Center(
-                                child: Text('Data Promo Happy Hour Tidak Ada'),
-                              )
+                              ? Center(child: Text('Data Promo Happy Hour Tidak Ada'))
                               : Obx(
                                 () => ListView.builder(
                                   padding: EdgeInsets.zero,
@@ -4862,37 +4478,28 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                       margin: EdgeInsets.all(10),
                                       decoration: BoxDecoration(
                                         border: Border.all(width: 1),
-                                        borderRadius: BorderRadius.all(
-                                          Radius.circular(10),
-                                        ),
+                                        borderRadius: BorderRadius.all(Radius.circular(10)),
                                       ),
                                       child: Container(
                                         width: 400,
                                         height: 185,
                                         padding: EdgeInsets.only(left: 10),
                                         child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.start,
+                                          mainAxisAlignment: MainAxisAlignment.start,
                                           children: [
                                             Row(
                                               children: [
                                                 Container(
                                                   child: Text(
                                                     item['kode_promo'],
-                                                    style: TextStyle(
-                                                      fontSize: 20,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 SizedBox(width: 10),
                                                 Container(
                                                   child: Text(
                                                     item['nama_promo'],
-                                                    style: TextStyle(
-                                                      fontSize: 20,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                               ],
@@ -4902,30 +4509,21 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                                 Container(
                                                   child: Text(
                                                     'Diskon :',
-                                                    style: TextStyle(
-                                                      fontSize: 14,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 SizedBox(width: 10),
                                                 Container(
                                                   child: Text(
                                                     item['disc'].toString(),
-                                                    style: TextStyle(
-                                                      fontSize: 14,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 SizedBox(width: 4),
                                                 Container(
                                                   child: Text(
                                                     '%',
-                                                    style: TextStyle(
-                                                      fontSize: 14,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                               ],
@@ -4934,38 +4532,26 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                               alignment: Alignment.centerLeft,
                                               child: Text(
                                                 'Hari Berlaku :',
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  fontFamily: 'Poppins',
-                                                ),
+                                                style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                               ),
                                             ),
                                             Row(
                                               children: [
                                                 Center(
                                                   child: Checkbox(
-                                                    value:
-                                                        item['valuesenin'] == 1,
+                                                    value: item['valuesenin'] == 1,
                                                     onChanged: (bool? value) {},
                                                   ),
                                                 ),
                                                 Text(
                                                   'Senin',
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    fontFamily: 'Poppins',
-                                                  ),
+                                                  style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                                 ),
                                                 Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                        left: 5,
-                                                      ),
+                                                  padding: const EdgeInsets.only(left: 5),
                                                   child: Center(
                                                     child: Checkbox(
-                                                      value:
-                                                          item['valueselasa'] ==
-                                                          1,
+                                                      value: item['valueselasa'] == 1,
                                                       onChanged: (bool? value) {
                                                         setState(() {});
                                                       },
@@ -4974,81 +4560,57 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                                 ),
                                                 Text(
                                                   'Selasa',
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    fontFamily: 'Poppins',
-                                                  ),
+                                                  style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                                 ),
                                                 Center(
                                                   child: Checkbox(
-                                                    value:
-                                                        item['valuerabu'] == 1,
+                                                    value: item['valuerabu'] == 1,
                                                     onChanged: (bool? value) {},
                                                   ),
                                                 ),
                                                 Text(
                                                   'Rabu',
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    fontFamily: 'Poppins',
-                                                  ),
+                                                  style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                                 ),
                                                 Center(
                                                   child: Checkbox(
-                                                    value:
-                                                        item['valuekamis'] == 1,
+                                                    value: item['valuekamis'] == 1,
                                                     onChanged: (bool? value) {},
                                                   ),
                                                 ),
                                                 Text(
                                                   'Kamis',
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    fontFamily: 'Poppins',
-                                                  ),
+                                                  style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                                 ),
                                                 Center(
                                                   child: Checkbox(
-                                                    value:
-                                                        item['valuejumat'] == 1,
+                                                    value: item['valuejumat'] == 1,
                                                     onChanged: (bool? value) {},
                                                   ),
                                                 ),
                                                 Text(
                                                   'Jumat',
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    fontFamily: 'Poppins',
-                                                  ),
+                                                  style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                                 ),
                                                 Center(
                                                   child: Checkbox(
-                                                    value:
-                                                        item['valuesabtu'] == 1,
+                                                    value: item['valuesabtu'] == 1,
                                                     onChanged: (bool? value) {},
                                                   ),
                                                 ),
                                                 Text(
                                                   'Sabtu',
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    fontFamily: 'Poppins',
-                                                  ),
+                                                  style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                                 ),
                                                 Center(
                                                   child: Checkbox(
-                                                    value:
-                                                        item['valueminggu'] ==
-                                                        1,
+                                                    value: item['valueminggu'] == 1,
                                                     onChanged: (bool? value) {},
                                                   ),
                                                 ),
                                                 Text(
                                                   'Minggu',
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    fontFamily: 'Poppins',
-                                                  ),
+                                                  style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                                 ),
                                               ],
                                             ),
@@ -5058,39 +4620,25 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                                 Container(
                                                   child: Text(
                                                     'Jam Berlaku : ',
-                                                    style: TextStyle(
-                                                      fontSize: 14,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 Container(
                                                   child: Text(
-                                                    item['jam_mulai']
-                                                        .toString(),
-                                                    style: TextStyle(
-                                                      fontSize: 14,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    item['jam_mulai'].toString(),
+                                                    style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 Container(
                                                   child: Text(
                                                     ' - ',
-                                                    style: TextStyle(
-                                                      fontSize: 14,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 Container(
                                                   child: Text(
-                                                    item['jam_selesai']
-                                                        .toString(),
-                                                    style: TextStyle(
-                                                      fontSize: 14,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    item['jam_selesai'].toString(),
+                                                    style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                               ],
@@ -5100,141 +4648,81 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                                 Container(
                                                   child: Text(
                                                     'Berlaku Untuk : ',
-                                                    style: TextStyle(
-                                                      fontSize: 14,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 Center(
                                                   child: Checkbox(
-                                                    value:
-                                                        item['valueumum'] == 1,
+                                                    value: item['valueumum'] == 1,
                                                     onChanged: (bool? value) {},
                                                   ),
                                                 ),
                                                 Text(
                                                   'Umum',
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    fontFamily: 'Poppins',
-                                                  ),
+                                                  style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                                 ),
                                                 Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                        left: 10,
-                                                      ),
+                                                  padding: const EdgeInsets.only(left: 10),
                                                   child: Checkbox(
-                                                    value:
-                                                        item['valuemember'] ==
-                                                        1,
+                                                    value: item['valuemember'] == 1,
                                                     onChanged: (bool? value) {},
                                                   ),
                                                 ),
                                                 Text(
                                                   'Member',
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    fontFamily: 'Poppins',
-                                                  ),
+                                                  style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                                 ),
                                                 Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                        left: 10,
-                                                      ),
+                                                  padding: const EdgeInsets.only(left: 10),
                                                   child: Center(
                                                     child: Checkbox(
-                                                      value:
-                                                          item['valuevip'] == 1,
-                                                      onChanged:
-                                                          (bool? value) {},
+                                                      value: item['valuevip'] == 1,
+                                                      onChanged: (bool? value) {},
                                                     ),
                                                   ),
                                                 ),
                                                 Text(
                                                   'VIP',
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    fontFamily: 'Poppins',
-                                                  ),
+                                                  style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                                 ),
                                                 Spacer(),
 
                                                 SizedBox(width: 10),
                                                 ElevatedButton(
                                                   onPressed: () {
-                                                    isSeninChecked =
-                                                        item['valuesenin'] == 1;
-                                                    isSelasaChecked =
-                                                        item['valueselasa'] ==
-                                                        1;
-                                                    isRabuChecked =
-                                                        item['valuerabu'] == 1;
-                                                    isKamisChecked =
-                                                        item['valuekamis'] == 1;
-                                                    isJumatChecked =
-                                                        item['valuejumat'] == 1;
-                                                    isSabtuChecked =
-                                                        item['valuesabtu'] == 1;
-                                                    isMingguChecked =
-                                                        item['valueminggu'] ==
-                                                        1;
-                                                    isUmumChecked =
-                                                        item['valueumum'] == 1;
-                                                    isVIPChecked =
-                                                        item['valuevip'] == 1;
-                                                    isMemberChecked =
-                                                        item['valuemember'] ==
-                                                        1;
-                                                    valuesenin =
-                                                        isSeninChecked ? 1 : 0;
-                                                    valueselasa =
-                                                        isSelasaChecked ? 1 : 0;
-                                                    valuerabu =
-                                                        isRabuChecked ? 1 : 0;
-                                                    valuekamis =
-                                                        isKamisChecked ? 1 : 0;
-                                                    valuejumat =
-                                                        isJumatChecked ? 1 : 0;
-                                                    valuesabtu =
-                                                        isSabtuChecked ? 1 : 0;
-                                                    valueminggu =
-                                                        isMingguChecked ? 1 : 0;
-                                                    valueumum =
-                                                        isUmumChecked ? 1 : 0;
-                                                    valuevip =
-                                                        isVIPChecked ? 1 : 0;
-                                                    valuemember =
-                                                        isMemberChecked ? 1 : 0;
+                                                    isSeninChecked = item['valuesenin'] == 1;
+                                                    isSelasaChecked = item['valueselasa'] == 1;
+                                                    isRabuChecked = item['valuerabu'] == 1;
+                                                    isKamisChecked = item['valuekamis'] == 1;
+                                                    isJumatChecked = item['valuejumat'] == 1;
+                                                    isSabtuChecked = item['valuesabtu'] == 1;
+                                                    isMingguChecked = item['valueminggu'] == 1;
+                                                    isUmumChecked = item['valueumum'] == 1;
+                                                    isVIPChecked = item['valuevip'] == 1;
+                                                    isMemberChecked = item['valuemember'] == 1;
+                                                    valuesenin = isSeninChecked ? 1 : 0;
+                                                    valueselasa = isSelasaChecked ? 1 : 0;
+                                                    valuerabu = isRabuChecked ? 1 : 0;
+                                                    valuekamis = isKamisChecked ? 1 : 0;
+                                                    valuejumat = isJumatChecked ? 1 : 0;
+                                                    valuesabtu = isSabtuChecked ? 1 : 0;
+                                                    valueminggu = isMingguChecked ? 1 : 0;
+                                                    valueumum = isUmumChecked ? 1 : 0;
+                                                    valuevip = isVIPChecked ? 1 : 0;
+                                                    valuemember = isMemberChecked ? 1 : 0;
 
-                                                    controller_edit_nama_promo_happyhour
-                                                            .text =
+                                                    controller_edit_nama_promo_happyhour.text =
                                                         item['nama_promo'];
-                                                    controller_edit_disc_happyhour
-                                                            .text =
+                                                    controller_edit_disc_happyhour.text =
                                                         item['disc'].toString();
-                                                    controller_edit_jam_mulai_happyhour
-                                                            .text =
-                                                        item['jam_mulai']
-                                                            .toString()
-                                                            .split(':')[0];
-                                                    controller_edit_menit_mulai_happyhour
-                                                            .text =
-                                                        item['jam_mulai']
-                                                            .toString()
-                                                            .split(':')[1];
-                                                    controller_edit_jam_selesai_happyhour
-                                                            .text =
-                                                        item['jam_selesai']
-                                                            .toString()
-                                                            .split(':')[0];
-                                                    controller_edit_menit_selesai_happyhour
-                                                            .text =
-                                                        item['jam_selesai']
-                                                            .toString()
-                                                            .split(':')[1];
+                                                    controller_edit_jam_mulai_happyhour.text =
+                                                        item['jam_mulai'].toString().split(':')[0];
+                                                    controller_edit_menit_mulai_happyhour.text =
+                                                        item['jam_mulai'].toString().split(':')[1];
+                                                    controller_edit_jam_selesai_happyhour.text =
+                                                        item['jam_selesai'].toString().split(':')[0];
+                                                    controller_edit_menit_selesai_happyhour.text =
+                                                        item['jam_selesai'].toString().split(':')[1];
                                                     isibuttonedithappyhour(
                                                       item['kode_promo'],
                                                       item['detail_kode_promo'],
@@ -5242,10 +4730,7 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                                   },
                                                   child: Text(
                                                     'Edit',
-                                                    style: TextStyle(
-                                                      fontSize: 20,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 SizedBox(width: 10),
@@ -5253,52 +4738,37 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                                   onPressed: () {
                                                     Get.dialog(
                                                       StatefulBuilder(
-                                                        builder: (
-                                                          context,
-                                                          setState,
-                                                        ) {
+                                                        builder: (context, setState) {
                                                           return AlertDialog(
                                                             actions: [
                                                               Center(
                                                                 child: Container(
-                                                                  margin:
-                                                                      EdgeInsets.only(
-                                                                        top: 20,
-                                                                      ),
+                                                                  margin: EdgeInsets.only(top: 20),
                                                                   height: 100,
                                                                   width: 250,
                                                                   child: Center(
                                                                     child: Column(
                                                                       crossAxisAlignment:
-                                                                          CrossAxisAlignment
-                                                                              .center,
+                                                                          CrossAxisAlignment.center,
                                                                       mainAxisAlignment:
-                                                                          MainAxisAlignment
-                                                                              .center,
+                                                                          MainAxisAlignment.center,
                                                                       children: [
                                                                         Text(
                                                                           '${item['nama_promo']}',
                                                                           style: TextStyle(
-                                                                            fontSize:
-                                                                                16,
-                                                                            fontFamily:
-                                                                                'Poppins',
+                                                                            fontSize: 16,
+                                                                            fontFamily: 'Poppins',
                                                                           ),
                                                                         ),
                                                                         Text(
                                                                           'Yakin ingin delete ?',
                                                                           style: TextStyle(
-                                                                            fontSize:
-                                                                                16,
-                                                                            fontFamily:
-                                                                                'Poppins',
+                                                                            fontSize: 16,
+                                                                            fontFamily: 'Poppins',
                                                                           ),
                                                                         ),
 
-                                                                        SizedBox(
-                                                                          height:
-                                                                              4,
-                                                                        ),
+                                                                        SizedBox(height: 4),
                                                                         Row(
                                                                           crossAxisAlignment:
                                                                               CrossAxisAlignment.center,
@@ -5316,25 +4786,16 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                                                                   title: Text(
                                                                                     'Data Berhasil DiHapus',
                                                                                   ),
-                                                                                ).show(
-                                                                                  context,
-                                                                                );
+                                                                                ).show(context);
                                                                               },
-                                                                              child: Text(
-                                                                                'Yes',
-                                                                              ),
+                                                                              child: Text('Yes'),
                                                                             ),
-                                                                            SizedBox(
-                                                                              width:
-                                                                                  20,
-                                                                            ),
+                                                                            SizedBox(width: 20),
                                                                             ElevatedButton(
                                                                               onPressed: () {
                                                                                 Get.back();
                                                                               },
-                                                                              child: Text(
-                                                                                'No',
-                                                                              ),
+                                                                              child: Text('No'),
                                                                             ),
                                                                           ],
                                                                         ),
@@ -5351,10 +4812,7 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                                   },
                                                   child: Text(
                                                     'Delete',
-                                                    style: TextStyle(
-                                                      fontSize: 20,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                               ],
@@ -5377,9 +4835,7 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                       ),
                       child:
                           datapromokunjungan.isEmpty
-                              ? Center(
-                                child: Text('Data Promo Paketan Tidak Ada'),
-                              )
+                              ? Center(child: Text('Data Promo Paketan Tidak Ada'))
                               : Obx(
                                 () => ListView.builder(
                                   padding: EdgeInsets.zero,
@@ -5390,9 +4846,7 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                       margin: EdgeInsets.all(10),
                                       decoration: BoxDecoration(
                                         border: Border.all(width: 1),
-                                        borderRadius: BorderRadius.all(
-                                          Radius.circular(10),
-                                        ),
+                                        borderRadius: BorderRadius.all(Radius.circular(10)),
                                       ),
                                       child: Container(
                                         width: 400,
@@ -5404,20 +4858,14 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                                 Container(
                                                   child: Text(
                                                     item['kode_promo'],
-                                                    style: TextStyle(
-                                                      fontSize: 25,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 SizedBox(width: 10),
                                                 Container(
                                                   child: Text(
                                                     item['nama_promo'],
-                                                    style: TextStyle(
-                                                      fontSize: 25,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                               ],
@@ -5427,20 +4875,13 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                                 Container(
                                                   child: Text(
                                                     'Limit Kunjungan : ',
-                                                    style: TextStyle(
-                                                      fontSize: 18,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 Container(
                                                   child: Text(
-                                                    item['limit_kunjungan']
-                                                        .toString(),
-                                                    style: TextStyle(
-                                                      fontSize: 18,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    item['limit_kunjungan'].toString(),
+                                                    style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                               ],
@@ -5451,29 +4892,19 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                                 Container(
                                                   child: Text(
                                                     'Limit Promo : ',
-                                                    style: TextStyle(
-                                                      fontSize: 18,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 Container(
                                                   child: Text(
-                                                    item['limit_promo']
-                                                        .toString(),
-                                                    style: TextStyle(
-                                                      fontSize: 18,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    item['limit_promo'].toString(),
+                                                    style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 Container(
                                                   child: Text(
                                                     ' Tahun',
-                                                    style: TextStyle(
-                                                      fontSize: 18,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                               ],
@@ -5484,28 +4915,19 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                                 Container(
                                                   child: Text(
                                                     'Durasi Paket : ',
-                                                    style: TextStyle(
-                                                      fontSize: 18,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 Container(
                                                   child: Text(
                                                     item['durasi'].toString(),
-                                                    style: TextStyle(
-                                                      fontSize: 18,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 Container(
                                                   child: Text(
                                                     ' Menit',
-                                                    style: TextStyle(
-                                                      fontSize: 18,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                               ],
@@ -5515,73 +4937,46 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                                 Container(
                                                   child: Text(
                                                     'Diskon : ',
-                                                    style: TextStyle(
-                                                      fontSize: 18,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 Container(
                                                   child: Text(
                                                     item['discount'].toString(),
-                                                    style: TextStyle(
-                                                      fontSize: 18,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 Container(
                                                   child: Text(
                                                     '%',
-                                                    style: TextStyle(
-                                                      fontSize: 18,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 Spacer(),
                                                 Container(
                                                   child: Text(
-                                                    currencyFormat
-                                                        .format(
-                                                          item['harga_promo'],
-                                                        )
-                                                        .toString(),
-                                                    style: TextStyle(
-                                                      fontSize: 22,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    currencyFormat.format(item['harga_promo']).toString(),
+                                                    style: TextStyle(fontSize: 22, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 SizedBox(width: 10),
                                                 ElevatedButton(
                                                   onPressed: () {
-                                                    controller_edit_kode_promo_kunjungan
-                                                            .text =
+                                                    controller_edit_kode_promo_kunjungan.text =
                                                         item['kode_promo'];
-                                                    controller_edit_nama_promo_kunjungan
-                                                            .text =
+                                                    controller_edit_nama_promo_kunjungan.text =
                                                         item['nama_promo'];
-                                                    controller_edit_limit_promo_kunjungan
-                                                            .text =
-                                                        item['limit_kunjungan']
-                                                            .toString();
-                                                    controller_edit_limit_promo
-                                                            .text =
-                                                        item['limit_promo']
-                                                            .toString();
+                                                    controller_edit_limit_promo_kunjungan.text =
+                                                        item['limit_kunjungan'].toString();
+                                                    controller_edit_limit_promo.text =
+                                                        item['limit_promo'].toString();
                                                     hargaPromo.value =
-                                                        (item['harga_promo']
-                                                                as num)
-                                                            .toDouble();
+                                                        (item['harga_promo'] as num).toDouble();
                                                     hargaSatuan.value =
-                                                        (item['harga_satuan']
-                                                                as num)
-                                                            .toDouble();
+                                                        (item['harga_satuan'] as num).toDouble();
 
-                                                    controller_edit_diskon_paket
-                                                        .text = item['discount']
-                                                            .toString();
+                                                    controller_edit_diskon_paket.text =
+                                                        item['discount'].toString();
 
                                                     isibuttoneditpromokunjungan(
                                                       item['kode_promo'],
@@ -5590,10 +4985,7 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                                   },
                                                   child: Text(
                                                     'Edit',
-                                                    style: TextStyle(
-                                                      fontSize: 25,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 SizedBox(width: 10),
@@ -5601,52 +4993,37 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                                   onPressed: () {
                                                     Get.dialog(
                                                       StatefulBuilder(
-                                                        builder: (
-                                                          context,
-                                                          setState,
-                                                        ) {
+                                                        builder: (context, setState) {
                                                           return AlertDialog(
                                                             actions: [
                                                               Center(
                                                                 child: Container(
-                                                                  margin:
-                                                                      EdgeInsets.only(
-                                                                        top: 20,
-                                                                      ),
+                                                                  margin: EdgeInsets.only(top: 20),
                                                                   height: 100,
                                                                   width: 250,
                                                                   child: Center(
                                                                     child: Column(
                                                                       crossAxisAlignment:
-                                                                          CrossAxisAlignment
-                                                                              .center,
+                                                                          CrossAxisAlignment.center,
                                                                       mainAxisAlignment:
-                                                                          MainAxisAlignment
-                                                                              .center,
+                                                                          MainAxisAlignment.center,
                                                                       children: [
                                                                         Text(
                                                                           '${item['nama_promo']}',
                                                                           style: TextStyle(
-                                                                            fontSize:
-                                                                                16,
-                                                                            fontFamily:
-                                                                                'Poppins',
+                                                                            fontSize: 16,
+                                                                            fontFamily: 'Poppins',
                                                                           ),
                                                                         ),
                                                                         Text(
                                                                           'Yakin ingin delete ?',
                                                                           style: TextStyle(
-                                                                            fontSize:
-                                                                                16,
-                                                                            fontFamily:
-                                                                                'Poppins',
+                                                                            fontSize: 16,
+                                                                            fontFamily: 'Poppins',
                                                                           ),
                                                                         ),
 
-                                                                        SizedBox(
-                                                                          height:
-                                                                              4,
-                                                                        ),
+                                                                        SizedBox(height: 4),
                                                                         Row(
                                                                           crossAxisAlignment:
                                                                               CrossAxisAlignment.center,
@@ -5664,25 +5041,16 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                                                                   title: Text(
                                                                                     'Data Berhasil DiHapus',
                                                                                   ),
-                                                                                ).show(
-                                                                                  context,
-                                                                                );
+                                                                                ).show(context);
                                                                               },
-                                                                              child: Text(
-                                                                                'Yes',
-                                                                              ),
+                                                                              child: Text('Yes'),
                                                                             ),
-                                                                            SizedBox(
-                                                                              width:
-                                                                                  20,
-                                                                            ),
+                                                                            SizedBox(width: 20),
                                                                             ElevatedButton(
                                                                               onPressed: () {
                                                                                 Get.back();
                                                                               },
-                                                                              child: Text(
-                                                                                'No',
-                                                                              ),
+                                                                              child: Text('No'),
                                                                             ),
                                                                           ],
                                                                         ),
@@ -5699,10 +5067,7 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                                   },
                                                   child: Text(
                                                     'Delete',
-                                                    style: TextStyle(
-                                                      fontSize: 25,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 SizedBox(width: 10),
@@ -5726,9 +5091,7 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                       ),
                       child:
                           datapromotahunan.isEmpty
-                              ? Center(
-                                child: Text('Data Promo Tahunan Tidak Ada'),
-                              )
+                              ? Center(child: Text('Data Promo Tahunan Tidak Ada'))
                               : Obx(
                                 () => ListView.builder(
                                   padding: EdgeInsets.zero,
@@ -5739,9 +5102,7 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                       margin: EdgeInsets.all(10),
                                       decoration: BoxDecoration(
                                         border: Border.all(width: 1),
-                                        borderRadius: BorderRadius.all(
-                                          Radius.circular(10),
-                                        ),
+                                        borderRadius: BorderRadius.all(Radius.circular(10)),
                                       ),
                                       child: Container(
                                         width: 400,
@@ -5753,20 +5114,14 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                                 Container(
                                                   child: Text(
                                                     item['kode_promo'],
-                                                    style: TextStyle(
-                                                      fontSize: 25,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 SizedBox(width: 10),
                                                 Container(
                                                   child: Text(
                                                     item['nama_promo'],
-                                                    style: TextStyle(
-                                                      fontSize: 25,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                               ],
@@ -5776,60 +5131,38 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                                 Container(
                                                   child: Text(
                                                     'Jangka Waktu : ',
-                                                    style: TextStyle(
-                                                      fontSize: 18,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 Container(
                                                   child: Text(
-                                                    item['jangka_tahun']
-                                                        .toString(),
-                                                    style: TextStyle(
-                                                      fontSize: 18,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    item['jangka_tahun'].toString(),
+                                                    style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 Container(
                                                   child: Text(
                                                     ' Tahun',
-                                                    style: TextStyle(
-                                                      fontSize: 18,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 SizedBox(width: 10),
                                                 Spacer(),
                                                 Container(
                                                   child: Text(
-                                                    currencyFormat
-                                                        .format(
-                                                          item['harga_promo'],
-                                                        )
-                                                        .toString(),
-                                                    style: TextStyle(
-                                                      fontSize: 25,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    currencyFormat.format(item['harga_promo']).toString(),
+                                                    style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 SizedBox(width: 10),
                                                 ElevatedButton(
                                                   onPressed: () {
-                                                    controller_edit_nama_promo_tahunan
-                                                            .text =
+                                                    controller_edit_nama_promo_tahunan.text =
                                                         item['nama_promo'];
-                                                    controller_edit_jangka_waktu_promo_tahunan
-                                                            .text =
-                                                        item['jangka_tahun']
-                                                            .toString();
-                                                    controller_edit_harga_promo_tahunan
-                                                            .text =
-                                                        item['harga_promo']
-                                                            .toString();
+                                                    controller_edit_jangka_waktu_promo_tahunan.text =
+                                                        item['jangka_tahun'].toString();
+                                                    controller_edit_harga_promo_tahunan.text =
+                                                        item['harga_promo'].toString();
                                                     isibuttoneditpromotahunan(
                                                       item['kode_promo'],
                                                       item['detail_kode_promo'],
@@ -5837,10 +5170,7 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                                   },
                                                   child: Text(
                                                     'Edit',
-                                                    style: TextStyle(
-                                                      fontSize: 25,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 SizedBox(width: 10),
@@ -5848,52 +5178,37 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                                   onPressed: () {
                                                     Get.dialog(
                                                       StatefulBuilder(
-                                                        builder: (
-                                                          context,
-                                                          setState,
-                                                        ) {
+                                                        builder: (context, setState) {
                                                           return AlertDialog(
                                                             actions: [
                                                               Center(
                                                                 child: Container(
-                                                                  margin:
-                                                                      EdgeInsets.only(
-                                                                        top: 20,
-                                                                      ),
+                                                                  margin: EdgeInsets.only(top: 20),
                                                                   height: 100,
                                                                   width: 250,
                                                                   child: Center(
                                                                     child: Column(
                                                                       crossAxisAlignment:
-                                                                          CrossAxisAlignment
-                                                                              .center,
+                                                                          CrossAxisAlignment.center,
                                                                       mainAxisAlignment:
-                                                                          MainAxisAlignment
-                                                                              .center,
+                                                                          MainAxisAlignment.center,
                                                                       children: [
                                                                         Text(
                                                                           '${item['nama_promo']}',
                                                                           style: TextStyle(
-                                                                            fontSize:
-                                                                                16,
-                                                                            fontFamily:
-                                                                                'Poppins',
+                                                                            fontSize: 16,
+                                                                            fontFamily: 'Poppins',
                                                                           ),
                                                                         ),
                                                                         Text(
                                                                           'Yakin ingin delete ?',
                                                                           style: TextStyle(
-                                                                            fontSize:
-                                                                                16,
-                                                                            fontFamily:
-                                                                                'Poppins',
+                                                                            fontSize: 16,
+                                                                            fontFamily: 'Poppins',
                                                                           ),
                                                                         ),
 
-                                                                        SizedBox(
-                                                                          height:
-                                                                              4,
-                                                                        ),
+                                                                        SizedBox(height: 4),
                                                                         Row(
                                                                           crossAxisAlignment:
                                                                               CrossAxisAlignment.center,
@@ -5911,25 +5226,16 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                                                                   title: Text(
                                                                                     'Data Berhasil DiHapus',
                                                                                   ),
-                                                                                ).show(
-                                                                                  context,
-                                                                                );
+                                                                                ).show(context);
                                                                               },
-                                                                              child: Text(
-                                                                                'Yes',
-                                                                              ),
+                                                                              child: Text('Yes'),
                                                                             ),
-                                                                            SizedBox(
-                                                                              width:
-                                                                                  20,
-                                                                            ),
+                                                                            SizedBox(width: 20),
                                                                             ElevatedButton(
                                                                               onPressed: () {
                                                                                 Get.back();
                                                                               },
-                                                                              child: Text(
-                                                                                'No',
-                                                                              ),
+                                                                              child: Text('No'),
                                                                             ),
                                                                           ],
                                                                         ),
@@ -5946,10 +5252,7 @@ class _WidgetListPromoMobileState extends State<WidgetListPromoMobile> {
                                                   },
                                                   child: Text(
                                                     'Delete',
-                                                    style: TextStyle(
-                                                      fontSize: 25,
-                                                      fontFamily: 'Poppins',
-                                                    ),
+                                                    style: TextStyle(fontSize: 25, fontFamily: 'Poppins'),
                                                   ),
                                                 ),
                                                 SizedBox(width: 10),

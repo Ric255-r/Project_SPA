@@ -44,40 +44,40 @@ class _RegisPromoState extends State<RegisPromo> {
   final TextEditingController controller_jam_mulai = TextEditingController();
   final TextEditingController controller_menit_mulai = TextEditingController();
   final TextEditingController controller_jam_selesai = TextEditingController();
-  final TextEditingController controller_menit_selesai =
-      TextEditingController();
+  final TextEditingController controller_menit_selesai = TextEditingController();
 
-  final TextEditingController controller_kode_promo_kunjungan =
-      TextEditingController();
-  final TextEditingController controller_nama_promo_kunjungan =
-      TextEditingController();
+  final TextEditingController controller_kode_promo_kunjungan = TextEditingController();
+  final TextEditingController controller_nama_promo_kunjungan = TextEditingController();
   final TextEditingController controller_hargasatuan = TextEditingController();
   final TextEditingController controller_limit_promo = TextEditingController();
-  final TextEditingController controller_limit_kunjungan =
-      TextEditingController();
+  final TextEditingController controller_limit_kunjungan = TextEditingController();
   final TextEditingController controller_diskon_paket = TextEditingController();
-  final TextEditingController controller_harga_promo_kunjungan =
-      TextEditingController();
+  final TextEditingController controller_harga_promo_kunjungan = TextEditingController();
 
-  final TextEditingController controller_kode_promo_tahunan =
-      TextEditingController();
-  final TextEditingController controller_nama_promo_tahunan =
-      TextEditingController();
-  final TextEditingController controller_jangka_tahunan =
-      TextEditingController();
-  final TextEditingController controller_harga_promo_tahunan =
-      TextEditingController();
+  final TextEditingController controller_kode_promo_tahunan = TextEditingController();
+  final TextEditingController controller_nama_promo_tahunan = TextEditingController();
+  final TextEditingController controller_jangka_tahunan = TextEditingController();
+  final TextEditingController controller_harga_promo_tahunan = TextEditingController();
+  final TextEditingController controller_kode_promo_bonus_item = TextEditingController();
+  final TextEditingController controller_nama_promo_bonus_item = TextEditingController();
+  final TextEditingController controller_qty_bonus_item = TextEditingController();
+
   List<Map<String, dynamic>> _listNamaPaket = [];
+  List<Map<String, dynamic>> _listfnb = [];
   String? dropdownNamaPaket;
+  String? dropdownnamapaketbonusitem;
+  String? selecteditem;
 
   var dio = Dio();
   bool _isSecondContainerOnTop = false;
   bool _isThirdContainerOnTop = false;
   bool _isFirstContainerOnTop = true;
+  bool _isFourthContainerOnTop = false;
 
   Color _FirstbuttonColor = Colors.blue;
   Color _SecondbuttonColor = Colors.white;
   Color _ThirdbuttonColor = Colors.white;
+  Color _FourthbuttonCOlor = Colors.white;
 
   bool isUmumChecked = false;
   bool isMemberChecked = false;
@@ -116,8 +116,10 @@ class _RegisPromoState extends State<RegisPromo> {
   void initState() {
     // TODO: implement initState
     getDataPaket();
+    getDataFnb();
     hargaPromo.value = 0;
     dropdownNamaPaket = null;
+    dropdownnamapaketbonusitem = null;
     super.initState();
   }
 
@@ -126,6 +128,7 @@ class _RegisPromoState extends State<RegisPromo> {
       _isSecondContainerOnTop = true;
       _isFirstContainerOnTop = false;
       _isThirdContainerOnTop = false;
+      _isFourthContainerOnTop = false;
     });
   }
 
@@ -134,6 +137,7 @@ class _RegisPromoState extends State<RegisPromo> {
       _isSecondContainerOnTop = false;
       _isFirstContainerOnTop = true;
       _isThirdContainerOnTop = false;
+      _isFourthContainerOnTop = false;
     });
   }
 
@@ -142,6 +146,16 @@ class _RegisPromoState extends State<RegisPromo> {
       _isSecondContainerOnTop = false;
       _isThirdContainerOnTop = true;
       _isFirstContainerOnTop = false;
+      _isFourthContainerOnTop = false;
+    });
+  }
+
+  void _moveFourthContainerToTop() {
+    setState(() {
+      _isSecondContainerOnTop = false;
+      _isThirdContainerOnTop = false;
+      _isFirstContainerOnTop = false;
+      _isFourthContainerOnTop = true;
     });
   }
 
@@ -151,14 +165,22 @@ class _RegisPromoState extends State<RegisPromo> {
         _FirstbuttonColor = Colors.blue;
         _SecondbuttonColor = Colors.white;
         _ThirdbuttonColor = Colors.white;
+        _FourthbuttonCOlor = Colors.white;
       } else if (buttonIndex == 2) {
         _FirstbuttonColor = Colors.white;
         _SecondbuttonColor = Colors.blue;
         _ThirdbuttonColor = Colors.white;
+        _FourthbuttonCOlor = Colors.white;
       } else if (buttonIndex == 3) {
         _FirstbuttonColor = Colors.white;
         _SecondbuttonColor = Colors.white;
         _ThirdbuttonColor = Colors.blue;
+        _FourthbuttonCOlor = Colors.white;
+      } else if (buttonIndex == 4) {
+        _FirstbuttonColor = Colors.white;
+        _SecondbuttonColor = Colors.white;
+        _ThirdbuttonColor = Colors.white;
+        _FourthbuttonCOlor = Colors.blue;
       }
     });
   }
@@ -167,9 +189,7 @@ class _RegisPromoState extends State<RegisPromo> {
 
   Future<void> getDataPaket() async {
     try {
-      var response = await dio.get(
-        '${myIpAddr()}/listmassage/getdatapaketmassage',
-      );
+      var response = await dio.get('${myIpAddr()}/listmassage/getdatapaketmassage');
       setState(() {
         _listNamaPaket =
             (response.data as List).map((item) {
@@ -183,6 +203,20 @@ class _RegisPromoState extends State<RegisPromo> {
       });
     } catch (e) {
       log("Error di fn Get Data Paket $e");
+    }
+  }
+
+  Future<void> getDataFnb() async {
+    try {
+      var response = await dio.get('${myIpAddr()}/listfnb/getdatafnb');
+      setState(() {
+        _listfnb =
+            (response.data as List).map((item) {
+              return {"id_fnb": item["id_fnb"], "nama_fnb": item["nama_fnb"]};
+            }).toList();
+      });
+    } catch (e) {
+      log("Error di fn Get Data Fnb $e");
     }
   }
 
@@ -200,9 +234,7 @@ class _RegisPromoState extends State<RegisPromo> {
       setState(() {
         kode_promo = response2.data;
       });
-      bool packageExists = kode_promo.any(
-        (item) => item['kode_promo'] == kodePromo,
-      );
+      bool packageExists = kode_promo.any((item) => item['kode_promo'] == kodePromo);
       if (kodePromo != "" &&
           namaPromo != "" &&
           discPromo != "" &&
@@ -232,9 +264,7 @@ class _RegisPromoState extends State<RegisPromo> {
             },
           );
           log("data sukses tersimpan");
-          CherryToast.success(
-            title: Text('paket ${kodePromo} Saved successfully!'),
-          ).show(context);
+          CherryToast.success(title: Text('paket ${kodePromo} Saved successfully!')).show(context);
           controller_nama_promo.clear();
           controller_kode_promo.clear();
           controller_diskon_promo.clear();
@@ -256,15 +286,11 @@ class _RegisPromoState extends State<RegisPromo> {
           });
         } else {
           log("data gagal tersimpan");
-          CherryToast.error(
-            title: Text('paket ${kodePromo} Already existed!'),
-          ).show(context);
+          CherryToast.error(title: Text('paket ${kodePromo} Already existed!')).show(context);
         }
       } else {
         log("data kosong");
-        CherryToast.warning(
-          title: Text('Data inputan tidak boleh kosong'),
-        ).show(context);
+        CherryToast.warning(title: Text('Data inputan tidak boleh kosong')).show(context);
       }
     } catch (e) {
       log("error: ${e.toString()}");
@@ -282,12 +308,8 @@ class _RegisPromoState extends State<RegisPromo> {
       setState(() {
         kode_promo = response2.data;
       });
-      bool packageExists = kode_promo.any(
-        (item) => item['kode_promo'] == kodePromoKunjungan,
-      );
-      bool namapackageExists = kode_promo.any(
-        (item) => item['nama_promo'] == dropdownNamaPaket!,
-      );
+      bool packageExists = kode_promo.any((item) => item['kode_promo'] == kodePromoKunjungan);
+      bool namapackageExists = kode_promo.any((item) => item['nama_promo'] == dropdownNamaPaket!);
 
       if (kodePromoKunjungan != "" &&
           dropdownNamaPaket != "" &&
@@ -309,9 +331,7 @@ class _RegisPromoState extends State<RegisPromo> {
             },
           );
           log("data sukses tersimpan");
-          CherryToast.success(
-            title: Text('paket ${kodePromoKunjungan} Saved successfully!'),
-          ).show(context);
+          CherryToast.success(title: Text('paket ${kodePromoKunjungan} Saved successfully!')).show(context);
           setState(() {
             dropdownNamaPaket = null;
           });
@@ -326,20 +346,14 @@ class _RegisPromoState extends State<RegisPromo> {
         } else {
           log("data gagal tersimpan");
           if (packageExists) {
-            CherryToast.error(
-              title: Text('paket ${kodePromoKunjungan} Already existed!'),
-            ).show(context);
+            CherryToast.error(title: Text('paket ${kodePromoKunjungan} Already existed!')).show(context);
           } else {
-            CherryToast.error(
-              title: Text('paket ${dropdownNamaPaket} Already existed!'),
-            ).show(context);
+            CherryToast.error(title: Text('paket ${dropdownNamaPaket} Already existed!')).show(context);
           }
         }
       } else {
         log("data kosong");
-        CherryToast.warning(
-          title: Text('Data inputan tidak boleh kosong'),
-        ).show(context);
+        CherryToast.warning(title: Text('Data inputan tidak boleh kosong')).show(context);
       }
     } catch (e) {
       log("error: ${e.toString()}");
@@ -357,9 +371,7 @@ class _RegisPromoState extends State<RegisPromo> {
       setState(() {
         kode_promo = response2.data;
       });
-      bool packageExists = kode_promo.any(
-        (item) => item['kode_promo'] == kodePromoTahunan,
-      );
+      bool packageExists = kode_promo.any((item) => item['kode_promo'] == kodePromoTahunan);
       if (kodePromoTahunan != "" &&
           namaPromoTahunan != "" &&
           jangkaTahunan != "" &&
@@ -375,24 +387,71 @@ class _RegisPromoState extends State<RegisPromo> {
             },
           );
           log("data sukses tersimpan");
-          CherryToast.success(
-            title: Text('paket ${kodePromoTahunan} Saved successfully!'),
-          ).show(context);
+          CherryToast.success(title: Text('paket ${kodePromoTahunan} Saved successfully!')).show(context);
           controller_nama_promo_tahunan.clear();
           controller_kode_promo_tahunan.clear();
           controller_jangka_tahunan.clear();
           controller_harga_promo_tahunan.clear();
         } else {
           log("data gagal tersimpan");
-          CherryToast.error(
-            title: Text('paket ${kodePromoTahunan} Already existed!'),
-          ).show(context);
+          CherryToast.error(title: Text('paket ${kodePromoTahunan} Already existed!')).show(context);
         }
       } else {
         log("data kosong");
-        CherryToast.warning(
-          title: Text('Data inputan tidak boleh kosong'),
-        ).show(context);
+        CherryToast.warning(title: Text('Data inputan tidak boleh kosong')).show(context);
+      }
+    } catch (e) {
+      log("error: ${e.toString()}");
+    }
+  }
+
+  Future<void> inputdatapromobonusitem() async {
+    String kodePromoBonusItem = controller_kode_promo_bonus_item.text;
+    String namaPromoBonusItem = controller_nama_promo_bonus_item.text;
+    String selectedidfnb = selecteditem!;
+    String selectedidpaket = dropdownnamapaketbonusitem!;
+    String qty = controller_qty_bonus_item.text;
+
+    log(kodePromoBonusItem);
+    log(namaPromoBonusItem);
+    log(selectedidpaket);
+    log(selectedidfnb);
+    log(qty);
+
+    try {
+      var response2 = await dio.get('${myIpAddr()}/promo/getidpromo');
+      setState(() {
+        kode_promo = response2.data;
+      });
+      bool packageExists = kode_promo.any((item) => item['kode_promo'] == kodePromoBonusItem);
+      if (kodePromoBonusItem != "" &&
+          namaPromoBonusItem != "" &&
+          selectedidpaket != "" &&
+          selectedidfnb != "" &&
+          qty != "") {
+        if (!packageExists) {
+          var response = await dio.post(
+            '${myIpAddr()}/promo/daftarpromobonusitem',
+            data: {
+              "kode_promo": kodePromoBonusItem,
+              "nama_promo": namaPromoBonusItem,
+              "id_paket": selectedidpaket,
+              "id_fnb": selectedidfnb,
+              "qty": qty,
+            },
+          );
+          log("data sukses tersimpan");
+          CherryToast.success(title: Text('paket ${kodePromoBonusItem} Saved successfully!')).show(context);
+          controller_kode_promo_bonus_item.clear();
+          controller_nama_promo_bonus_item.clear();
+          controller_qty_bonus_item.clear();
+        } else {
+          log("data gagal tersimpan");
+          CherryToast.error(title: Text('paket ${kodePromoBonusItem} Already existed!')).show(context);
+        }
+      } else {
+        log("data kosong");
+        CherryToast.warning(title: Text('Data inputan tidak boleh kosong')).show(context);
       }
     } catch (e) {
       log("error: ${e.toString()}");
@@ -401,16 +460,10 @@ class _RegisPromoState extends State<RegisPromo> {
 
   void calculateHargaPromo() {
     hargaPromo.value =
-        hargaPromo.value =
-            (hargaSatuan.value * limitKunjungan.value) *
-            (1 - (diskonPaket.value / 100));
+        hargaPromo.value = (hargaSatuan.value * limitKunjungan.value) * (1 - (diskonPaket.value / 100));
   }
 
-  final currencyFormatter = NumberFormat.currency(
-    locale: 'id_ID',
-    symbol: 'Rp ',
-    decimalDigits: 0,
-  );
+  final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
   @override
   Widget build(BuildContext context) {
@@ -433,19 +486,13 @@ class _RegisPromoState extends State<RegisPromo> {
                 height: 100,
                 width: 100,
                 decoration: BoxDecoration(shape: BoxShape.circle),
-                child: ClipOval(
-                  child: Image.asset('assets/spa.jpg', fit: BoxFit.cover),
-                ),
+                child: ClipOval(child: Image.asset('assets/spa.jpg', fit: BoxFit.cover)),
               ),
               Padding(
                 padding: EdgeInsets.only(top: 20),
                 child: Text(
                   'Daftar Promo',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontFamily: 'Poppins', fontSize: 30, fontWeight: FontWeight.bold),
                 ),
               ),
               Row(
@@ -458,20 +505,12 @@ class _RegisPromoState extends State<RegisPromo> {
                         _toggleButtonColors(buttonIndex: 1);
                       },
                       style: ElevatedButton.styleFrom(
-                        foregroundColor:
-                            _FirstbuttonColor == Colors.blue
-                                ? Colors.white
-                                : Colors.black,
+                        foregroundColor: _FirstbuttonColor == Colors.blue ? Colors.white : Colors.black,
                         backgroundColor: _FirstbuttonColor,
                         minimumSize: Size(150, 45),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero,
-                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
                       ),
-                      child: Text(
-                        'Promo Happy Hour',
-                        style: TextStyle(color: Colors.black),
-                      ),
+                      child: Text('Promo Happy Hour', style: TextStyle(color: Colors.black)),
                     ),
                   ),
                   Padding(
@@ -483,19 +522,11 @@ class _RegisPromoState extends State<RegisPromo> {
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _SecondbuttonColor,
-                        foregroundColor:
-                            _FirstbuttonColor == Colors.blue
-                                ? Colors.white
-                                : Colors.black,
+                        foregroundColor: _FirstbuttonColor == Colors.blue ? Colors.white : Colors.black,
                         minimumSize: Size(150, 45),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero,
-                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
                       ),
-                      child: Text(
-                        'Promo Paketan',
-                        style: TextStyle(color: Colors.black),
-                      ),
+                      child: Text('Promo Paketan', style: TextStyle(color: Colors.black)),
                     ),
                   ),
                   Padding(
@@ -507,19 +538,27 @@ class _RegisPromoState extends State<RegisPromo> {
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _ThirdbuttonColor,
-                        foregroundColor:
-                            _FirstbuttonColor == Colors.blue
-                                ? Colors.white
-                                : Colors.black,
+                        foregroundColor: _FirstbuttonColor == Colors.blue ? Colors.white : Colors.black,
                         minimumSize: Size(150, 45),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero,
-                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
                       ),
-                      child: Text(
-                        'Promo Tahunan',
-                        style: TextStyle(color: Colors.black),
+                      child: Text('Promo Tahunan', style: TextStyle(color: Colors.black)),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(top: 20, left: 10),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        _moveFourthContainerToTop();
+                        _toggleButtonColors(buttonIndex: 4);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _FourthbuttonCOlor,
+                        foregroundColor: _FirstbuttonColor == Colors.blue ? Colors.white : Colors.black,
+                        minimumSize: Size(150, 45),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
                       ),
+                      child: Text('Promo Bonus Item', style: TextStyle(color: Colors.black)),
                     ),
                   ),
                 ],
@@ -543,62 +582,41 @@ class _RegisPromoState extends State<RegisPromo> {
                                 child: Container(
                                   height: 260,
                                   width: 200,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                  ),
+                                  decoration: BoxDecoration(color: Colors.white),
                                   child: Padding(
                                     padding: EdgeInsets.only(right: 10),
                                     child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
+                                      crossAxisAlignment: CrossAxisAlignment.end,
                                       children: [
                                         SizedBox(height: 15),
                                         Text(
                                           'Kode Promo :',
-                                          style: TextStyle(
-                                            fontFamily: 'Poppins',
-                                            fontSize: 18,
-                                          ),
+                                          style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
                                         ),
                                         SizedBox(height: 15),
                                         Text(
                                           'Nama Promo :',
-                                          style: TextStyle(
-                                            fontFamily: 'Poppins',
-                                            fontSize: 18,
-                                          ),
+                                          style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
                                         ),
                                         SizedBox(height: 15),
                                         Text(
                                           'Discount Promo :',
-                                          style: TextStyle(
-                                            fontFamily: 'Poppins',
-                                            fontSize: 18,
-                                          ),
+                                          style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
                                         ),
                                         SizedBox(height: 15),
                                         Text(
                                           'Hari Berlaku :',
-                                          style: TextStyle(
-                                            fontFamily: 'Poppins',
-                                            fontSize: 18,
-                                          ),
+                                          style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
                                         ),
                                         SizedBox(height: 15),
                                         Text(
                                           'Jam Berlaku :',
-                                          style: TextStyle(
-                                            fontFamily: 'Poppins',
-                                            fontSize: 18,
-                                          ),
+                                          style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
                                         ),
                                         SizedBox(height: 15),
                                         Text(
                                           'Berlaku Untuk :',
-                                          style: TextStyle(
-                                            fontFamily: 'Poppins',
-                                            fontSize: 18,
-                                          ),
+                                          style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
                                         ),
                                       ],
                                     ),
@@ -612,8 +630,7 @@ class _RegisPromoState extends State<RegisPromo> {
                                 child: Padding(
                                   padding: EdgeInsets.only(left: 10),
                                   child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       SizedBox(height: 12),
                                       Container(
@@ -621,25 +638,19 @@ class _RegisPromoState extends State<RegisPromo> {
                                         width: 730,
                                         height: 30,
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
+                                          borderRadius: BorderRadius.circular(10),
                                           color: Colors.grey[300],
                                         ),
                                         child: TextField(
                                           controller: controller_kode_promo,
                                           decoration: InputDecoration(
                                             border: InputBorder.none,
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                  vertical: 13.5,
-                                                  horizontal: 10,
-                                                ),
+                                            contentPadding: EdgeInsets.symmetric(
+                                              vertical: 13.5,
+                                              horizontal: 10,
+                                            ),
                                           ),
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontFamily: 'Poppins',
-                                          ),
+                                          style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                         ),
                                       ),
                                       SizedBox(height: 12),
@@ -648,25 +659,19 @@ class _RegisPromoState extends State<RegisPromo> {
                                         width: 730,
                                         height: 30,
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
+                                          borderRadius: BorderRadius.circular(10),
                                           color: Colors.grey[300],
                                         ),
                                         child: TextField(
                                           controller: controller_nama_promo,
                                           decoration: InputDecoration(
                                             border: InputBorder.none,
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                  vertical: 13.5,
-                                                  horizontal: 10,
-                                                ),
+                                            contentPadding: EdgeInsets.symmetric(
+                                              vertical: 13.5,
+                                              horizontal: 10,
+                                            ),
                                           ),
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontFamily: 'Poppins',
-                                          ),
+                                          style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                         ),
                                       ),
                                       SizedBox(height: 12),
@@ -677,41 +682,28 @@ class _RegisPromoState extends State<RegisPromo> {
                                             width: 270,
                                             height: 30,
                                             decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
+                                              borderRadius: BorderRadius.circular(10),
                                               color: Colors.grey[300],
                                             ),
                                             child: TextField(
-                                              controller:
-                                                  controller_diskon_promo,
-                                              keyboardType:
-                                                  TextInputType.number,
-                                              inputFormatters: [
-                                                FilteringTextInputFormatter
-                                                    .digitsOnly,
-                                              ],
+                                              controller: controller_diskon_promo,
+                                              keyboardType: TextInputType.number,
+                                              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                                               decoration: InputDecoration(
                                                 border: InputBorder.none,
-                                                contentPadding:
-                                                    EdgeInsets.symmetric(
-                                                      vertical: 13.5,
-                                                      horizontal: 10,
-                                                    ),
+                                                contentPadding: EdgeInsets.symmetric(
+                                                  vertical: 13.5,
+                                                  horizontal: 10,
+                                                ),
                                               ),
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                fontFamily: 'Poppins',
-                                              ),
+                                              style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                             ),
                                           ),
                                           Padding(
                                             padding: EdgeInsets.only(left: 10),
                                             child: Text(
                                               '% Dari Total Transaksi',
-                                              style: TextStyle(
-                                                fontSize: 18,
-                                                fontFamily: 'Poppins',
-                                              ),
+                                              style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                             ),
                                           ),
                                         ],
@@ -724,8 +716,7 @@ class _RegisPromoState extends State<RegisPromo> {
                                               value: isSeninChecked,
                                               onChanged: (bool? value) {
                                                 setState(() {
-                                                  isSeninChecked =
-                                                      value ?? false;
+                                                  isSeninChecked = value ?? false;
                                                 });
                                                 if (isSeninChecked == true) {
                                                   valuesenin = 1;
@@ -737,22 +728,16 @@ class _RegisPromoState extends State<RegisPromo> {
                                           ),
                                           Text(
                                             'Senin',
-                                            style: TextStyle(
-                                              fontSize: 18,
-                                              fontFamily: 'Poppins',
-                                            ),
+                                            style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                           ),
                                           Padding(
-                                            padding: const EdgeInsets.only(
-                                              left: 5,
-                                            ),
+                                            padding: const EdgeInsets.only(left: 5),
                                             child: Center(
                                               child: Checkbox(
                                                 value: isSelasaChecked,
                                                 onChanged: (bool? value) {
                                                   setState(() {
-                                                    isSelasaChecked =
-                                                        value ?? false;
+                                                    isSelasaChecked = value ?? false;
                                                   });
                                                   if (isSelasaChecked == true) {
                                                     valueselasa = 1;
@@ -765,18 +750,14 @@ class _RegisPromoState extends State<RegisPromo> {
                                           ),
                                           Text(
                                             'Selasa',
-                                            style: TextStyle(
-                                              fontSize: 18,
-                                              fontFamily: 'Poppins',
-                                            ),
+                                            style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                           ),
                                           Center(
                                             child: Checkbox(
                                               value: isRabuChecked,
                                               onChanged: (bool? value) {
                                                 setState(() {
-                                                  isRabuChecked =
-                                                      value ?? false;
+                                                  isRabuChecked = value ?? false;
                                                 });
                                                 if (isRabuChecked == true) {
                                                   valuerabu = 1;
@@ -786,20 +767,13 @@ class _RegisPromoState extends State<RegisPromo> {
                                               },
                                             ),
                                           ),
-                                          Text(
-                                            'Rabu',
-                                            style: TextStyle(
-                                              fontSize: 18,
-                                              fontFamily: 'Poppins',
-                                            ),
-                                          ),
+                                          Text('Rabu', style: TextStyle(fontSize: 18, fontFamily: 'Poppins')),
                                           Center(
                                             child: Checkbox(
                                               value: isKamisChecked,
                                               onChanged: (bool? value) {
                                                 setState(() {
-                                                  isKamisChecked =
-                                                      value ?? false;
+                                                  isKamisChecked = value ?? false;
                                                 });
                                                 if (isKamisChecked == true) {
                                                   valuekamis = 1;
@@ -811,18 +785,14 @@ class _RegisPromoState extends State<RegisPromo> {
                                           ),
                                           Text(
                                             'Kamis',
-                                            style: TextStyle(
-                                              fontSize: 18,
-                                              fontFamily: 'Poppins',
-                                            ),
+                                            style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                           ),
                                           Center(
                                             child: Checkbox(
                                               value: isJumatChecked,
                                               onChanged: (bool? value) {
                                                 setState(() {
-                                                  isJumatChecked =
-                                                      value ?? false;
+                                                  isJumatChecked = value ?? false;
                                                 });
                                                 if (isJumatChecked == true) {
                                                   valuejumat = 1;
@@ -834,18 +804,14 @@ class _RegisPromoState extends State<RegisPromo> {
                                           ),
                                           Text(
                                             'Jumat',
-                                            style: TextStyle(
-                                              fontSize: 18,
-                                              fontFamily: 'Poppins',
-                                            ),
+                                            style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                           ),
                                           Center(
                                             child: Checkbox(
                                               value: isSabtuChecked,
                                               onChanged: (bool? value) {
                                                 setState(() {
-                                                  isSabtuChecked =
-                                                      value ?? false;
+                                                  isSabtuChecked = value ?? false;
                                                 });
                                                 if (isSabtuChecked == true) {
                                                   valuesabtu = 1;
@@ -857,18 +823,14 @@ class _RegisPromoState extends State<RegisPromo> {
                                           ),
                                           Text(
                                             'Sabtu',
-                                            style: TextStyle(
-                                              fontSize: 18,
-                                              fontFamily: 'Poppins',
-                                            ),
+                                            style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                           ),
                                           Center(
                                             child: Checkbox(
                                               value: isMingguChecked,
                                               onChanged: (bool? value) {
                                                 setState(() {
-                                                  isMingguChecked =
-                                                      value ?? false;
+                                                  isMingguChecked = value ?? false;
                                                 });
                                                 if (isMingguChecked == true) {
                                                   valueminggu = 1;
@@ -880,10 +842,7 @@ class _RegisPromoState extends State<RegisPromo> {
                                           ),
                                           Text(
                                             'Minggu',
-                                            style: TextStyle(
-                                              fontSize: 18,
-                                              fontFamily: 'Poppins',
-                                            ),
+                                            style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                           ),
                                         ],
                                       ),
@@ -894,44 +853,30 @@ class _RegisPromoState extends State<RegisPromo> {
                                             width: 50,
                                             height: 30,
                                             decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
+                                              borderRadius: BorderRadius.circular(10),
                                               color: Colors.grey[300],
                                             ),
                                             child: TextField(
                                               controller: controller_jam_mulai,
-                                              keyboardType:
-                                                  TextInputType.number,
-                                              inputFormatters:
-                                                  <TextInputFormatter>[
-                                                    FilteringTextInputFormatter
-                                                        .digitsOnly,
-                                                  ],
+                                              keyboardType: TextInputType.number,
+                                              inputFormatters: <TextInputFormatter>[
+                                                FilteringTextInputFormatter.digitsOnly,
+                                              ],
                                               decoration: InputDecoration(
                                                 border: InputBorder.none,
-                                                contentPadding:
-                                                    EdgeInsets.symmetric(
-                                                      vertical: 13.5,
-                                                      horizontal: 10,
-                                                    ),
+                                                contentPadding: EdgeInsets.symmetric(
+                                                  vertical: 13.5,
+                                                  horizontal: 10,
+                                                ),
                                               ),
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                fontFamily: 'Poppins',
-                                              ),
+                                              style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                             ),
                                           ),
                                           Padding(
-                                            padding: EdgeInsets.only(
-                                              left: 5,
-                                              right: 5,
-                                            ),
+                                            padding: EdgeInsets.only(left: 5, right: 5),
                                             child: Text(
                                               ':',
-                                              style: TextStyle(
-                                                fontSize: 18,
-                                                fontFamily: 'Poppins',
-                                              ),
+                                              style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                             ),
                                           ),
                                           Container(
@@ -939,45 +884,30 @@ class _RegisPromoState extends State<RegisPromo> {
                                             width: 50,
                                             height: 30,
                                             decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
+                                              borderRadius: BorderRadius.circular(10),
                                               color: Colors.grey[300],
                                             ),
                                             child: TextField(
-                                              controller:
-                                                  controller_menit_mulai,
-                                              keyboardType:
-                                                  TextInputType.number,
-                                              inputFormatters:
-                                                  <TextInputFormatter>[
-                                                    FilteringTextInputFormatter
-                                                        .digitsOnly,
-                                                  ],
+                                              controller: controller_menit_mulai,
+                                              keyboardType: TextInputType.number,
+                                              inputFormatters: <TextInputFormatter>[
+                                                FilteringTextInputFormatter.digitsOnly,
+                                              ],
                                               decoration: InputDecoration(
                                                 border: InputBorder.none,
-                                                contentPadding:
-                                                    EdgeInsets.symmetric(
-                                                      vertical: 13.5,
-                                                      horizontal: 10,
-                                                    ),
+                                                contentPadding: EdgeInsets.symmetric(
+                                                  vertical: 13.5,
+                                                  horizontal: 10,
+                                                ),
                                               ),
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                fontFamily: 'Poppins',
-                                              ),
+                                              style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                             ),
                                           ),
                                           Padding(
-                                            padding: EdgeInsets.only(
-                                              left: 10,
-                                              right: 10,
-                                            ),
+                                            padding: EdgeInsets.only(left: 10, right: 10),
                                             child: Text(
                                               'Sampai',
-                                              style: TextStyle(
-                                                fontSize: 18,
-                                                fontFamily: 'Poppins',
-                                              ),
+                                              style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                             ),
                                           ),
                                           Container(
@@ -985,45 +915,30 @@ class _RegisPromoState extends State<RegisPromo> {
                                             width: 50,
                                             height: 30,
                                             decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
+                                              borderRadius: BorderRadius.circular(10),
                                               color: Colors.grey[300],
                                             ),
                                             child: TextField(
-                                              controller:
-                                                  controller_jam_selesai,
-                                              keyboardType:
-                                                  TextInputType.number,
-                                              inputFormatters:
-                                                  <TextInputFormatter>[
-                                                    FilteringTextInputFormatter
-                                                        .digitsOnly,
-                                                  ],
+                                              controller: controller_jam_selesai,
+                                              keyboardType: TextInputType.number,
+                                              inputFormatters: <TextInputFormatter>[
+                                                FilteringTextInputFormatter.digitsOnly,
+                                              ],
                                               decoration: InputDecoration(
                                                 border: InputBorder.none,
-                                                contentPadding:
-                                                    EdgeInsets.symmetric(
-                                                      vertical: 13.5,
-                                                      horizontal: 10,
-                                                    ),
+                                                contentPadding: EdgeInsets.symmetric(
+                                                  vertical: 13.5,
+                                                  horizontal: 10,
+                                                ),
                                               ),
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                fontFamily: 'Poppins',
-                                              ),
+                                              style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                             ),
                                           ),
                                           Padding(
-                                            padding: EdgeInsets.only(
-                                              left: 5,
-                                              right: 5,
-                                            ),
+                                            padding: EdgeInsets.only(left: 5, right: 5),
                                             child: Text(
                                               ':',
-                                              style: TextStyle(
-                                                fontSize: 18,
-                                                fontFamily: 'Poppins',
-                                              ),
+                                              style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                             ),
                                           ),
                                           Container(
@@ -1031,32 +946,23 @@ class _RegisPromoState extends State<RegisPromo> {
                                             width: 50,
                                             height: 30,
                                             decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
+                                              borderRadius: BorderRadius.circular(10),
                                               color: Colors.grey[300],
                                             ),
                                             child: TextField(
-                                              controller:
-                                                  controller_menit_selesai,
-                                              keyboardType:
-                                                  TextInputType.number,
-                                              inputFormatters:
-                                                  <TextInputFormatter>[
-                                                    FilteringTextInputFormatter
-                                                        .digitsOnly,
-                                                  ],
+                                              controller: controller_menit_selesai,
+                                              keyboardType: TextInputType.number,
+                                              inputFormatters: <TextInputFormatter>[
+                                                FilteringTextInputFormatter.digitsOnly,
+                                              ],
                                               decoration: InputDecoration(
                                                 border: InputBorder.none,
-                                                contentPadding:
-                                                    EdgeInsets.symmetric(
-                                                      vertical: 13.5,
-                                                      horizontal: 10,
-                                                    ),
+                                                contentPadding: EdgeInsets.symmetric(
+                                                  vertical: 13.5,
+                                                  horizontal: 10,
+                                                ),
                                               ),
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                fontFamily: 'Poppins',
-                                              ),
+                                              style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                             ),
                                           ),
                                         ],
@@ -1070,8 +976,7 @@ class _RegisPromoState extends State<RegisPromo> {
                                               value: isUmumChecked,
                                               onChanged: (bool? value) {
                                                 setState(() {
-                                                  isUmumChecked =
-                                                      value ?? false;
+                                                  isUmumChecked = value ?? false;
                                                 });
                                                 if (isUmumChecked == true) {
                                                   valueumum = 1;
@@ -1081,23 +986,14 @@ class _RegisPromoState extends State<RegisPromo> {
                                               },
                                             ),
                                           ),
-                                          Text(
-                                            'Umum',
-                                            style: TextStyle(
-                                              fontSize: 18,
-                                              fontFamily: 'Poppins',
-                                            ),
-                                          ),
+                                          Text('Umum', style: TextStyle(fontSize: 18, fontFamily: 'Poppins')),
                                           Padding(
-                                            padding: const EdgeInsets.only(
-                                              left: 30,
-                                            ),
+                                            padding: const EdgeInsets.only(left: 30),
                                             child: Checkbox(
                                               value: isMemberChecked,
                                               onChanged: (bool? value) {
                                                 setState(() {
-                                                  isMemberChecked =
-                                                      value ?? false;
+                                                  isMemberChecked = value ?? false;
                                                 });
                                                 if (isMemberChecked == true) {
                                                   valuemember = 1;
@@ -1109,22 +1005,16 @@ class _RegisPromoState extends State<RegisPromo> {
                                           ),
                                           Text(
                                             'Member',
-                                            style: TextStyle(
-                                              fontSize: 18,
-                                              fontFamily: 'Poppins',
-                                            ),
+                                            style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                           ),
                                           Padding(
-                                            padding: const EdgeInsets.only(
-                                              left: 30,
-                                            ),
+                                            padding: const EdgeInsets.only(left: 30),
                                             child: Center(
                                               child: Checkbox(
                                                 value: isVIPChecked,
                                                 onChanged: (bool? value) {
                                                   setState(() {
-                                                    isVIPChecked =
-                                                        value ?? false;
+                                                    isVIPChecked = value ?? false;
                                                   });
                                                   if (isVIPChecked == true) {
                                                     valuevip = 1;
@@ -1135,13 +1025,7 @@ class _RegisPromoState extends State<RegisPromo> {
                                               ),
                                             ),
                                           ),
-                                          Text(
-                                            'VIP',
-                                            style: TextStyle(
-                                              fontSize: 18,
-                                              fontFamily: 'Poppins',
-                                            ),
-                                          ),
+                                          Text('VIP', style: TextStyle(fontSize: 18, fontFamily: 'Poppins')),
                                         ],
                                       ),
                                     ],
@@ -1163,16 +1047,8 @@ class _RegisPromoState extends State<RegisPromo> {
                                 onPressed: () {
                                   inputdatapromohappyhour();
                                 },
-                                style: TextButton.styleFrom(
-                                  foregroundColor: Colors.black,
-                                ),
-                                child: Text(
-                                  'Simpan',
-                                  style: TextStyle(
-                                    fontSize: 40,
-                                    fontFamily: 'Poppins',
-                                  ),
-                                ),
+                                style: TextButton.styleFrom(foregroundColor: Colors.black),
+                                child: Text('Simpan', style: TextStyle(fontSize: 40, fontFamily: 'Poppins')),
                               ),
                             ),
                           ),
@@ -1196,62 +1072,41 @@ class _RegisPromoState extends State<RegisPromo> {
                                 child: Container(
                                   height: 260,
                                   width: 200,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                  ),
+                                  decoration: BoxDecoration(color: Colors.white),
                                   child: Padding(
                                     padding: EdgeInsets.only(right: 10),
                                     child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
+                                      crossAxisAlignment: CrossAxisAlignment.end,
                                       children: [
                                         SizedBox(height: 15),
                                         Text(
                                           'Kode Promo :',
-                                          style: TextStyle(
-                                            fontFamily: 'Poppins',
-                                            fontSize: 18,
-                                          ),
+                                          style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
                                         ),
                                         SizedBox(height: 15),
                                         Text(
                                           'Nama Paket :',
-                                          style: TextStyle(
-                                            fontFamily: 'Poppins',
-                                            fontSize: 18,
-                                          ),
+                                          style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
                                         ),
                                         SizedBox(height: 15),
                                         Text(
                                           'Harga Satuan :',
-                                          style: TextStyle(
-                                            fontFamily: 'Poppins',
-                                            fontSize: 18,
-                                          ),
+                                          style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
                                         ),
                                         SizedBox(height: 15),
                                         Text(
                                           'Limit Promo :',
-                                          style: TextStyle(
-                                            fontFamily: 'Poppins',
-                                            fontSize: 18,
-                                          ),
+                                          style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
                                         ),
                                         SizedBox(height: 15),
                                         Text(
                                           'Limit Kunjungan :',
-                                          style: TextStyle(
-                                            fontFamily: 'Poppins',
-                                            fontSize: 18,
-                                          ),
+                                          style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
                                         ),
                                         SizedBox(height: 15),
                                         Text(
                                           'Harga Promo :',
-                                          style: TextStyle(
-                                            fontFamily: 'Poppins',
-                                            fontSize: 18,
-                                          ),
+                                          style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
                                         ),
                                       ],
                                     ),
@@ -1265,8 +1120,7 @@ class _RegisPromoState extends State<RegisPromo> {
                                 child: Padding(
                                   padding: EdgeInsets.only(left: 10),
                                   child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       SizedBox(height: 12),
                                       Container(
@@ -1274,26 +1128,19 @@ class _RegisPromoState extends State<RegisPromo> {
                                         width: 730,
                                         height: 30,
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
+                                          borderRadius: BorderRadius.circular(10),
                                           color: Colors.grey[300],
                                         ),
                                         child: TextField(
-                                          controller:
-                                              controller_kode_promo_kunjungan,
+                                          controller: controller_kode_promo_kunjungan,
                                           decoration: InputDecoration(
                                             border: InputBorder.none,
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                  vertical: 13.5,
-                                                  horizontal: 10,
-                                                ),
+                                            contentPadding: EdgeInsets.symmetric(
+                                              vertical: 13.5,
+                                              horizontal: 10,
+                                            ),
                                           ),
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontFamily: 'Poppins',
-                                          ),
+                                          style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                         ),
                                       ),
                                       SizedBox(height: 12),
@@ -1301,74 +1148,50 @@ class _RegisPromoState extends State<RegisPromo> {
                                         width: 730,
                                         height: 30,
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
+                                          borderRadius: BorderRadius.circular(10),
                                           color: Colors.grey[300],
                                         ),
 
                                         child: DropdownButton<String>(
                                           value: dropdownNamaPaket,
                                           isExpanded: true,
-                                          icon: const Icon(
-                                            Icons.arrow_drop_down,
-                                          ),
+                                          icon: const Icon(Icons.arrow_drop_down),
                                           elevation: 16,
-                                          style: const TextStyle(
-                                            color: Colors.deepPurple,
-                                          ),
+                                          style: const TextStyle(color: Colors.deepPurple),
                                           underline: SizedBox(),
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 10,
-                                          ),
+                                          padding: EdgeInsets.symmetric(horizontal: 10),
                                           onChanged: (String? value) {
                                             setState(() {
                                               dropdownNamaPaket = value;
-                                              controller_limit_kunjungan
-                                                  .clear();
+                                              controller_limit_kunjungan.clear();
                                               controller_diskon_paket.clear();
                                               hargaPromo.value = 0;
                                               diskonPaket.value = 0.0;
                                               // Find the corresponding id_karyawan
-                                              var selectedPaket = _listNamaPaket
-                                                  .firstWhere(
-                                                    (item) =>
-                                                        item['nama_paket_msg'] ==
-                                                        value,
-                                                    orElse:
-                                                        () => {
-                                                          "nama_paket_msg": "",
-                                                          "harga_paket_msg": 0,
-                                                        },
-                                                  );
+                                              var selectedPaket = _listNamaPaket.firstWhere(
+                                                (item) => item['nama_paket_msg'] == value,
+                                                orElse: () => {"nama_paket_msg": "", "harga_paket_msg": 0},
+                                              );
                                               // controller_hargasatuan
                                               //     .text = currencyFormatter.format(
                                               //   selectedPaket['harga_paket_msg'],
                                               // );
                                               hargaSatuan.value =
-                                                  (selectedPaket['harga_paket_msg']
-                                                          as num)
-                                                      .toDouble();
+                                                  (selectedPaket['harga_paket_msg'] as num).toDouble();
                                               controller_hargasatuan.text =
-                                                  selectedPaket['harga_paket_msg']
-                                                      .toString();
-                                              selectedDurasi =
-                                                  selectedPaket['durasi'];
+                                                  selectedPaket['harga_paket_msg'].toString();
+                                              selectedDurasi = selectedPaket['durasi'];
                                               // controller_hargasatuan
                                               //     .text = currencyFormatter
                                               //     .format(hargaSatuan.value);
                                             });
                                           },
                                           items:
-                                              _listNamaPaket.map<
-                                                DropdownMenuItem<String>
-                                              >((item) {
+                                              _listNamaPaket.map<DropdownMenuItem<String>>((item) {
                                                 return DropdownMenuItem<String>(
-                                                  value:
-                                                      item['nama_paket_msg'], // Use ID as value
+                                                  value: item['nama_paket_msg'], // Use ID as value
                                                   child: Align(
-                                                    alignment:
-                                                        Alignment.centerLeft,
+                                                    alignment: Alignment.centerLeft,
                                                     child: Text(
                                                       item['nama_paket_msg']
                                                           .toString(), // Display category name
@@ -1388,25 +1211,19 @@ class _RegisPromoState extends State<RegisPromo> {
                                         width: 730,
                                         height: 30,
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
+                                          borderRadius: BorderRadius.circular(10),
                                           color: Colors.grey[300],
                                         ),
                                         child: TextField(
                                           controller: controller_hargasatuan,
-                                          keyboardType:
-                                              TextInputType
-                                                  .number, // Show number keyboard
+                                          keyboardType: TextInputType.number, // Show number keyboard
                                           inputFormatters: <TextInputFormatter>[
-                                            FilteringTextInputFormatter
-                                                .digitsOnly, // Allow only digits
+                                            FilteringTextInputFormatter.digitsOnly, // Allow only digits
                                           ],
                                           onChanged: (value) {
                                             if (value.isNotEmpty) {
                                               if (int.parse(value) > 0) {
-                                                hargaSatuan.value =
-                                                    double.parse(value);
+                                                hargaSatuan.value = double.parse(value);
 
                                                 calculateHargaPromo();
                                               }
@@ -1415,16 +1232,12 @@ class _RegisPromoState extends State<RegisPromo> {
                                           readOnly: false,
                                           decoration: InputDecoration(
                                             border: InputBorder.none,
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                  vertical: 13.5,
-                                                  horizontal: 10,
-                                                ),
+                                            contentPadding: EdgeInsets.symmetric(
+                                              vertical: 13.5,
+                                              horizontal: 10,
+                                            ),
                                           ),
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontFamily: 'Poppins',
-                                          ),
+                                          style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                         ),
                                       ),
                                       SizedBox(height: 12),
@@ -1435,44 +1248,30 @@ class _RegisPromoState extends State<RegisPromo> {
                                             width: 70,
                                             height: 30,
                                             decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
+                                              borderRadius: BorderRadius.circular(10),
                                               color: Colors.grey[300],
                                             ),
                                             child: TextField(
-                                              controller:
-                                                  controller_limit_promo,
-                                              keyboardType:
-                                                  TextInputType
-                                                      .number, // Show number keyboard
-                                              inputFormatters: <
-                                                TextInputFormatter
-                                              >[
-                                                FilteringTextInputFormatter
-                                                    .digitsOnly, // Allow only digits
+                                              controller: controller_limit_promo,
+                                              keyboardType: TextInputType.number, // Show number keyboard
+                                              inputFormatters: <TextInputFormatter>[
+                                                FilteringTextInputFormatter.digitsOnly, // Allow only digits
                                               ],
                                               decoration: InputDecoration(
                                                 border: InputBorder.none,
-                                                contentPadding:
-                                                    EdgeInsets.symmetric(
-                                                      vertical: 13.5,
-                                                      horizontal: 10,
-                                                    ),
+                                                contentPadding: EdgeInsets.symmetric(
+                                                  vertical: 13.5,
+                                                  horizontal: 10,
+                                                ),
                                               ),
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                fontFamily: 'Poppins',
-                                              ),
+                                              style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                             ),
                                           ),
                                           Padding(
                                             padding: EdgeInsets.only(left: 10),
                                             child: Text(
                                               'Tahun',
-                                              style: TextStyle(
-                                                fontSize: 18,
-                                                fontFamily: 'Poppins',
-                                              ),
+                                              style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                             ),
                                           ),
                                         ],
@@ -1485,94 +1284,64 @@ class _RegisPromoState extends State<RegisPromo> {
                                             width: 70,
                                             height: 30,
                                             decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
+                                              borderRadius: BorderRadius.circular(10),
                                               color: Colors.grey[300],
                                             ),
                                             child: TextField(
-                                              controller:
-                                                  controller_limit_kunjungan,
-                                              keyboardType:
-                                                  TextInputType
-                                                      .number, // Show number keyboard
-                                              inputFormatters: <
-                                                TextInputFormatter
-                                              >[
-                                                FilteringTextInputFormatter
-                                                    .digitsOnly, // Allow only digits
+                                              controller: controller_limit_kunjungan,
+                                              keyboardType: TextInputType.number, // Show number keyboard
+                                              inputFormatters: <TextInputFormatter>[
+                                                FilteringTextInputFormatter.digitsOnly, // Allow only digits
                                               ],
                                               decoration: InputDecoration(
                                                 border: InputBorder.none,
-                                                contentPadding:
-                                                    EdgeInsets.symmetric(
-                                                      vertical: 13.5,
-                                                      horizontal: 10,
-                                                    ),
+                                                contentPadding: EdgeInsets.symmetric(
+                                                  vertical: 13.5,
+                                                  horizontal: 10,
+                                                ),
                                               ),
                                               onChanged: (value) {
-                                                limitKunjungan.value =
-                                                    int.tryParse(value) ?? 1;
+                                                limitKunjungan.value = int.tryParse(value) ?? 1;
                                                 calculateHargaPromo();
                                               },
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                fontFamily: 'Poppins',
-                                              ),
+                                              style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                             ),
                                           ),
                                           Padding(
                                             padding: EdgeInsets.only(left: 10),
                                             child: Text(
                                               'Discount :',
-                                              style: TextStyle(
-                                                fontSize: 18,
-                                                fontFamily: 'Poppins',
-                                              ),
+                                              style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                             ),
                                           ),
                                           Padding(
-                                            padding: const EdgeInsets.only(
-                                              left: 10,
-                                            ),
+                                            padding: const EdgeInsets.only(left: 10),
                                             child: Container(
                                               alignment: Alignment.centerLeft,
                                               width: 70,
                                               height: 30,
                                               decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
+                                                borderRadius: BorderRadius.circular(10),
                                                 color: Colors.grey[300],
                                               ),
                                               child: TextField(
-                                                controller:
-                                                    controller_diskon_paket,
-                                                keyboardType:
-                                                    TextInputType
-                                                        .number, // Show number keyboard
-                                                inputFormatters: <
-                                                  TextInputFormatter
-                                                >[
-                                                  FilteringTextInputFormatter
-                                                      .digitsOnly, // Allow only digits
+                                                controller: controller_diskon_paket,
+                                                keyboardType: TextInputType.number, // Show number keyboard
+                                                inputFormatters: <TextInputFormatter>[
+                                                  FilteringTextInputFormatter.digitsOnly, // Allow only digits
                                                 ],
                                                 decoration: InputDecoration(
                                                   border: InputBorder.none,
-                                                  contentPadding:
-                                                      EdgeInsets.symmetric(
-                                                        vertical: 13.5,
-                                                        horizontal: 10,
-                                                      ),
+                                                  contentPadding: EdgeInsets.symmetric(
+                                                    vertical: 13.5,
+                                                    horizontal: 10,
+                                                  ),
                                                 ),
                                                 onChanged: (value) {
-                                                  diskonPaket.value =
-                                                      double.tryParse(value) ??
-                                                      0.0;
+                                                  diskonPaket.value = double.tryParse(value) ?? 0.0;
                                                   calculateHargaPromo();
                                                 },
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  fontFamily: 'Poppins',
-                                                ),
+                                                style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                               ),
                                             ),
                                           ),
@@ -1580,10 +1349,7 @@ class _RegisPromoState extends State<RegisPromo> {
                                             padding: EdgeInsets.only(left: 10),
                                             child: Text(
                                               '%',
-                                              style: TextStyle(
-                                                fontSize: 18,
-                                                fontFamily: 'Poppins',
-                                              ),
+                                              style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                             ),
                                           ),
                                         ],
@@ -1594,30 +1360,22 @@ class _RegisPromoState extends State<RegisPromo> {
                                         width: 250,
                                         height: 30,
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
+                                          borderRadius: BorderRadius.circular(10),
                                           color: Colors.grey[300],
                                         ),
                                         child: Obx(
                                           () => TextField(
                                             decoration: InputDecoration(
                                               border: InputBorder.none,
-                                              contentPadding:
-                                                  EdgeInsets.symmetric(
-                                                    vertical: 13.5,
-                                                    horizontal: 10,
-                                                  ),
+                                              contentPadding: EdgeInsets.symmetric(
+                                                vertical: 13.5,
+                                                horizontal: 10,
+                                              ),
                                             ),
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              fontFamily: 'Poppins',
-                                            ),
+                                            style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                             readOnly: true,
                                             controller: TextEditingController(
-                                              text: currencyFormatter.format(
-                                                hargaPromo.value,
-                                              ), // Auto-update
+                                              text: currencyFormatter.format(hargaPromo.value), // Auto-update
                                             ),
                                           ),
                                         ),
@@ -1641,16 +1399,8 @@ class _RegisPromoState extends State<RegisPromo> {
                                 onPressed: () {
                                   inputdatapromokunjungan();
                                 },
-                                style: TextButton.styleFrom(
-                                  foregroundColor: Colors.black,
-                                ),
-                                child: Text(
-                                  'Simpan',
-                                  style: TextStyle(
-                                    fontSize: 40,
-                                    fontFamily: 'Poppins',
-                                  ),
-                                ),
+                                style: TextButton.styleFrom(foregroundColor: Colors.black),
+                                child: Text('Simpan', style: TextStyle(fontSize: 40, fontFamily: 'Poppins')),
                               ),
                             ),
                           ),
@@ -1675,46 +1425,31 @@ class _RegisPromoState extends State<RegisPromo> {
                                 child: Container(
                                   height: 180,
                                   width: 200,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                  ),
+                                  decoration: BoxDecoration(color: Colors.white),
                                   child: Padding(
                                     padding: EdgeInsets.only(right: 10),
                                     child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
+                                      crossAxisAlignment: CrossAxisAlignment.end,
                                       children: [
                                         SizedBox(height: 15),
                                         Text(
                                           'Kode Promo :',
-                                          style: TextStyle(
-                                            fontFamily: 'Poppins',
-                                            fontSize: 18,
-                                          ),
+                                          style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
                                         ),
                                         SizedBox(height: 15),
                                         Text(
                                           'Nama Promo :',
-                                          style: TextStyle(
-                                            fontFamily: 'Poppins',
-                                            fontSize: 18,
-                                          ),
+                                          style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
                                         ),
                                         SizedBox(height: 15),
                                         Text(
                                           'Jangka Waktu :',
-                                          style: TextStyle(
-                                            fontFamily: 'Poppins',
-                                            fontSize: 18,
-                                          ),
+                                          style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
                                         ),
                                         SizedBox(height: 15),
                                         Text(
                                           'Harga Promo :',
-                                          style: TextStyle(
-                                            fontFamily: 'Poppins',
-                                            fontSize: 18,
-                                          ),
+                                          style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
                                         ),
                                       ],
                                     ),
@@ -1728,8 +1463,7 @@ class _RegisPromoState extends State<RegisPromo> {
                                 child: Padding(
                                   padding: EdgeInsets.only(left: 10),
                                   child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       SizedBox(height: 12),
                                       Container(
@@ -1737,26 +1471,19 @@ class _RegisPromoState extends State<RegisPromo> {
                                         width: 730,
                                         height: 30,
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
+                                          borderRadius: BorderRadius.circular(10),
                                           color: Colors.grey[300],
                                         ),
                                         child: TextField(
-                                          controller:
-                                              controller_kode_promo_tahunan,
+                                          controller: controller_kode_promo_tahunan,
                                           decoration: InputDecoration(
                                             border: InputBorder.none,
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                  vertical: 13.5,
-                                                  horizontal: 10,
-                                                ),
+                                            contentPadding: EdgeInsets.symmetric(
+                                              vertical: 13.5,
+                                              horizontal: 10,
+                                            ),
                                           ),
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontFamily: 'Poppins',
-                                          ),
+                                          style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                         ),
                                       ),
                                       SizedBox(height: 12),
@@ -1765,26 +1492,19 @@ class _RegisPromoState extends State<RegisPromo> {
                                         width: 730,
                                         height: 30,
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
+                                          borderRadius: BorderRadius.circular(10),
                                           color: Colors.grey[300],
                                         ),
                                         child: TextField(
-                                          controller:
-                                              controller_nama_promo_tahunan,
+                                          controller: controller_nama_promo_tahunan,
                                           decoration: InputDecoration(
                                             border: InputBorder.none,
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                  vertical: 13.5,
-                                                  horizontal: 10,
-                                                ),
+                                            contentPadding: EdgeInsets.symmetric(
+                                              vertical: 13.5,
+                                              horizontal: 10,
+                                            ),
                                           ),
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontFamily: 'Poppins',
-                                          ),
+                                          style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                         ),
                                       ),
                                       SizedBox(height: 12),
@@ -1795,41 +1515,28 @@ class _RegisPromoState extends State<RegisPromo> {
                                             width: 50,
                                             height: 30,
                                             decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
+                                              borderRadius: BorderRadius.circular(10),
                                               color: Colors.grey[300],
                                             ),
                                             child: TextField(
-                                              controller:
-                                                  controller_jangka_tahunan,
-                                              keyboardType:
-                                                  TextInputType.number,
-                                              inputFormatters: [
-                                                FilteringTextInputFormatter
-                                                    .digitsOnly,
-                                              ],
+                                              controller: controller_jangka_tahunan,
+                                              keyboardType: TextInputType.number,
+                                              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                                               decoration: InputDecoration(
                                                 border: InputBorder.none,
-                                                contentPadding:
-                                                    EdgeInsets.symmetric(
-                                                      vertical: 13.5,
-                                                      horizontal: 10,
-                                                    ),
+                                                contentPadding: EdgeInsets.symmetric(
+                                                  vertical: 13.5,
+                                                  horizontal: 10,
+                                                ),
                                               ),
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                fontFamily: 'Poppins',
-                                              ),
+                                              style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                             ),
                                           ),
                                           Padding(
                                             padding: EdgeInsets.only(left: 10),
                                             child: Text(
                                               'Tahun',
-                                              style: TextStyle(
-                                                fontSize: 18,
-                                                fontFamily: 'Poppins',
-                                              ),
+                                              style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                             ),
                                           ),
                                         ],
@@ -1840,31 +1547,21 @@ class _RegisPromoState extends State<RegisPromo> {
                                         width: 270,
                                         height: 30,
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
+                                          borderRadius: BorderRadius.circular(10),
                                           color: Colors.grey[300],
                                         ),
                                         child: TextField(
-                                          controller:
-                                              controller_harga_promo_tahunan,
+                                          controller: controller_harga_promo_tahunan,
                                           keyboardType: TextInputType.number,
-                                          inputFormatters: [
-                                            FilteringTextInputFormatter
-                                                .digitsOnly,
-                                          ],
+                                          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                                           decoration: InputDecoration(
                                             border: InputBorder.none,
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                  vertical: 13.5,
-                                                  horizontal: 10,
-                                                ),
+                                            contentPadding: EdgeInsets.symmetric(
+                                              vertical: 13.5,
+                                              horizontal: 10,
+                                            ),
                                           ),
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontFamily: 'Poppins',
-                                          ),
+                                          style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                         ),
                                       ),
                                     ],
@@ -1886,16 +1583,242 @@ class _RegisPromoState extends State<RegisPromo> {
                                 onPressed: () {
                                   inputdatapromotahunan();
                                 },
-                                style: TextButton.styleFrom(
-                                  foregroundColor: Colors.black,
-                                ),
-                                child: Text(
-                                  'Simpan',
-                                  style: TextStyle(
-                                    fontSize: 40,
-                                    fontFamily: 'Poppins',
+                                style: TextButton.styleFrom(foregroundColor: Colors.black),
+                                child: Text('Simpan', style: TextStyle(fontSize: 40, fontFamily: 'Poppins')),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  if (_isFourthContainerOnTop)
+                    Container(
+                      height: 300,
+                      width: 950,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.zero,
+                                child: Container(
+                                  height: 220,
+                                  width: 200,
+                                  decoration: BoxDecoration(color: Colors.white),
+                                  child: Padding(
+                                    padding: EdgeInsets.only(right: 10),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      children: [
+                                        SizedBox(height: 15),
+                                        Text(
+                                          'Kode Promo :',
+                                          style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
+                                        ),
+                                        SizedBox(height: 15),
+                                        Text(
+                                          'Nama Promo :',
+                                          style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
+                                        ),
+                                        SizedBox(height: 15),
+                                        Text(
+                                          'Paket :',
+                                          style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
+                                        ),
+                                        SizedBox(height: 15),
+                                        Text(
+                                          'Bonus Item :',
+                                          style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
+                                        ),
+                                        SizedBox(height: 15),
+                                        Text('Qty :', style: TextStyle(fontFamily: 'Poppins', fontSize: 18)),
+                                      ],
+                                    ),
                                   ),
                                 ),
+                              ),
+                              Container(
+                                height: 220,
+                                width: 750,
+                                decoration: BoxDecoration(color: Colors.white),
+                                child: Padding(
+                                  padding: EdgeInsets.only(left: 10),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      SizedBox(height: 12),
+                                      Container(
+                                        alignment: Alignment.centerLeft,
+                                        width: 730,
+                                        height: 30,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(10),
+                                          color: Colors.grey[300],
+                                        ),
+                                        child: TextField(
+                                          controller: controller_kode_promo_bonus_item,
+                                          decoration: InputDecoration(
+                                            border: InputBorder.none,
+                                            contentPadding: EdgeInsets.symmetric(
+                                              vertical: 13.5,
+                                              horizontal: 10,
+                                            ),
+                                          ),
+                                          style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
+                                        ),
+                                      ),
+                                      SizedBox(height: 12),
+                                      Container(
+                                        alignment: Alignment.centerLeft,
+                                        width: 730,
+                                        height: 30,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(10),
+                                          color: Colors.grey[300],
+                                        ),
+                                        child: TextField(
+                                          controller: controller_nama_promo_bonus_item,
+                                          decoration: InputDecoration(
+                                            border: InputBorder.none,
+                                            contentPadding: EdgeInsets.symmetric(
+                                              vertical: 13.5,
+                                              horizontal: 10,
+                                            ),
+                                          ),
+                                          style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
+                                        ),
+                                      ),
+                                      SizedBox(height: 12),
+                                      Row(
+                                        children: [
+                                          Container(
+                                            alignment: Alignment.centerLeft,
+                                            width: 730,
+                                            height: 30,
+                                            decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.circular(10),
+                                              color: Colors.grey[300],
+                                            ),
+                                            child: DropdownButton<String>(
+                                              value: dropdownnamapaketbonusitem,
+                                              isExpanded: true,
+                                              icon: const Icon(Icons.arrow_drop_down),
+                                              elevation: 16,
+                                              style: const TextStyle(color: Colors.deepPurple),
+                                              underline: SizedBox(),
+                                              padding: EdgeInsets.symmetric(horizontal: 10),
+                                              onChanged: (String? value) {
+                                                setState(() {
+                                                  dropdownnamapaketbonusitem = value;
+                                                });
+                                              },
+                                              items:
+                                                  _listNamaPaket.map<DropdownMenuItem<String>>((item) {
+                                                    return DropdownMenuItem<String>(
+                                                      value: item['id_paket_msg'], // Use ID as value
+                                                      child: Align(
+                                                        alignment: Alignment.centerLeft,
+                                                        child: Text(
+                                                          item['nama_paket_msg']
+                                                              .toString(), // Display category name
+                                                          style: const TextStyle(
+                                                            fontSize: 18,
+                                                            fontFamily: 'Poppins',
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    );
+                                                  }).toList(),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      SizedBox(height: 10),
+                                      Container(
+                                        alignment: Alignment.centerLeft,
+                                        width: 730,
+                                        height: 30,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(10),
+                                          color: Colors.grey[300],
+                                        ),
+                                        child: DropdownButton<String>(
+                                          value: selecteditem,
+                                          isExpanded: true,
+                                          icon: const Icon(Icons.arrow_drop_down),
+                                          elevation: 16,
+                                          style: const TextStyle(color: Colors.deepPurple),
+                                          underline: SizedBox(),
+                                          padding: EdgeInsets.symmetric(horizontal: 10),
+                                          onChanged: (String? value) {
+                                            setState(() {
+                                              selecteditem = value;
+                                            });
+                                          },
+                                          items:
+                                              _listfnb.map<DropdownMenuItem<String>>((item) {
+                                                return DropdownMenuItem<String>(
+                                                  value: item['id_fnb'], // Use ID as value
+                                                  child: Align(
+                                                    alignment: Alignment.centerLeft,
+                                                    child: Text(
+                                                      item['nama_fnb'].toString(), // Display category name
+                                                      style: const TextStyle(
+                                                        fontSize: 18,
+                                                        fontFamily: 'Poppins',
+                                                      ),
+                                                    ),
+                                                  ),
+                                                );
+                                              }).toList(),
+                                        ),
+                                      ),
+                                      SizedBox(height: 12),
+                                      Container(
+                                        alignment: Alignment.centerLeft,
+                                        width: 50,
+                                        height: 30,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(10),
+                                          color: Colors.grey[300],
+                                        ),
+                                        child: TextField(
+                                          controller: controller_qty_bonus_item,
+                                          decoration: InputDecoration(
+                                            border: InputBorder.none,
+                                            contentPadding: EdgeInsets.symmetric(
+                                              vertical: 13.5,
+                                              horizontal: 10,
+                                            ),
+                                          ),
+                                          style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 10),
+                          Center(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(15),
+                                color: Color(0XFFF6F7C4),
+                              ),
+                              height: 70,
+                              width: 300,
+                              child: TextButton(
+                                onPressed: () {
+                                  inputdatapromobonusitem();
+                                },
+                                style: TextButton.styleFrom(foregroundColor: Colors.black),
+                                child: Text('Simpan', style: TextStyle(fontSize: 40, fontFamily: 'Poppins')),
                               ),
                             ),
                           ),
