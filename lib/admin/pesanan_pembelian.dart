@@ -1,3 +1,4 @@
+import 'package:Project_SPA/function/admin_drawer.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 import 'package:Project_SPA/function/rupiah_formatter.dart';
 import 'package:cherry_toast/cherry_toast.dart';
@@ -14,7 +15,7 @@ class POPemasokController extends GetxController {
   final RxList<Map<String, dynamic>> suppliers = <Map<String, dynamic>>[].obs;
   final RxnString selectedSupplierId = RxnString();
 
-  // Item milik supplier terpilih (dari /supplier/{id}/items)
+  // Item milik supplier terpilih
   final RxList<Map<String, dynamic>> supplierItems = <Map<String, dynamic>>[].obs;
 
   // Baris input item yang akan dibeli
@@ -22,6 +23,12 @@ class POPemasokController extends GetxController {
 
   // No Form auto
   final RxString noForm = ''.obs;
+
+  // ===== Diskon =====
+  // mode: 'amount' (nominal rupiah) | 'percent' (persen)
+  final RxString discountMode = 'amount'.obs;
+  final RxInt discountAmount = 0.obs; // rupiah
+  final RxDouble discountPercent = 0.0.obs; // 0..100
 
   String get _base => myIpAddr().replaceAll(RegExp(r"/$"), "");
   String _ts() => DateTime.now().millisecondsSinceEpoch.toString();
@@ -36,9 +43,9 @@ class POPemasokController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    selectedSupplierId.value = null; // clear saat buka page
+    selectedSupplierId.value = null;
     fetchSuppliers();
-    addItemRow(); // mulai 1 baris kosong
+    addItemRow();
   }
 
   @override
@@ -46,6 +53,8 @@ class POPemasokController extends GetxController {
     for (final r in itemRows) {
       (r['qty'] as TextEditingController).dispose();
       (r['price'] as TextEditingController).dispose();
+      (r['purchaseUnit'] as TextEditingController).dispose();
+      (r['factor'] as TextEditingController).dispose();
     }
     try {
       selectedSupplierId.close();
@@ -109,14 +118,13 @@ class POPemasokController extends GetxController {
     addItemRow();
   }
 
-  // ================= SUPPLIER ITEMS (tetap dari supplier) =================
+  // ================= SUPPLIER ITEMS =================
   Future<void> fetchSupplierItems(String? idSupplier) async {
     supplierItems.clear();
     if (idSupplier == null || idSupplier.isEmpty) return;
     try {
       final res = await dio.get('$_base/supplier/$idSupplier/items?_ts=${_ts()}', options: _noCache);
       if (res.data is List) {
-        // ekspektasi backend: [{id, id_supplier, nama_item, harga_item}, ...]
         supplierItems.assignAll(List<Map<String, dynamic>>.from(res.data));
       }
     } catch (e) {
@@ -134,13 +142,21 @@ class POPemasokController extends GetxController {
 
   // ================= ROWS =================
   void addItemRow() {
-    itemRows.add({'itemId': null, 'qty': TextEditingController(), 'price': TextEditingController()});
+    itemRows.add({
+      'itemId': null, // supplier_items.id (opsional)
+      'qty': TextEditingController(),
+      'price': TextEditingController(),
+      'purchaseUnit': TextEditingController(text: ''),
+      'factor': TextEditingController(text: ''),
+    });
   }
 
   void removeItemRow(int index) {
     if (index < 0 || index >= itemRows.length) return;
     (itemRows[index]['qty'] as TextEditingController).dispose();
     (itemRows[index]['price'] as TextEditingController).dispose();
+    (itemRows[index]['purchaseUnit'] as TextEditingController).dispose();
+    (itemRows[index]['factor'] as TextEditingController).dispose();
     itemRows.removeAt(index);
   }
 
@@ -148,6 +164,8 @@ class POPemasokController extends GetxController {
     for (final r in itemRows) {
       (r['qty'] as TextEditingController).dispose();
       (r['price'] as TextEditingController).dispose();
+      (r['purchaseUnit'] as TextEditingController).dispose();
+      (r['factor'] as TextEditingController).dispose();
     }
     itemRows.clear();
   }
@@ -157,11 +175,6 @@ class POPemasokController extends GetxController {
     if (s.isEmpty) return 0;
     final cleaned = s.replaceAll('.', '').replaceAll(',', '.');
     return double.tryParse(cleaned) ?? 0;
-  }
-
-  String _priceString(dynamic harga) {
-    if (harga == null) return '';
-    return NumberFormat.decimalPattern('id').format(harga);
   }
 
   num lineTotal(Map<String, dynamic> r) {
@@ -180,6 +193,46 @@ class POPemasokController extends GetxController {
 
   num get grandTotal => subtotal;
 
+  // ===== Diskon helper =====
+  int _parseRupiah(String s) {
+    if (s.isEmpty) return 0;
+    final cleaned = s.replaceAll('.', '').replaceAll(',', '');
+    return int.tryParse(cleaned) ?? 0;
+  }
+
+  double _parsePercent(String s) {
+    if (s.isEmpty) return 0.0;
+    final v = double.tryParse(s.replaceAll(',', '.')) ?? 0.0;
+    if (v < 0) return 0.0;
+    if (v > 100) return 100.0;
+    return v;
+  }
+
+  // setter dari UI
+  void setDiscountText(String text) {
+    if (discountMode.value == 'amount') {
+      discountAmount.value = _parseRupiah(text);
+    } else {
+      discountPercent.value = _parsePercent(text);
+    }
+  }
+
+  // hitung nominal diskon berdasarkan mode
+  int get discountNominal {
+    final sub = subtotal.round();
+    if (discountMode.value == 'percent') {
+      final d = (sub * (discountPercent.value / 100.0)).floor();
+      return d.clamp(0, sub);
+    }
+    return discountAmount.value.clamp(0, sub);
+  }
+
+  // total setelah diskon
+  num get grandTotalNet {
+    final net = subtotal - discountNominal;
+    return net < 0 ? 0 : net;
+  }
+
   String money(num n) => NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(n);
 
   // ================= SIMPAN =================
@@ -188,7 +241,6 @@ class POPemasokController extends GetxController {
     required DateTime tanggalForm,
     required BuildContext context,
   }) async {
-    // >>> VALIDASI: no faktur wajib
     if (noFaktur.trim().isEmpty) {
       CherryToast.error(title: const Text("No Faktur Supplier wajib diisi")).show(context);
       return;
@@ -205,40 +257,62 @@ class POPemasokController extends GetxController {
 
     final detail = <Map<String, dynamic>>[];
     for (final r in itemRows) {
-      final idStr = r['itemId'] as String?;
+      final idStr = r['itemId'] as String?; // referensi dropdown
+      final selected = itemById(idStr);
+      final namaItem = (selected?['nama_item'] ?? '').toString().trim();
+
       final qty = int.tryParse((r['qty'] as TextEditingController).text.trim()) ?? 0;
       final harga =
           int.tryParse(
             (r['price'] as TextEditingController).text.trim().replaceAll('.', '').replaceAll(',', ''),
           ) ??
           0;
-      if (idStr == null || idStr.isEmpty || qty <= 0 || harga < 0) {
+      final purchaseUnit = (r['purchaseUnit'] as TextEditingController).text.trim();
+      final factor =
+          double.tryParse((r['factor'] as TextEditingController).text.trim().replaceAll(',', '.')) ?? 0;
+
+      if (namaItem.isEmpty || qty <= 0 || harga < 0 || purchaseUnit.isEmpty || factor <= 0) {
         CherryToast.error(
           title: const Text("Cek lagi baris item. Ada yang belum lengkap/valid."),
         ).show(context);
         return;
       }
-      final supplierItemId = int.tryParse(idStr) ?? -1; // supplier_items.id
-      if (supplierItemId <= 0) {
-        CherryToast.error(title: const Text("ID item tidak valid")).show(context);
-        return;
+
+      final row = {
+        'nama_item': namaItem,
+        'purchase_unit': purchaseUnit,
+        'factor_to_pcs': factor,
+        'qty': qty,
+        'harga_beli': harga,
+      };
+
+      if (idStr != null && idStr.isNotEmpty) {
+        final supplierItemId = int.tryParse(idStr);
+        if (supplierItemId != null && supplierItemId > 0) {
+          row['supplier_item_id'] = supplierItemId;
+        }
       }
-      detail.add({"supplier_item_id": supplierItemId, "qty": qty, "harga_beli": harga});
+      detail.add(row);
     }
 
     final body = {
       "no_faktur": noFaktur,
       "tanggal_form": DateFormat('yyyy-MM-dd').format(tanggalForm),
       "id_supplier": selectedSupplierId.value!,
+      // Diskon (baru)
+      "diskon_type": discountMode.value, // 'amount' | 'percent'
+      "diskon_value": discountMode.value == 'percent' ? discountPercent.value : discountAmount.value,
+      // Kompat lama: tetap kirim nominal diskon
+      "diskon": discountNominal,
+      // Items
       "items": detail,
     };
 
     try {
       final res = await dio.post('$_base/pembelian/simpan', data: body);
-      final idForm = res.data?['data']?['id_form'];
-      CherryToast.success(title: Text("Tersimpan • $idForm")).show(context);
+      final idForm = res.data?['data']?['id_form'] ?? res.data?['id_form'];
+      CherryToast.success(title: Text("Tersimpan • ${idForm ?? ''}")).show(context);
 
-      // CLEAR ALL
       selectedSupplierId.value = null;
       supplierItems.clear();
       _clearAllFieldsAfterSave(tanggalForm);
@@ -253,11 +327,12 @@ class POPemasokController extends GetxController {
   }
 
   void _clearAllFieldsAfterSave(DateTime tgl) {
-    // kosongkan baris & input
     clearAllItemRows();
     addItemRow();
-    // regenerate no form
     refreshNoForm(tgl);
+    discountMode.value = 'amount';
+    discountAmount.value = 0;
+    discountPercent.value = 0.0;
   }
 }
 
@@ -272,6 +347,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
   final _dateC = TextEditingController();
   final _noFormC = TextEditingController();
   final _fakturC = TextEditingController();
+  final _diskonC = TextEditingController();
   DateTime? _selectedDate;
 
   late final POPemasokController c;
@@ -284,9 +360,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
     _dateC.text = DateFormat('dd/MM/yyyy').format(_selectedDate!);
     c = Get.put(POPemasokController());
 
-    // sinkronkan no form auto ke textfield tanpa mengubah layout
     _noFormWorker = ever<String>(c.noForm, (v) => _noFormC.text = v);
-    // generate pertama kali
     c.refreshNoForm(_selectedDate!);
   }
 
@@ -296,6 +370,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
     _dateC.dispose();
     _noFormC.dispose();
     _fakturC.dispose();
+    _diskonC.dispose();
     super.dispose();
   }
 
@@ -311,7 +386,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
         _selectedDate = picked;
         _dateC.text = DateFormat('dd/MM/yyyy').format(picked);
       });
-      await c.refreshNoForm(picked); // update no form saat tanggal berubah
+      await c.refreshNoForm(picked);
     }
   }
 
@@ -325,6 +400,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
         centerTitle: true,
         backgroundColor: const Color(0XFFFFE0B2),
       ),
+      drawer: AdminDrawer(),
       body: Container(
         decoration: const BoxDecoration(color: Color(0XFFFFE0B2)),
         width: Get.width,
@@ -345,7 +421,8 @@ class _PesananPembelianState extends State<PesananPembelian> {
                             child: SizedBox(
                               width: Get.width * 0.4,
                               child: TextFormField(
-                                controller: _noFormC, // auto
+                                controller: _noFormC,
+                                readOnly: true,
                                 decoration: const InputDecoration(
                                   labelText: 'No Form',
                                   labelStyle: labelStyle,
@@ -363,7 +440,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
                           SizedBox(
                             width: Get.width * 0.4,
                             child: TextFormField(
-                              controller: _fakturC, // no faktur
+                              controller: _fakturC,
                               decoration: const InputDecoration(
                                 labelText: 'No Faktur Supplier',
                                 labelStyle: labelStyle,
@@ -458,8 +535,8 @@ class _PesananPembelianState extends State<PesananPembelian> {
                           tanggalForm: _selectedDate ?? DateTime.now(),
                           context: context,
                         );
-                        // bersihkan input UI lain
                         _fakturC.clear();
+                        _diskonC.clear(); // reset field diskon
                       },
                       child: Container(
                         decoration: BoxDecoration(
@@ -484,7 +561,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
               ),
 
               // =========================================================
-              // Container LIST INPUT ITEM DIBELI
+              // Container LIST INPUT ITEM DIBELI (Responsif, anti-overflow)
               // =========================================================
               const SizedBox(height: 16),
               Padding(
@@ -507,56 +584,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
                         ),
                         const SizedBox(height: 8),
 
-                        // Header kolom
-                        Row(
-                          children: const [
-                            SizedBox(
-                              width: 48,
-                              child: Text(
-                                "No",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Expanded(
-                              flex: 4,
-                              child: Text(
-                                "Nama Item",
-                                style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                "Qty",
-                                style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Expanded(
-                              flex: 3,
-                              child: Text(
-                                "Harga",
-                                style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Expanded(
-                              flex: 3,
-                              child: Text(
-                                "Total",
-                                style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            SizedBox(width: 40),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-
-                        // Baris input (ikut scroll halaman)
+                        // Baris input (responsif)
                         Obx(() {
                           if (c.itemRows.isEmpty) {
                             return const Padding(
@@ -568,135 +596,194 @@ class _PesananPembelianState extends State<PesananPembelian> {
                             );
                           }
 
-                          return Column(
-                            children: List.generate(c.itemRows.length, (i) {
-                              final r = c.itemRows[i];
-                              final qtyC = r['qty'] as TextEditingController;
-                              final priceC = r['price'] as TextEditingController;
-                              final selItemId = r['itemId'] as String?;
-                              final total = c.lineTotal(r);
+                          return LayoutBuilder(
+                            builder: (ctx, cons) {
+                              final isNarrow = cons.maxWidth < 1050;
 
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 8),
-                                child: Row(
-                                  children: [
-                                    // No
-                                    SizedBox(
-                                      width: 48,
-                                      child: Text(
-                                        '${i + 1}',
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(fontFamily: 'Poppins'),
+                              return Column(
+                                children: List.generate(c.itemRows.length, (i) {
+                                  final r = c.itemRows[i];
+                                  final qtyC = r['qty'] as TextEditingController;
+                                  final priceC = r['price'] as TextEditingController;
+                                  final unitC = r['purchaseUnit'] as TextEditingController;
+                                  final factorC = r['factor'] as TextEditingController;
+                                  final selItemId = r['itemId'] as String?;
+                                  final total = c.lineTotal(r);
+
+                                  // widgets kecil agar reusable
+                                  Widget namaItemDD() => Obx(
+                                    () => DropdownButtonFormField<String>(
+                                      value: selItemId,
+                                      isExpanded: true,
+                                      decoration: const InputDecoration(
+                                        isDense: true,
+                                        labelText: "Nama Item",
+                                        border: OutlineInputBorder(),
                                       ),
+                                      items:
+                                          c.supplierItems
+                                              .map(
+                                                (it) => DropdownMenuItem<String>(
+                                                  value: it['id']?.toString(),
+                                                  child: Text(
+                                                    '${it['nama_item'] ?? '-'} - ${it['satuan'] ?? '-'}',
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              )
+                                              .toList(),
+                                      onChanged: (val) {
+                                        if (c.selectedSupplierId.value == null) {
+                                          CherryToast.error(
+                                            title: const Text("Pilih pemasok terlebih dahulu"),
+                                          ).show(Get.context!);
+                                          return;
+                                        }
+                                        r['itemId'] = val; // cuma simpan item yang dipilih
+                                        c.itemRows.refresh(); // refresh tampilan
+                                      },
                                     ),
-                                    const SizedBox(width: 8),
+                                  );
 
-                                    // Nama Item (Dropdown) -> supplier_items
-                                    Expanded(
-                                      flex: 4,
-                                      child: Obx(
-                                        () => DropdownButtonFormField<String>(
-                                          value: selItemId,
-                                          isExpanded: true,
-                                          decoration: const InputDecoration(
-                                            isDense: true,
-                                            labelText: "Nama Item",
-                                            border: OutlineInputBorder(),
+                                  Widget qtyField() => TextField(
+                                    controller: qtyC,
+                                    onChanged: (_) => c.itemRows.refresh(),
+                                    keyboardType: const TextInputType.numberWithOptions(decimal: false),
+                                    decoration: const InputDecoration(
+                                      isDense: true,
+                                      labelText: "Qty",
+                                      border: OutlineInputBorder(),
+                                    ),
+                                  );
+
+                                  Widget hargaField() => TextField(
+                                    controller: priceC,
+                                    onChanged: (_) => c.itemRows.refresh(),
+                                    keyboardType: const TextInputType.numberWithOptions(decimal: false),
+                                    inputFormatters: <TextInputFormatter>[RupiahInputFormatter()],
+                                    decoration: const InputDecoration(
+                                      border: OutlineInputBorder(),
+                                      hintText: "Harga ",
+                                      isDense: true,
+                                    ),
+                                  );
+
+                                  Widget unitField() => TextField(
+                                    controller: unitC,
+                                    decoration: const InputDecoration(
+                                      isDense: true,
+                                      labelText: "Unit",
+                                      border: OutlineInputBorder(),
+                                    ),
+                                  );
+
+                                  Widget faktorField() => TextField(
+                                    controller: factorC,
+                                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
+                                    decoration: const InputDecoration(
+                                      isDense: true,
+                                      labelText: "Faktor",
+                                      border: OutlineInputBorder(),
+                                    ),
+                                  );
+
+                                  Widget totalField() => TextField(
+                                    readOnly: true,
+                                    controller: TextEditingController(text: c.money(total)),
+                                    decoration: const InputDecoration(
+                                      isDense: true,
+                                      labelText: "Total",
+                                      border: OutlineInputBorder(),
+                                    ),
+                                  );
+
+                                  Widget deleteBtn() => SizedBox(
+                                    width: 40,
+                                    child: IconButton(
+                                      tooltip: 'Hapus baris',
+                                      icon: const Icon(Icons.remove_circle, color: Colors.red),
+                                      onPressed: () => c.removeItemRow(i),
+                                    ),
+                                  );
+
+                                  if (!isNarrow) {
+                                    // 1 baris (lebar)
+                                    return Padding(
+                                      padding: const EdgeInsets.only(bottom: 8),
+                                      child: Row(
+                                        children: [
+                                          SizedBox(
+                                            width: 48,
+                                            child: Text(
+                                              '${i + 1}',
+                                              textAlign: TextAlign.center,
+                                              style: const TextStyle(fontFamily: 'Poppins'),
+                                            ),
                                           ),
-                                          items:
-                                              c.supplierItems
-                                                  .map(
-                                                    (it) => DropdownMenuItem<String>(
-                                                      value: it['id']?.toString(),
-                                                      child: Text(
-                                                        '${it['nama_item'] ?? '-'} - ${it['satuan'] ?? '-'}',
-                                                        overflow: TextOverflow.ellipsis,
-                                                      ),
-                                                    ),
-                                                  )
-                                                  .toList(),
-                                          onChanged: (val) {
-                                            if (c.selectedSupplierId.value == null) {
-                                              CherryToast.error(
-                                                title: const Text("Pilih pemasok terlebih dahulu"),
-                                              ).show(Get.context!);
-                                              return;
-                                            }
-                                            r['itemId'] = val;
+                                          const SizedBox(width: 8),
+                                          const SizedBox(width: 0),
+                                          // Nama Item
+                                          Expanded(flex: 5, child: namaItemDD()),
+                                          const SizedBox(width: 8),
+                                          // Qty
+                                          Expanded(flex: 2, child: qtyField()),
+                                          const SizedBox(width: 8),
+                                          // Harga
+                                          Expanded(flex: 3, child: hargaField()),
+                                          const SizedBox(width: 8),
+                                          // Unit
+                                          Expanded(flex: 2, child: unitField()),
+                                          const SizedBox(width: 8),
+                                          // Faktor
+                                          Expanded(flex: 2, child: faktorField()),
+                                          const SizedBox(width: 8),
+                                          // Total
+                                          Expanded(flex: 3, child: totalField()),
+                                          const SizedBox(width: 8),
+                                          deleteBtn(),
+                                        ],
+                                      ),
+                                    );
+                                  }
 
-                                            // auto set harga dari supplier_items
-                                            final item = c.itemById(val);
-                                            if (item != null) {
-                                              priceC.text = c._priceString(item['harga_item']);
-                                            }
-                                            c.itemRows.refresh();
-                                          },
+                                  // 2 baris (sempit) → anti-overflow
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 12),
+                                    child: Column(
+                                      children: [
+                                        Row(
+                                          children: [
+                                            SizedBox(
+                                              width: 48,
+                                              child: Text(
+                                                '${i + 1}',
+                                                textAlign: TextAlign.center,
+                                                style: const TextStyle(fontFamily: 'Poppins'),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Expanded(flex: 4, child: namaItemDD()),
+                                            const SizedBox(width: 8),
+                                            Expanded(flex: 2, child: qtyField()),
+                                            const SizedBox(width: 8),
+                                            Expanded(flex: 2, child: unitField()),
+                                            const SizedBox(width: 8),
+                                            Expanded(flex: 3, child: hargaField()),
+                                            const SizedBox(width: 8),
+                                            Expanded(flex: 2, child: faktorField()),
+                                            const SizedBox(width: 8),
+                                            Expanded(flex: 4, child: totalField()),
+                                            const SizedBox(width: 8),
+                                            deleteBtn(),
+                                          ],
                                         ),
-                                      ),
+                                      ],
                                     ),
-                                    const SizedBox(width: 8),
-
-                                    // Qty
-                                    Expanded(
-                                      flex: 2,
-                                      child: TextField(
-                                        controller: qtyC,
-                                        onChanged: (_) => c.itemRows.refresh(),
-                                        keyboardType: const TextInputType.numberWithOptions(decimal: false),
-                                        decoration: const InputDecoration(
-                                          isDense: true,
-                                          labelText: "Qty",
-                                          border: OutlineInputBorder(),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-
-                                    // Harga
-                                    Expanded(
-                                      flex: 3,
-                                      child: TextField(
-                                        controller: priceC,
-                                        onChanged: (_) => c.itemRows.refresh(),
-                                        keyboardType: const TextInputType.numberWithOptions(decimal: false),
-                                        inputFormatters: <TextInputFormatter>[RupiahInputFormatter()], //
-                                        decoration: InputDecoration(
-                                          border: OutlineInputBorder(),
-                                          hintText: "Harga ",
-                                          isDense: true,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-
-                                    // Total (readOnly)
-                                    Expanded(
-                                      flex: 3,
-                                      child: TextField(
-                                        readOnly: true,
-                                        controller: TextEditingController(text: c.money(total)),
-                                        decoration: const InputDecoration(
-                                          isDense: true,
-                                          labelText: "Total",
-                                          border: OutlineInputBorder(),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-
-                                    // Hapus baris
-                                    SizedBox(
-                                      width: 40,
-                                      child: IconButton(
-                                        tooltip: 'Hapus baris',
-                                        icon: const Icon(Icons.remove_circle, color: Colors.red),
-                                        onPressed: () => c.removeItemRow(i),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                  );
+                                }),
                               );
-                            }),
+                            },
                           );
                         }),
 
@@ -726,20 +813,104 @@ class _PesananPembelianState extends State<PesananPembelian> {
 
                         const Divider(height: 24),
 
-                        // Ringkasan total
+                        // Ringkasan total + Diskon (mode amount/percent)
                         Obx(
                           () => Align(
                             alignment: Alignment.centerRight,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
+                                // Subtotal (sebelum diskon)
                                 Text(
                                   "Subtotal: ${c.money(c.subtotal)}",
                                   style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
                                 ),
-                                const SizedBox(height: 4),
+                                const SizedBox(height: 8),
+
+                                // Input Diskon: mode + nilai
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    const Text("Diskon: ", style: TextStyle(fontFamily: 'Poppins')),
+                                    const SizedBox(width: 8),
+
+                                    // Dropdown mode
+                                    SizedBox(
+                                      width: 150,
+                                      child: DropdownButtonFormField<String>(
+                                        value: c.discountMode.value,
+                                        isExpanded: true,
+                                        items: const [
+                                          DropdownMenuItem(value: 'amount', child: Text('Nominal (Rp)')),
+                                          DropdownMenuItem(value: 'percent', child: Text('Persen (%)')),
+                                        ],
+                                        onChanged: (v) {
+                                          if (v == null) return;
+                                          setState(() {
+                                            c.discountMode.value = v;
+                                            _diskonC.text = ''; // clear tampilan input saat ganti mode
+                                            if (v == 'amount') {
+                                              c.discountPercent.value = 0.0;
+                                            } else {
+                                              c.discountAmount.value = 0;
+                                            }
+                                          });
+                                        },
+                                        decoration: const InputDecoration(
+                                          isDense: true,
+                                          border: OutlineInputBorder(),
+                                          filled: true,
+                                          fillColor: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+
+                                    const SizedBox(width: 8),
+
+                                    // Field nilai diskon (menyesuaikan mode)
+                                    SizedBox(
+                                      width: 180,
+                                      child: TextField(
+                                        controller: _diskonC,
+                                        onChanged: (v) => c.setDiscountText(v),
+                                        inputFormatters:
+                                            c.discountMode.value == 'amount'
+                                                ? <TextInputFormatter>[RupiahInputFormatter()]
+                                                : <TextInputFormatter>[
+                                                  FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                                                ],
+                                        keyboardType:
+                                            c.discountMode.value == 'amount'
+                                                ? const TextInputType.numberWithOptions(decimal: false)
+                                                : const TextInputType.numberWithOptions(decimal: true),
+                                        textAlign: TextAlign.right,
+                                        decoration: InputDecoration(
+                                          isDense: true,
+                                          hintText: c.discountMode.value == 'amount' ? "0" : "0 - 100",
+                                          suffixText: c.discountMode.value == 'amount' ? null : "%",
+                                          border: const OutlineInputBorder(),
+                                          filled: true,
+                                          fillColor: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+
+                                // Preview nominal diskon (kalau persen)
+                                if (c.discountMode.value == 'percent') ...[
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    "≈ Potongan: ${c.money(c.discountNominal)}",
+                                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                  ),
+                                ],
+
+                                const SizedBox(height: 8),
+
+                                // Grand Total setelah diskon
                                 Text(
-                                  "Grand Total: ${c.money(c.grandTotal)}",
+                                  "Grand Total: ${c.money(c.grandTotalNet)}",
                                   style: const TextStyle(
                                     fontFamily: 'Poppins',
                                     fontWeight: FontWeight.w700,

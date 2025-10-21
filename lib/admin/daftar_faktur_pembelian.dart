@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:Project_SPA/function/admin_drawer.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 import 'package:Project_SPA/function/rupiah_formatter.dart';
 import 'package:Project_SPA/resepsionis/detail_food_n_beverages.dart';
@@ -548,6 +549,7 @@ class HistoryPembelian extends StatelessWidget {
         centerTitle: true,
         backgroundColor: const Color(0XFFFFE0B2),
       ),
+      drawer: AdminDrawer(),
       body: Container(
         decoration: BoxDecoration(color: Color(0XFFFFE0B2)),
         padding: const EdgeInsets.only(top: 20, left: 20, right: 20),
