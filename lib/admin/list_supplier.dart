@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:developer';
 
 import 'package:Project_SPA/function/rupiah_formatter.dart';
@@ -55,11 +56,21 @@ class SupplierController extends GetxController {
   List<Map<String, dynamic>> get filteredItems {
     final q = itemQuery.value.trim().toLowerCase();
     if (q.isEmpty) return items;
-    return items.where((it) {
-      final name = (it['nama_item'] ?? '').toString().toLowerCase();
-      final unit = (it['satuan'] ?? '').toString().toLowerCase();
-      final priceStr = (it['harga_item'] ?? '').toString().toLowerCase();
-      return name.contains(q) || unit.contains(q) || priceStr.contains(q);
+
+    return items.where((item) {
+      // Check the main item name
+      final name = (item['nama_item'] ?? '').toString().toLowerCase();
+      if (name.contains(q)) {
+        return true;
+      }
+
+      // Check within the nested details list
+      final List details = item['detail_supplier_information'] ?? [];
+      return details.any((detail) {
+        final unit = (detail['satuan'] ?? '').toString().toLowerCase();
+        final priceStr = (detail['harga'] ?? '').toString().toLowerCase();
+        return unit.contains(q) || priceStr.contains(q);
+      });
     }).toList();
   }
 
@@ -80,26 +91,32 @@ class SupplierController extends GetxController {
 
   /// ---------- GET ----------
   Future<void> fetchSuppliers() async {
-    final res = await dio.get('$_base/supplier/listsupplier?_ts=${_ts()}', options: _noCache);
-    final List data = res.data;
+    try {
+      final res = await dio.get('$_base/supplier/listsupplier?_ts=${_ts()}', options: _noCache);
+      final List data = res.data;
 
-    // dedup by id + simpan detail
-    final seen = <String>{};
-    final all = <Map<String, dynamic>>[];
-    for (final e in data) {
-      final id = e['id_supplier'].toString();
-      if (seen.add(id)) {
-        all.add({
-          "id_supplier": id,
-          "nama_supplier": e["nama_supplier"],
-          "alamat": e["alamat"],
-          "telp": e["telp"],
-          "kota": e["kota"],
-          "contact_person": e["contact_person"],
-        });
+      // dedup by id + simpan detail
+      final seen = <String>{};
+      final all = <Map<String, dynamic>>[];
+      for (final e in data) {
+        final id = e['id_supplier'].toString();
+        if (seen.add(id)) {
+          all.add({
+            "id_supplier": id,
+            "nama_supplier": e["nama_supplier"],
+            "alamat": e["alamat"],
+            "telp": e["telp"],
+            "kota": e["kota"],
+            "contact_person": e["contact_person"],
+          });
+        }
+      }
+      suppliers.assignAll(all);
+    } catch (e) {
+      if (e is DioException) {
+        log("Error FetchSupplier ${e.response!.data}");
       }
     }
-    suppliers.assignAll(all);
   }
 
   Future<void> fetchItems(String idSupplier) async {
@@ -114,36 +131,43 @@ class SupplierController extends GetxController {
           "id": e["id"],
           "id_supplier": e["id_supplier"],
           "nama_item": e["nama_item"],
-          "satuan": e["satuan"],
-          "harga_item": e["harga_item"],
+          "detail_supplier_information": e["detail_supplier_information"],
         },
       ),
     );
+
+    log("detail type: ${items[0]['detail_supplier_information'].runtimeType}");
   }
 
   /// Ambil master nama items gabungan dari backend untuk dropdown
   Future<void> fetchMasterNama() async {
-    final res = await dio.get('$_base/supplier/master-nama-items?_ts=${_ts()}', options: _noCache);
-    Map responseData = res.data;
+    try {
+      final res = await dio.get('$_base/supplier/master-nama-items?_ts=${_ts()}', options: _noCache);
+      Map responseData = res.data;
 
-    final List dataProduk = responseData['produk'];
-    final String dataSatuan = responseData['satuan'];
-    final s = <String>{};
-    for (final e in dataProduk) {
-      final n = (e['nama'] ?? '').toString().trim();
-      if (n.isNotEmpty) s.add(n);
+      final List dataProduk = responseData['produk'];
+      final String dataSatuan = responseData['satuan'];
+      final s = <String>{};
+      for (final e in dataProduk) {
+        final n = (e['nama'] ?? '').toString().trim();
+        if (n.isNotEmpty) s.add(n);
+      }
+
+      masterNama.assignAll(s.toList()..sort());
+      // Bersihkan string dari karakter yang tidak dibutuhkan
+      final String cleanedString = dataSatuan
+          .replaceAll("enum(", "") // -> "'pcs','pack','liter','box')"
+          .replaceAll(")", "") // -> "'pcs','pack','liter','box'"
+          .replaceAll("'", ""); // -> "pcs,pack,liter,box"
+
+      // Pisahkan string menjadi List berdasarkan koma
+      final List<String> satuanList = cleanedString.split(',');
+      masterSatuan.assignAll(satuanList);
+    } catch (e) {
+      if (e is DioException) {
+        log("Error FetchMasterNama ${e.response!.data}");
+      }
     }
-
-    masterNama.assignAll(s.toList()..sort());
-    // Bersihkan string dari karakter yang tidak dibutuhkan
-    final String cleanedString = dataSatuan
-        .replaceAll("enum(", "") // -> "'pcs','pack','liter','box')"
-        .replaceAll(")", "") // -> "'pcs','pack','liter','box'"
-        .replaceAll("'", ""); // -> "pcs,pack,liter,box"
-
-    // Pisahkan string menjadi List berdasarkan koma
-    final List<String> satuanList = cleanedString.split(',');
-    masterSatuan.assignAll(satuanList);
   }
 
   /// Re-fetch suppliers & keep selection (atau pilih pertama jika hilang)
@@ -249,40 +273,175 @@ class SupplierController extends GetxController {
   Future<void> updateItem(int id, String idSupplier, String nama, String satuan, double harga) async {
     await dio.put(
       '$_base/supplier/updateitem/$id',
-      data: {"nama_item": nama, "satuan": satuan, "harga_item": harga},
+      data: {"id_supplier_items": nama, "satuan": satuan, "harga_item": harga},
     );
     await fetchItems(idSupplier);
     Get.back(); // AUTO REFRESH
   }
 
+  Future<void> updatePrice(int detailId, {required int harga, required String satuan}) async {
+    final idSupplier = selectedSupplierId.value;
+    if (idSupplier == null) return;
+
+    await dio.put(
+      '$_base/supplier/update-price-detail/$detailId', // Assuming this is your endpoint for price updates
+      data: {"harga": harga, "satuan": satuan},
+    );
+    await fetchItems(idSupplier);
+    Get.back(); // Close the dialog and refresh
+  }
+
   Future<void> deleteItem(int id) async {
-    final current = selectedSupplierId.value;
-    // Optimistic: hilangkan dulu di UI
-    items.removeWhere((it) => it['id'] == id);
-    await dio.delete('$_base/supplier/deleteitem/$id');
-    if (current != null) {
-      await fetchItems(current); // AUTO REFRESH
+    try {
+      final current = selectedSupplierId.value;
+      // Optimistic: hilangkan dulu di UI
+      items.removeWhere((it) => it['id'] == id);
+      await dio.delete('$_base/supplier/deleteitem/$id');
+      CherryToast.success(title: const Text("Sukses Menghapus Item")).show(Get.context!);
+
+      if (current != null) {
+        await fetchItems(current); // AUTO REFRESH
+      }
+
+      Get.back(result: true);
+    } catch (e) {
+      CherryToast.error(title: const Text("Gagal Menghapus Item")).show(Get.context!);
+      Get.back(result: false);
+
+      log("Error in deleteItem: $e");
     }
   }
-}
 
-Future<bool> _confirmDeleteItem(BuildContext context, {required String itemName}) async {
-  final res = await Get.dialog<bool>(
-    AlertDialog(
-      title: const Text('Hapus Item?'),
-      content: Text('Yakin ingin menghapus item "$itemName"?'),
-      actions: [
-        TextButton(onPressed: () => Get.back(result: false), child: const Text('Tidak')),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-          onPressed: () => Get.back(result: true),
-          child: const Text('Ya, Hapus'),
+  Future<void> deletePrice(int id) async {
+    try {
+      final current = selectedSupplierId.value;
+
+      await dio.delete('$_base/supplier/delete-price-detail/$id');
+      CherryToast.success(title: const Text("Sukses Menghapus Item")).show(Get.context!);
+
+      if (current != null) {
+        await fetchItems(current); // AUTO REFRESH
+      }
+
+      Get.back(result: true);
+    } catch (e) {
+      CherryToast.error(title: const Text("Gagal Menghapus Item")).show(Get.context!);
+      Get.back(result: false);
+
+      log("Error in deleteItem: $e");
+    }
+  }
+
+  void _showEditPriceDialog(BuildContext context, Map<String, dynamic> detail) {
+    final priceC = TextEditingController(
+      text: NumberFormat.decimalPattern('id').format(detail['harga'] ?? 0),
+    );
+    RxString selectedUnit = "${detail['satuan'] ?? masterSatuan.firstOrNull}".obs;
+
+    Get.dialog(
+      AlertDialog(
+        title: const Text("Edit Harga & Satuan"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Obx(
+              () => DropdownSearch<String>(
+                items: masterSatuan,
+                selectedItem: selectedUnit.value,
+                onChanged: (val) {
+                  if (val != null) selectedUnit.value = val;
+                },
+                popupProps: const PopupProps.menu(showSearchBox: true, fit: FlexFit.loose),
+                dropdownDecoratorProps: const DropDownDecoratorProps(
+                  dropdownSearchDecoration: InputDecoration(
+                    labelText: 'Satuan',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: priceC,
+              inputFormatters: <TextInputFormatter>[RupiahInputFormatter()],
+              decoration: const InputDecoration(border: OutlineInputBorder(), hintText: "Harga (Rp.)"),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            ),
+          ],
         ),
-      ],
-    ),
-    barrierDismissible: false,
-  );
-  return res ?? false;
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text("Batal")),
+          ElevatedButton(
+            onPressed: () async {
+              final unit = selectedUnit.value;
+              final hargaStr = priceC.text.replaceAll('.', '').replaceAll(',', '');
+              final harga = int.tryParse(hargaStr);
+
+              if (unit.isEmpty || harga == null || harga < 0) {
+                CherryToast.error(title: const Text("Input tidak valid")).show(context);
+                return;
+              }
+              try {
+                await updatePrice(detail['id'] as int, harga: harga, satuan: unit);
+                CherryToast.success(title: const Text("Harga diupdate")).show(Get.context!);
+              } on DioException catch (e) {
+                CherryToast.error(
+                  title: const Text("Gagal update harga"),
+                  description: Text("${e.response?.statusCode} ${e.response?.data ?? e.message}"),
+                ).show(Get.context!);
+              } catch (e) {
+                CherryToast.error(
+                  title: const Text("Gagal update harga"),
+                  description: Text("$e"),
+                ).show(Get.context!);
+              }
+            },
+            child: const Text("Update"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<bool> _confirmDeleteItem(BuildContext context, Map<String, dynamic> item) async {
+    final res = await Get.dialog<bool>(
+      AlertDialog(
+        title: const Text('Hapus Item?'),
+        content: Text('Yakin ingin menghapus item "${item['nama_item']}"?'),
+        actions: [
+          TextButton(onPressed: () => Get.back(result: false), child: const Text('Tidak')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => deleteItem(item['id'] as int),
+            child: const Text('Ya, Hapus'),
+          ),
+        ],
+      ),
+      barrierDismissible: false,
+    );
+    return res ?? false;
+  }
+
+  Future<bool> _confirmDeletePricePerItem(BuildContext context, Map<String, dynamic> item) async {
+    final res = await Get.dialog<bool>(
+      AlertDialog(
+        title: const Text('Hapus Harga?'),
+        content: Text(
+          'Yakin ingin menghapus Harga Rp. ${NumberFormat.decimalPattern('id').format(item['harga'])} / "${item['satuan']} ?',
+        ),
+        actions: [
+          TextButton(onPressed: () => Get.back(result: false), child: const Text('Tidak')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => deletePrice(item['id'] as int),
+            child: const Text('Ya, Hapus'),
+          ),
+        ],
+      ),
+      barrierDismissible: false,
+    );
+    return res ?? false;
+  }
 }
 
 class ListSupplierPage extends StatelessWidget {
@@ -335,7 +494,7 @@ class ListSupplierPage extends StatelessWidget {
                   return list;
                 },
                 selectedItem: selected,
-                itemAsString: (m) => "${m?['id_supplier']} - ${m?['nama_supplier']}",
+                itemAsString: (m) => "${m['id_supplier']} - ${m['nama_supplier']}",
                 onChanged: (m) async {
                   final id = m?['id_supplier']?.toString();
                   c.selectedSupplierId.value = id;
@@ -345,7 +504,7 @@ class ListSupplierPage extends StatelessWidget {
                     c.items.clear();
                   }
                 },
-                compareFn: (a, b) => a?['id_supplier'] == b?['id_supplier'],
+                compareFn: (a, b) => a['id_supplier'] == b['id_supplier'],
                 clearButtonProps: const ClearButtonProps(isVisible: true),
                 popupProps: PopupProps.menu(
                   showSearchBox: true,
@@ -444,6 +603,7 @@ class ListSupplierPage extends StatelessWidget {
                 return const Expanded(child: Center(child: Text("Pilih supplier terlebih dahulu")));
               }
 
+              // ignore: unused_local_variable
               String supplierName = "";
               for (final s in c.suppliers) {
                 if (s['id_supplier'] == selected) {
@@ -489,19 +649,19 @@ class ListSupplierPage extends StatelessWidget {
                               c.selectedSupplierId.value = null;
                               c.items.clear();
 
-                              CherryToast.success(title: const Text("Supplier dihapus")).show(context);
+                              CherryToast.success(title: const Text("Supplier dihapus")).show(Get.context!);
                             } on DioException catch (e) {
                               CherryToast.error(
                                 title: const Text("Gagal hapus supplier"),
                                 description: Text(
                                   "${e.response?.statusCode} ${e.response?.data ?? e.message}",
                                 ),
-                              ).show(context);
+                              ).show(Get.context!);
                             } catch (e) {
                               CherryToast.error(
                                 title: const Text("Gagal hapus supplier"),
                                 description: Text("$e"),
-                              ).show(context);
+                              ).show(Get.context!);
                             }
                           },
                           child: const Text("Hapus Supplier"),
@@ -552,17 +712,11 @@ class ListSupplierPage extends StatelessWidget {
                           );
                         }
 
+                        // Use ExpansionTile for a better user experience
+
                         return Theme(
                           data: Theme.of(context).copyWith(
-                            dividerColor: const Color(0xFFBCAAA4),
-                            listTileTheme: ListTileThemeData(
-                              tileColor: Colors.white,
-                              selectedTileColor: const Color(0xFF8D6E63).withOpacity(.12),
-                              iconColor: const Color(0xFF6D4C41),
-                              textColor: const Color(0xFF3E2723),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                            ),
+                            dividerColor: const Color(0xFFBCAAA4), // Color for dividers inside ExpansionTile
                           ),
                           child: ListView.separated(
                             physics: const BouncingScrollPhysics(),
@@ -570,40 +724,71 @@ class ListSupplierPage extends StatelessWidget {
                             itemCount: data.length,
                             separatorBuilder: (_, __) => const SizedBox(height: 8),
                             itemBuilder: (_, i) {
-                              final it = data[i];
-                              return ListTile(
-                                title: Text(
-                                  "${it['nama_item']} - (${it['satuan'] ?? "-"})",
-                                  style: const TextStyle(fontFamily: 'Poppins'),
-                                ),
-                                subtitle: Text(
-                                  NumberFormat.currency(
-                                    locale: 'id_ID',
-                                    symbol: 'Rp ',
-                                    decimalDigits: 0,
-                                  ).format(it['harga_item']),
-                                  style: const TextStyle(color: Color(0xFF6D4C41), fontFamily: 'Poppins'),
-                                ),
-                                trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.edit),
-                                      onPressed: () => _showEditItemDialog(context, it),
+                              final item = data[i];
+                              final List details = item['detail_supplier_information'] ?? [];
+
+                              return Card(
+                                clipBehavior: Clip.antiAlias,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                margin: EdgeInsets.zero,
+                                child: ExpansionTile(
+                                  backgroundColor: Colors.white,
+                                  title: Text(
+                                    item['nama_item'] ?? "Tanpa Nama",
+                                    style: const TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
                                     ),
-                                    IconButton(
-                                      icon: const Icon(Icons.delete),
-                                      onPressed: () async {
-                                        final ok = await _confirmDeleteItem(
-                                          context,
-                                          itemName: it['nama_item'] ?? 'Item',
+                                  ),
+                                  subtitle: Text(
+                                    '${details.length} Opsi Harga',
+                                    style: const TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 12,
+                                      color: Color(0xFF6D4C41),
+                                    ),
+                                  ),
+                                  trailing: IconButton(
+                                    icon: const Icon(Icons.delete),
+                                    tooltip: 'Edit Nama Item',
+                                    onPressed: () => c._confirmDeleteItem(context, item),
+                                  ),
+
+                                  children:
+                                      details.map((detail) {
+                                        return Container(
+                                          color: const Color(0xFFF5F5F5),
+                                          child: ListTile(
+                                            dense: true,
+                                            title: Text(
+                                              "Harga: Rp. ${NumberFormat.decimalPattern('id').format(detail['harga'])} / ${detail['satuan']}",
+                                              style: const TextStyle(fontFamily: 'Poppins'),
+                                            ),
+                                            trailing: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                IconButton(
+                                                  icon: const Icon(Icons.edit, size: 20),
+                                                  tooltip: 'Edit Harga/Satuan',
+                                                  onPressed: () => c._showEditPriceDialog(context, detail),
+                                                ),
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    Icons.delete,
+                                                    size: 20,
+                                                    color: Colors.redAccent,
+                                                  ),
+                                                  tooltip: 'Hapus Harga/Satuan',
+                                                  onPressed: () {
+                                                    c._confirmDeletePricePerItem(context, detail);
+                                                  },
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                         );
-                                        if (!ok) return;
-                                        await c.deleteItem(it['id']);
-                                        CherryToast.success(title: const Text("Item dihapus")).show(context);
-                                      },
-                                    ),
-                                  ],
+                                      }).toList(),
                                 ),
                               );
                             },
@@ -782,7 +967,7 @@ class ListSupplierPage extends StatelessWidget {
                           await ctrl.fetchItems(currentId!);
                           CherryToast.success(
                             title: const Text("Supplier berhasil ditambahkan"),
-                          ).show(context);
+                          ).show(Get.context!);
                           c.fetchSuppliers();
                           Get.back();
                         } on DioException catch (e) {
@@ -790,13 +975,13 @@ class ListSupplierPage extends StatelessWidget {
                           CherryToast.error(
                             title: const Text("Gagal tambah supplier"),
                             description: Text("${e.response?.statusCode} ${e.response?.data ?? e.message}"),
-                          ).show(context);
+                          ).show(Get.context!);
                         } catch (e) {
                           saving.value = false;
                           CherryToast.error(
                             title: const Text("Gagal tambah supplier"),
                             description: Text("$e"),
-                          ).show(context);
+                          ).show(Get.context!);
                         }
                       },
               child:
@@ -817,14 +1002,11 @@ class ListSupplierPage extends StatelessWidget {
 
   /// Dialog TAMBAH ITEM (HANYA UBAH NAMA ITEM -> DropdownSearch masterNama)
   void _showAddItemDialog(BuildContext context, String idSupplier) {
+    final defaultUnit = (c.masterSatuan.isNotEmpty ? c.masterSatuan.first : null);
     // Struktur baris: nameSel untuk pilihan dropdown, price untuk harga
     final rows =
         <Map<String, dynamic>>[
-          {
-            "nameSel": RxnString(),
-            "satuanSel": RxnString(c.masterSatuan[0]),
-            "price": TextEditingController(),
-          },
+          {"nameSel": RxnString(), "satuanSel": RxnString(defaultUnit), "price": TextEditingController()},
         ].obs;
     final saving = false.obs;
 
@@ -863,13 +1045,19 @@ class ListSupplierPage extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
 
+                          // Satuan
                           Expanded(
                             flex: 1,
-                            child: Obx(
-                              () => DropdownSearch<String>(
+                            child: Obx(() {
+                              // backfill agar key selalu ada
+                              rows[i]["satuanSel"] =
+                                  (rows[i]["satuanSel"] as RxnString?) ?? RxnString(defaultUnit);
+                              final unitRx = rows[i]["satuanSel"] as RxnString;
+
+                              return DropdownSearch<String>(
                                 items: c.masterSatuan,
-                                selectedItem: c.masterSatuan[0],
-                                onChanged: (val) => rows[i]["satuanSel"].value = val,
+                                selectedItem: unitRx.value, // aman
+                                onChanged: (val) => unitRx.value = val, // aman
                                 popupProps: const PopupProps.menu(showSearchBox: true, fit: FlexFit.loose),
                                 dropdownDecoratorProps: const DropDownDecoratorProps(
                                   dropdownSearchDecoration: InputDecoration(
@@ -877,8 +1065,8 @@ class ListSupplierPage extends StatelessWidget {
                                     border: OutlineInputBorder(),
                                   ),
                                 ),
-                              ),
-                            ),
+                              );
+                            }),
                           ),
                           const SizedBox(width: 8),
 
@@ -905,7 +1093,12 @@ class ListSupplierPage extends StatelessWidget {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton.icon(
-                      onPressed: () => rows.add({"nameSel": RxnString(), "price": TextEditingController()}),
+                      onPressed:
+                          () => rows.add({
+                            "nameSel": RxnString(),
+                            "satuanSel": RxnString(defaultUnit),
+                            "price": TextEditingController(),
+                          }),
                       icon: const Icon(Icons.add),
                       label: const Text("Tambah Baris"),
                     ),
@@ -952,20 +1145,20 @@ class ListSupplierPage extends StatelessWidget {
                         try {
                           final ctrl = Get.find<SupplierController>();
                           await ctrl.addItemsToSupplier(idSupplier, payload); // <-- AUTO REFRESH
-                          CherryToast.success(title: const Text("Item ditambahkan")).show(context);
+                          CherryToast.success(title: const Text("Item ditambahkan")).show(Get.context!);
                           Get.back();
                         } on DioException catch (e) {
                           saving.value = false;
                           CherryToast.error(
                             title: const Text("Gagal tambah item"),
                             description: Text("${e.response?.statusCode} ${e.response?.data ?? e.message}"),
-                          ).show(context);
+                          ).show(Get.context!);
                         } catch (e) {
                           saving.value = false;
                           CherryToast.error(
                             title: const Text("Gagal tambah item"),
                             description: Text("$e"),
-                          ).show(context);
+                          ).show(Get.context!);
                         }
                       },
               child:
@@ -1059,98 +1252,17 @@ class ListSupplierPage extends StatelessWidget {
                   kota: kotaC.text.trim(),
                   contactPerson: cpC.text.trim(),
                 );
-                CherryToast.success(title: const Text("Supplier diupdate")).show(context);
+                CherryToast.success(title: const Text("Supplier diupdate")).show(Get.context!);
                 c.fetchSuppliers();
                 Get.back();
               } on DioException catch (e) {
                 CherryToast.error(
                   title: const Text("Gagal update supplier"),
                   description: Text("${e.response?.statusCode} ${e.response?.data ?? e.message}"),
-                ).show(context);
-              } catch (e) {
-                CherryToast.error(
-                  title: const Text("Gagal update supplier"),
-                  description: Text("$e"),
-                ).show(context);
-              }
-            },
-            child: const Text("Update"),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showEditItemDialog(BuildContext context, Map<String, dynamic> item) {
-    final nameC = TextEditingController(text: item['nama_item']);
-    final unitC = TextEditingController(text: item['satuan']);
-
-    // tampilkan harga tanpa .0
-    final harga = item['harga_item'];
-    final priceC = TextEditingController(
-      text:
-          (harga is int) ? harga.toString() : (harga is double ? harga.toStringAsFixed(0) : harga.toString()),
-    );
-
-    Get.dialog(
-      AlertDialog(
-        title: const Text("Edit Item"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameC,
-              decoration: const InputDecoration(labelText: "Nama Item", border: OutlineInputBorder()),
-            ),
-            const SizedBox(height: 8),
-            Obx(
-              () => DropdownSearch<String>(
-                items: c.masterSatuan,
-                selectedItem: c.masterSatuan[0],
-                onChanged: (val) => unitC.text = val!,
-                popupProps: const PopupProps.menu(showSearchBox: true, fit: FlexFit.loose),
-                dropdownDecoratorProps: const DropDownDecoratorProps(
-                  dropdownSearchDecoration: InputDecoration(
-                    labelText: 'Satuan',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: priceC,
-              inputFormatters: <TextInputFormatter>[RupiahInputFormatter()], //
-              decoration: InputDecoration(border: OutlineInputBorder(), hintText: "Harga (Rp. ) "),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text("Batal")),
-          ElevatedButton(
-            onPressed: () async {
-              final nama = nameC.text.trim();
-              final unit = unitC.text.trim();
-              final harga = double.tryParse(priceC.text.trim());
-              if (nama.isEmpty || harga == null || harga < 0) {
-                CherryToast.error(title: const Text("Input tidak valid")).show(context);
-                return;
-              }
-              try {
-                final ctrl = Get.find<SupplierController>();
-                final idSup = item['id_supplier'].toString();
-                await ctrl.updateItem(item['id'] as int, idSup, nama, unit, harga);
-                CherryToast.success(title: const Text("Item diupdate")).show(Get.context!);
-                ctrl.fetchItems(idSup);
-              } on DioException catch (e) {
-                CherryToast.error(
-                  title: const Text("Gagal update item"),
-                  description: Text("${e.response?.statusCode} ${e.response?.data ?? e.message}"),
                 ).show(Get.context!);
               } catch (e) {
                 CherryToast.error(
-                  title: const Text("Gagal update item"),
+                  title: const Text("Gagal update supplier"),
                   description: Text("$e"),
                 ).show(Get.context!);
               }
