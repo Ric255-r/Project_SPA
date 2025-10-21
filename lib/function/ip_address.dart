@@ -5,7 +5,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 class ApiEndpointResolver {
   // Note. Ip Mereka 192.168.1.55 Platinum System 2. taruh di MainlocalIp
   // Start. Mainkan IP Kalian di MainLocalIp
-  static const String _mainLocalIp = "192.168.1.55";
+  static const String _mainLocalIp = "172.16.251.216";
   // End. Cukup Mainkan Disini
   static const String _secondLocalIp = "192.168.1.25";
   static const String _thirdLocalIp = "192.168.100.130";
@@ -74,11 +74,7 @@ class ApiEndpointResolver {
 
   static Future<bool> _canReach(String host, int port) async {
     try {
-      final socket = await Socket.connect(
-        host,
-        port,
-        timeout: const Duration(seconds: 2),
-      );
+      final socket = await Socket.connect(host, port, timeout: const Duration(seconds: 2));
       socket.destroy();
       return true;
     } catch (_) {
