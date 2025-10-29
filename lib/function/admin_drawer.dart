@@ -5,6 +5,7 @@ import 'package:Project_SPA/admin/list_barang.dart';
 import 'package:Project_SPA/admin/list_member.dart';
 import 'package:Project_SPA/admin/listagency.dart';
 import 'package:Project_SPA/admin/listterapis.dart';
+import 'package:Project_SPA/admin/opname_history/opname_history.dart';
 import 'package:Project_SPA/admin/pajak.dart';
 import 'package:Project_SPA/admin/regis_agency.dart';
 import 'package:Project_SPA/admin/list_supplier.dart';
@@ -464,6 +465,15 @@ class _AdminDrawerState extends State<AdminDrawer> {
                               title: const Text('Laporan OB', style: TextStyle(fontFamily: 'Poppins')),
                               onTap: () {
                                 Get.to(() => LaporanOB());
+                              },
+                            ),
+                          ),
+                          Material(
+                            color: Colors.white,
+                            child: ListTile(
+                              title: const Text('History Opname', style: TextStyle(fontFamily: 'Poppins')),
+                              onTap: () {
+                                Get.to(() => OpnameHistoryPage());
                               },
                             ),
                           ),

@@ -1,3 +1,4 @@
+import 'package:Project_SPA/admin/stok_opname.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:dio/dio.dart';
@@ -133,8 +134,15 @@ class ListBarang extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFFFE0B2),
       appBar: AppBar(
-        title: const Text("List Barang", style: TextStyle(fontFamily: 'Poppins', fontSize: 30)),
         backgroundColor: const Color(0xFFFFE0B2),
+        title: const Text("List Barang", style: TextStyle(fontFamily: 'Poppins', fontSize: 30)),
+        actions: [
+          TextButton(
+            onPressed: () => Get.to(() => StokOpnamePage()),
+            child: const Text('Stok Opname', style: TextStyle(fontFamily: 'Poppins', fontSize: 30)),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddDialog(context),

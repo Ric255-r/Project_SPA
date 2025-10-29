@@ -25,10 +25,12 @@ class POPemasokController extends GetxController {
   final RxString noForm = ''.obs;
 
   // ===== Diskon =====
-  // mode: 'amount' (nominal rupiah) | 'percent' (persen)
-  final RxString discountMode = 'amount'.obs;
-  final RxInt discountAmount = 0.obs; // rupiah
+  final RxString discountMode = 'amount'.obs; // 'amount' | 'percent'
+  final RxInt discountAmount = 0.obs; // rupiah bulat
   final RxDouble discountPercent = 0.0.obs; // 0..100
+
+  // ===== Pajak (2 desimal) =====
+  final RxDouble taxAmount = 0.0.obs; // rupiah desimal (mis. 1234.56)
 
   String get _base => myIpAddr().replaceAll(RegExp(r"/$"), "");
   String _ts() => DateTime.now().millisecondsSinceEpoch.toString();
@@ -55,6 +57,7 @@ class POPemasokController extends GetxController {
       (r['price'] as TextEditingController).dispose();
       (r['purchaseUnit'] as TextEditingController).dispose();
       (r['factor'] as TextEditingController).dispose();
+      (r['total'] as TextEditingController).dispose();
     }
     try {
       selectedSupplierId.close();
@@ -148,6 +151,7 @@ class POPemasokController extends GetxController {
       'price': TextEditingController(),
       'purchaseUnit': TextEditingController(text: ''),
       'factor': TextEditingController(text: ''),
+      'total': TextEditingController(), // total baris (editable)
     });
   }
 
@@ -157,6 +161,7 @@ class POPemasokController extends GetxController {
     (itemRows[index]['price'] as TextEditingController).dispose();
     (itemRows[index]['purchaseUnit'] as TextEditingController).dispose();
     (itemRows[index]['factor'] as TextEditingController).dispose();
+    (itemRows[index]['total'] as TextEditingController).dispose();
     itemRows.removeAt(index);
   }
 
@@ -166,20 +171,65 @@ class POPemasokController extends GetxController {
       (r['price'] as TextEditingController).dispose();
       (r['purchaseUnit'] as TextEditingController).dispose();
       (r['factor'] as TextEditingController).dispose();
+      (r['total'] as TextEditingController).dispose();
     }
     itemRows.clear();
   }
 
-  // ================= HITUNG TOTAL =================
-  num _num(String s) {
-    if (s.isEmpty) return 0;
-    final cleaned = s.replaceAll('.', '').replaceAll(',', '.');
-    return double.tryParse(cleaned) ?? 0;
+  // ================= HELPER PARSE & FORMAT =================
+  String _stripCurrency(String s) {
+    // sisakan digit, titik, koma, minus
+    return s.replaceAll(RegExp(r'[^0-9,.\-]'), '');
   }
 
+  // PERBAIKAN UTAMA: heuristik titik/koma agar "20.000" dibaca 20000 (bukan 20.0)
+  double _parseNumFlexible(String s) {
+    if (s.isEmpty) return 0.0;
+    var t = _stripCurrency(s);
+    if (t.isEmpty) return 0.0;
+
+    final hasDot = t.contains('.');
+    final hasComma = t.contains(',');
+
+    if (hasDot && hasComma) {
+      // Contoh: "1.234,56" -> ribuan '.', desimal ','
+      t = t.replaceAll('.', '').replaceAll(',', '.');
+      return double.tryParse(t) ?? 0.0;
+    }
+
+    if (hasComma && !hasDot) {
+      // Contoh: "1234,56" -> desimal ','
+      t = t.replaceAll(',', '.');
+      return double.tryParse(t) ?? 0.0;
+    }
+
+    if (hasDot && !hasComma) {
+      // Hanya titik: cek pola ribuan 1.234(.567)*
+      final thousandsPattern = RegExp(r'^\d{1,3}(\.\d{3})+$');
+      if (thousandsPattern.hasMatch(t)) {
+        // Anggap titik sebagai pemisah ribuan
+        t = t.replaceAll('.', '');
+        return double.tryParse(t) ?? 0.0;
+      } else {
+        // Titik dianggap desimal (misal "12.5")
+        return double.tryParse(t) ?? 0.0;
+      }
+    }
+
+    // Tanpa titik & koma: langsung parse
+    return double.tryParse(t) ?? 0.0;
+  }
+
+  int _parseCurrencyToInt(String s) {
+    final onlyDigits = s.replaceAll(RegExp(r'[^0-9]'), '');
+    if (onlyDigits.isEmpty) return 0;
+    return int.tryParse(onlyDigits) ?? 0;
+  }
+
+  // ================= HITUNG TOTAL =================
   num lineTotal(Map<String, dynamic> r) {
-    final q = _num((r['qty'] as TextEditingController).text.trim());
-    final p = _num((r['price'] as TextEditingController).text.trim());
+    final q = _parseNumFlexible((r['qty'] as TextEditingController).text.trim());
+    final p = _parseNumFlexible((r['price'] as TextEditingController).text.trim());
     return q * p;
   }
 
@@ -193,31 +243,28 @@ class POPemasokController extends GetxController {
 
   num get grandTotal => subtotal;
 
-  // ===== Diskon helper =====
-  int _parseRupiah(String s) {
-    if (s.isEmpty) return 0;
-    final cleaned = s.replaceAll('.', '').replaceAll(',', '');
-    return int.tryParse(cleaned) ?? 0;
-  }
-
-  double _parsePercent(String s) {
-    if (s.isEmpty) return 0.0;
-    final v = double.tryParse(s.replaceAll(',', '.')) ?? 0.0;
-    if (v < 0) return 0.0;
-    if (v > 100) return 100.0;
-    return v;
-  }
-
-  // setter dari UI
+  // ===== setter Diskon/Pajak =====
   void setDiscountText(String text) {
     if (discountMode.value == 'amount') {
-      discountAmount.value = _parseRupiah(text);
+      discountAmount.value = _parseCurrencyToInt(text);
     } else {
-      discountPercent.value = _parsePercent(text);
+      final v = _parseNumFlexible(text);
+      discountPercent.value = v.clamp(0.0, 100.0);
     }
   }
 
-  // hitung nominal diskon berdasarkan mode
+  void setTaxText(String text) {
+    if (text.trim().isEmpty) {
+      taxAmount.value = 0.0;
+      return;
+    }
+    var v = _parseNumFlexible(text);
+    v = (v * 100).round() / 100.0; // 2 desimal
+    if (v < 0) v = 0.0;
+    taxAmount.value = v;
+  }
+
+  // ===== Nominal Diskon =====
   int get discountNominal {
     final sub = subtotal.round();
     if (discountMode.value == 'percent') {
@@ -227,13 +274,26 @@ class POPemasokController extends GetxController {
     return discountAmount.value.clamp(0, sub);
   }
 
-  // total setelah diskon
-  num get grandTotalNet {
-    final net = subtotal - discountNominal;
-    return net < 0 ? 0 : net;
+  // ===== Grand total sebelum pembulatan (setelah diskon + pajak) =====
+  double get grandTotalFinal {
+    final net = (subtotal - discountNominal).toDouble() + taxAmount.value;
+    return net < 0 ? 0.0 : ((net * 100).round() / 100.0); // pastikan 2 desimal
   }
 
-  String money(num n) => NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(n);
+  // ===== Aturan pembulatan: 2 digit desimal >= 50 => ceil, else floor =====
+  int _roundByCentsRule(double amount) {
+    final intPart = amount.floor();
+    int cents = ((amount - intPart) * 100).round(); // 0..99
+    if (cents >= 50) return intPart + 1;
+    return intPart;
+  }
+
+  // Grand total dibulatkan sesuai aturan
+  int get grandTotalRounded => _roundByCentsRule(grandTotalFinal);
+
+  // ===== Format uang =====
+  String money0(num n) => NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(n);
+  String money2(num n) => NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 2).format(n);
 
   // ================= SIMPAN =================
   Future<void> simpanPembelian({
@@ -261,15 +321,10 @@ class POPemasokController extends GetxController {
       final selected = itemById(idStr);
       final namaItem = (selected?['nama_item'] ?? '').toString().trim();
 
-      final qty = int.tryParse((r['qty'] as TextEditingController).text.trim()) ?? 0;
-      final harga =
-          int.tryParse(
-            (r['price'] as TextEditingController).text.trim().replaceAll('.', '').replaceAll(',', ''),
-          ) ??
-          0;
+      final qty = _parseNumFlexible((r['qty'] as TextEditingController).text.trim()).round();
+      final harga = _parseCurrencyToInt((r['price'] as TextEditingController).text.trim());
       final purchaseUnit = (r['purchaseUnit'] as TextEditingController).text.trim();
-      final factor =
-          double.tryParse((r['factor'] as TextEditingController).text.trim().replaceAll(',', '.')) ?? 0;
+      final factor = _parseNumFlexible((r['factor'] as TextEditingController).text.trim());
 
       if (namaItem.isEmpty || qty <= 0 || harga < 0 || purchaseUnit.isEmpty || factor <= 0) {
         CherryToast.error(
@@ -299,13 +354,12 @@ class POPemasokController extends GetxController {
       "no_faktur": noFaktur,
       "tanggal_form": DateFormat('yyyy-MM-dd').format(tanggalForm),
       "id_supplier": selectedSupplierId.value!,
-      // Diskon (baru)
-      "diskon_type": discountMode.value, // 'amount' | 'percent'
+      "diskon_type": discountMode.value,
       "diskon_value": discountMode.value == 'percent' ? discountPercent.value : discountAmount.value,
-      // Kompat lama: tetap kirim nominal diskon
       "diskon": discountNominal,
-      // Items
+      "pajak": taxAmount.value, // desimal
       "items": detail,
+      // "grand_total_bulat": grandTotalRounded, // jika backend perlu
     };
 
     try {
@@ -333,6 +387,7 @@ class POPemasokController extends GetxController {
     discountMode.value = 'amount';
     discountAmount.value = 0;
     discountPercent.value = 0.0;
+    taxAmount.value = 0.0;
   }
 }
 
@@ -348,6 +403,8 @@ class _PesananPembelianState extends State<PesananPembelian> {
   final _noFormC = TextEditingController();
   final _fakturC = TextEditingController();
   final _diskonC = TextEditingController();
+  final _pajakC = TextEditingController(); // controller pajak
+
   DateTime? _selectedDate;
 
   late final POPemasokController c;
@@ -371,6 +428,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
     _noFormC.dispose();
     _fakturC.dispose();
     _diskonC.dispose();
+    _pajakC.dispose();
     super.dispose();
   }
 
@@ -388,6 +446,33 @@ class _PesananPembelianState extends State<PesananPembelian> {
       });
       await c.refreshNoForm(picked);
     }
+  }
+
+  // Util: format rupiah bulat pada TextEditingController
+  void _setMoney0(TextEditingController ctrl, num value) {
+    ctrl.text = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(value);
+  }
+
+  // handler ubah "Total" → hitung price = total / qty
+  void _applyTotalToPrice({
+    required TextEditingController qtyC,
+    required TextEditingController priceC,
+    required TextEditingController totalC,
+  }) {
+    final qty = c._parseNumFlexible(qtyC.text.trim());
+    final desiredTotal = c._parseCurrencyToInt(totalC.text.trim());
+    if (qty <= 0) {
+      CherryToast.error(title: const Text("Qty harus > 0 untuk mengubah Total.")).show(Get.context!);
+      final computed = c.lineTotal({'qty': qtyC, 'price': priceC});
+      _setMoney0(totalC, computed);
+      return;
+    }
+    final newPrice = (desiredTotal / qty).round(); // harga bulat
+    priceC.text = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(newPrice);
+    final recomputed = (qty * newPrice).round();
+    _setMoney0(totalC, recomputed);
+    c.itemRows.refresh();
+    setState(() {});
   }
 
   @override
@@ -536,7 +621,8 @@ class _PesananPembelianState extends State<PesananPembelian> {
                           context: context,
                         );
                         _fakturC.clear();
-                        _diskonC.clear(); // reset field diskon
+                        _diskonC.clear();
+                        _pajakC.clear();
                       },
                       child: Container(
                         decoration: BoxDecoration(
@@ -607,8 +693,14 @@ class _PesananPembelianState extends State<PesananPembelian> {
                                   final priceC = r['price'] as TextEditingController;
                                   final unitC = r['purchaseUnit'] as TextEditingController;
                                   final factorC = r['factor'] as TextEditingController;
+                                  final totalC = r['total'] as TextEditingController;
                                   final selItemId = r['itemId'] as String?;
-                                  final total = c.lineTotal(r);
+                                  final totalCalc = c.lineTotal(r);
+
+                                  // sinkronisasi otomatis total ketika qty/price berubah
+                                  void _syncTotalFromQtyPrice() {
+                                    _setMoney0(totalC, totalCalc);
+                                  }
 
                                   // widgets kecil agar reusable
                                   Widget namaItemDD() => Obx(
@@ -639,15 +731,18 @@ class _PesananPembelianState extends State<PesananPembelian> {
                                           ).show(Get.context!);
                                           return;
                                         }
-                                        r['itemId'] = val; // cuma simpan item yang dipilih
-                                        c.itemRows.refresh(); // refresh tampilan
+                                        r['itemId'] = val;
+                                        c.itemRows.refresh();
                                       },
                                     ),
                                   );
 
                                   Widget qtyField() => TextField(
                                     controller: qtyC,
-                                    onChanged: (_) => c.itemRows.refresh(),
+                                    onChanged: (_) {
+                                      _syncTotalFromQtyPrice();
+                                      c.itemRows.refresh();
+                                    },
                                     keyboardType: const TextInputType.numberWithOptions(decimal: false),
                                     decoration: const InputDecoration(
                                       isDense: true,
@@ -658,12 +753,15 @@ class _PesananPembelianState extends State<PesananPembelian> {
 
                                   Widget hargaField() => TextField(
                                     controller: priceC,
-                                    onChanged: (_) => c.itemRows.refresh(),
+                                    onChanged: (_) {
+                                      _syncTotalFromQtyPrice();
+                                      c.itemRows.refresh();
+                                    },
                                     keyboardType: const TextInputType.numberWithOptions(decimal: false),
                                     inputFormatters: <TextInputFormatter>[RupiahInputFormatter()],
                                     decoration: const InputDecoration(
                                       border: OutlineInputBorder(),
-                                      hintText: "Harga ",
+                                      hintText: "Harga",
                                       isDense: true,
                                     ),
                                   );
@@ -688,9 +786,15 @@ class _PesananPembelianState extends State<PesananPembelian> {
                                     ),
                                   );
 
+                                  // Total editable: ketika user Enter/blur → set price = total / qty
                                   Widget totalField() => TextField(
-                                    readOnly: true,
-                                    controller: TextEditingController(text: c.money(total)),
+                                    controller: totalC,
+                                    onSubmitted:
+                                        (_) => _applyTotalToPrice(qtyC: qtyC, priceC: priceC, totalC: totalC),
+                                    onEditingComplete:
+                                        () => _applyTotalToPrice(qtyC: qtyC, priceC: priceC, totalC: totalC),
+                                    keyboardType: const TextInputType.numberWithOptions(decimal: false),
+                                    inputFormatters: <TextInputFormatter>[RupiahInputFormatter()],
                                     decoration: const InputDecoration(
                                       isDense: true,
                                       labelText: "Total",
@@ -709,6 +813,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
 
                                   if (!isNarrow) {
                                     // 1 baris (lebar)
+                                    _syncTotalFromQtyPrice();
                                     return Padding(
                                       padding: const EdgeInsets.only(bottom: 8),
                                       child: Row(
@@ -722,24 +827,17 @@ class _PesananPembelianState extends State<PesananPembelian> {
                                             ),
                                           ),
                                           const SizedBox(width: 8),
-                                          const SizedBox(width: 0),
-                                          // Nama Item
                                           Expanded(flex: 5, child: namaItemDD()),
                                           const SizedBox(width: 8),
-                                          // Qty
                                           Expanded(flex: 2, child: qtyField()),
                                           const SizedBox(width: 8),
-                                          // Harga
                                           Expanded(flex: 3, child: hargaField()),
                                           const SizedBox(width: 8),
-                                          // Unit
                                           Expanded(flex: 2, child: unitField()),
                                           const SizedBox(width: 8),
-                                          // Faktor
                                           Expanded(flex: 2, child: faktorField()),
                                           const SizedBox(width: 8),
-                                          // Total
-                                          Expanded(flex: 3, child: totalField()),
+                                          Expanded(flex: 3, child: totalField()), // editable
                                           const SizedBox(width: 8),
                                           deleteBtn(),
                                         ],
@@ -747,7 +845,8 @@ class _PesananPembelianState extends State<PesananPembelian> {
                                     );
                                   }
 
-                                  // 2 baris (sempit) → anti-overflow
+                                  // 2 baris (sempit)
+                                  _syncTotalFromQtyPrice();
                                   return Padding(
                                     padding: const EdgeInsets.only(bottom: 12),
                                     child: Column(
@@ -813,28 +912,25 @@ class _PesananPembelianState extends State<PesananPembelian> {
 
                         const Divider(height: 24),
 
-                        // Ringkasan total + Diskon (mode amount/percent)
+                        // Ringkasan total + Diskon + Pajak + Pembulatan
                         Obx(
                           () => Align(
                             alignment: Alignment.centerRight,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                // Subtotal (sebelum diskon)
                                 Text(
-                                  "Subtotal: ${c.money(c.subtotal)}",
+                                  "Subtotal: ${c.money0(c.subtotal)}",
                                   style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
                                 ),
                                 const SizedBox(height: 8),
 
-                                // Input Diskon: mode + nilai
+                                // Input Diskon
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
                                     const Text("Diskon: ", style: TextStyle(fontFamily: 'Poppins')),
                                     const SizedBox(width: 8),
-
-                                    // Dropdown mode
                                     SizedBox(
                                       width: 150,
                                       child: DropdownButtonFormField<String>(
@@ -848,7 +944,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
                                           if (v == null) return;
                                           setState(() {
                                             c.discountMode.value = v;
-                                            _diskonC.text = ''; // clear tampilan input saat ganti mode
+                                            _diskonC.text = '';
                                             if (v == 'amount') {
                                               c.discountPercent.value = 0.0;
                                             } else {
@@ -864,10 +960,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
                                         ),
                                       ),
                                     ),
-
                                     const SizedBox(width: 8),
-
-                                    // Field nilai diskon (menyesuaikan mode)
                                     SizedBox(
                                       width: 180,
                                       child: TextField(
@@ -897,20 +990,54 @@ class _PesananPembelianState extends State<PesananPembelian> {
                                   ],
                                 ),
 
-                                // Preview nominal diskon (kalau persen)
                                 if (c.discountMode.value == 'percent') ...[
                                   const SizedBox(height: 6),
                                   Text(
-                                    "≈ Potongan: ${c.money(c.discountNominal)}",
+                                    "≈ Potongan: ${c.money0(c.discountNominal)}",
                                     style: const TextStyle(fontSize: 12, color: Colors.grey),
                                   ),
                                 ],
 
+                                // Pajak
                                 const SizedBox(height: 8),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    const Text("Pajak (Rp): ", style: TextStyle(fontFamily: 'Poppins')),
+                                    const SizedBox(width: 8),
+                                    SizedBox(
+                                      width: 180,
+                                      child: TextField(
+                                        controller: _pajakC,
+                                        onChanged: (v) {
+                                          c.setTaxText(v);
+                                          setState(() {});
+                                        },
+                                        inputFormatters: <TextInputFormatter>[
+                                          FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                                        ],
+                                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                        textAlign: TextAlign.right,
+                                        decoration: const InputDecoration(
+                                          isDense: true,
+                                          hintText: "0,00",
+                                          border: OutlineInputBorder(),
+                                          filled: true,
+                                          fillColor: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
 
-                                // Grand Total setelah diskon
+                                const SizedBox(height: 8),
+                                // Tampilkan sebelum & sesudah pembulatan
                                 Text(
-                                  "Grand Total: ${c.money(c.grandTotalNet)}",
+                                  "Grand Total (sebelum pembulatan): ${c.money2(c.grandTotalFinal)}",
+                                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                ),
+                                Text(
+                                  "Grand Total: ${c.money0(c.grandTotalRounded)}",
                                   style: const TextStyle(
                                     fontFamily: 'Poppins',
                                     fontWeight: FontWeight.w700,
