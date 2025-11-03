@@ -145,6 +145,14 @@ class POPemasokController extends GetxController {
 
   // ================= ROWS =================
   void addItemRow() {
+    final qty = TextEditingController();
+    final price = TextEditingController();
+    final unit = TextEditingController(text: '');
+    final factor = TextEditingController(text: '');
+    final total = TextEditingController();
+
+    // Seed awal supaya tidak kosong
+    total.text = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(0);
     itemRows.add({
       'itemId': null, // supplier_items.id (opsional)
       'qty': TextEditingController(),
@@ -416,7 +424,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
     _selectedDate = DateTime.now();
     _dateC.text = DateFormat('dd/MM/yyyy').format(_selectedDate!);
     c = Get.put(POPemasokController());
-
+    _noFormC.text = c.noForm.value;
     _noFormWorker = ever<String>(c.noForm, (v) => _noFormC.text = v);
     c.refreshNoForm(_selectedDate!);
   }
@@ -429,6 +437,7 @@ class _PesananPembelianState extends State<PesananPembelian> {
     _fakturC.dispose();
     _diskonC.dispose();
     _pajakC.dispose();
+    Get.delete<POPemasokController>();
     super.dispose();
   }
 
@@ -573,8 +582,8 @@ class _PesananPembelianState extends State<PesananPembelian> {
                                 value: c.selectedSupplierId.value,
                                 isExpanded: true,
                                 decoration: const InputDecoration(
-                                  labelText: 'Pemasok',
-                                  hintText: 'Pilih Pemasok',
+                                  labelText: 'Supplier',
+                                  hintText: 'Pilih Supplier',
                                   labelStyle: labelStyle,
                                   border: OutlineInputBorder(),
                                   enabledBorder: OutlineInputBorder(

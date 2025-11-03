@@ -352,7 +352,7 @@ class StokOpnamePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFFFE0B2),
       appBar: AppBar(
-        title: const Text('Stok Opname (Batch)', style: TextStyle(fontFamily: 'Poppins', fontSize: 24)),
+        title: const Text('Stok Opname', style: TextStyle(fontFamily: 'Poppins', fontSize: 24)),
         backgroundColor: const Color(0xFFFFE0B2),
         actions: [
           IconButton(

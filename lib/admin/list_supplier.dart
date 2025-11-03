@@ -1,6 +1,7 @@
 import 'dart:collection';
 import 'dart:developer';
 
+import 'package:Project_SPA/function/admin_drawer.dart';
 import 'package:Project_SPA/function/rupiah_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -135,8 +136,6 @@ class SupplierController extends GetxController {
         },
       ),
     );
-
-    log("detail type: ${items[0]['detail_supplier_information'].runtimeType}");
   }
 
   /// Ambil master nama items gabungan dari backend untuk dropdown
@@ -457,6 +456,7 @@ class ListSupplierPage extends StatelessWidget {
         title: const Text("List Supplier", style: TextStyle(fontFamily: 'Poppins', fontSize: 30)),
         backgroundColor: const Color(0XFFFFE0B2),
       ),
+      drawer: AdminDrawer(),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddSupplierDialog(context),
         child: const Icon(Icons.add),

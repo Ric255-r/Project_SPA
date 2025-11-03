@@ -1,4 +1,5 @@
 import 'package:Project_SPA/admin/stok_opname.dart';
+import 'package:Project_SPA/function/admin_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:dio/dio.dart';
@@ -144,6 +145,7 @@ class ListBarang extends StatelessWidget {
           const SizedBox(width: 8),
         ],
       ),
+      drawer: AdminDrawer(),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddDialog(context),
         child: const Icon(Icons.add),

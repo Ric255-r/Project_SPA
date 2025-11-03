@@ -1,4 +1,5 @@
 // opname_history.dart
+import 'package:Project_SPA/function/admin_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:dio/dio.dart';
@@ -63,7 +64,7 @@ class OpnameHistoryController extends GetxController {
       if (ctx != null) {
         CherryToast.error(
           title: const Text('Gagal'),
-          description: Text('Gagal memuat riwayat: $e'),
+          description: Text('Gagal memuat History: $e'),
         ).show(ctx);
       }
     } finally {
@@ -114,7 +115,7 @@ class OpnameHistoryPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFFFE0B2),
       appBar: AppBar(
-        title: const Text('Riwayat Stok Opname', style: TextStyle(fontFamily: 'Poppins', fontSize: 24)),
+        title: const Text('History Stok Opname', style: TextStyle(fontFamily: 'Poppins', fontSize: 24)),
         backgroundColor: const Color(0xFFFFE0B2),
         actions: [
           IconButton(
@@ -129,6 +130,7 @@ class OpnameHistoryPage extends StatelessWidget {
           ),
         ],
       ),
+      drawer: AdminDrawer(),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -168,7 +170,7 @@ class OpnameHistoryPage extends StatelessWidget {
         return const Center(child: CircularProgressIndicator());
       }
       if (c.headers.isEmpty) {
-        return const Center(child: Text('Belum ada riwayat opname.'));
+        return const Center(child: Text('Belum ada History opname.'));
       }
 
       return Card(
