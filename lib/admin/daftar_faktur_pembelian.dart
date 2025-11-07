@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:Project_SPA/function/admin_drawer.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 import 'package:Project_SPA/function/rupiah_formatter.dart';
+import 'package:Project_SPA/owner/download_splash.dart';
 import 'package:Project_SPA/resepsionis/detail_food_n_beverages.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:cherry_toast/cherry_toast.dart';
@@ -12,6 +13,8 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
 
 String formatrupiah(num amount) {
   final formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
@@ -449,7 +452,57 @@ class HistoryPembelianController extends GetxController {
   }
 
   Future<void> cetakLaporan() async {
-    try {} catch (e) {}
+    Get.dialog(
+      const DownloadSplash(),
+      barrierDismissible: true, // Prevent user from dismissing by tapping outside
+    );
+
+    try {
+      final dir = await getDownloadsDirectory();
+      final filePath = '${dir?.path}/history_datapembelian.pdf';
+
+      // 1. Tentukan URL dasar (tanpa query parameter)
+      String url = '${myIpAddr()}/main_owner/export_excel_history_pembelian';
+
+      // 2. Buat Map untuk menampung query parameters
+      final Map<String, dynamic> queryParams = {};
+
+      if (rangeDatePickerSupplier.isNotEmpty) {
+        List<dynamic> rangeDate = rangeDatePickerSupplier;
+        if (rangeDate.isNotEmpty) {
+          String startDate = rangeDate[0].toString().split(" ")[0];
+          queryParams['start_date'] = startDate;
+
+          if (rangeDate.length == 2) {
+            String endDate = rangeDate[1].toString().split(" ")[0];
+            queryParams['end_date'] = endDate;
+          }
+        }
+      }
+
+      if (selectedSupplierId.value != null) {
+        queryParams['id_supplier'] = selectedSupplierId.value;
+      }
+
+      // 3. Masukkan Map ke parameter queryParameters di dio
+      await dio.download(
+        url,
+        filePath,
+        queryParameters: queryParams, // <--- Perubahan di sini
+        options: Options(responseType: ResponseType.bytes, headers: {'Accept': 'application/pdf'}),
+      );
+
+      Get.back();
+
+      // open downloaded file
+      await OpenFile.open(filePath);
+      log('File downloaded to: $filePath');
+    } catch (e) {
+      if (e is DioException) {
+        log("Error di fn cetakLaporan DioException : ${e.response?.data['message']}");
+      }
+      log("Error di fn cetakLaporan : $e");
+    }
   }
 
   @override
@@ -818,7 +871,7 @@ class HistoryPembelian extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.only(top: 24),
                         child: TextButton(
-                          onPressed: () => c,
+                          onPressed: c.cetakLaporan,
                           style: TextButton.styleFrom(),
 
                           child: Text("Cetak Laporan - (${selectedSupplier['nama_supplier']})"),
@@ -858,12 +911,11 @@ class HistoryPembelian extends StatelessWidget {
 
                     Padding(
                       padding: const EdgeInsets.only(top: 24),
-                      child: Text(
-                        "Cetak Laporan",
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
+                      child: TextButton(
+                        onPressed: c.cetakLaporan,
+                        child: const Text(
+                          "Cetak Laporan",
+                          style: TextStyle(color: Colors.black, fontSize: 17, fontWeight: FontWeight.w600),
                         ),
                       ),
                     ),
