@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:Project_SPA/office_boy/hp_ob.dart';
+import 'package:Project_SPA/owner/Laporan_pilihan_terapis.dart';
 import 'package:Project_SPA/owner/laporan_komisi.dart';
 import 'package:Project_SPA/resepsionis/list_transaksi.dart';
 import 'package:Project_SPA/resepsionis/rating.dart';
@@ -236,6 +237,13 @@ class _OurDrawerState extends State<OurDrawer> {
                         title: const Text('Komisi', style: TextStyle(fontFamily: 'Poppins')),
                         onTap: () {
                           Get.off(() => laporankomisi());
+                        },
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.timeline_sharp),
+                        title: const Text('Laporan Terapis Dipilih', style: TextStyle(fontFamily: 'Poppins')),
+                        onTap: () {
+                          Get.off(() => laporanpilihanterapis());
                         },
                       ),
                     ],
