@@ -3,14 +3,18 @@ import 'dart:developer';
 import 'package:Project_SPA/function/admin_drawer.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 import 'package:Project_SPA/function/rupiah_formatter.dart';
+import 'package:Project_SPA/owner/download_splash.dart';
 import 'package:Project_SPA/resepsionis/detail_food_n_beverages.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
+import 'package:cherry_toast/cherry_toast.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
 
 String formatrupiah(num amount) {
   final formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
@@ -40,6 +44,7 @@ class HistoryPembelianController extends GetxController {
 
   // Variabel untuk menyimpan TextController agar tidak hilang saat di-scroll
   List<TextEditingController> qtyControllers = [];
+  List<TextEditingController> purchaseUnitControllers = [];
   List<TextEditingController> hargaControllers = [];
 
   // --- FUNGSI BARU UNTUK MENGHITUNG ULANG TOTAL ---
@@ -112,7 +117,7 @@ class HistoryPembelianController extends GetxController {
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text(
-                      "Qty: ${item['qty']} x Rp ${currencyFormat.format(item['harga_beli'] ?? 0)}",
+                      "Qty: ${item['qty_purchase']} (${item['purchase_unit']}) x Rp ${currencyFormat.format(item['harga_per_purchase_unit'] ?? 0)}",
                     ),
                     trailing: Text(
                       "Rp ${currencyFormat.format(item['total'] ?? 0)}",
@@ -233,6 +238,19 @@ class HistoryPembelianController extends GetxController {
                                 ),
                               ),
                             ),
+                            // Purchase Unit
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: TextField(
+                                controller: purchaseUnitControllers[index],
+                                keyboardType: TextInputType.number,
+                                decoration: InputDecoration(
+                                  labelText: 'Satuan',
+                                  border: OutlineInputBorder(),
+                                  isDense: true,
+                                ),
+                              ),
+                            ),
                             SizedBox(width: 8),
                             // TextField untuk Harga Beli
                             Expanded(
@@ -295,8 +313,9 @@ class HistoryPembelianController extends GetxController {
         final itemMap = data as Map<String, dynamic>;
 
         // Buat controller untuk setiap item
-        final qtyController = TextEditingController(text: itemMap['qty'].toString());
-        final hargaController = TextEditingController(text: itemMap['harga_beli'].toString());
+        final qtyController = TextEditingController(text: itemMap['qty_purchase'].toString());
+        final purchaseUnitController = TextEditingController(text: itemMap['purchase_unit']);
+        final hargaController = TextEditingController(text: itemMap['harga_per_purchase_unit'].toString());
 
         // Tambahkan listener untuk update otomatis
         void updateItemTotal() {
@@ -313,8 +332,9 @@ class HistoryPembelianController extends GetxController {
           final harga = int.tryParse(cleanHargaString) ?? 0;
           // --- AKHIR PERUBAHAN ---
 
-          itemMap['qty'] = qty;
-          itemMap['harga_beli'] = harga;
+          itemMap['qty_purchase'] = qty;
+          itemMap['purchase_unit'] = purchaseUnitController.text;
+          itemMap['harga_per_purchase_unit'] = harga;
           itemMap['total'] = qty * harga;
           // Refresh list agar UI terupdate & hitung ulang grand total
           detailFakturItems.refresh();
@@ -323,8 +343,10 @@ class HistoryPembelianController extends GetxController {
 
         qtyController.addListener(updateItemTotal);
         hargaController.addListener(updateItemTotal);
+        purchaseUnitController.addListener(updateItemTotal);
 
         qtyControllers.add(qtyController);
+        purchaseUnitControllers.add(purchaseUnitController);
         hargaControllers.add(hargaController);
         detailFakturItems.add(itemMap);
       }
@@ -346,7 +368,11 @@ class HistoryPembelianController extends GetxController {
       // Siapkan data untuk dikirim
       final List<Map<String, dynamic>> updatedItems = [];
       for (var item in detailFakturItems) {
-        updatedItems.add({"id_item": item['id_item'], "qty": item['qty'], "harga_beli": item['harga_beli']});
+        updatedItems.add({
+          "id_item": item['id_item'],
+          "qty_purchase": item['qty_purchase'],
+          "harga_per_purchase_unit": item['harga_per_purchase_unit'],
+        });
       }
 
       final payload = {"id_form": idForm, "items": updatedItems};
@@ -364,6 +390,118 @@ class HistoryPembelianController extends GetxController {
       Get.back(); // Tutup loading overlay
       log("Gagal menyimpan perubahan: $e");
       Get.snackbar('Error', 'Gagal menyimpan perubahan.');
+    }
+  }
+
+  void pelunasanFaktur(String idForm) {
+    Get.defaultDialog(
+      title: "Konfirmasi Pelunasan",
+      titleStyle: TextStyle(fontSize: 20),
+      middleText: "Anda Yakin Ingin Melunasi Faktur Ini",
+      textConfirm: "Ya, Lanjutkan",
+      textCancel: "Batal",
+      confirmTextColor: Colors.white,
+      onConfirm: () async {
+        Get.back();
+
+        try {
+          // KIRIM ULANG dengan objek FormData yang BARU
+          await dio.put('${myIpAddr()}/pembelian/pelunasan_pembelian/$idForm');
+
+          CherryToast.info(title: const Text("Faktur berhasil dilunasi")).show(Get.context!);
+
+          fetchFakturPembelian();
+        } catch (e) {
+          log("Error saat mengirim ulang: $e");
+          CherryToast.error(title: const Text("Terjadi Kesalahan")).show(Get.context!);
+        }
+      },
+      onCancel: () {
+        Get.back();
+      },
+    );
+  }
+
+  void cancelFaktur(String idForm) {
+    Get.defaultDialog(
+      title: "Konfirmasi Pembatalan",
+      titleStyle: TextStyle(fontSize: 20),
+      middleText: "Anda Yakin Ingin Membatalkan Faktur Ini",
+      textConfirm: "Ya, Lanjutkan",
+      textCancel: "Batal",
+      confirmTextColor: Colors.white,
+      onConfirm: () async {
+        Get.back();
+
+        try {
+          // KIRIM ULANG dengan objek FormData yang BARU
+          await dio.put('${myIpAddr()}/pembelian/cancel_pembelian/$idForm');
+
+          CherryToast.info(title: const Text("Faktur berhasil Dibatalkan")).show(Get.context!);
+
+          fetchFakturPembelian();
+        } catch (e) {
+          log("Error saat mengirim ulang: $e");
+          CherryToast.error(title: const Text("Terjadi Kesalahan")).show(Get.context!);
+        }
+      },
+      onCancel: () {
+        Get.back();
+      },
+    );
+  }
+
+  Future<void> cetakLaporan() async {
+    Get.dialog(
+      const DownloadSplash(),
+      barrierDismissible: true, // Prevent user from dismissing by tapping outside
+    );
+
+    try {
+      final dir = await getDownloadsDirectory();
+      final filePath = '${dir?.path}/history_datapembelian.pdf';
+
+      // 1. Tentukan URL dasar (tanpa query parameter)
+      String url = '${myIpAddr()}/main_owner/export_excel_history_pembelian';
+
+      // 2. Buat Map untuk menampung query parameters
+      final Map<String, dynamic> queryParams = {};
+
+      if (rangeDatePickerSupplier.isNotEmpty) {
+        List<dynamic> rangeDate = rangeDatePickerSupplier;
+        if (rangeDate.isNotEmpty) {
+          String startDate = rangeDate[0].toString().split(" ")[0];
+          queryParams['start_date'] = startDate;
+
+          if (rangeDate.length == 2) {
+            String endDate = rangeDate[1].toString().split(" ")[0];
+            queryParams['end_date'] = endDate;
+          }
+        }
+      }
+
+      if (selectedSupplierId.value != null) {
+        queryParams['id_supplier'] = selectedSupplierId.value;
+      }
+
+      // 3. Masukkan Map ke parameter queryParameters di dio
+      await dio.download(
+        url,
+        filePath,
+        queryParameters: queryParams, // <--- Perubahan di sini
+        options: Options(responseType: ResponseType.bytes, headers: {'Accept': 'application/pdf'}),
+      );
+
+      Get.back();
+
+      // open downloaded file
+      await OpenFile.open(filePath);
+      log('File downloaded to: $filePath');
+    } catch (e) {
+      if (e is DioException) {
+        log("Error di fn cetakLaporan DioException : ${e.response?.data['message']}");
+      }
+      log("Error di fn cetakLaporan : $e");
     }
   }
 
@@ -732,13 +870,11 @@ class HistoryPembelian extends StatelessWidget {
 
                       Padding(
                         padding: const EdgeInsets.only(top: 24),
-                        child: Text(
-                          "Cetak Laporan - (${selectedSupplier['nama_supplier']})",
-                          style: const TextStyle(
-                            color: Colors.black,
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        child: TextButton(
+                          onPressed: c.cetakLaporan,
+                          style: TextButton.styleFrom(),
+
+                          child: Text("Cetak Laporan - (${selectedSupplier['nama_supplier']})"),
                         ),
                       ),
                     ],
@@ -775,12 +911,11 @@ class HistoryPembelian extends StatelessWidget {
 
                     Padding(
                       padding: const EdgeInsets.only(top: 24),
-                      child: Text(
-                        "Cetak Laporan",
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
+                      child: TextButton(
+                        onPressed: c.cetakLaporan,
+                        child: const Text(
+                          "Cetak Laporan",
+                          style: TextStyle(color: Colors.black, fontSize: 17, fontWeight: FontWeight.w600),
                         ),
                       ),
                     ),
@@ -965,6 +1100,32 @@ class ContainerDataFaktur extends StatelessWidget {
                     ),
                   ],
                 ),
+
+                const SizedBox(height: 6),
+
+                // Status
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 110,
+                      child: Text("Status: ", style: labelStyle, overflow: TextOverflow.ellipsis),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        item['cancel_at'] != null
+                            ? 'Dibatalkan Pada ${indonesianDateFormat(DateTime.parse(item['cancel_at']))}'
+                            : item['paid_at'] == null
+                            ? 'Belum Lunas'
+                            : 'Lunas Pada ${indonesianDateFormat(DateTime.parse(item['paid_at']))}',
+                        style: valueStyle.copyWith(fontWeight: FontWeight.w700),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -985,22 +1146,23 @@ class ContainerDataFaktur extends StatelessWidget {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      Tooltip(
-                        message: 'Edit',
-                        waitDuration: const Duration(milliseconds: 400),
-                        child: ElevatedButton(
-                          onPressed: () {
-                            c.showEditDialog(item);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            minimumSize: const Size(40, 40),
-                            padding: EdgeInsets.zero,
-                            visualDensity: VisualDensity.compact,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      if (item['cancel_at'] == null && item['paid_at'] == null)
+                        Tooltip(
+                          message: 'Edit',
+                          waitDuration: const Duration(milliseconds: 400),
+                          child: ElevatedButton(
+                            onPressed: () {
+                              c.showEditDialog(item);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              minimumSize: const Size(40, 40),
+                              padding: EdgeInsets.zero,
+                              visualDensity: VisualDensity.compact,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                            child: const Icon(Icons.edit, size: 20),
                           ),
-                          child: const Icon(Icons.edit, size: 20),
                         ),
-                      ),
                       Tooltip(
                         message: 'Detail',
                         waitDuration: const Duration(milliseconds: 400),
@@ -1017,35 +1179,44 @@ class ContainerDataFaktur extends StatelessWidget {
                           child: const Icon(Icons.visibility_outlined, size: 20),
                         ),
                       ),
-                      Tooltip(
-                        message: 'Print',
-                        waitDuration: const Duration(milliseconds: 400),
-                        child: OutlinedButton(
-                          onPressed: () {},
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size(40, 40),
-                            padding: EdgeInsets.zero,
-                            visualDensity: VisualDensity.compact,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+
+                      if (item['cancel_at'] == null)
+                        Tooltip(
+                          message: 'Void',
+                          waitDuration: const Duration(milliseconds: 400),
+                          child: TextButton(
+                            onPressed: () {
+                              c.cancelFaktur(item['id_form']);
+                            },
+                            style: TextButton.styleFrom(
+                              minimumSize: const Size(40, 40),
+                              padding: EdgeInsets.zero,
+                              foregroundColor: Colors.red.shade600,
+                              visualDensity: VisualDensity.compact,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                            child: const Icon(Icons.block, size: 20),
                           ),
-                          child: const Icon(Icons.print, size: 20),
                         ),
-                      ),
-                      Tooltip(
-                        message: 'Void',
-                        waitDuration: const Duration(milliseconds: 400),
-                        child: TextButton(
-                          onPressed: () {},
-                          style: TextButton.styleFrom(
-                            minimumSize: const Size(40, 40),
-                            padding: EdgeInsets.zero,
-                            foregroundColor: Colors.red.shade600,
-                            visualDensity: VisualDensity.compact,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+
+                      if (item['paid_at'] == null)
+                        Tooltip(
+                          message: 'Lunaskan',
+                          waitDuration: const Duration(milliseconds: 400),
+                          child: TextButton(
+                            onPressed: () {
+                              c.pelunasanFaktur(item['id_form']);
+                            },
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.green,
+                              minimumSize: const Size(40, 40),
+                              padding: EdgeInsets.zero,
+                              visualDensity: VisualDensity.compact,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                            child: const Icon(Icons.check, size: 20, color: Colors.green),
                           ),
-                          child: const Icon(Icons.block, size: 20),
                         ),
-                      ),
                     ],
                   ),
                 ],
