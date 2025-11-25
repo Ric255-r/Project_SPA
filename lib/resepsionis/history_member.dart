@@ -24,12 +24,7 @@ class _HistoryMemberState extends State<HistoryMember> {
   TextEditingController _txtJenisTamu = TextEditingController();
   TextEditingController _txtNamaTamu = TextEditingController();
   TextEditingController _txtNoHP = TextEditingController();
-  void _updateFields(
-    String nama,
-    String noHp,
-    String status,
-    String id_member,
-  ) {
+  void _updateFields(String nama, String noHp, String status, String id_member) {
     setState(() {
       _txtNamaTamu.text = nama;
       _txtNoHP.text = noHp;
@@ -46,23 +41,66 @@ class _HistoryMemberState extends State<HistoryMember> {
 
   Future<void> _fetchHistoryMember(String id_member) async {
     try {
-      final response = await dio.get(
-        '${myIpAddr()}/history/historymember/$id_member',
-      ); // API request
+      final response = await dio.get('${myIpAddr()}/history/historymember/$id_member'); // API request
+
       if (response.statusCode == 200) {
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+
         setState(() {
-          historyMember = response.data;
+          historyMember =
+              (response.data as List).map((raw) {
+                final Map<String, dynamic> item = Map<String, dynamic>.from(raw);
+
+                // ------------ exp_kunjungan ------------
+                String expKunjunganLabel = '';
+                final expKunjStr = item['exp_kunjungan']?.toString() ?? '';
+
+                if (expKunjStr.isNotEmpty) {
+                  final expDate = DateTime.tryParse(expKunjStr);
+                  if (expDate != null) {
+                    final expOnlyDate = DateTime(expDate.year, expDate.month, expDate.day);
+                    final isExpired = expOnlyDate.isBefore(today);
+
+                    // contoh: "2026-07-03 (Expired)" atau "2026-07-03"
+                    expKunjunganLabel = isExpired ? '$expKunjStr (Expired)' : expKunjStr;
+                  } else {
+                    expKunjunganLabel = expKunjStr; // kalau parse gagal, tampilkan apa adanya
+                  }
+                }
+
+                item['exp_kunjungan_label'] = expKunjunganLabel;
+
+                // ------------ exp_tahunan ------------
+                String expTahunanLabel = '';
+                final expTahStr = item['exp_tahunan']?.toString() ?? '';
+
+                if (expTahStr.isNotEmpty) {
+                  final expDate = DateTime.tryParse(expTahStr);
+                  if (expDate != null) {
+                    final expOnlyDate = DateTime(expDate.year, expDate.month, expDate.day);
+                    final isExpired = expOnlyDate.isBefore(today);
+
+                    // contoh: "2026-07-03 (Expired)" atau "2026-07-03"
+                    expTahunanLabel = isExpired ? '$expTahStr (Expired)' : expTahStr;
+                  } else {
+                    expTahunanLabel = expTahStr;
+                  }
+                }
+
+                item['exp_tahunan_label'] = expTahunanLabel;
+
+                return item;
+              }).toList();
         });
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error fetching ID: ${response.statusCode}")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Error fetching ID: ${response.statusCode}")));
       }
     } catch (e) {
       print("Error fetching ID: $e");
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Error fetching ID")));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error fetching ID")));
     }
   }
 
@@ -81,10 +119,7 @@ class _HistoryMemberState extends State<HistoryMember> {
     return Scaffold(
       drawer: OurDrawer(),
       appBar: AppBar(
-        title: Text(
-          'History Member',
-          style: TextStyle(fontSize: 60, fontFamily: 'Poppins'),
-        ),
+        title: Text('History Member', style: TextStyle(fontSize: 60, fontFamily: 'Poppins')),
         leading: Padding(
           padding: const EdgeInsets.only(left: 30),
           child: IconButton(
@@ -108,20 +143,14 @@ class _HistoryMemberState extends State<HistoryMember> {
           children: [
             Row(
               children: [
-                SizedBox(width: 80),
+                SizedBox(width: 30),
                 Row(
                   children: [
-                    Text(
-                      'ID Member : ',
-                      style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
-                    ),
+                    Text('ID Member : ', style: TextStyle(fontFamily: 'Poppins', fontSize: 18)),
                     Container(
                       width: 85,
                       height: 38,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.white,
-                      ),
+                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
                       child: TextField(
                         controller: _txtIdMember,
                         readOnly: true,
@@ -140,17 +169,11 @@ class _HistoryMemberState extends State<HistoryMember> {
                 SizedBox(width: 40),
                 Row(
                   children: [
-                    Text(
-                      'Status : ',
-                      style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
-                    ),
+                    Text('Status : ', style: TextStyle(fontFamily: 'Poppins', fontSize: 18)),
                     Container(
                       width: 100,
                       height: 38,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.white,
-                      ),
+                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
                       child: TextField(
                         controller: _txtJenisTamu,
                         readOnly: true,
@@ -159,10 +182,7 @@ class _HistoryMemberState extends State<HistoryMember> {
                         scrollPhysics: BouncingScrollPhysics(),
                         decoration: InputDecoration(
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.only(
-                            left: 5,
-                            bottom: 17.5,
-                          ),
+                          contentPadding: EdgeInsets.only(left: 5, bottom: 17.5),
                         ),
                         style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                       ),
@@ -172,17 +192,11 @@ class _HistoryMemberState extends State<HistoryMember> {
                 SizedBox(width: 40),
                 Row(
                   children: [
-                    Text(
-                      'Nama : ',
-                      style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
-                    ),
+                    Text('Nama : ', style: TextStyle(fontFamily: 'Poppins', fontSize: 18)),
                     Container(
                       width: 200,
                       height: 38,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.white,
-                      ),
+                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
                       child: TextField(
                         controller: _txtNamaTamu,
                         readOnly: true,
@@ -191,10 +205,7 @@ class _HistoryMemberState extends State<HistoryMember> {
                         scrollPhysics: BouncingScrollPhysics(),
                         decoration: InputDecoration(
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.only(
-                            left: 5,
-                            bottom: 17.5,
-                          ),
+                          contentPadding: EdgeInsets.only(left: 5, bottom: 17.5),
                         ),
                         style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                       ),
@@ -204,17 +215,11 @@ class _HistoryMemberState extends State<HistoryMember> {
                 SizedBox(width: 40),
                 Row(
                   children: [
-                    Text(
-                      'No HP : ',
-                      style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
-                    ),
+                    Text('No HP : ', style: TextStyle(fontFamily: 'Poppins', fontSize: 18)),
                     Container(
-                      width: 85,
+                      width: 190,
                       height: 38,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.white,
-                      ),
+                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
                       child: TextField(
                         controller: _txtNoHP,
                         readOnly: true,
@@ -223,10 +228,7 @@ class _HistoryMemberState extends State<HistoryMember> {
                         scrollPhysics: BouncingScrollPhysics(),
                         decoration: InputDecoration(
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.only(
-                            left: 5,
-                            bottom: 17.5,
-                          ),
+                          contentPadding: EdgeInsets.only(left: 5, bottom: 17.5),
                         ),
                         style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                       ),
@@ -242,28 +244,19 @@ class _HistoryMemberState extends State<HistoryMember> {
                 Container(
                   height: 30,
                   width: 170,
-                  child: Text(
-                    "Kode Promo",
-                    style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
-                  ),
+                  child: Text("Kode Promo", style: TextStyle(fontFamily: 'Poppins', fontSize: 18)),
                 ),
                 SizedBox(width: 10),
                 Container(
                   height: 30,
                   width: 140,
-                  child: Text(
-                    "Nama Promo",
-                    style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
-                  ),
+                  child: Text("Nama Promo", style: TextStyle(fontFamily: 'Poppins', fontSize: 18)),
                 ),
                 SizedBox(width: 80),
                 Container(
                   height: 30,
                   width: 170,
-                  child: Text(
-                    "Sisa Kunjungan",
-                    style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
-                  ),
+                  child: Text("Sisa Kunjungan", style: TextStyle(fontFamily: 'Poppins', fontSize: 18)),
                 ),
                 SizedBox(width: 18),
                 Container(
@@ -291,10 +284,7 @@ class _HistoryMemberState extends State<HistoryMember> {
             Container(
               height: 270,
               width: Get.width - 150,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(15),
-                color: Colors.white,
-              ),
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), color: Colors.white),
               child:
                   historyMember.isEmpty
                       ? Center(
@@ -310,10 +300,7 @@ class _HistoryMemberState extends State<HistoryMember> {
                           return Column(
                             children: [
                               Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 4.0,
-                                  horizontal: 8.0,
-                                ),
+                                padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
                                 child: Row(
                                   children: [
                                     Container(
@@ -323,13 +310,7 @@ class _HistoryMemberState extends State<HistoryMember> {
                                         style: TextStyle(fontFamily: 'Poppins'),
                                       ),
                                     ),
-                                    SizedBox(
-                                      width: 10,
-                                      child: Text(
-                                        "|",
-                                        style: TextStyle(fontSize: 21),
-                                      ),
-                                    ),
+                                    SizedBox(width: 10, child: Text("|", style: TextStyle(fontSize: 21))),
                                     Container(
                                       width: 240,
                                       child: Text(
@@ -348,8 +329,7 @@ class _HistoryMemberState extends State<HistoryMember> {
                                     Container(
                                       width: 110,
                                       child: Text(
-                                        item['sisa_kunjungan'] != null &&
-                                                item['sisa_kunjungan'] != ''
+                                        item['sisa_kunjungan'] != null && item['sisa_kunjungan'] != ''
                                             ? '${item['sisa_kunjungan']} Kali'
                                             : '',
                                         style: TextStyle(fontFamily: 'Poppins'),
@@ -366,10 +346,7 @@ class _HistoryMemberState extends State<HistoryMember> {
                                     Container(
                                       width: 135,
                                       child: Text(
-                                        item['exp_kunjungan'] != null &&
-                                                item['exp_kunjungan'] != ''
-                                            ? '${item['exp_kunjungan']}'
-                                            : '',
+                                        item['exp_kunjungan_label'] ?? '',
                                         style: TextStyle(fontFamily: 'Poppins'),
                                       ),
                                     ),
@@ -385,21 +362,14 @@ class _HistoryMemberState extends State<HistoryMember> {
                                     Container(
                                       width: 100,
                                       child: Text(
-                                        item['exp_tahunan'] != null &&
-                                                item['exp_tahunan'] != ''
-                                            ? '${item['exp_tahunan']}'
-                                            : '',
+                                        item['exp_tahunan_label'] ?? '',
                                         style: TextStyle(fontFamily: 'Poppins'),
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                              Divider(
-                                thickness: 1,
-                                color: Colors.grey.shade300,
-                                height: 1,
-                              ),
+                              Divider(thickness: 1, color: Colors.grey.shade300, height: 1),
                             ],
                           );
                         },
@@ -408,28 +378,18 @@ class _HistoryMemberState extends State<HistoryMember> {
             Padding(
               padding: EdgeInsets.only(top: 10),
               child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15),
-                  color: Color(0XCCCDFADB),
-                ),
+                decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), color: Color(0XCCCDFADB)),
                 height: 100,
                 width: 300,
                 child: TextButton(
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder:
-                            (context) =>
-                                QRScannerScreen(onScannedData: _updateFields),
-                      ),
+                      MaterialPageRoute(builder: (context) => QRScannerScreen(onScannedData: _updateFields)),
                     );
                   },
                   style: TextButton.styleFrom(foregroundColor: Colors.black),
-                  child: Text(
-                    'SCAN QR',
-                    style: TextStyle(fontSize: 30, fontFamily: 'Poppins'),
-                  ),
+                  child: Text('SCAN QR', style: TextStyle(fontSize: 30, fontFamily: 'Poppins')),
                 ),
               ),
             ),
