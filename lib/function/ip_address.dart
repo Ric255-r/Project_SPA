@@ -50,21 +50,26 @@ class ApiEndpointResolver {
 
     // 2) Kalau tidak, dan ada Wi-Fi + server lokal reachable → pakai lokal
     final connectivity = await Connectivity().checkConnectivity();
-    final onWifi = connectivity == ConnectivityResult.wifi;
+    final onLan =
+        connectivity == ConnectivityResult.wifi ||
+        connectivity == ConnectivityResult.ethernet ||
+        connectivity == ConnectivityResult.vpn; // Tailscale reports vpn. Add This if Tailscale having issue
+
     List<bool> localOk = await Future.wait([
       _canReach(_mainLocalIp, 5500),
       _canReach(_secondLocalIp, 5500),
       _canReach(_thirdLocalIp, 5500),
     ]);
-    if (onWifi && localOk[0]) {
+
+    if (onLan && localOk[0]) {
       _cachedBase = _firstLocalBase;
       return;
     }
-    if (onWifi && localOk[1]) {
+    if (onLan && localOk[1]) {
       _cachedBase = _secondLocalBase;
       return;
     }
-    if (onWifi && localOk[2]) {
+    if (onLan && localOk[2]) {
       _cachedBase = _thirdLocalBase;
       return;
     }
