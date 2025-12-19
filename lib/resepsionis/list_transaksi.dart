@@ -95,6 +95,9 @@ class ListTransaksiController extends GetxController {
 
   List<dynamic>? allDataOmset;
 
+  int _loadingCounter = 0;
+  bool _isLoadingVisible = false;
+
   void showDialogTgl() {
     rangeDatePickerOmset.clear();
 
@@ -175,10 +178,57 @@ class ListTransaksiController extends GetxController {
     });
   }
 
+  void _setupDio() {
+    dio.interceptors.clear();
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          _loadingCounter++;
+          _showLoadingDialog();
+          handler.next(options);
+        },
+        onResponse: (response, handler) {
+          _loadingCounter = _loadingCounter - 1;
+          if (_loadingCounter < 0) _loadingCounter = 0;
+          _hideLoadingDialog();
+          handler.next(response);
+        },
+        onError: (err, handler) {
+          _loadingCounter = _loadingCounter - 1;
+          if (_loadingCounter < 0) _loadingCounter = 0;
+          _hideLoadingDialog();
+          handler.next(err);
+        },
+      ),
+    );
+  }
+
+  void _showLoadingDialog() {
+    if (_isLoadingVisible) return;
+    _isLoadingVisible = true;
+    Get.dialog(
+      WillPopScope(
+        onWillPop: () async => false,
+        child: const Center(child: CircularProgressIndicator()),
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+  void _hideLoadingDialog() {
+    if (_loadingCounter > 0) return;
+    if (!_isLoadingVisible) return;
+    if (Get.isDialogOpen == true) {
+      Get.back();
+    }
+    _isLoadingVisible = false;
+  }
+
   @override
   void onInit() {
     // TODO: implement onInit
     super.onInit();
+    _setupDio();
     _profileUser().then((_) {
       refreshData();
       startAutoRefresh();
