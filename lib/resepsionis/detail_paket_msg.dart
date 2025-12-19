@@ -211,14 +211,19 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
   Map<String, double> getHargaAfterDisc() {
     double totalBefore = getHargaBeforeDisc();
-    // Convert to List<double>
-    // List<double> doubleDisc =
-    //     listDisc.map((percentStr) {
-    //       return double.parse(percentStr.replaceAll('%', '')) / 100;
-    //     }).toList();
+    // Diskon hanya berlaku untuk item massage (id_paket_msg diawali "M")
+    double totalEligibleDisc = dataJual.fold(0.0, (sum, item) {
+      final idPaket = item['id_paket_msg']?.toString() ?? '';
+      if (idPaket.isNotEmpty && idPaket[0] == "M") {
+        final harga = item['harga_total'] ?? item['harga_fnb'] ?? 0;
+        return sum + (harga is int ? harga.toDouble() : harga);
+      }
+      return sum;
+    });
+
     double doubleDisc = discSetelahPromo.value / 100;
 
-    double jlhPotongan = totalBefore * doubleDisc;
+    double jlhPotongan = totalEligibleDisc * doubleDisc;
     double totalStlhDisc = totalBefore - jlhPotongan;
 
     if (hargavip.isNotEmpty) {
