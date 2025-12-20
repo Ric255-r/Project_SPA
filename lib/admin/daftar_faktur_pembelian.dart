@@ -26,15 +26,21 @@ String indonesianDateFormat(DateTime date) {
 }
 
 class HistoryPembelianController extends GetxController {
+  static const String statusAll = 'all';
+  static const List<String> statusFilters = ['void', 'pending', 'lunas'];
+
   RxList<DateTime?> rangeDatePickerSupplier = <DateTime?>[].obs;
   ScrollController scrollTglController = ScrollController();
   Dio dio = Dio();
   RxList<Map<String, dynamic>> suppliers = <Map<String, dynamic>>[].obs;
   RxnString selectedSupplierId = RxnString(null);
   TextEditingController txtTglController = TextEditingController();
+  RxList<Map<String, dynamic>> allFaktur = <Map<String, dynamic>>[].obs;
   RxList<Map<String, dynamic>> dataFaktur = <Map<String, dynamic>>[].obs;
   // TAMBAHKAN INI: Variabel untuk "STATE UI" dropdown
   Rxn<Map<String, dynamic>> uiSelectedSupplier = Rxn(null);
+  RxString selectedStatus = statusAll.obs;
+  RxString uiSelectedStatus = statusAll.obs;
   RxBool hasSearched = false.obs; // flag untuk trigger pas pencet btn tampil
 
   // --- TAMBAHANB VARIABEL BARU UNTUK MENAMPILKAN DIALOG ---
@@ -484,6 +490,10 @@ class HistoryPembelianController extends GetxController {
         queryParams['id_supplier'] = selectedSupplierId.value;
       }
 
+      if (selectedStatus.value != statusAll) {
+        queryParams['status'] = selectedStatus.value;
+      }
+
       // 3. Masukkan Map ke parameter queryParameters di dio
       await dio.download(
         url,
@@ -519,6 +529,18 @@ class HistoryPembelianController extends GetxController {
     } catch (_) {}
     try {
       uiSelectedSupplier.close();
+    } catch (_) {}
+    try {
+      allFaktur.close();
+    } catch (_) {}
+    try {
+      dataFaktur.close();
+    } catch (_) {}
+    try {
+      selectedStatus.close();
+    } catch (_) {}
+    try {
+      uiSelectedStatus.close();
     } catch (_) {}
     try {
       totalHargaDetailFaktur.close();
@@ -567,6 +589,23 @@ class HistoryPembelianController extends GetxController {
     }
   }
 
+  /// Terapkan filter status ke list faktur yang sudah diambil.
+  void applyCurrentFilters() {
+    dataFaktur.assignAll(_applyStatusFilter(allFaktur));
+  }
+
+  List<Map<String, dynamic>> _applyStatusFilter(List<Map<String, dynamic>> source) {
+    final filter = selectedStatus.value;
+    if (filter == statusAll) return List<Map<String, dynamic>>.from(source);
+    return source.where((item) => _deriveStatus(item) == filter).toList();
+  }
+
+  String _deriveStatus(Map<String, dynamic> item) {
+    if (item['cancel_at'] != null) return 'void';
+    if (item['paid_at'] != null) return 'lunas';
+    return 'pending';
+  }
+
   Future<void> fetchFakturPembelian() async {
     try {
       String url =
@@ -585,7 +624,8 @@ class HistoryPembelianController extends GetxController {
 
       var response = await dio.get(url);
 
-      dataFaktur.assignAll((response.data as List).map((el) => {...el}));
+      allFaktur.assignAll((response.data as List).map((el) => {...el}));
+      applyCurrentFilters();
 
       log("response data faktur : ${dataFaktur}");
     } catch (e) {
@@ -800,6 +840,49 @@ class HistoryPembelian extends StatelessWidget {
                 ),
 
                 const SizedBox(width: 10),
+                Expanded(
+                  child: Obx(() {
+                    return DropdownButtonFormField<String>(
+                      value: c.uiSelectedStatus.value,
+                      decoration: InputDecoration(
+                        isDense: true,
+                        labelText: "Status",
+                        border: OutlineInputBorder(),
+                        floatingLabelBehavior: FloatingLabelBehavior.always,
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.brown.shade300, width: 1.2),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.brown.shade700, width: 2),
+                        ),
+                      ),
+                      items: [
+                        const DropdownMenuItem(
+                          value: HistoryPembelianController.statusAll,
+                          child: Text('Semua Status'),
+                        ),
+                        ...HistoryPembelianController.statusFilters.map(
+                          (value) => DropdownMenuItem(
+                            value: value,
+                            child: Text(value.capitalizeFirst ?? value),
+                          ),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        final newValue = value ?? HistoryPembelianController.statusAll;
+                        c.uiSelectedStatus.value = newValue;
+                        if (c.hasSearched.isTrue && c.allFaktur.isNotEmpty) {
+                          c.selectedStatus.value = newValue;
+                          c.applyCurrentFilters();
+                        }
+                      },
+                    );
+                  }),
+                ),
+
+                const SizedBox(width: 10),
 
                 SizedBox(
                   height: 50,
@@ -810,6 +893,7 @@ class HistoryPembelian extends StatelessWidget {
 
                       // 2. "Commit" atau simpan ID tersebut ke state utama
                       c.selectedSupplierId.value = id;
+                      c.selectedStatus.value = c.uiSelectedStatus.value;
 
                       // 3. Panggil fetchFakturPembelian, yang akan menggunakan
                       //    selectedSupplierId.value yang sudah ter-update.

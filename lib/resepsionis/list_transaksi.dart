@@ -207,10 +207,7 @@ class ListTransaksiController extends GetxController {
     if (_isLoadingVisible) return;
     _isLoadingVisible = true;
     Get.dialog(
-      WillPopScope(
-        onWillPop: () async => false,
-        child: const Center(child: CircularProgressIndicator()),
-      ),
+      WillPopScope(onWillPop: () async => false, child: const Center(child: CircularProgressIndicator())),
       barrierDismissible: false,
     );
   }
@@ -1752,7 +1749,7 @@ class ListTransaksiController extends GetxController {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  "Total Pembelian Addon ${disc > 0 && jenisPembayaran == 1 ? "(Sblm Disc)" : ""}:",
+                                  "Total Pembelian Addon:",
                                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                 ),
                                 Text(
@@ -1761,41 +1758,6 @@ class ListTransaksiController extends GetxController {
                                 ),
                               ],
                             ),
-                            if (disc > 0 && jenisPembayaran == 1) ...[
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    "Diskon :",
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                                  ),
-                                  Text(
-                                    "${disc * 100}%",
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    "Total Pembelian Addon (Stlh Disc):",
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                                  ),
-                                  Builder(
-                                    builder: (context) {
-                                      var nominalDisc = paketTotal * disc;
-                                      var paketStlhDisc = paketTotal - nominalDisc;
-
-                                      return Text(
-                                        currencyFormatter.format(paketStlhDisc),
-                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ],
                           ],
                         ),
                       ),
@@ -2038,7 +2000,7 @@ class ListTransaksiController extends GetxController {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  "Total Pembelian Produk ${disc > 0 ? "(Sblm Disc)" : ""}:",
+                                  "Total Pembelian Produk:",
                                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                 ),
                                 Text(
@@ -2047,41 +2009,6 @@ class ListTransaksiController extends GetxController {
                                 ),
                               ],
                             ),
-                            if (disc > 0) ...[
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    "Diskon :",
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                                  ),
-                                  Text(
-                                    "${disc * 100}%",
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    "Total Pembelian Produk (Stlh Disc):",
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                                  ),
-                                  Builder(
-                                    builder: (context) {
-                                      var nominalDisc = produkTotal * disc;
-                                      var produkStlhDisc = produkTotal - nominalDisc;
-
-                                      return Text(
-                                        currencyFormatter.format(produkStlhDisc),
-                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ],
                           ],
                         ),
                       ),
