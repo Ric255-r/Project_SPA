@@ -4,7 +4,6 @@ import 'package:Project_SPA/function/admin_drawer.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 import 'package:Project_SPA/function/rupiah_formatter.dart';
 import 'package:Project_SPA/owner/download_splash.dart';
-import 'package:Project_SPA/resepsionis/detail_food_n_beverages.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:cherry_toast/cherry_toast.dart';
 import 'package:dropdown_search/dropdown_search.dart';
@@ -602,9 +601,15 @@ class HistoryPembelianController extends GetxController {
     return source.where((item) => _deriveStatus(item) == filter).toList();
   }
 
+  bool _hasTimestamp(dynamic value) {
+    if (value == null) return false;
+    final s = value.toString().trim().toLowerCase();
+    return s.isNotEmpty && s != 'null';
+  }
+
   String _deriveStatus(Map<String, dynamic> item) {
-    if (item['cancel_at'] != null) return 'void';
-    if (item['paid_at'] != null) return 'lunas';
+    if (_hasTimestamp(item['cancel_at'])) return 'void';
+    if (_hasTimestamp(item['paid_at'])) return 'lunas';
     return 'pending';
   }
 
@@ -866,8 +871,6 @@ class HistoryPembelian extends StatelessWidget {
                           child: Text('Semua Status'),
                         ),
                         ...HistoryPembelianController.statusFilters.map(
-                          (value) =>
-                              DropdownMenuItem(value: value, child: Text(value.capitalizeFirst ?? value)),
                           (value) =>
                               DropdownMenuItem(value: value, child: Text(value.capitalizeFirst ?? value)),
                         ),
@@ -1178,7 +1181,7 @@ class ContainerDataFaktur extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        formatrupiah(item['total'] ?? 0),
+                        formatrupiah(item['total_net'] ?? 0),
                         style: valueStyle.copyWith(fontWeight: FontWeight.w700),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -1200,11 +1203,11 @@ class ContainerDataFaktur extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        item['cancel_at'] != null
+                        c._hasTimestamp(item['cancel_at'])
                             ? 'Dibatalkan Pada ${indonesianDateFormat(DateTime.parse(item['cancel_at']))}'
-                            : item['paid_at'] == null
-                            ? 'Belum Lunas'
-                            : 'Lunas Pada ${indonesianDateFormat(DateTime.parse(item['paid_at']))}',
+                            : c._hasTimestamp(item['paid_at'])
+                            ? 'Lunas Pada ${indonesianDateFormat(DateTime.parse(item['paid_at']))}'
+                            : 'Belum Lunas',
                         style: valueStyle.copyWith(fontWeight: FontWeight.w700),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -1227,83 +1230,90 @@ class ContainerDataFaktur extends StatelessWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  Wrap(
-                    alignment: WrapAlignment.end,
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      if (item['cancel_at'] == null && item['paid_at'] == null)
-                        Tooltip(
-                          message: 'Edit',
-                          waitDuration: const Duration(milliseconds: 400),
-                          child: ElevatedButton(
-                            onPressed: () {
-                              c.showEditDialog(item);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              minimumSize: const Size(40, 40),
-                              padding: EdgeInsets.zero,
-                              visualDensity: VisualDensity.compact,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                            ),
-                            child: const Icon(Icons.edit, size: 20),
-                          ),
-                        ),
-                      Tooltip(
-                        message: 'Detail',
-                        waitDuration: const Duration(milliseconds: 400),
-                        child: OutlinedButton(
-                          onPressed: () {
-                            c.showDetailDialog(item);
-                          },
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size(40, 40),
-                            padding: EdgeInsets.zero,
-                            visualDensity: VisualDensity.compact,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          ),
-                          child: const Icon(Icons.visibility_outlined, size: 20),
-                        ),
-                      ),
+                  Builder(
+                    builder: (_) {
+                      final isCancelled = c._hasTimestamp(item['cancel_at']);
+                      final isPaid = c._hasTimestamp(item['paid_at']);
 
-                      if (item['cancel_at'] == null)
-                        Tooltip(
-                          message: 'Void',
-                          waitDuration: const Duration(milliseconds: 400),
-                          child: TextButton(
-                            onPressed: () {
-                              c.cancelFaktur(item['id_form']);
-                            },
-                            style: TextButton.styleFrom(
-                              minimumSize: const Size(40, 40),
-                              padding: EdgeInsets.zero,
-                              foregroundColor: Colors.red.shade600,
-                              visualDensity: VisualDensity.compact,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      return Wrap(
+                        alignment: WrapAlignment.end,
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          if (!isCancelled && !isPaid)
+                            Tooltip(
+                              message: 'Edit',
+                              waitDuration: const Duration(milliseconds: 400),
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  c.showEditDialog(item);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  minimumSize: const Size(40, 40),
+                                  padding: EdgeInsets.zero,
+                                  visualDensity: VisualDensity.compact,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                                child: const Icon(Icons.edit, size: 20),
+                              ),
                             ),
-                            child: const Icon(Icons.block, size: 20),
+                          Tooltip(
+                            message: 'Detail',
+                            waitDuration: const Duration(milliseconds: 400),
+                            child: OutlinedButton(
+                              onPressed: () {
+                                c.showDetailDialog(item);
+                              },
+                              style: OutlinedButton.styleFrom(
+                                minimumSize: const Size(40, 40),
+                                padding: EdgeInsets.zero,
+                                visualDensity: VisualDensity.compact,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                              child: const Icon(Icons.visibility_outlined, size: 20),
+                            ),
                           ),
-                        ),
 
-                      if (item['paid_at'] == null)
-                        Tooltip(
-                          message: 'Lunaskan',
-                          waitDuration: const Duration(milliseconds: 400),
-                          child: TextButton(
-                            onPressed: () {
-                              c.pelunasanFaktur(item['id_form']);
-                            },
-                            style: TextButton.styleFrom(
-                              foregroundColor: Colors.green,
-                              minimumSize: const Size(40, 40),
-                              padding: EdgeInsets.zero,
-                              visualDensity: VisualDensity.compact,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          if (!isCancelled)
+                            Tooltip(
+                              message: 'Void',
+                              waitDuration: const Duration(milliseconds: 400),
+                              child: TextButton(
+                                onPressed: () {
+                                  c.cancelFaktur(item['id_form']);
+                                },
+                                style: TextButton.styleFrom(
+                                  minimumSize: const Size(40, 40),
+                                  padding: EdgeInsets.zero,
+                                  foregroundColor: Colors.red.shade600,
+                                  visualDensity: VisualDensity.compact,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                                child: const Icon(Icons.block, size: 20),
+                              ),
                             ),
-                            child: const Icon(Icons.check, size: 20, color: Colors.green),
-                          ),
-                        ),
-                    ],
+
+                          if (!isPaid)
+                            Tooltip(
+                              message: 'Lunaskan',
+                              waitDuration: const Duration(milliseconds: 400),
+                              child: TextButton(
+                                onPressed: () {
+                                  c.pelunasanFaktur(item['id_form']);
+                                },
+                                style: TextButton.styleFrom(
+                                  foregroundColor: Colors.green,
+                                  minimumSize: const Size(40, 40),
+                                  padding: EdgeInsets.zero,
+                                  visualDensity: VisualDensity.compact,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                                child: const Icon(Icons.check, size: 20, color: Colors.green),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
                   ),
                 ],
               ),
