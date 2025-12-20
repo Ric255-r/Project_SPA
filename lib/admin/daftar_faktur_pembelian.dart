@@ -4,7 +4,6 @@ import 'package:Project_SPA/function/admin_drawer.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 import 'package:Project_SPA/function/rupiah_formatter.dart';
 import 'package:Project_SPA/owner/download_splash.dart';
-import 'package:Project_SPA/resepsionis/detail_food_n_beverages.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:cherry_toast/cherry_toast.dart';
 import 'package:dropdown_search/dropdown_search.dart';
@@ -26,15 +25,21 @@ String indonesianDateFormat(DateTime date) {
 }
 
 class HistoryPembelianController extends GetxController {
+  static const String statusAll = 'all';
+  static const List<String> statusFilters = ['void', 'pending', 'lunas'];
+
   RxList<DateTime?> rangeDatePickerSupplier = <DateTime?>[].obs;
   ScrollController scrollTglController = ScrollController();
   Dio dio = Dio();
   RxList<Map<String, dynamic>> suppliers = <Map<String, dynamic>>[].obs;
   RxnString selectedSupplierId = RxnString(null);
   TextEditingController txtTglController = TextEditingController();
+  RxList<Map<String, dynamic>> allFaktur = <Map<String, dynamic>>[].obs;
   RxList<Map<String, dynamic>> dataFaktur = <Map<String, dynamic>>[].obs;
   // TAMBAHKAN INI: Variabel untuk "STATE UI" dropdown
   Rxn<Map<String, dynamic>> uiSelectedSupplier = Rxn(null);
+  RxString selectedStatus = statusAll.obs;
+  RxString uiSelectedStatus = statusAll.obs;
   RxBool hasSearched = false.obs; // flag untuk trigger pas pencet btn tampil
 
   // --- TAMBAHANB VARIABEL BARU UNTUK MENAMPILKAN DIALOG ---
@@ -46,6 +51,12 @@ class HistoryPembelianController extends GetxController {
   List<TextEditingController> qtyControllers = [];
   List<TextEditingController> purchaseUnitControllers = [];
   List<TextEditingController> hargaControllers = [];
+
+  void _closeDefaultDialogIfOpen() {
+    if (Get.isDialogOpen ?? false) {
+      Get.back();
+    }
+  }
 
   // --- FUNGSI BARU UNTUK MENGHITUNG ULANG TOTAL ---
   void recalculateTotal() {
@@ -167,7 +178,11 @@ class HistoryPembelianController extends GetxController {
     for (var controller in hargaControllers) {
       controller.dispose();
     }
+    for (var controller in purchaseUnitControllers) {
+      controller.dispose();
+    }
     qtyControllers.clear();
+    purchaseUnitControllers.clear();
     hargaControllers.clear();
 
     Get.dialog(
@@ -402,7 +417,7 @@ class HistoryPembelianController extends GetxController {
       textCancel: "Batal",
       confirmTextColor: Colors.white,
       onConfirm: () async {
-        Get.back();
+        _closeDefaultDialogIfOpen();
 
         try {
           // KIRIM ULANG dengan objek FormData yang BARU
@@ -416,9 +431,7 @@ class HistoryPembelianController extends GetxController {
           CherryToast.error(title: const Text("Terjadi Kesalahan")).show(Get.context!);
         }
       },
-      onCancel: () {
-        Get.back();
-      },
+      onCancel: () {},
     );
   }
 
@@ -431,7 +444,7 @@ class HistoryPembelianController extends GetxController {
       textCancel: "Batal",
       confirmTextColor: Colors.white,
       onConfirm: () async {
-        Get.back();
+        _closeDefaultDialogIfOpen();
 
         try {
           // KIRIM ULANG dengan objek FormData yang BARU
@@ -445,9 +458,7 @@ class HistoryPembelianController extends GetxController {
           CherryToast.error(title: const Text("Terjadi Kesalahan")).show(Get.context!);
         }
       },
-      onCancel: () {
-        Get.back();
-      },
+      onCancel: () {},
     );
   }
 
@@ -482,6 +493,10 @@ class HistoryPembelianController extends GetxController {
 
       if (selectedSupplierId.value != null) {
         queryParams['id_supplier'] = selectedSupplierId.value;
+      }
+
+      if (selectedStatus.value != statusAll) {
+        queryParams['status'] = selectedStatus.value;
       }
 
       // 3. Masukkan Map ke parameter queryParameters di dio
@@ -521,6 +536,18 @@ class HistoryPembelianController extends GetxController {
       uiSelectedSupplier.close();
     } catch (_) {}
     try {
+      allFaktur.close();
+    } catch (_) {}
+    try {
+      dataFaktur.close();
+    } catch (_) {}
+    try {
+      selectedStatus.close();
+    } catch (_) {}
+    try {
+      uiSelectedStatus.close();
+    } catch (_) {}
+    try {
       totalHargaDetailFaktur.close();
     } catch (_) {}
 
@@ -529,6 +556,9 @@ class HistoryPembelianController extends GetxController {
         controller.dispose();
       }
       for (var controller in hargaControllers) {
+        controller.dispose();
+      }
+      for (var controller in purchaseUnitControllers) {
         controller.dispose();
       }
     } catch (_) {}
@@ -567,6 +597,29 @@ class HistoryPembelianController extends GetxController {
     }
   }
 
+  /// Terapkan filter status ke list faktur yang sudah diambil.
+  void applyCurrentFilters() {
+    dataFaktur.assignAll(_applyStatusFilter(allFaktur));
+  }
+
+  List<Map<String, dynamic>> _applyStatusFilter(List<Map<String, dynamic>> source) {
+    final filter = selectedStatus.value;
+    if (filter == statusAll) return List<Map<String, dynamic>>.from(source);
+    return source.where((item) => _deriveStatus(item) == filter).toList();
+  }
+
+  bool _hasTimestamp(dynamic value) {
+    if (value == null) return false;
+    final s = value.toString().trim().toLowerCase();
+    return s.isNotEmpty && s != 'null';
+  }
+
+  String _deriveStatus(Map<String, dynamic> item) {
+    if (_hasTimestamp(item['cancel_at'])) return 'void';
+    if (_hasTimestamp(item['paid_at'])) return 'lunas';
+    return 'pending';
+  }
+
   Future<void> fetchFakturPembelian() async {
     try {
       String url =
@@ -585,7 +638,8 @@ class HistoryPembelianController extends GetxController {
 
       var response = await dio.get(url);
 
-      dataFaktur.assignAll((response.data as List).map((el) => {...el}));
+      allFaktur.assignAll((response.data as List).map((el) => {...el}));
+      applyCurrentFilters();
 
       log("response data faktur : ${dataFaktur}");
     } catch (e) {
@@ -800,6 +854,47 @@ class HistoryPembelian extends StatelessWidget {
                 ),
 
                 const SizedBox(width: 10),
+                Expanded(
+                  child: Obx(() {
+                    return DropdownButtonFormField<String>(
+                      value: c.uiSelectedStatus.value,
+                      decoration: InputDecoration(
+                        isDense: true,
+                        labelText: "Status",
+                        border: OutlineInputBorder(),
+                        floatingLabelBehavior: FloatingLabelBehavior.always,
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.brown.shade300, width: 1.2),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.brown.shade700, width: 2),
+                        ),
+                      ),
+                      items: [
+                        const DropdownMenuItem(
+                          value: HistoryPembelianController.statusAll,
+                          child: Text('Semua Status'),
+                        ),
+                        ...HistoryPembelianController.statusFilters.map(
+                          (value) =>
+                              DropdownMenuItem(value: value, child: Text(value.capitalizeFirst ?? value)),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        final newValue = value ?? HistoryPembelianController.statusAll;
+                        c.uiSelectedStatus.value = newValue;
+                        if (c.hasSearched.isTrue && c.allFaktur.isNotEmpty) {
+                          c.selectedStatus.value = newValue;
+                          c.applyCurrentFilters();
+                        }
+                      },
+                    );
+                  }),
+                ),
+
+                const SizedBox(width: 10),
 
                 SizedBox(
                   height: 50,
@@ -810,6 +905,7 @@ class HistoryPembelian extends StatelessWidget {
 
                       // 2. "Commit" atau simpan ID tersebut ke state utama
                       c.selectedSupplierId.value = id;
+                      c.selectedStatus.value = c.uiSelectedStatus.value;
 
                       // 3. Panggil fetchFakturPembelian, yang akan menggunakan
                       //    selectedSupplierId.value yang sudah ter-update.
@@ -1092,7 +1188,7 @@ class ContainerDataFaktur extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        formatrupiah(item['total'] ?? 0),
+                        formatrupiah(item['total_net'] ?? 0),
                         style: valueStyle.copyWith(fontWeight: FontWeight.w700),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -1114,11 +1210,11 @@ class ContainerDataFaktur extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        item['cancel_at'] != null
+                        c._hasTimestamp(item['cancel_at'])
                             ? 'Dibatalkan Pada ${indonesianDateFormat(DateTime.parse(item['cancel_at']))}'
-                            : item['paid_at'] == null
-                            ? 'Belum Lunas'
-                            : 'Lunas Pada ${indonesianDateFormat(DateTime.parse(item['paid_at']))}',
+                            : c._hasTimestamp(item['paid_at'])
+                            ? 'Lunas Pada ${indonesianDateFormat(DateTime.parse(item['paid_at']))}'
+                            : 'Belum Lunas',
                         style: valueStyle.copyWith(fontWeight: FontWeight.w700),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -1141,83 +1237,90 @@ class ContainerDataFaktur extends StatelessWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  Wrap(
-                    alignment: WrapAlignment.end,
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      if (item['cancel_at'] == null && item['paid_at'] == null)
-                        Tooltip(
-                          message: 'Edit',
-                          waitDuration: const Duration(milliseconds: 400),
-                          child: ElevatedButton(
-                            onPressed: () {
-                              c.showEditDialog(item);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              minimumSize: const Size(40, 40),
-                              padding: EdgeInsets.zero,
-                              visualDensity: VisualDensity.compact,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                            ),
-                            child: const Icon(Icons.edit, size: 20),
-                          ),
-                        ),
-                      Tooltip(
-                        message: 'Detail',
-                        waitDuration: const Duration(milliseconds: 400),
-                        child: OutlinedButton(
-                          onPressed: () {
-                            c.showDetailDialog(item);
-                          },
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size(40, 40),
-                            padding: EdgeInsets.zero,
-                            visualDensity: VisualDensity.compact,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          ),
-                          child: const Icon(Icons.visibility_outlined, size: 20),
-                        ),
-                      ),
+                  Builder(
+                    builder: (_) {
+                      final isCancelled = c._hasTimestamp(item['cancel_at']);
+                      final isPaid = c._hasTimestamp(item['paid_at']);
 
-                      if (item['cancel_at'] == null)
-                        Tooltip(
-                          message: 'Void',
-                          waitDuration: const Duration(milliseconds: 400),
-                          child: TextButton(
-                            onPressed: () {
-                              c.cancelFaktur(item['id_form']);
-                            },
-                            style: TextButton.styleFrom(
-                              minimumSize: const Size(40, 40),
-                              padding: EdgeInsets.zero,
-                              foregroundColor: Colors.red.shade600,
-                              visualDensity: VisualDensity.compact,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      return Wrap(
+                        alignment: WrapAlignment.end,
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          if (!isCancelled && !isPaid)
+                            Tooltip(
+                              message: 'Edit',
+                              waitDuration: const Duration(milliseconds: 400),
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  c.showEditDialog(item);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  minimumSize: const Size(40, 40),
+                                  padding: EdgeInsets.zero,
+                                  visualDensity: VisualDensity.compact,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                                child: const Icon(Icons.edit, size: 20),
+                              ),
                             ),
-                            child: const Icon(Icons.block, size: 20),
+                          Tooltip(
+                            message: 'Detail',
+                            waitDuration: const Duration(milliseconds: 400),
+                            child: OutlinedButton(
+                              onPressed: () {
+                                c.showDetailDialog(item);
+                              },
+                              style: OutlinedButton.styleFrom(
+                                minimumSize: const Size(40, 40),
+                                padding: EdgeInsets.zero,
+                                visualDensity: VisualDensity.compact,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                              child: const Icon(Icons.visibility_outlined, size: 20),
+                            ),
                           ),
-                        ),
 
-                      if (item['paid_at'] == null)
-                        Tooltip(
-                          message: 'Lunaskan',
-                          waitDuration: const Duration(milliseconds: 400),
-                          child: TextButton(
-                            onPressed: () {
-                              c.pelunasanFaktur(item['id_form']);
-                            },
-                            style: TextButton.styleFrom(
-                              foregroundColor: Colors.green,
-                              minimumSize: const Size(40, 40),
-                              padding: EdgeInsets.zero,
-                              visualDensity: VisualDensity.compact,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          if (!isCancelled)
+                            Tooltip(
+                              message: 'Void',
+                              waitDuration: const Duration(milliseconds: 400),
+                              child: TextButton(
+                                onPressed: () {
+                                  c.cancelFaktur(item['id_form']);
+                                },
+                                style: TextButton.styleFrom(
+                                  minimumSize: const Size(40, 40),
+                                  padding: EdgeInsets.zero,
+                                  foregroundColor: Colors.red.shade600,
+                                  visualDensity: VisualDensity.compact,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                                child: const Icon(Icons.block, size: 20),
+                              ),
                             ),
-                            child: const Icon(Icons.check, size: 20, color: Colors.green),
-                          ),
-                        ),
-                    ],
+
+                          if (!isPaid)
+                            Tooltip(
+                              message: 'Lunaskan',
+                              waitDuration: const Duration(milliseconds: 400),
+                              child: TextButton(
+                                onPressed: () {
+                                  c.pelunasanFaktur(item['id_form']);
+                                },
+                                style: TextButton.styleFrom(
+                                  foregroundColor: Colors.green,
+                                  minimumSize: const Size(40, 40),
+                                  padding: EdgeInsets.zero,
+                                  visualDensity: VisualDensity.compact,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                                child: const Icon(Icons.check, size: 20, color: Colors.green),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
                   ),
                 ],
               ),

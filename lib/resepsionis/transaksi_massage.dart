@@ -289,12 +289,37 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
 
   Future<void> _fetchHistoryMember(String id_member) async {
     try {
-      final response = await dio.get(
-        '${myIpAddr()}/history/historymemberkunjungan/$id_member',
-      ); // API request
+      final response = await dio.get('${myIpAddr()}/history/historymemberkunjungan/$id_member');
+
       if (response.statusCode == 200) {
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+
         setState(() {
-          historyMember = response.data;
+          historyMember =
+              (response.data as List).map((raw) {
+                final Map<String, dynamic> item = Map<String, dynamic>.from(raw);
+
+                String expLabel = '';
+                final expStr = item['exp_kunjungan']?.toString() ?? '';
+
+                if (expStr.isNotEmpty) {
+                  final expDate = DateTime.tryParse(expStr);
+                  if (expDate != null) {
+                    final expOnlyDate = DateTime(expDate.year, expDate.month, expDate.day);
+
+                    // kalau lewat hari ini -> Expired
+                    expLabel = expOnlyDate.isBefore(today) ? 'Expired' : '';
+                  }
+                }
+
+                // gabungkan tanggal + label
+                // contoh: "2026-07-03 (Expired)" atau cuma "2026-07-03"
+                final labelExpired = expLabel.isNotEmpty ? '$expStr ($expLabel)' : expStr;
+
+                item['exp_kunjungan_label'] = labelExpired;
+                return item;
+              }).toList();
         });
       } else {
         ScaffoldMessenger.of(
@@ -333,31 +358,60 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
 
     try {
       var response = await dio.get('${myIpAddr()}/history/historymember/$id_member');
+
       final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+
       setState(() {
         _activePromos =
             (response.data as List)
                 .where((promo) {
+                  // ---- cek sisa kunjungan ----
+                  final sisa = int.tryParse(promo['sisa_kunjungan']?.toString() ?? '0') ?? 0;
+                  if (sisa <= 0) return false; // kalau sisa 0, tidak bisa apply
+
+                  // ---- cek exp_kunjungan ----
                   final expKunjungan = promo['exp_kunjungan'];
-                  if (expKunjungan != null && expKunjungan.isNotEmpty) {
-                    final expDate = DateTime.tryParse(expKunjungan);
+                  if (expKunjungan != null && expKunjungan.toString().isNotEmpty) {
+                    final expDate = DateTime.tryParse(expKunjungan.toString());
                     if (expDate != null) {
-                      return expDate.isAfter(now); // Only include if not expired
+                      final expOnlyDate = DateTime(expDate.year, expDate.month, expDate.day);
+
+                      // sama dengan kondisi: exp_kunjungan >= CURDATE()
+                      final isExpired = expOnlyDate.isBefore(today);
+
+                      // hanya include kalau belum expired
+                      return !isExpired;
                     }
                   }
-                  return false; // Skip invalid or expired promo
+                  return false; // kalau tanggal tidak valid / null -> anggap tidak bisa dipakai
                 })
-                .map((promo) {
+                .map<Map<String, dynamic>>((promo) {
+                  // bikin label buat ditampilkan di UI (Expired / tanggal)
+                  String expLabel = '';
+                  final expStr = promo['exp_kunjungan']?.toString() ?? '';
+                  if (expStr.isNotEmpty) {
+                    final expDate = DateTime.tryParse(expStr);
+                    if (expDate != null) {
+                      final expOnlyDate = DateTime(expDate.year, expDate.month, expDate.day);
+                      expLabel = expOnlyDate.isBefore(today) ? 'Expired' : expStr;
+                    } else {
+                      expLabel = expStr;
+                    }
+                  }
+
                   return {
                     'kode_promo': promo['kode_promo'],
                     'nama_promo': promo['nama_promo'],
                     'nama_paket_msg': promo['nama_paket_msg'],
                     'sisa_kunjungan': promo['sisa_kunjungan'],
                     'exp_kunjungan': promo['exp_kunjungan'],
+                    'exp_kunjungan_label': expLabel, // <-- bisa dipakai di Text()
                     'exp_tahunan': promo['exp_tahunan'],
                   };
                 })
                 .toList();
+
         _isLoadingPromos = false;
       });
     } catch (e) {
@@ -2063,11 +2117,8 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                                           Container(
                                                             width: 90,
                                                             child: Text(
-                                                              item['exp_kunjungan'] != null &&
-                                                                      item['exp_kunjungan'] != ''
-                                                                  ? '${item['exp_kunjungan']}'
-                                                                  : '',
-                                                              style: TextStyle(fontFamily: 'Poppins'),
+                                                              item['exp_kunjungan_label'] ?? '',
+                                                              style: const TextStyle(fontFamily: 'Poppins'),
                                                             ),
                                                           ),
                                                         ],

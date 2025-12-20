@@ -211,14 +211,19 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
   Map<String, double> getHargaAfterDisc() {
     double totalBefore = getHargaBeforeDisc();
-    // Convert to List<double>
-    // List<double> doubleDisc =
-    //     listDisc.map((percentStr) {
-    //       return double.parse(percentStr.replaceAll('%', '')) / 100;
-    //     }).toList();
+    // Diskon hanya berlaku untuk item massage (id_paket_msg diawali "M")
+    double totalEligibleDisc = dataJual.fold(0.0, (sum, item) {
+      final idPaket = item['id_paket_msg']?.toString() ?? '';
+      if (idPaket.isNotEmpty && idPaket[0] == "M") {
+        final harga = item['harga_total'] ?? item['harga_fnb'] ?? 0;
+        return sum + (harga is int ? harga.toDouble() : harga);
+      }
+      return sum;
+    });
+
     double doubleDisc = discSetelahPromo.value / 100;
 
-    double jlhPotongan = totalBefore * doubleDisc;
+    double jlhPotongan = totalEligibleDisc * doubleDisc;
     double totalStlhDisc = totalBefore - jlhPotongan;
 
     if (hargavip.isNotEmpty) {
@@ -2211,14 +2216,23 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                       IconButton(
                         icon: Icon(Icons.delete, size: 18),
                         onPressed: () {
+                          // Guard against stale index when list already changed
+                          if (index < 0 || index >= widget.dataJual.length) return;
+
+                          // Snapshot current item to avoid range errors if the list mutates later
+                          final currentItem = Map<String, dynamic>.from(widget.dataJual[index]);
+                          final currentNamaPaket = currentItem['nama_paket_msg'];
+                          final currentIdPaket = (currentItem['id_paket_msg'] ?? '').toString();
+                          final currentQty = (currentItem['jlh'] as num?)?.toInt() ?? 0;
+
                           setState(() {
                             final promoExists = widget.datapromo.any(
-                              (promo) => promo['nama_promo'] == widget.dataJual[index]['nama_paket_msg'],
+                              (promo) => promo['nama_promo'] == currentNamaPaket,
                             );
 
                             if (promoExists) {
                               if (retrieveindex != null) {
-                                String itemname = widget.dataJual[index]['nama_paket_msg'];
+                                String itemname = currentNamaPaket;
                                 // retrieveindex = selecteditemindex[itemname];
                                 retrieveindex = itemname;
 
@@ -2226,27 +2240,27 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                               }
                             } else {
                               for (var produk in dataproduk.where(
-                                (p) => p['nama_produk'] == widget.dataJual[index]['nama_paket_msg'],
+                                (p) => p['nama_produk'] == currentNamaPaket,
                               )) {
                                 sisastok = int.tryParse(produk['stok_produk'].toString()) ?? 0;
                                 tipepaket = 'produk';
                               }
 
                               if (tipepaket == 'produk') {
-                                String itemname = widget.dataJual[index]['nama_paket_msg'];
+                                String itemname = currentNamaPaket;
                                 // selecteditemindex[itemname] = index;
                                 // retrieveindex = selecteditemindex[itemname];
                                 retrieveindex = itemname;
                                 itemTapCounts[retrieveindex!] = 0;
                               }
                             }
-                            if (widget.dataJual[index]['id_paket_msg'][0] == 'F') {
+                            if (currentIdPaket.startsWith('F')) {
                               CherryToast.error(
                                 title: Text('Error'),
                                 description: Text('Item bonus tidak dapat dihapus manual'),
                               ).show(context);
                             } else {
-                              checkpaketadapromoitem(widget.dataJual[index]['id_paket_msg']).then((_) {
+                              checkpaketadapromoitem(currentIdPaket).then((_) {
                                 if (Listbonusitem.isNotEmpty) {
                                   final existbonusitemidx = widget.dataJual.indexWhere(
                                     (item) => item['nama_paket_msg'] == Listbonusitem[0]['nama_fnb'],
@@ -2254,11 +2268,11 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
 
                                   if (existbonusitemidx != -1) {
                                     if (widget.dataJual[existbonusitemidx]['jlh'] > Listbonusitem[0]['qty'] &&
-                                        widget.dataJual[index]['jlh'] > 1) {
-                                      log(widget.dataJual[index]['jlh'].toString());
+                                        currentQty > 1) {
+                                      log(currentQty.toString());
                                       widget.dataJual[existbonusitemidx]['jlh'] =
                                           (widget.dataJual[existbonusitemidx]['jlh'] as num).toInt() -
-                                          Listbonusitem[0]['qty'] * widget.dataJual[index]['jlh'];
+                                          Listbonusitem[0]['qty'] * currentQty;
                                     }
 
                                     if (widget.dataJual[existbonusitemidx]['jlh'] < Listbonusitem[0]['qty']) {
@@ -2267,7 +2281,14 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                                   }
                                 }
 
-                                widget.dataJual.removeAt(index);
+                                final removeIdx = widget.dataJual.indexWhere(
+                                  (item) =>
+                                      item['id_paket_msg'] == currentIdPaket &&
+                                      item['nama_paket_msg'] == currentNamaPaket,
+                                );
+                                if (removeIdx != -1) {
+                                  widget.dataJual.removeAt(removeIdx);
+                                }
                               });
                             }
                           });
