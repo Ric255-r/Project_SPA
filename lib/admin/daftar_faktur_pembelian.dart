@@ -178,7 +178,11 @@ class HistoryPembelianController extends GetxController {
     for (var controller in hargaControllers) {
       controller.dispose();
     }
+    for (var controller in purchaseUnitControllers) {
+      controller.dispose();
+    }
     qtyControllers.clear();
+    purchaseUnitControllers.clear();
     hargaControllers.clear();
 
     Get.dialog(
@@ -552,6 +556,9 @@ class HistoryPembelianController extends GetxController {
         controller.dispose();
       }
       for (var controller in hargaControllers) {
+        controller.dispose();
+      }
+      for (var controller in purchaseUnitControllers) {
         controller.dispose();
       }
     } catch (_) {}
