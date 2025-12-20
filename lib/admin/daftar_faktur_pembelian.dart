@@ -422,9 +422,7 @@ class HistoryPembelianController extends GetxController {
           CherryToast.error(title: const Text("Terjadi Kesalahan")).show(Get.context!);
         }
       },
-      onCancel: () {
-        Get.back();
-      },
+      onCancel: () {},
     );
   }
 
@@ -451,9 +449,7 @@ class HistoryPembelianController extends GetxController {
           CherryToast.error(title: const Text("Terjadi Kesalahan")).show(Get.context!);
         }
       },
-      onCancel: () {
-        Get.back();
-      },
+      onCancel: () {},
     );
   }
 
@@ -864,10 +860,8 @@ class HistoryPembelian extends StatelessWidget {
                           child: Text('Semua Status'),
                         ),
                         ...HistoryPembelianController.statusFilters.map(
-                          (value) => DropdownMenuItem(
-                            value: value,
-                            child: Text(value.capitalizeFirst ?? value),
-                          ),
+                          (value) =>
+                              DropdownMenuItem(value: value, child: Text(value.capitalizeFirst ?? value)),
                         ),
                       ],
                       onChanged: (value) {

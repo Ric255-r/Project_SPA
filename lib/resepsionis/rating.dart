@@ -41,9 +41,7 @@ class RatingController extends GetxController {
 
   Future<void> cekRating() async {
     try {
-      var response = await dio.get(
-        '${myIpAddr()}/listtrans/cek_rating?id_transaksi=$idTransaksi',
-      );
+      var response = await dio.get('${myIpAddr()}/listtrans/cek_rating?id_transaksi=$idTransaksi');
       Map<String, dynamic> responseData = response.data;
 
       isFirstTimeRate.value = responseData['is_first_time'];
@@ -54,8 +52,7 @@ class RatingController extends GetxController {
         // krna valuenya bentuk rxInt, update spt ini
         selectedRatings['pelayanan_terapis']?.value = data['pelayanan_terapis'];
         selectedRatings['fasilitas']?.value = data['fasilitas'];
-        selectedRatings['pelayanan_keseluruhan']?.value =
-            data['pelayanan_keseluruhan'];
+        selectedRatings['pelayanan_keseluruhan']?.value = data['pelayanan_keseluruhan'];
       }
 
       print(isFirstTimeRate.value);
@@ -73,15 +70,11 @@ class RatingController extends GetxController {
       Map<String, dynamic> data = {
         "pelayanan_terapis": selectedRatings["pelayanan_terapis"]?.value,
         "fasilitas": selectedRatings["fasilitas"]?.value,
-        "pelayanan_keseluruhan":
-            selectedRatings["pelayanan_keseluruhan"]?.value,
+        "pelayanan_keseluruhan": selectedRatings["pelayanan_keseluruhan"]?.value,
         "id_transaksi": idTransaksi,
       };
 
-      var response = await dio.post(
-        '${myIpAddr()}/listtrans/store_rating',
-        data: data,
-      );
+      var response = await dio.post('${myIpAddr()}/listtrans/store_rating', data: data);
 
       if (response.statusCode == 200) {
         Get.back();
@@ -142,13 +135,9 @@ class Rating extends StatelessWidget {
 
     // 3. Hitung designSize yang efektif berdasarkan tipe perangkat
     final double effectiveDesignWidth =
-        isMobile
-            ? tabletDesignWidth * mobileAdjustmentFactor
-            : tabletDesignWidth;
+        isMobile ? tabletDesignWidth * mobileAdjustmentFactor : tabletDesignWidth;
     final double effectiveDesignHeight =
-        isMobile
-            ? tabletDesignHeight * mobileAdjustmentFactor
-            : tabletDesignHeight;
+        isMobile ? tabletDesignHeight * mobileAdjustmentFactor : tabletDesignHeight;
     return isMobile
         ? WidgetRatingMobile()
         : Scaffold(
@@ -156,11 +145,7 @@ class Rating extends StatelessWidget {
           appBar: AppBar(
             title: Text(
               'PLATINUM',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 30,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontFamily: 'Poppins', fontSize: 30, fontWeight: FontWeight.bold),
             ),
             toolbarHeight: 100,
             centerTitle: true,
@@ -179,20 +164,12 @@ class Rating extends StatelessWidget {
                     if (c.isFirstTimeRate.value) {
                       return Text(
                         'Berikan Rating Anda 🤗',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.bold),
                       );
                     } else {
                       return Text(
                         'Rating pada ${c.idTransaksi} Adalah: ',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.bold),
                       );
                     }
                   }),
@@ -217,11 +194,7 @@ class Rating extends StatelessWidget {
           padding: EdgeInsets.only(left: 130, top: 20),
           child: Text(
             category,
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.bold),
           ),
         ),
         SizedBox(height: 10),
@@ -245,17 +218,9 @@ class Rating extends StatelessWidget {
                     height: 100,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(15),
-                      color:
-                          c.selectedRatings[category]?.value == index
-                              ? Colors.greenAccent
-                              : Colors.white,
+                      color: c.selectedRatings[category]?.value == index ? Colors.greenAccent : Colors.white,
                     ),
-                    child: Center(
-                      child: Text(
-                        emojis[index],
-                        style: TextStyle(fontSize: 60),
-                      ),
-                    ),
+                    child: Center(child: Text(emojis[index], style: TextStyle(fontSize: 60))),
                   ),
                 );
               }),
@@ -279,11 +244,7 @@ class WidgetRatingMobile extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           'PLATINUM',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 30,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontFamily: 'Poppins', fontSize: 30, fontWeight: FontWeight.bold),
         ),
         toolbarHeight: 100,
         centerTitle: true,
@@ -302,20 +263,12 @@ class WidgetRatingMobile extends StatelessWidget {
                 if (c.isFirstTimeRate.value) {
                   return Text(
                     'Berikan Rating Anda 🤗',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.bold),
                   );
                 } else {
                   return Text(
                     'Rating pada ${c.idTransaksi} Adalah: ',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.bold),
                   );
                 }
               }),
@@ -338,11 +291,7 @@ class WidgetRatingMobile extends StatelessWidget {
           padding: EdgeInsets.only(left: 40, top: 20),
           child: Text(
             category,
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.bold),
           ),
         ),
         SizedBox(height: 10),
@@ -365,17 +314,9 @@ class WidgetRatingMobile extends StatelessWidget {
                     height: 100,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(15),
-                      color:
-                          c.selectedRatings[category]?.value == index
-                              ? Colors.greenAccent
-                              : Colors.white,
+                      color: c.selectedRatings[category]?.value == index ? Colors.greenAccent : Colors.white,
                     ),
-                    child: Center(
-                      child: Text(
-                        emojis[index],
-                        style: TextStyle(fontSize: 60),
-                      ),
-                    ),
+                    child: Center(child: Text(emojis[index], style: TextStyle(fontSize: 60))),
                   ),
                 );
               }),
