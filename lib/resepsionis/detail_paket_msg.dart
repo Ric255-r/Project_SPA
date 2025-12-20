@@ -2275,7 +2275,8 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                                           Listbonusitem[0]['qty'] * currentQty;
                                     }
 
-                                    if (widget.dataJual[existbonusitemidx]['jlh'] < Listbonusitem[0]['qty']) {
+                                    if (widget.dataJual[existbonusitemidx]['jlh'] <=
+                                        Listbonusitem[0]['qty']) {
                                       widget.dataJual.removeAt(existbonusitemidx);
                                     }
                                   }
@@ -2291,9 +2292,8 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                                 }
                               });
                             }
+                            widget.onChangeHrg();
                           });
-
-                          widget.onChangeHrg();
                         },
                       ),
                     ],
