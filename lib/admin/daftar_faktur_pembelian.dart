@@ -53,6 +53,12 @@ class HistoryPembelianController extends GetxController {
   List<TextEditingController> purchaseUnitControllers = [];
   List<TextEditingController> hargaControllers = [];
 
+  void _closeDefaultDialogIfOpen() {
+    if (Get.isDialogOpen ?? false) {
+      Get.back();
+    }
+  }
+
   // --- FUNGSI BARU UNTUK MENGHITUNG ULANG TOTAL ---
   void recalculateTotal() {
     double total = 0;
@@ -408,7 +414,7 @@ class HistoryPembelianController extends GetxController {
       textCancel: "Batal",
       confirmTextColor: Colors.white,
       onConfirm: () async {
-        Get.back();
+        _closeDefaultDialogIfOpen();
 
         try {
           // KIRIM ULANG dengan objek FormData yang BARU
@@ -435,7 +441,7 @@ class HistoryPembelianController extends GetxController {
       textCancel: "Batal",
       confirmTextColor: Colors.white,
       onConfirm: () async {
-        Get.back();
+        _closeDefaultDialogIfOpen();
 
         try {
           // KIRIM ULANG dengan objek FormData yang BARU
@@ -860,6 +866,8 @@ class HistoryPembelian extends StatelessWidget {
                           child: Text('Semua Status'),
                         ),
                         ...HistoryPembelianController.statusFilters.map(
+                          (value) =>
+                              DropdownMenuItem(value: value, child: Text(value.capitalizeFirst ?? value)),
                           (value) =>
                               DropdownMenuItem(value: value, child: Text(value.capitalizeFirst ?? value)),
                         ),
