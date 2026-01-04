@@ -885,21 +885,50 @@ class ListTransaksiController extends GetxController {
 
     Get.defaultDialog(
       title: "Konfirmasi",
-      middleText: "Pastikan Bahwa Transaksi Ini Sudah Selesai. Jika Yakin, tekan 'Ya'",
+      titleStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
       textConfirm: "Ya",
       textCancel: "Tidak",
       confirmTextColor: Colors.white,
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const SizedBox(height: 12),
-          Obx(
-            () => CheckboxListTile(
-              value: dontShowAgain.value,
-              onChanged: (val) => dontShowAgain.value = val ?? false,
-              controlAffinity: ListTileControlAffinity.leading,
-              contentPadding: EdgeInsets.zero,
-              title: const Text("Jangan tampilkan lagi (Hati Hati!)"),
+          // Pindahkan teks konfirmasi ke sini
+          const Text(
+            "Pastikan Bahwa Transaksi Ini Sudah Selesai. Jika Yakin, tekan 'Ya'",
+            textAlign: TextAlign.center,
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+          ),
+          const SizedBox(height: 6),
+          InkWell(
+            onTap: () => dontShowAgain.value = !dontShowAgain.value,
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Row(
+                children: [
+                  Obx(
+                    () => SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: Checkbox(
+                        value: dontShowAgain.value,
+                        onChanged: (val) => dontShowAgain.value = val ?? false,
+                        activeColor: Colors.blueAccent, // Warna saat dicentang
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4), // Membuat sudut box tumpul
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      "Jangan tampilkan lagi",
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
