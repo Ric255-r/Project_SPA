@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:Project_SPA/office_boy/hp_ob.dart';
 import 'package:Project_SPA/owner/Laporan_pilihan_terapis.dart';
+import 'package:Project_SPA/owner/laporan_jenis_tamu.dart';
 import 'package:Project_SPA/owner/laporan_komisi.dart';
 import 'package:Project_SPA/resepsionis/list_transaksi.dart';
 import 'package:Project_SPA/resepsionis/rating.dart';
@@ -215,35 +216,42 @@ class _OurDrawerState extends State<OurDrawer> {
                         leading: const Icon(Icons.admin_panel_settings_rounded),
                         title: const Text('Owner', style: TextStyle(fontFamily: 'Poppins')),
                         onTap: () {
-                          Get.off(() => OwnerPage());
+                          Get.to(() => OwnerPage());
                         },
                       ),
                       ListTile(
                         leading: const Icon(Icons.admin_panel_settings_rounded),
                         title: const Text('Admin', style: TextStyle(fontFamily: 'Poppins')),
                         onTap: () {
-                          Get.off(() => MainAdmin());
+                          Get.to(() => MainAdmin());
                         },
                       ),
                       ListTile(
                         leading: const Icon(Icons.list_rounded),
                         title: const Text('List Transaksi', style: TextStyle(fontFamily: 'Poppins')),
                         onTap: () {
-                          Get.off(() => ListTransaksi());
+                          Get.to(() => ListTransaksi());
                         },
                       ),
                       ListTile(
                         leading: const Icon(Icons.safety_check),
                         title: const Text('Komisi', style: TextStyle(fontFamily: 'Poppins')),
                         onTap: () {
-                          Get.off(() => laporankomisi());
+                          Get.to(() => laporankomisi());
                         },
                       ),
                       ListTile(
                         leading: const Icon(Icons.timeline_sharp),
                         title: const Text('Laporan Terapis Dipilih', style: TextStyle(fontFamily: 'Poppins')),
                         onTap: () {
-                          Get.off(() => laporanpilihanterapis());
+                          Get.to(() => laporanpilihanterapis());
+                        },
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.list_rounded),
+                        title: const Text('Laporan Jenis Tamu', style: TextStyle(fontFamily: 'Poppins')),
+                        onTap: () {
+                          Get.to(() => LaporanJenisTamu());
                         },
                       ),
                     ],
