@@ -25,6 +25,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:Project_SPA/function/me.dart';
 import 'package:Project_SPA/function/token.dart';
 import 'package:Project_SPA/main.dart';
@@ -95,6 +96,11 @@ class ListTransaksiController extends GetxController {
   final List<String> listJenisPilihan = <String>['Showing', 'Pilih Bawah', 'Request', 'Rolling'];
   RxnString selectedJenisPilihan = RxnString();
   RxnString selectedStatus = RxnString();
+
+  final GetStorage _storage = GetStorage();
+  static const String _skipPelunasanConfirmKey = 'skip_pelunasan_confirm';
+  static const String _skipPelunasanConfirmSetAtKey = 'skip_pelunasan_confirm_set_at';
+  RxBool _skipPelunasanConfirm = false.obs;
 
   List<dynamic>? allDataOmset;
 
@@ -236,11 +242,37 @@ class ListTransaksiController extends GetxController {
     _isLoadingVisible = false;
   }
 
+  void _loadSkipPelunasanFlag() {
+    final storedSkip = _storage.read(_skipPelunasanConfirmKey) ?? false;
+    final storedSetAt = _storage.read(_skipPelunasanConfirmSetAtKey);
+
+    if (storedSkip == true && storedSetAt != null) {
+      try {
+        final setAt = DateTime.parse(storedSetAt.toString());
+        final expired = DateTime.now().difference(setAt) >= const Duration(hours: 6);
+        if (expired) {
+          _storage.remove(_skipPelunasanConfirmKey);
+          _storage.remove(_skipPelunasanConfirmSetAtKey);
+          _skipPelunasanConfirm.value = false;
+          return;
+        }
+      } catch (_) {
+        _storage.remove(_skipPelunasanConfirmKey);
+        _storage.remove(_skipPelunasanConfirmSetAtKey);
+        _skipPelunasanConfirm.value = false;
+        return;
+      }
+    }
+
+    _skipPelunasanConfirm.value = storedSkip == true;
+  }
+
   @override
   void onInit() {
     // TODO: implement onInit
     super.onInit();
     _setupDio();
+    _loadSkipPelunasanFlag();
     _profileUser().then((_) {
       refreshData();
       startAutoRefresh();
@@ -834,6 +866,53 @@ class ListTransaksiController extends GetxController {
     _txtKembalian.value = TextEditingValue(
       text: formattedKembali,
       selection: TextSelection.collapsed(offset: formattedKembali.length),
+    );
+  }
+
+  void dialogConfirmSessionBeforePay(
+    String idTrans,
+    int grandTotal,
+    int jumlahBayar,
+    int kembalian,
+    String status,
+  ) async {
+    if (_skipPelunasanConfirm.value) {
+      dialogPelunasan(idTrans, grandTotal, jumlahBayar, kembalian, status);
+      return;
+    }
+
+    final RxBool dontShowAgain = false.obs;
+
+    Get.defaultDialog(
+      title: "Konfirmasi",
+      middleText: "Pastikan Bahwa Transaksi Ini Sudah Selesai. Jika Yakin, tekan 'Ya'",
+      textConfirm: "Ya",
+      textCancel: "Tidak",
+      confirmTextColor: Colors.white,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 12),
+          Obx(
+            () => CheckboxListTile(
+              value: dontShowAgain.value,
+              onChanged: (val) => dontShowAgain.value = val ?? false,
+              controlAffinity: ListTileControlAffinity.leading,
+              contentPadding: EdgeInsets.zero,
+              title: const Text("Jangan tampilkan lagi (Hati Hati!)"),
+            ),
+          ),
+        ],
+      ),
+      onConfirm: () async {
+        if (dontShowAgain.value) {
+          _skipPelunasanConfirm.value = true;
+          await _storage.write(_skipPelunasanConfirmKey, true);
+          await _storage.write(_skipPelunasanConfirmSetAtKey, DateTime.now().toIso8601String());
+        }
+        Get.back();
+        dialogPelunasan(idTrans, grandTotal, jumlahBayar, kembalian, status);
+      },
     );
   }
 
@@ -3387,7 +3466,7 @@ class ListTransaksi extends StatelessWidget {
                                                               //   totalAddOnAll = (addOnSblmBulat / 1000).round() * 1000;
                                                               // }
 
-                                                              c.dialogPelunasan(
+                                                              c.dialogConfirmSessionBeforePay(
                                                                 item['id_transaksi'],
                                                                 item['gtotal_stlh_pajak'],
                                                                 item['jumlah_bayar'],
