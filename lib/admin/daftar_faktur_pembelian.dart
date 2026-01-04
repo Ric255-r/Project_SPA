@@ -866,6 +866,67 @@ class HistoryPembelianController extends GetxController {
   }
 }
 
+class SummaryDataFaktur extends StatelessWidget {
+  final num total;
+  final num totalDiskon;
+  final num totalPajak;
+  final num totalNet;
+  final num cancelledTotalNet;
+
+  const SummaryDataFaktur({
+    super.key,
+    required this.total,
+    required this.totalDiskon,
+    required this.totalPajak,
+    required this.totalNet,
+    required this.cancelledTotalNet,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: const [BoxShadow(blurRadius: 10, offset: Offset(0, 2), color: Color(0x14000000))],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Ringkasan Total (tidak termasuk void)',
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+          ),
+          const SizedBox(height: 10),
+          _buildRow('Total', formatrupiah(total)),
+          const SizedBox(height: 6),
+          _buildRow('Total Diskon', formatrupiah(totalDiskon)),
+          const SizedBox(height: 6),
+          _buildRow('Pajak', formatrupiah(totalPajak)),
+          const SizedBox(height: 6),
+          _buildRow('Total Bersih', formatrupiah(totalNet)),
+          if (cancelledTotalNet > 0) ...[
+            const SizedBox(height: 6),
+            _buildRow('Total Dibatalkan', formatrupiah(cancelledTotalNet), valueColor: Colors.red.shade700),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRow(String label, String value, {Color? valueColor}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: TextStyle(color: Colors.grey.shade700, fontWeight: FontWeight.w600)),
+        Text(value, style: TextStyle(fontWeight: FontWeight.w700, color: valueColor ?? Colors.black)),
+      ],
+    );
+  }
+}
+
 class HistoryPembelian extends StatelessWidget {
   HistoryPembelian({super.key});
 
@@ -1389,14 +1450,43 @@ class HistoryPembelian extends StatelessWidget {
 
             Obx(() {
               if (c.dataFaktur.isNotEmpty) {
+                num sumField(List<Map<String, dynamic>> source, String key) {
+                  return source.fold<num>(0, (sum, el) {
+                    final value = el[key];
+                    if (value is num) return sum + value;
+                    if (value == null) return sum;
+                    return sum + (num.tryParse(value.toString()) ?? 0);
+                  });
+                }
+
+                final fakturList = c.dataFaktur;
+                final aktifFaktur = fakturList.where((el) => !c._hasTimestamp(el['cancel_at'])).toList();
+                final cancelledFaktur = fakturList.where((el) => c._hasTimestamp(el['cancel_at'])).toList();
+
+                final totalAmount = sumField(aktifFaktur, 'total');
+                final totalDiskon = sumField(aktifFaktur, 'total_diskon');
+                final totalPajak = sumField(aktifFaktur, 'pajak');
+                final totalNet = sumField(aktifFaktur, 'total_net');
+                final cancelledTotalNet = sumField(cancelledFaktur, 'total_net');
+
                 return Expanded(
                   child: Scrollbar(
                     thumbVisibility: true,
                     child: ListView.separated(
-                      itemCount: c.dataFaktur.length,
+                      itemCount: fakturList.length + 1,
                       separatorBuilder: (_, _) => const SizedBox(height: 12),
                       itemBuilder: (context, index) {
-                        final item = c.dataFaktur[index];
+                        if (index == fakturList.length) {
+                          return SummaryDataFaktur(
+                            total: totalAmount,
+                            totalDiskon: totalDiskon,
+                            totalPajak: totalPajak,
+                            totalNet: totalNet,
+                            cancelledTotalNet: cancelledTotalNet,
+                          );
+                        }
+
+                        final item = fakturList[index];
 
                         return ContainerDataFaktur(item: item);
                       },
@@ -1551,7 +1641,73 @@ class ContainerDataFaktur extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        formatrupiah(item['total_net'] ?? 0),
+                        formatrupiah(item['total'] ?? 0),
+                        style: valueStyle.copyWith(fontWeight: FontWeight.w700),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 6),
+
+                // Diskon
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 110,
+                      child: Text("Diskon :", style: labelStyle, overflow: TextOverflow.ellipsis),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        formatrupiah(item['total_diskon'] ?? 0),
+                        style: valueStyle.copyWith(fontWeight: FontWeight.w700),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 6),
+
+                // Pajak
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 110,
+                      child: Text("Pajak :", style: labelStyle, overflow: TextOverflow.ellipsis),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        formatrupiah(item['pajak'] ?? 0),
+                        style: valueStyle.copyWith(fontWeight: FontWeight.w700),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 6),
+
+                // Total Bersih
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 110,
+                      child: Text("Total Bersih :", style: labelStyle, overflow: TextOverflow.ellipsis),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        formatrupiah(item['total_net'] ?? item['total'] ?? 0),
                         style: valueStyle.copyWith(fontWeight: FontWeight.w700),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
