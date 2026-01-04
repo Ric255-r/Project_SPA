@@ -92,6 +92,9 @@ class ListTransaksiController extends GetxController {
   List<String> listJenisRuang = <String>['Fasilitas', 'Reguler', 'VIP'];
   String? dropdownValue;
   final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp. ', decimalDigits: 0);
+  final List<String> listJenisPilihan = <String>['Showing', 'Pilih Bawah', 'Request', 'Rolling'];
+  RxnString selectedJenisPilihan = RxnString();
+  RxnString selectedStatus = RxnString();
 
   List<dynamic>? allDataOmset;
 
@@ -183,17 +186,29 @@ class ListTransaksiController extends GetxController {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
+          if (options.extra['skipGlobalLoading'] == true) {
+            handler.next(options);
+            return;
+          }
           _loadingCounter++;
           _showLoadingDialog();
           handler.next(options);
         },
         onResponse: (response, handler) {
+          if (response.requestOptions.extra['skipGlobalLoading'] == true) {
+            handler.next(response);
+            return;
+          }
           _loadingCounter = _loadingCounter - 1;
           if (_loadingCounter < 0) _loadingCounter = 0;
           _hideLoadingDialog();
           handler.next(response);
         },
         onError: (err, handler) {
+          if (err.requestOptions.extra['skipGlobalLoading'] == true) {
+            handler.next(err);
+            return;
+          }
           _loadingCounter = _loadingCounter - 1;
           if (_loadingCounter < 0) _loadingCounter = 0;
           _hideLoadingDialog();
@@ -2505,6 +2520,36 @@ class ListTransaksiController extends GetxController {
   }
 
   Future<void> downloadExcel() async {
+    String url = '${myIpAddr()}/main_owner/export_excel?';
+
+    // Date filter
+    if (_hakAkses.value == "owner") {
+      List<dynamic> rangeDate = rangeDatePickerOmset;
+      if (rangeDate.isNotEmpty) {
+        String startDate = rangeDate[0].toString().split(" ")[0];
+        url += "start_date=$startDate";
+
+        if (rangeDate.length == 2) {
+          String endDate = rangeDate[1].toString().split(" ")[0];
+          url += "&end_date=$endDate";
+        }
+      }
+    }
+
+    // Jenis Pilihan Terapis filter
+    if ((selectedJenisPilihan.value ?? '').isNotEmpty) {
+      url += "&pilihan_terapis=${selectedJenisPilihan.value}";
+    }
+
+    // Status filter
+    if (selectedStatus.value == 'unpaid') {
+      url += "&status=unpaid";
+    } else if (selectedStatus.value == 'paid_done') {
+      url += "&status=paid_done";
+    } else if (selectedStatus.value == 'void') {
+      url += "&is_cancel=1";
+    }
+
     Get.dialog(
       const DownloadSplash(),
       barrierDismissible: false, // Prevent user from dismissing by tapping outside
@@ -2514,25 +2559,14 @@ class ListTransaksiController extends GetxController {
       final dir = await getDownloadsDirectory();
       final filePath = '${dir?.path}/datapenjualan_platinum.pdf';
 
-      String url = '${myIpAddr()}/main_owner/export_excel?';
-
-      if (_hakAkses.value == "owner") {
-        List<dynamic> rangeDate = rangeDatePickerOmset;
-        if (rangeDate.isNotEmpty) {
-          String startDate = rangeDate[0].toString().split(" ")[0];
-          url += "start_date=$startDate";
-
-          if (rangeDate.length == 2) {
-            String endDate = rangeDate[1].toString().split(" ")[0];
-            url += "&end_date=$endDate";
-          }
-        }
-      }
-
       await dio.download(
         url,
         filePath,
-        options: Options(responseType: ResponseType.bytes, headers: {'Accept': 'application/pdf'}),
+        options: Options(
+          responseType: ResponseType.bytes,
+          headers: {'Accept': 'application/pdf'},
+          extra: {'skipGlobalLoading': true},
+        ),
       );
 
       // Close the loading dialog
@@ -2542,10 +2576,121 @@ class ListTransaksiController extends GetxController {
       await OpenFile.open(filePath);
       log('File downloaded to: $filePath');
     } catch (e) {
-      // Close the loading dialog
-      Get.back();
-      log('Error downloading file: $e');
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
+
+      if (e is DioException) {
+        String errorMessage = "Gagal mengunduh file.";
+
+        // Cek apakah ada respon dari server
+        if (e.response != null) {
+          final rawData = e.response?.data;
+
+          try {
+            // SKENARIO 1: Dio sudah otomatis mengubahnya menjadi MAP (Paling mungkin terjadi pada kasus Anda)
+            if (rawData is Map) {
+              errorMessage = rawData['message'] ?? e.response?.statusMessage;
+            }
+            // SKENARIO 2: Masih berupa String JSON
+            else if (rawData is String) {
+              var jsonMap = jsonDecode(rawData);
+              errorMessage = jsonMap['message'] ?? e.response?.statusMessage;
+            }
+            // SKENARIO 3: Masih berupa Bytes (List<int>) sesuai request awal
+            else if (rawData is List<int>) {
+              String decodedString = utf8.decode(rawData);
+              // Coba cek apakah string hasil decode adalah JSON
+              try {
+                var jsonMap = jsonDecode(decodedString);
+                errorMessage = jsonMap['message'] ?? e.response?.statusMessage;
+              } catch (_) {
+                // Jika bukan JSON, mungkin pesan teks biasa
+                errorMessage = decodedString;
+              }
+            }
+            // Fallback jika format tidak dikenali
+            else {
+              errorMessage = e.response?.statusMessage ?? "Terjadi kesalahan server";
+            }
+          } catch (err) {
+            log("Gagal parsing error message: $err");
+            errorMessage = e.response?.statusMessage ?? "Terjadi kesalahan";
+          }
+        } else {
+          // Error koneksi (timeout, dns, dll)
+          errorMessage = e.message ?? "Koneksi bermasalah";
+        }
+
+        log("Error Message Final: $errorMessage");
+
+        Get.snackbar(
+          "Gagal Download",
+          errorMessage, // Harusnya sekarang muncul: "No transaction data found..."
+          backgroundColor: Colors.redAccent,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+          margin: const EdgeInsets.all(10),
+          duration: const Duration(seconds: 4),
+        );
+      } else {
+        log('Error downloading file: $e');
+        Get.snackbar("Error", "Terjadi kesalahan: $e");
+      }
     }
+  }
+
+  void showDownloadFilterDialog() {
+    Get.dialog(
+      AlertDialog(
+        title: const Text("Cetak Laporan"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "Lewati Filter jika ingin mencetak semua transaksi",
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+              textAlign: TextAlign.center,
+            ),
+            Obx(
+              () => DropdownButtonFormField<String>(
+                value: selectedJenisPilihan.value,
+                decoration: const InputDecoration(labelText: "Pilih Jenis Pilihan Terapis"),
+                items:
+                    listJenisPilihan.map((e) => DropdownMenuItem<String>(value: e, child: Text(e))).toList(),
+                onChanged: (val) => selectedJenisPilihan.value = val,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Obx(
+              () => DropdownButtonFormField<String>(
+                value: selectedStatus.value,
+                decoration: const InputDecoration(labelText: "Status Transaksi"),
+                items: const [
+                  DropdownMenuItem(value: 'unpaid', child: Text('Belum Lunas')),
+                  DropdownMenuItem(value: 'paid_done', child: Text('Lunas')),
+                  DropdownMenuItem(value: 'void', child: Text('VOID')),
+                ],
+                onChanged: (val) => selectedStatus.value = val,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text("Batal")),
+          ElevatedButton(
+            onPressed: () {
+              Get.back();
+              downloadExcel();
+            },
+            child: const Text("Download"),
+          ),
+        ],
+      ),
+    ).then((_) {
+      selectedJenisPilihan.value = null;
+      selectedStatus.value = null;
+    });
   }
 }
 
@@ -2673,7 +2818,7 @@ class ListTransaksi extends StatelessWidget {
                                 child: Align(
                                   alignment: Alignment.centerRight,
                                   child: InkWell(
-                                    onTap: c.downloadExcel,
+                                    onTap: c.showDownloadFilterDialog,
                                     child: Text(
                                       "Cetak Laporan",
                                       style: TextStyle(
