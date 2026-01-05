@@ -8,6 +8,7 @@ import 'package:Project_SPA/ruang_tunggu/main_rt.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:dartx/dartx_io.dart';
 import 'package:flutter/material.dart';
+import 'package:cherry_toast/cherry_toast.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -139,7 +140,10 @@ class _laporankomisiState extends State<laporankomisi> with SingleTickerProvider
     } catch (e) {
       Get.back();
       log("Error di fn export komisi bulanan : $e");
-      Get.snackbar("Download Failed", "Gagal menyiapkan file komisi terapis");
+      CherryToast.error(
+        title: const Text("Download Failed"),
+        description: const Text("Gagal menyiapkan file komisi terapis"),
+      ).show(Get.context!);
     }
   }
 
@@ -169,7 +173,10 @@ class _laporankomisiState extends State<laporankomisi> with SingleTickerProvider
     } catch (e) {
       Get.back();
       log("Error di fn export komisi gro bulanan : $e");
-      Get.snackbar("Download Failed", "Gagal menyiapkan file komisi GRO");
+      CherryToast.error(
+        title: const Text("Download Failed"),
+        description: const Text("Gagal menyiapkan file komisi GRO"),
+      ).show(Get.context!);
     }
   }
 
@@ -231,7 +238,10 @@ class _laporankomisiState extends State<laporankomisi> with SingleTickerProvider
     } catch (e) {
       Get.back();
       log("Error di fn exportkomisitahunan : $e");
-      Get.snackbar("Download Failed", "Gagal menyiapkan file komisi terapis");
+      CherryToast.error(
+        title: const Text("Download Failed"),
+        description: const Text("Gagal menyiapkan file komisi terapis"),
+      ).show(Get.context!);
     }
   }
 
@@ -261,7 +271,10 @@ class _laporankomisiState extends State<laporankomisi> with SingleTickerProvider
     } catch (e) {
       Get.back();
       log("Error di fn exportkomisigrotahunan : $e");
-      Get.snackbar("Download Failed", "Gagal menyiapkan file komisi GRO");
+      CherryToast.error(
+        title: const Text("Download Failed"),
+        description: const Text("Gagal menyiapkan file komisi GRO"),
+      ).show(Get.context!);
     }
   }
 
@@ -328,7 +341,10 @@ class _laporankomisiState extends State<laporankomisi> with SingleTickerProvider
     } catch (e) {
       Get.back();
       log("Error di fn exportdatakomisiharian : $e");
-      Get.snackbar("Download Failed", "Gagal menyiapkan file komisi terapis");
+      CherryToast.error(
+        title: const Text("Download Failed"),
+        description: const Text("Gagal menyiapkan file komisi terapis"),
+      ).show(Get.context!);
     }
   }
 
@@ -359,7 +375,10 @@ class _laporankomisiState extends State<laporankomisi> with SingleTickerProvider
     } catch (e) {
       Get.back();
       log("Error di fn exportkomisigroharian : $e");
-      Get.snackbar("Download Failed", "Gagal menyiapkan file komisi GRO");
+      CherryToast.error(
+        title: const Text("Download Failed"),
+        description: const Text("Gagal menyiapkan file komisi GRO"),
+      ).show(Get.context!);
     }
   }
 

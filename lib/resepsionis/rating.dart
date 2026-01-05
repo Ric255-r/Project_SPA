@@ -6,6 +6,7 @@ import 'package:Project_SPA/resepsionis/list_transaksi.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:cherry_toast/cherry_toast.dart';
 
 class RatingController extends GetxController {
   final String idTransaksi;
@@ -209,7 +210,10 @@ class Rating extends StatelessWidget {
                     if (c.isFirstTimeRate.value) {
                       c.selectRating(category, index);
                     } else {
-                      Get.snackbar("Error", "Tidak Dapat Mengubah");
+                      CherryToast.error(
+                        title: const Text("Error"),
+                        description: const Text("Tidak Dapat Mengubah"),
+                      ).show(Get.context!);
                       return;
                     }
                   },
@@ -302,13 +306,16 @@ class WidgetRatingMobile extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: List.generate(emojis.length, (index) {
                 return GestureDetector(
-                  onTap: () {
-                    if (c.isFirstTimeRate.value) {
-                      c.selectRating(category, index);
-                    } else {
-                      Get.snackbar("Error", "Tidak Dapat Mengubah");
-                    }
-                  },
+                    onTap: () {
+                      if (c.isFirstTimeRate.value) {
+                        c.selectRating(category, index);
+                      } else {
+                        CherryToast.error(
+                          title: const Text("Error"),
+                          description: const Text("Tidak Dapat Mengubah"),
+                        ).show(Get.context!);
+                      }
+                    },
                   child: Container(
                     width: 200,
                     height: 100,

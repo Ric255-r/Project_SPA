@@ -25,7 +25,10 @@ class CustEndSblmWaktunya extends StatelessWidget {
         canPop: false,
         onPopInvoked: (didPop) {
           if (!didPop) {
-            Get.snackbar("Error", "Wajib Pilih Alasan!");
+            CherryToast.warning(
+              title: const Text("Error"),
+              description: const Text("Wajib Pilih Alasan!"),
+            ).show(Get.context!);
           }
         },
         child: Container(

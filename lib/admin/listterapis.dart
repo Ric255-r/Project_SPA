@@ -6,6 +6,7 @@ import 'package:Project_SPA/resepsionis/transaksi_fasilitas.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:cherry_toast/cherry_toast.dart';
 import 'dart:async';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:Project_SPA/resepsionis/transaksi_food.dart';
@@ -174,25 +175,25 @@ class _ListTerapisState extends State<ListTerapis> {
                                                                         .refresh();
                                                                     await getdataTerapis();
                                                                     Navigator.of(
-                                                                      context,
-                                                                    ).pop();
-                                                                  } else {
-                                                                    // Show error if backend failed
-                                                                    Get.snackbar(
-                                                                      "Gagal",
-                                                                      "Gagal menyelesaikan terapis.",
-                                                                    );
-                                                                  }
-                                                                } catch (e) {
-                                                                  Get.snackbar(
-                                                                    "Error",
-                                                                    "Terjadi kesalahan: $e",
-                                                                  );
-                                                                }
-                                                              },
-                                                              child: Text("Ya"),
-                                                            ),
-                                                          ],
+                                                                  context,
+                                                                ).pop();
+                                                              } else {
+                                                                // Show error if backend failed
+                                                                CherryToast.error(
+                                                                  title: const Text("Gagal"),
+                                                                  description: const Text("Gagal menyelesaikan terapis."),
+                                                                ).show(Get.context!);
+                                                              }
+                                                            } catch (e) {
+                                                              CherryToast.error(
+                                                                title: const Text("Error"),
+                                                                description: Text("Terjadi kesalahan: $e"),
+                                                              ).show(Get.context!);
+                                                            }
+                                                          },
+                                                          child: Text("Ya"),
+                                                        ),
+                                                      ],
                                                         ),
                                                   );
                                                 }

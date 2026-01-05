@@ -1336,7 +1336,10 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
           bool isDeleted = await removeIdDraft();
           return isDeleted;
         } catch (e) {
-          Get.snackbar("Error", "Gagal Remove Id Draft $e");
+          CherryToast.error(
+            title: const Text("Error"),
+            description: Text("Gagal Remove Id Draft $e"),
+          ).show(Get.context!);
           return false;
         }
       },

@@ -418,7 +418,10 @@ class ListTransaksiController extends GetxController {
       filteredList.assignAll(data);
     } catch (e) {
       log("Error di refresh data $e");
-      Get.snackbar("Error", "Gagal Refresh Data");
+      CherryToast.error(
+        title: const Text("Error"),
+        description: const Text("Gagal Refresh Data"),
+      ).show(Get.context!);
     }
 
     print("Fungsi refreshData Dipanggil oninit");
@@ -1577,11 +1580,17 @@ class ListTransaksiController extends GetxController {
       );
 
       if (response.statusCode != 200) {
-        Get.snackbar("Error", "Gagal Konek Printer ${response.data}", backgroundColor: Colors.white);
+        CherryToast.error(
+          title: const Text("Error"),
+          description: Text("Gagal Konek Printer ${response.data}"),
+        ).show(Get.context!);
         throw Exception("Failed to print: ${response.statusCode}");
       }
     } catch (e) {
-      Get.snackbar("Error", "Gagal Kirim Ke printer $e", backgroundColor: Colors.white);
+      CherryToast.error(
+        title: const Text("Error"),
+        description: Text("Gagal Kirim Ke printer $e"),
+      ).show(Get.context!);
       log("Error sending to printer: $e");
       rethrow;
     }
@@ -2732,18 +2741,16 @@ class ListTransaksiController extends GetxController {
 
         log("Error Message Final: $errorMessage");
 
-        Get.snackbar(
-          "Gagal Download",
-          errorMessage, // Harusnya sekarang muncul: "No transaction data found..."
-          backgroundColor: Colors.redAccent,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM,
-          margin: const EdgeInsets.all(10),
-          duration: const Duration(seconds: 4),
-        );
+        CherryToast.error(
+          title: const Text("Gagal Download"),
+          description: Text(errorMessage), // Harusnya sekarang muncul: "No transaction data found..."
+        ).show(Get.context!);
       } else {
         log('Error downloading file: $e');
-        Get.snackbar("Error", "Terjadi kesalahan: $e");
+        CherryToast.error(
+          title: const Text("Error"),
+          description: Text("Terjadi kesalahan: $e"),
+        ).show(Get.context!);
       }
     }
   }

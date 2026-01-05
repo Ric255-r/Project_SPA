@@ -207,10 +207,10 @@ class _BillingLockerState extends State<BillingLocker> {
                                                   print(
                                                     "Error fetching transaksi: $e",
                                                   );
-                                                  Get.snackbar(
-                                                    "Error",
-                                                    "Gagal mengambil transaksi.",
-                                                  );
+                                                  CherryToast.error(
+                                                    title: const Text("Error"),
+                                                    description: const Text("Gagal mengambil transaksi."),
+                                                  ).show(Get.context!);
                                                 }
                                               },
 
