@@ -4,7 +4,6 @@ import 'package:Project_SPA/function/admin_drawer.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 import 'package:Project_SPA/function/rupiah_formatter.dart';
 import 'package:Project_SPA/owner/download_splash.dart';
-import 'package:Project_SPA/resepsionis/detail_food_n_beverages.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:cherry_toast/cherry_toast.dart';
 import 'package:dropdown_search/dropdown_search.dart';
@@ -37,6 +36,7 @@ class HistoryPembelianController extends GetxController {
   TextEditingController txtTglController = TextEditingController();
   RxList<Map<String, dynamic>> allFaktur = <Map<String, dynamic>>[].obs;
   RxList<Map<String, dynamic>> dataFaktur = <Map<String, dynamic>>[].obs;
+  RxList<Map<String, dynamic>> diskonPembelian = <Map<String, dynamic>>[].obs;
   // TAMBAHKAN INI: Variabel untuk "STATE UI" dropdown
   Rxn<Map<String, dynamic>> uiSelectedSupplier = Rxn(null);
   RxString selectedStatus = statusAll.obs;
@@ -47,6 +47,7 @@ class HistoryPembelianController extends GetxController {
   RxBool isDetailLoading = false.obs;
   RxList<Map<String, dynamic>> detailFakturItems = <Map<String, dynamic>>[].obs;
   Rx<num> totalHargaDetailFaktur = Rx<num>(0);
+  Rx<num> discfaktur = Rx<num>(0);
 
   // Variabel untuk menyimpan TextController agar tidak hilang saat di-scroll
   List<TextEditingController> qtyControllers = [];
@@ -73,6 +74,27 @@ class HistoryPembelianController extends GetxController {
     isDetailLoading.value = true;
     detailFakturItems.clear();
     totalHargaDetailFaktur.value = 0;
+    String idform = '';
+
+    try {
+      final response = await dio.get(
+        '${myIpAddr()}/pembelian/getdiskonpembelian',
+        queryParameters: {'id_form': faktur['id_form']},
+      );
+      List<Map<String, dynamic>> fetcheddata =
+          (response.data as List).map((item) {
+            return {
+              "tipe_diskon": item['diskon_type'],
+              "diskon_value": item['diskon_value'],
+              "total_diskon": item['total_diskon'],
+              "pajak": item['pajak'],
+              "total_net": item['total_net'],
+            };
+          }).toList();
+      diskonPembelian.assignAll(fetcheddata);
+    } catch (e) {
+      log("Error di fn getdiskonpembelian : $e");
+    }
 
     // 2. Tampilkan dialog SEGERA. Isinya akan reaktif.
     Get.dialog(
@@ -87,7 +109,7 @@ class HistoryPembelianController extends GetxController {
                 Text("Detail Faktur", style: TextStyle(fontWeight: FontWeight.bold)),
                 Obx(
                   () => Text(
-                    "Total: ${formatrupiah(totalHargaDetailFaktur.value)}",
+                    "Total: ${formatrupiah(diskonPembelian[0]['total_net'])}",
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                   ),
                 ),
@@ -97,6 +119,39 @@ class HistoryPembelianController extends GetxController {
               // ignore: prefer_interpolation_to_compose_strings
               "No Faktur Supplier: " + faktur['no_faktur'],
               style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Obx(
+                () => Column(
+                  children: [
+                    Container(
+                      alignment: Alignment.centerRight,
+                      width: 200,
+                      child: Text(
+                        "Netto: ${formatrupiah(totalHargaDetailFaktur.value)}",
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                      ),
+                    ),
+                    Container(
+                      alignment: Alignment.centerRight,
+                      width: 200,
+                      child: Text(
+                        "Disc: ${formatrupiah(diskonPembelian[0]['total_diskon'])}",
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                      ),
+                    ),
+                    Container(
+                      alignment: Alignment.centerRight,
+                      width: 200,
+                      child: Text(
+                        "Pajak: ${formatrupiah(diskonPembelian[0]['pajak'])}",
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
@@ -171,6 +226,27 @@ class HistoryPembelianController extends GetxController {
     isDetailLoading.value = true;
     detailFakturItems.clear();
     totalHargaDetailFaktur.value = 0;
+    String idform = '';
+
+    try {
+      final response = await dio.get(
+        '${myIpAddr()}/pembelian/getdiskonpembelian',
+        queryParameters: {'id_form': faktur['id_form']},
+      );
+      List<Map<String, dynamic>> fetcheddata =
+          (response.data as List).map((item) {
+            return {
+              "tipe_diskon": item['diskon_type'],
+              "diskon_value": item['diskon_value'],
+              "total_diskon": item['total_diskon'],
+              "pajak": item['pajak'],
+              "total_net": item['total_net'],
+            };
+          }).toList();
+      diskonPembelian.assignAll(fetcheddata);
+    } catch (e) {
+      log("Error di fn getdiskonpembelian : $e");
+    }
 
     // Bersihkan controller lama sebelum digunakan lagi
     for (var controller in qtyControllers) {
@@ -179,7 +255,11 @@ class HistoryPembelianController extends GetxController {
     for (var controller in hargaControllers) {
       controller.dispose();
     }
+    for (var controller in purchaseUnitControllers) {
+      controller.dispose();
+    }
     qtyControllers.clear();
+    purchaseUnitControllers.clear();
     hargaControllers.clear();
 
     Get.dialog(
@@ -194,7 +274,7 @@ class HistoryPembelianController extends GetxController {
                 Text("Detail Faktur", style: TextStyle(fontWeight: FontWeight.bold)),
                 Obx(
                   () => Text(
-                    "Total: ${formatrupiah(totalHargaDetailFaktur.value)}",
+                    "Total: ${formatrupiah(diskonPembelian[0]['total_net'])}",
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                   ),
                 ),
@@ -205,6 +285,39 @@ class HistoryPembelianController extends GetxController {
               "No Faktur Supplier: " + faktur['no_faktur'],
               style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
             ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Obx(
+                () => Column(
+                  children: [
+                    Container(
+                      alignment: Alignment.centerRight,
+                      width: 200,
+                      child: Text(
+                        "Netto: ${formatrupiah(totalHargaDetailFaktur.value)}",
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                      ),
+                    ),
+                    Container(
+                      alignment: Alignment.centerRight,
+                      width: 200,
+                      child: Text(
+                        "Disc: ${formatrupiah(diskonPembelian[0]['total_diskon'])}",
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                      ),
+                    ),
+                    Container(
+                      alignment: Alignment.centerRight,
+                      width: 200,
+                      child: Text(
+                        "Pajak: ${formatrupiah(diskonPembelian[0]['pajak'])}",
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
         content: Obx(() {
@@ -214,7 +327,6 @@ class HistoryPembelianController extends GetxController {
           if (detailFakturItems.isEmpty) {
             return Text("Tidak ada item detail.");
           }
-
           return SizedBox(
             width: Get.width * 0.8,
             child: ListView.builder(
@@ -223,7 +335,6 @@ class HistoryPembelianController extends GetxController {
               itemBuilder: (context, index) {
                 final item = detailFakturItems[index];
                 final currencyFormat = NumberFormat.decimalPattern('id_ID');
-
                 return Card(
                   margin: const EdgeInsets.symmetric(vertical: 6),
                   child: Padding(
@@ -306,7 +417,15 @@ class HistoryPembelianController extends GetxController {
           ElevatedButton(
             onPressed: () {
               // Panggil fungsi simpan
-              saveFakturChanges(faktur['id_form']);
+
+              print('${diskonPembelian[0]['diskon_value']}');
+              saveFakturChanges(
+                faktur['id_form'],
+                diskonPembelian[0]['total_diskon'],
+                diskonPembelian[0]['pajak'],
+                diskonPembelian[0]['tipe_diskon'],
+                diskonPembelian[0]['diskon_value'],
+              );
             },
             child: Text("SIMPAN"),
           ),
@@ -372,7 +491,13 @@ class HistoryPembelianController extends GetxController {
   }
 
   // --- FUNGSI BARU UNTUK MENGIRIM PERUBAHAN KE API ---
-  Future<void> saveFakturChanges(String idForm) async {
+  Future<void> saveFakturChanges(
+    String idForm,
+    num diskon,
+    num pajak,
+    String diskonType,
+    num diskonValue,
+  ) async {
     try {
       // Tampilkan loading overlay
       Get.dialog(Center(child: CircularProgressIndicator()), barrierDismissible: false);
@@ -384,6 +509,10 @@ class HistoryPembelianController extends GetxController {
           "id_item": item['id_item'],
           "qty_purchase": item['qty_purchase'],
           "harga_per_purchase_unit": item['harga_per_purchase_unit'],
+          "diskon": diskon,
+          "pajak": pajak,
+          "tipediskon": diskonType,
+          "isidiskon": diskonValue,
         });
       }
 
@@ -423,9 +552,15 @@ class HistoryPembelianController extends GetxController {
           CherryToast.info(title: const Text("Faktur berhasil dilunasi")).show(Get.context!);
 
           fetchFakturPembelian();
-        } catch (e) {
-          log("Error saat mengirim ulang: $e");
-          CherryToast.error(title: const Text("Terjadi Kesalahan")).show(Get.context!);
+        } on DioException catch (e) {
+          if (e.response != null) {
+            CherryToast.error(
+              title: Text(e.response?.data['message'] ?? "Terjadi Kesalahan"),
+            ).show(Get.context!);
+          } else {
+            log("Error saat mengirim ulang: $e");
+            CherryToast.error(title: Text("Tidak dapat terhubung ke server")).show(Get.context!);
+          }
         }
       },
       onCancel: () {},
@@ -450,9 +585,15 @@ class HistoryPembelianController extends GetxController {
           CherryToast.info(title: const Text("Faktur berhasil Dibatalkan")).show(Get.context!);
 
           fetchFakturPembelian();
-        } catch (e) {
-          log("Error saat mengirim ulang: $e");
-          CherryToast.error(title: const Text("Terjadi Kesalahan")).show(Get.context!);
+        } on DioException catch (e) {
+          if (e.response != null) {
+            CherryToast.error(
+              title: Text(e.response?.data['message'] ?? "Terjadi Kesalahan"),
+            ).show(Get.context!);
+          } else {
+            log("Error saat mengirim ulang: $e");
+            CherryToast.error(title: const Text("Tidak dapat terhubung ke server")).show(Get.context!);
+          }
         }
       },
       onCancel: () {},
@@ -555,6 +696,9 @@ class HistoryPembelianController extends GetxController {
       for (var controller in hargaControllers) {
         controller.dispose();
       }
+      for (var controller in purchaseUnitControllers) {
+        controller.dispose();
+      }
     } catch (_) {}
     super.onClose();
   }
@@ -602,9 +746,15 @@ class HistoryPembelianController extends GetxController {
     return source.where((item) => _deriveStatus(item) == filter).toList();
   }
 
+  bool _hasTimestamp(dynamic value) {
+    if (value == null) return false;
+    final s = value.toString().trim().toLowerCase();
+    return s.isNotEmpty && s != 'null';
+  }
+
   String _deriveStatus(Map<String, dynamic> item) {
-    if (item['cancel_at'] != null) return 'void';
-    if (item['paid_at'] != null) return 'lunas';
+    if (_hasTimestamp(item['cancel_at'])) return 'void';
+    if (_hasTimestamp(item['paid_at'])) return 'lunas';
     return 'pending';
   }
 
@@ -912,9 +1062,40 @@ class HistoryPembelian extends StatelessWidget {
 
             Obx(() {
               if (c.dataFaktur.isNotEmpty) {
-                int totalHargaFaktur = c.dataFaktur
-                    .map((el) => el['total'])
-                    .reduce((value, element) => value + element);
+                int totalHargaFaktur;
+                int totalHargaFakturLunas;
+                int totalHargaFakturVoid;
+                int totalHargaFakturPending;
+
+                if (c.selectedStatus == HistoryPembelianController.statusAll) {
+                  totalHargaFaktur = c.dataFaktur
+                      .where((el) => el['status'] != 'void')
+                      .map((el) => el['total_net'])
+                      .reduce((value, element) => value + element);
+
+                  totalHargaFakturLunas = c.dataFaktur
+                      .where((el) => el['status'] == 'lunas')
+                      .map((el) => el['total_net'] as int)
+                      .fold(0, (value, element) => value + element);
+
+                  totalHargaFakturVoid = c.dataFaktur
+                      .where((el) => el['status'] == 'void')
+                      .map((el) => el['total_net'] as int)
+                      .fold(0, (value, element) => value + element);
+
+                  totalHargaFakturPending = c.dataFaktur
+                      .where((el) => el['status'] == 'pending')
+                      .map((el) => el['total_net'] as int)
+                      .fold(0, (value, element) => value + element);
+                } else {
+                  totalHargaFaktur = c.dataFaktur
+                      .map((el) => el['total_net'])
+                      .reduce((value, element) => value + element);
+
+                  totalHargaFakturPending = 0;
+                  totalHargaFakturVoid = 0;
+                  totalHargaFakturLunas = 0;
+                }
 
                 if (c.selectedSupplierId.value != null) {
                   int panjangDataFaktur = c.dataFaktur.length;
@@ -940,14 +1121,111 @@ class HistoryPembelian extends StatelessWidget {
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            Text(
-                              "Total Pembelian: ${formatrupiah(totalHargaFaktur)}",
-                              style: const TextStyle(
-                                color: Colors.black,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
+                            Row(
+                              children: [
+                                c.selectedStatus == HistoryPembelianController.statusAll
+                                    ? Container(
+                                      width: 130,
+                                      child: Text(
+                                        "Total Pembelian:",
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    )
+                                    : Container(
+                                      width: 170,
+                                      child: Text(
+                                        c.selectedStatus == "void"
+                                            ? "Total Pembelian Void:"
+                                            : c.selectedStatus == "pending"
+                                            ? "Total Pembelian Pending:"
+                                            : c.selectedStatus == "lunas"
+                                            ? "Total Pembelian Lunas:"
+                                            : "Total Pembelian:",
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                SizedBox(width: 5),
+                                Text(
+                                  "${formatrupiah(totalHargaFaktur)}",
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                SizedBox(width: 20),
+                                c.selectedStatus == HistoryPembelianController.statusAll
+                                    ? Text(
+                                      "Total Pembelian Dibatalkan: ${formatrupiah(totalHargaFakturVoid)}",
+                                      style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    )
+                                    : SizedBox.shrink(),
+                              ],
                             ),
+                            c.selectedStatus == HistoryPembelianController.statusAll
+                                ? Row(
+                                  children: [
+                                    Container(
+                                      width: 130,
+                                      child: Text(
+                                        "Total Lunas: ",
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(width: 5),
+                                    Text(
+                                      "${formatrupiah(totalHargaFakturLunas)}",
+                                      style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                )
+                                : SizedBox.shrink(),
+                            c.selectedStatus == HistoryPembelianController.statusAll
+                                ? Row(
+                                  children: [
+                                    Container(
+                                      width: 130,
+                                      child: Text(
+                                        "Total Belum Lunas:",
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(width: 5),
+                                    Text(
+                                      "${formatrupiah(totalHargaFakturPending)}",
+                                      style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                )
+                                : SizedBox.shrink(),
                           ],
                         ),
                       ),
@@ -981,14 +1259,111 @@ class HistoryPembelian extends StatelessWidget {
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          Text(
-                            "Total Pembelian: ${formatrupiah(totalHargaFaktur)}",
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
+                          Row(
+                            children: [
+                              c.selectedStatus == HistoryPembelianController.statusAll
+                                  ? Container(
+                                    width: 130,
+                                    child: Text(
+                                      "Total Pembelian:",
+                                      style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  )
+                                  : Container(
+                                    width: 170,
+                                    child: Text(
+                                      c.selectedStatus == "void"
+                                          ? "Total Pembelian Void:"
+                                          : c.selectedStatus == "pending"
+                                          ? "Total Pembelian Pending:"
+                                          : c.selectedStatus == "lunas"
+                                          ? "Total Pembelian Lunas:"
+                                          : "Total Pembelian:",
+                                      style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                              SizedBox(width: 5),
+                              Text(
+                                "${formatrupiah(totalHargaFaktur)}",
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              SizedBox(width: 20),
+                              c.selectedStatus == HistoryPembelianController.statusAll
+                                  ? Text(
+                                    "Total Pembelian Dibatalkan: ${formatrupiah(totalHargaFakturVoid)}",
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  )
+                                  : SizedBox.shrink(),
+                            ],
                           ),
+                          c.selectedStatus == HistoryPembelianController.statusAll
+                              ? Row(
+                                children: [
+                                  Container(
+                                    width: 130,
+                                    child: Text(
+                                      "Total Lunas: ",
+                                      style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 5),
+                                  Text(
+                                    "${formatrupiah(totalHargaFakturLunas)}",
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              )
+                              : SizedBox.shrink(),
+                          c.selectedStatus == HistoryPembelianController.statusAll
+                              ? Row(
+                                children: [
+                                  Container(
+                                    width: 130,
+                                    child: Text(
+                                      "Total Belum Lunas:",
+                                      style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 5),
+                                  Text(
+                                    "${formatrupiah(totalHargaFakturPending)}",
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              )
+                              : SizedBox.shrink(),
                         ],
                       ),
                     ),
@@ -1176,7 +1551,7 @@ class ContainerDataFaktur extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        formatrupiah(item['total'] ?? 0),
+                        formatrupiah(item['total_net'] ?? 0),
                         style: valueStyle.copyWith(fontWeight: FontWeight.w700),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -1198,11 +1573,11 @@ class ContainerDataFaktur extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        item['cancel_at'] != null
+                        c._hasTimestamp(item['cancel_at'])
                             ? 'Dibatalkan Pada ${indonesianDateFormat(DateTime.parse(item['cancel_at']))}'
-                            : item['paid_at'] == null
-                            ? 'Belum Lunas'
-                            : 'Lunas Pada ${indonesianDateFormat(DateTime.parse(item['paid_at']))}',
+                            : c._hasTimestamp(item['paid_at'])
+                            ? 'Lunas Pada ${indonesianDateFormat(DateTime.parse(item['paid_at']))}'
+                            : 'Belum Lunas',
                         style: valueStyle.copyWith(fontWeight: FontWeight.w700),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -1225,83 +1600,90 @@ class ContainerDataFaktur extends StatelessWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  Wrap(
-                    alignment: WrapAlignment.end,
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      if (item['cancel_at'] == null && item['paid_at'] == null)
-                        Tooltip(
-                          message: 'Edit',
-                          waitDuration: const Duration(milliseconds: 400),
-                          child: ElevatedButton(
-                            onPressed: () {
-                              c.showEditDialog(item);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              minimumSize: const Size(40, 40),
-                              padding: EdgeInsets.zero,
-                              visualDensity: VisualDensity.compact,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                            ),
-                            child: const Icon(Icons.edit, size: 20),
-                          ),
-                        ),
-                      Tooltip(
-                        message: 'Detail',
-                        waitDuration: const Duration(milliseconds: 400),
-                        child: OutlinedButton(
-                          onPressed: () {
-                            c.showDetailDialog(item);
-                          },
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size(40, 40),
-                            padding: EdgeInsets.zero,
-                            visualDensity: VisualDensity.compact,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          ),
-                          child: const Icon(Icons.visibility_outlined, size: 20),
-                        ),
-                      ),
+                  Builder(
+                    builder: (_) {
+                      final isCancelled = c._hasTimestamp(item['cancel_at']);
+                      final isPaid = c._hasTimestamp(item['paid_at']);
 
-                      if (item['cancel_at'] == null)
-                        Tooltip(
-                          message: 'Void',
-                          waitDuration: const Duration(milliseconds: 400),
-                          child: TextButton(
-                            onPressed: () {
-                              c.cancelFaktur(item['id_form']);
-                            },
-                            style: TextButton.styleFrom(
-                              minimumSize: const Size(40, 40),
-                              padding: EdgeInsets.zero,
-                              foregroundColor: Colors.red.shade600,
-                              visualDensity: VisualDensity.compact,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      return Wrap(
+                        alignment: WrapAlignment.end,
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          if (!isCancelled && !isPaid)
+                            Tooltip(
+                              message: 'Edit',
+                              waitDuration: const Duration(milliseconds: 400),
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  c.showEditDialog(item);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  minimumSize: const Size(40, 40),
+                                  padding: EdgeInsets.zero,
+                                  visualDensity: VisualDensity.compact,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                                child: const Icon(Icons.edit, size: 20),
+                              ),
                             ),
-                            child: const Icon(Icons.block, size: 20),
+                          Tooltip(
+                            message: 'Detail',
+                            waitDuration: const Duration(milliseconds: 400),
+                            child: OutlinedButton(
+                              onPressed: () {
+                                c.showDetailDialog(item);
+                              },
+                              style: OutlinedButton.styleFrom(
+                                minimumSize: const Size(40, 40),
+                                padding: EdgeInsets.zero,
+                                visualDensity: VisualDensity.compact,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                              child: const Icon(Icons.visibility_outlined, size: 20),
+                            ),
                           ),
-                        ),
 
-                      if (item['paid_at'] == null)
-                        Tooltip(
-                          message: 'Lunaskan',
-                          waitDuration: const Duration(milliseconds: 400),
-                          child: TextButton(
-                            onPressed: () {
-                              c.pelunasanFaktur(item['id_form']);
-                            },
-                            style: TextButton.styleFrom(
-                              foregroundColor: Colors.green,
-                              minimumSize: const Size(40, 40),
-                              padding: EdgeInsets.zero,
-                              visualDensity: VisualDensity.compact,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          if (!isCancelled)
+                            Tooltip(
+                              message: 'Void',
+                              waitDuration: const Duration(milliseconds: 400),
+                              child: TextButton(
+                                onPressed: () {
+                                  c.cancelFaktur(item['id_form']);
+                                },
+                                style: TextButton.styleFrom(
+                                  minimumSize: const Size(40, 40),
+                                  padding: EdgeInsets.zero,
+                                  foregroundColor: Colors.red.shade600,
+                                  visualDensity: VisualDensity.compact,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                                child: const Icon(Icons.block, size: 20),
+                              ),
                             ),
-                            child: const Icon(Icons.check, size: 20, color: Colors.green),
-                          ),
-                        ),
-                    ],
+
+                          if (!isPaid)
+                            Tooltip(
+                              message: 'Lunaskan',
+                              waitDuration: const Duration(milliseconds: 400),
+                              child: TextButton(
+                                onPressed: () {
+                                  c.pelunasanFaktur(item['id_form']);
+                                },
+                                style: TextButton.styleFrom(
+                                  foregroundColor: Colors.green,
+                                  minimumSize: const Size(40, 40),
+                                  padding: EdgeInsets.zero,
+                                  visualDensity: VisualDensity.compact,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                                child: const Icon(Icons.check, size: 20, color: Colors.green),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
                   ),
                 ],
               ),

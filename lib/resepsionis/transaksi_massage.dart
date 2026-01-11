@@ -278,6 +278,10 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
     txtTerapis.clear();
     txtGRO.clear();
     _txtNoLocker.dispose();
+    txtTerapis2.clear();
+    txtTerapis3.clear();
+    controllerPekerja.getidterapis2.value = '';
+    controllerPekerja.getidterapis3.value = '';
     super.dispose();
   }
 
