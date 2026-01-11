@@ -868,8 +868,6 @@ class HistoryPembelian extends StatelessWidget {
                         ...HistoryPembelianController.statusFilters.map(
                           (value) =>
                               DropdownMenuItem(value: value, child: Text(value.capitalizeFirst ?? value)),
-                          (value) =>
-                              DropdownMenuItem(value: value, child: Text(value.capitalizeFirst ?? value)),
                         ),
                       ],
                       onChanged: (value) {
