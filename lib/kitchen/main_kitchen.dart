@@ -5,6 +5,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:get/get.dart';
+import 'package:cherry_toast/cherry_toast.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 import 'package:Project_SPA/function/me.dart';
 import 'package:Project_SPA/function/our_drawer.dart';
@@ -270,11 +271,10 @@ class _MainKitchenState extends State<MainKitchen>
 
     // Optionally handle if still empty
     if (dataDetailPesanan.isEmpty) {
-      Get.snackbar(
-        "Data Kosong",
-        "Gagal mengambil detail pesanan. Silakan coba lagi.",
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      CherryToast.warning(
+        title: const Text("Data Kosong"),
+        description: const Text("Gagal mengambil detail pesanan. Silakan coba lagi."),
+      ).show(Get.context!);
       return;
     }
 

@@ -213,8 +213,10 @@ class HistoryPembelianController extends GetxController {
       recalculateTotal();
     } catch (e) {
       log("Gagal mengambil detail faktur: $e");
-      // Opsional: Tampilkan pesan error dengan Get.snackbar
-      Get.snackbar('Error', 'Gagal memuat detail data.');
+      CherryToast.error(
+        title: const Text('Error'),
+        description: const Text('Gagal memuat detail data.'),
+      ).show(Get.context!);
     } finally {
       // 4. Pastikan loading disetel ke false setelah selesai
       isDetailLoading.value = false;
@@ -484,7 +486,10 @@ class HistoryPembelianController extends GetxController {
       recalculateTotal();
     } catch (e) {
       log("Gagal mengambil detail faktur: $e");
-      Get.snackbar('Error', 'Gagal memuat detail data.');
+      CherryToast.error(
+        title: const Text('Error'),
+        description: const Text('Gagal memuat detail data.'),
+      ).show(Get.context!);
     } finally {
       isDetailLoading.value = false;
     }
@@ -523,14 +528,20 @@ class HistoryPembelianController extends GetxController {
 
       Get.back(); // Tutup loading overlay
       Get.back(); // Tutup dialog edit
-      Get.snackbar('Sukses', 'Data faktur berhasil diperbarui!');
+      CherryToast.success(
+        title: const Text('Sukses'),
+        description: const Text('Data faktur berhasil diperbarui!'),
+      ).show(Get.context!);
 
       // Refresh data di halaman utama
       fetchFakturPembelian();
     } catch (e) {
       Get.back(); // Tutup loading overlay
       log("Gagal menyimpan perubahan: $e");
-      Get.snackbar('Error', 'Gagal menyimpan perubahan.');
+      CherryToast.error(
+        title: const Text('Error'),
+        description: const Text('Gagal menyimpan perubahan.'),
+      ).show(Get.context!);
     }
   }
 

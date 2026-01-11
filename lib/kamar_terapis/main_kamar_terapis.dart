@@ -8,6 +8,7 @@ import 'package:Project_SPA/office_boy/main_ob.dart';
 import 'package:Project_SPA/resepsionis/main_resepsionis.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:cherry_toast/cherry_toast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:Project_SPA/kamar_terapis/terapis_confirm.dart';
 import 'dart:developer';
@@ -61,11 +62,20 @@ class _MainKamarTerapisState extends State<MainKamarTerapis> {
     } catch (e) {
       if (e is DioException) {
         if (e.response!.statusCode == 404) {
-          Get.snackbar("Error", "Akun Tidak Ditemukan");
+          CherryToast.error(
+            title: const Text("Error"),
+            description: const Text("Akun Tidak Ditemukan"),
+          ).show(Get.context!);
         } else if (e.response!.statusCode == 401) {
-          Get.snackbar("Error", "Password Salah");
+          CherryToast.error(
+            title: const Text("Error"),
+            description: const Text("Password Salah"),
+          ).show(Get.context!);
         } else {
-          Get.snackbar("Error", "Gagal Login fnverif_mainkamarterapis.dart");
+          CherryToast.error(
+            title: const Text("Error"),
+            description: const Text("Gagal Login fnverif_mainkamarterapis.dart"),
+          ).show(Get.context!);
         }
       }
       log("Error Di Verif Akun $e");

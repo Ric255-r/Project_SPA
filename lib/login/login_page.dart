@@ -1,6 +1,7 @@
 // login_page.dart (Stateless)
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:cherry_toast/cherry_toast.dart';
 import 'package:Project_SPA/function/confirm_logout.dart'; // untuk showPopupExit
 import 'login_controller.dart';
 
@@ -104,8 +105,10 @@ class LoginPage extends StatelessWidget {
                               if (c.userC.text.isNotEmpty && c.passC.text.isNotEmpty) {
                                 await c.login(context);
                               } else {
-                                // pakai CherryToast juga oke jika mau konsisten
-                                Get.snackbar('Warning', 'Inputan Username / Password Kosong');
+                                CherryToast.warning(
+                                  title: const Text('Warning'),
+                                  description: const Text('Inputan Username / Password Kosong'),
+                                ).show(context);
                               }
                             },
                             style: ElevatedButton.styleFrom(backgroundColor: Colors.black.withOpacity(0.5)),

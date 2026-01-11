@@ -200,7 +200,10 @@ class OpnameReportController extends GetxController {
     } catch (e) {
       if (Get.isDialogOpen == true) Get.back();
       log("Error di exportOpnamePdf : $e");
-      Get.snackbar("Download Failed", "Gagal menyiapkan file PDF opname");
+      CherryToast.error(
+        title: const Text("Download Failed"),
+        description: const Text("Gagal menyiapkan file PDF opname"),
+      ).show(Get.context!);
     }
   }
 }

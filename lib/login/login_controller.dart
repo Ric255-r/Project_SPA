@@ -42,7 +42,10 @@ class LoginController extends GetxController {
 
       if (resp.data == null || resp.data['access_token'] == null) {
         Get.back();
-        Get.snackbar('Error', 'Invalid server response');
+        CherryToast.error(
+          title: const Text('Error'),
+          description: const Text('Invalid server response'),
+        ).show(context);
         return;
       }
 
@@ -50,7 +53,10 @@ class LoginController extends GetxController {
         await saveTokenSharedPref(resp.data['access_token']);
       } catch (_) {
         Get.back();
-        Get.snackbar('Error', 'Failed to save login session');
+        CherryToast.error(
+          title: const Text('Error'),
+          description: const Text('Failed to save login session'),
+        ).show(context);
         return;
       }
 

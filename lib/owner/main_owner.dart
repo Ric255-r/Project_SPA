@@ -236,16 +236,25 @@ class OwnerPageController extends GetxController {
                   final end = _toYm(_endYear.value!, _endMonth.value!);
                   // 1️⃣ Cek tahun harus sama
                   if (start.year != end.year) {
-                    Get.snackbar('Tidak Valid', 'Tahun awal dan tahun akhir harus sama.');
+                    CherryToast.warning(
+                      title: const Text('Tidak Valid'),
+                      description: const Text('Tahun awal dan tahun akhir harus sama.'),
+                    ).show(Get.context!);
                     return;
                   }
                   // Validasi Range Maks 12 bln
                   if (!isRangeValid(start, end)) {
                     final selisih = monthDiff(start, end);
                     if (selisih < 0) {
-                      Get.snackbar('Periode Bulan Terbalik', ' (sekarang: Selisih $selisih bulan).');
+                      CherryToast.warning(
+                        title: const Text('Periode Bulan Terbalik'),
+                        description: Text(' (sekarang: Selisih $selisih bulan).'),
+                      ).show(Get.context!);
                     } else {
-                      Get.snackbar('Range terlalu panjang', 'Maksimal 12 bulan (sekarang: $selisih bulan).');
+                      CherryToast.warning(
+                        title: const Text('Range terlalu panjang'),
+                        description: Text('Maksimal 12 bulan (sekarang: $selisih bulan).'),
+                      ).show(Get.context!);
                     }
                     return; // matikan fungsi sesuai requirement
                   }

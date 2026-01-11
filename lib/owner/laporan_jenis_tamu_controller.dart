@@ -6,6 +6,7 @@ import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:cherry_toast/cherry_toast.dart';
 import 'package:intl/intl.dart';
 import 'package:open_file/open_file.dart';
 
@@ -48,7 +49,10 @@ class LaporanJenisTamuController extends GetxController {
 
   Future<void> downloadLaporanJenisTamu() async {
     if (rangeDatePickerTamu.isEmpty) {
-      Get.snackbar("Informasi", "Harap memilih tanggal terlebih dahulu");
+      CherryToast.info(
+        title: const Text("Informasi"),
+        description: const Text("Harap memilih tanggal terlebih dahulu"),
+      ).show(Get.context!);
       return;
     }
 
