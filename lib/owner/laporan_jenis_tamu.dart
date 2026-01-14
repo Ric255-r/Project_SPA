@@ -81,7 +81,65 @@ class LaporanJenisTamu extends StatelessWidget {
                         alignment: Alignment.centerRight,
                         child: InkWell(
                           onTap: () {
-                            c.downloadLaporanJenisTamu();
+                            Get.dialog(
+                              AlertDialog(
+                                title: const Text("Cetak Laporan"),
+                                content: SingleChildScrollView(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        "Lewati Filter jika ingin mencetak semua transaksi",
+                                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Obx(
+                                        () => DropdownButtonFormField<String>(
+                                          value: c.selectedStatus.value,
+                                          decoration: const InputDecoration(labelText: "Status Transaksi"),
+                                          items: const [
+                                            DropdownMenuItem(value: 'unpaid', child: Text('Belum Lunas')),
+                                            DropdownMenuItem(value: 'paid_done', child: Text('Lunas')),
+                                            DropdownMenuItem(value: 'void', child: Text('VOID')),
+                                          ],
+                                          onChanged: (val) => c.selectedStatus.value = val,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Obx(
+                                        () => DropdownButtonFormField<String>(
+                                          value: c.selectedJenisPilihan.value,
+                                          decoration: const InputDecoration(
+                                            labelText: "Pilih Jenis Pilihan Tamu",
+                                          ),
+                                          items:
+                                              c.listJenisPilihan
+                                                  .map(
+                                                    (e) => DropdownMenuItem<String>(value: e, child: Text(e)),
+                                                  )
+                                                  .toList(),
+                                          onChanged: (val) => c.selectedJenisPilihan.value = val,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(onPressed: () => Get.back(), child: const Text("Batal")),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      Get.back();
+                                      c.downloadLaporanJenisTamu();
+                                    },
+                                    child: const Text("Download"),
+                                  ),
+                                ],
+                              ),
+                            ).then((_) {
+                              c.selectedJenisPilihan.value = null;
+                              c.selectedStatus.value = null;
+                            });
                           },
                           child: Text(
                             "Cetak Laporan",
