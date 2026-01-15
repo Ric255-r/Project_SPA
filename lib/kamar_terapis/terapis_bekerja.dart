@@ -1689,7 +1689,10 @@ class GantiPaketController extends GetxController {
                           return InkWell(
                             onTap: () async {
                               if (current) {
-                                Get.snackbar("Error", "Paket Saat Ini");
+                                CherryToast.error(
+                                  title: const Text("Error"),
+                                  description: const Text("Paket Saat Ini"),
+                                ).show(context);
                               } else {
                                 // paketcontroller.pilihanpaket[index] =
                                 //     'Item ${paketindex + 1}';

@@ -102,7 +102,9 @@ class MainResepsionisController extends GetxController with WidgetsBindingObserv
         log("App Resumed, WebSocket not connect, Reconnecting...");
         _connectToWebSocket(); // Safe connect
       }
-    } else if (state == AppLifecycleState.inactive || state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+    } else if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
       // Close dlu, lalu reconnect ulg pas resume biar fresh
       if (_isWebSocketConnected) {
         log("App Paused/Inactive. Close Websocket");
@@ -229,7 +231,13 @@ class MainResepsionisController extends GetxController with WidgetsBindingObserv
       }
 
       AwesomeNotifications().createNotification(
-        content: NotificationContent(id: idNotif, channelKey: 'basic_channel_kamar', title: title, body: body, groupKey: "kamar_terapis"), //
+        content: NotificationContent(
+          id: idNotif,
+          channelKey: 'basic_channel_kamar',
+          title: title,
+          body: body,
+          groupKey: "kamar_terapis",
+        ), //
       );
 
       // Event ketika dipencet. initialize setelah websocket jalan
@@ -393,11 +401,17 @@ class MainResepsionisController extends GetxController with WidgetsBindingObserv
                                 alignment: Alignment.centerLeft,
                                 width: 480,
                                 height: 30,
-                                decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.grey[300]),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  color: Colors.grey[300],
+                                ),
                                 child: TextField(
                                   readOnly: true,
                                   controller: KodeTerapisController,
-                                  decoration: InputDecoration(border: InputBorder.none, contentPadding: EdgeInsets.symmetric(vertical: 13.5, horizontal: 10)),
+                                  decoration: InputDecoration(
+                                    border: InputBorder.none,
+                                    contentPadding: EdgeInsets.symmetric(vertical: 13.5, horizontal: 10),
+                                  ),
                                   style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
                                 ),
                               ),
@@ -405,7 +419,10 @@ class MainResepsionisController extends GetxController with WidgetsBindingObserv
                               Container(
                                 width: 380,
                                 height: 30,
-                                decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.grey[300]),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  color: Colors.grey[300],
+                                ),
                                 child: Obx(
                                   () => DropdownButton<String>(
                                     value: dropdownNamaTerapis!.value,
@@ -458,7 +475,10 @@ class MainResepsionisController extends GetxController with WidgetsBindingObserv
                         child: TextButton(
                           style: TextButton.styleFrom(backgroundColor: Colors.green),
                           onPressed: () async {
-                            final response = await dio.post('${myIpAddr()}/absen/post_absenterapis', data: {"id_karyawan": KodeTerapisController.text});
+                            final response = await dio.post(
+                              '${myIpAddr()}/absen/post_absenterapis',
+                              data: {"id_karyawan": KodeTerapisController.text},
+                            );
                             if (response.statusCode == 200) {
                               KodeTerapisController.clear();
                               dropdownNamaTerapis.value = null;
@@ -466,7 +486,10 @@ class MainResepsionisController extends GetxController with WidgetsBindingObserv
                             }
                           },
 
-                          child: Text('Absen', style: TextStyle(fontFamily: 'Poppins', fontSize: 18, color: Colors.white)),
+                          child: Text(
+                            'Absen',
+                            style: TextStyle(fontFamily: 'Poppins', fontSize: 18, color: Colors.white),
+                          ),
                         ),
                       ),
                       SizedBox(width: 40),
@@ -493,7 +516,10 @@ class MainResepsionisController extends GetxController with WidgetsBindingObserv
                               barrierDismissible: false,
                             );
                           },
-                          child: Text('Clear', style: TextStyle(fontFamily: 'Poppins', fontSize: 18, color: Colors.white)),
+                          child: Text(
+                            'Clear',
+                            style: TextStyle(fontFamily: 'Poppins', fontSize: 18, color: Colors.white),
+                          ),
                         ),
                       ),
                     ],
@@ -518,159 +544,218 @@ class MainResepsionis extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = Get.find<MainResepsionisController>();
+    // Mengambil ukuran layar untuk perhitungan responsif dasar
+    double screenHeight = Get.height;
 
     return Scaffold(
       drawer: OurDrawer(),
-      appBar: AppBar(title: Text('PLATINUM', style: TextStyle(fontSize: 60, fontFamily: 'Poppins')), centerTitle: true, backgroundColor: Color(0XFFFFE0B2)),
+      appBar: AppBar(
+        // Menggunakan FittedBox di title agar font 60 tidak overflow di layar kecil
+        title: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text('PLATINUM', style: TextStyle(fontSize: 60, fontFamily: 'Poppins')),
+        ),
+        centerTitle: true,
+        backgroundColor: Color(0XFFFFE0B2),
+      ),
       body: Container(
+        width: double.infinity, // Pastikan container memenuhi lebar
+        height: double.infinity,
         decoration: BoxDecoration(color: Color(0XFFFFE0B2)),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center, // Ubah ke center agar rapi saat di-scale
           children: [
-            Padding(
-              padding: EdgeInsets.only(left: 90, right: 90, top: 150),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      Get.to(BillingLocker());
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(border: Border.all(color: Colors.white), color: Colors.white, borderRadius: BorderRadius.circular(15)),
-                      height: 250,
-                      width: 200,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Icon(Icons.doorbell_rounded, size: 180),
-                          Text('Billing', style: TextStyle(fontSize: 20, fontFamily: 'Poppins')),
-                          Text('Locker', style: TextStyle(fontSize: 20, fontFamily: 'Poppins')),
-                        ],
-                      ),
-                    ),
-                  ),
+            // 1. Ganti Padding Top statis dengan Spacer atau SizedBox relatif
+            // Ini akan mengambil 10% dari tinggi layar sebagai jarak atas
+            SizedBox(height: screenHeight * 0.1),
 
-                  GestureDetector(
-                    onTap: () {
-                      Get.to(daftarRoom());
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(border: Border.all(color: Colors.white), color: Colors.white, borderRadius: BorderRadius.circular(15)),
-                      height: 250,
-                      width: 200,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Icon(Icons.door_back_door_rounded, size: 180),
-                          Text('Daftar', style: TextStyle(fontSize: 20, fontFamily: 'Poppins')),
-                          Text('Room', style: TextStyle(fontSize: 20, fontFamily: 'Poppins')),
-                        ],
+            // 2. BAGIAN MENU UTAMA
+            // Expanded memastikan area ini mengambil sisa ruang yang tersedia
+            Expanded(
+              flex: 3, // Porsi lebih besar untuk menu
+              child: Padding(
+                padding: const EdgeInsets.only(left: 10, right: 10, top: 30), // Padding aman kiri kanan
+                child: FittedBox(
+                  // KUNCI: BoxFit.scaleDown akan mengecilkan seluruh Row
+                  // jika lebar layar lebih kecil dari total lebar tombol.
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.topCenter,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildMenuCard(
+                        icon: Icons.doorbell_rounded,
+                        text1: 'Billing',
+                        text2: 'Locker',
+                        onTap: () => Get.to(BillingLocker()),
                       ),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      Get.to(() => (TransaksiFood()));
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(border: Border.all(color: Colors.white), color: Colors.white, borderRadius: BorderRadius.circular(15)),
-                      height: 250,
-                      width: 200,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Icon(Icons.food_bank_rounded, size: 180),
-                          Text('Food &', style: TextStyle(fontSize: 20, fontFamily: 'Poppins')),
-                          Text('Beverages', style: TextStyle(fontSize: 20, fontFamily: 'Poppins')),
-                        ],
+                      SizedBox(width: 20), // Jarak antar kartu (ganti mainAxisAlignment)
+                      _buildMenuCard(
+                        icon: Icons.door_back_door_rounded,
+                        text1: 'Daftar',
+                        text2: 'Room',
+                        onTap: () => Get.to(daftarRoom()),
                       ),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      Get.to(() => (JenisMember()));
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(border: Border.all(color: Colors.white), color: Colors.white, borderRadius: BorderRadius.circular(15)),
-                      height: 250,
-                      width: 200,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [Icon(Icons.local_activity_rounded, size: 180), Text('Member', style: TextStyle(fontSize: 20, fontFamily: 'Poppins'))],
+                      SizedBox(width: 20),
+                      _buildMenuCard(
+                        icon: Icons.food_bank_rounded,
+                        text1: 'Food &',
+                        text2: 'Beverages',
+                        onTap: () => Get.to(() => (TransaksiFood())),
                       ),
-                    ),
+                      SizedBox(width: 20),
+                      _buildMenuCard(
+                        icon: Icons.local_activity_rounded,
+                        text1: 'Member',
+                        text2: '', // Kosongkan jika cuma 1 baris
+                        onTap: () => Get.to(() => (JenisMember())),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
-            Expanded(flex: 1, child: Container()),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.black), color: Colors.grey),
-                  width: 400,
-                  height: 100,
-                  child: Row(
-                    children: [
-                      Padding(padding: EdgeInsets.only(left: 30)),
-                      Container(
-                        decoration: BoxDecoration(border: Border.all(), shape: BoxShape.circle),
-                        width: 80,
-                        height: 80,
 
-                        child: CircleAvatar(
-                          child: Obx(
-                            () => Text(
-                              c.namaKaryawan.value.isNotEmpty ? c.namaKaryawan.value[0].toUpperCase() : "?",
-                              style: TextStyle(fontSize: 50, fontFamily: 'Poppins'),
-                            ),
-                          ),
+            // Spacer agar ada jarak fleksibel antara menu dan footer
+            Spacer(flex: 1),
+
+            // 3. BAGIAN BAWAH (PROFIL & ABSENSI)
+            Padding(
+              padding: const EdgeInsets.only(left: 30, right: 30),
+              child: FittedBox(
+                fit: BoxFit.scaleDown, // Ini juga akan mengecil jika layar sempit
+                child: Container(
+                  // Kita bungkus Row bawah dengan container lebar agar tata letak terjaga
+                  // Lebar diset cukup besar agar Row 'spread' dengan benar saat di-scale
+                  width: 1200,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // KARTU PROFIL
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.black),
+                          color: Colors.grey,
                         ),
-                      ),
-                      Obx(
-                        () => Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        width: 400,
+                        height: 100,
+                        child: Row(
                           children: [
-                            Padding(
-                              padding: EdgeInsets.only(left: 20),
-                              child: Text(c.namaKaryawan.value, style: TextStyle(fontSize: 30, color: Colors.white, fontFamily: 'Poppins')),
+                            Padding(padding: EdgeInsets.only(left: 30)),
+                            Container(
+                              decoration: BoxDecoration(border: Border.all(), shape: BoxShape.circle),
+                              width: 80,
+                              height: 80,
+                              child: CircleAvatar(
+                                child: Obx(
+                                  () => Text(
+                                    c.namaKaryawan.value.isNotEmpty
+                                        ? c.namaKaryawan.value[0].toUpperCase()
+                                        : "?",
+                                    style: TextStyle(fontSize: 50, fontFamily: 'Poppins'),
+                                  ),
+                                ),
+                              ),
                             ),
-                            Padding(
-                              padding: EdgeInsets.only(left: 20),
-                              child: Text(c.jabatan.value, style: TextStyle(fontSize: 30, color: Colors.white, fontFamily: 'Poppins')),
+                            Expanded(
+                              // Gunakan Expanded agar teks tidak nabrak kanan
+                              child: Obx(
+                                () => Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Padding(
+                                      padding: EdgeInsets.only(left: 20),
+                                      child: Text(
+                                        c.namaKaryawan.value,
+                                        overflow: TextOverflow.ellipsis, // Tambah ini
+                                        style: TextStyle(
+                                          fontSize: 30,
+                                          color: Colors.white,
+                                          fontFamily: 'Poppins',
+                                        ),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: EdgeInsets.only(left: 20),
+                                      child: Text(
+                                        c.jabatan.value,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 30,
+                                          color: Colors.white,
+                                          fontFamily: 'Poppins',
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ],
+                        ),
+                      ),
+
+                      // TOMBOL ABSENSI
+                      Container(
+                        width: 200,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(15),
+                          border: Border.all(),
+                          color: Color(0xFFEBFFD8),
+                        ),
+                        child: TextButton(
+                          onPressed: () {
+                            c.openDialog();
+                            c.dropdownNamaTerapis.value = null;
+                            c.KodeTerapisController.clear();
+                          },
+                          child: Text(
+                            'Absensi\n Rolling',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 30, fontFamily: 'Poppins', color: Colors.black),
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(right: 90),
-                  child: Container(
-                    width: 200,
-                    height: 100,
-                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), border: Border.all(), color: Color(0xFFEBFFD8)),
-                    child: TextButton(
-                      onPressed: () {
-                        c.openDialog();
-                        c.dropdownNamaTerapis.value = null;
-                        c.KodeTerapisController.clear();
-                      },
-
-                      child: Text('Absensi\n Rolling', style: TextStyle(fontSize: 30, fontFamily: 'Poppins', color: Colors.black)),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Widget Terpisah agar kode lebih rapi dan konsisten
+  Widget _buildMenuCard({
+    required IconData icon,
+    required String text1,
+    required String text2,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.white),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        height: 250,
+        width: 200,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Icon juga dibungkus flexible/fitted jika perlu, tapi fixed size 180 oke
+            // selama parentnya di-scale down oleh FittedBox utama.
+            Icon(icon, size: 180),
+            Text(text1, style: TextStyle(fontSize: 20, fontFamily: 'Poppins')),
+            if (text2.isNotEmpty) Text(text2, style: TextStyle(fontSize: 20, fontFamily: 'Poppins')),
           ],
         ),
       ),

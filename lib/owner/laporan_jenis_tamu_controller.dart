@@ -6,6 +6,7 @@ import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:cherry_toast/cherry_toast.dart';
 import 'package:intl/intl.dart';
 import 'package:open_file/open_file.dart';
 
@@ -15,7 +16,7 @@ class LaporanJenisTamuController extends GetxController {
   RxList laporanJenisTamu = <Map<String, dynamic>>[].obs;
   RxList<DateTime?> rangeDatePickerTamu = <DateTime?>[].obs;
   ScrollController laporanScrollController = ScrollController();
-  final List<String> listJenisPilihan = const ['Showing', 'Pilih Bawah', 'Request', 'Rolling'];
+  final List<String> listJenisPilihan = const ['Umum', 'Member', 'VIP'];
   final RxnString selectedJenisPilihan = RxnString();
   final RxnString selectedStatus = RxnString();
 
@@ -48,7 +49,10 @@ class LaporanJenisTamuController extends GetxController {
 
   Future<void> downloadLaporanJenisTamu() async {
     if (rangeDatePickerTamu.isEmpty) {
-      Get.snackbar("Informasi", "Harap memilih tanggal terlebih dahulu");
+      CherryToast.info(
+        title: const Text("Informasi"),
+        description: const Text("Harap memilih tanggal terlebih dahulu"),
+      ).show(Get.context!);
       return;
     }
 
@@ -61,11 +65,16 @@ class LaporanJenisTamuController extends GetxController {
     final fileName = 'laporan_jenis_tamu_${startDate}_$endDate.pdf';
     final savePath = '${Directory.systemTemp.path}/$fileName';
 
+    Map<String, String> queryParams = {"start_date": startDate, "end_date": endDate};
+
+    if (selectedJenisPilihan.value != null) queryParams['jenis_tamu'] = selectedJenisPilihan.value ?? '';
+    if (selectedStatus.value != null) queryParams['status'] = selectedStatus.value ?? '';
+
     try {
       await dio.download(
         '${myIpAddr()}/laporan_jenis_tamu/export_excel',
         savePath,
-        queryParameters: {"start_date": startDate, "end_date": endDate},
+        queryParameters: queryParams,
       );
 
       log("Laporan jenis tamu diunduh ke $savePath");

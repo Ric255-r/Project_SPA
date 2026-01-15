@@ -2,6 +2,7 @@ import 'package:Project_SPA/admin/stok_opname.dart';
 import 'package:Project_SPA/function/admin_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:cherry_toast/cherry_toast.dart';
 import 'package:dio/dio.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 
@@ -77,12 +78,18 @@ class BarangController extends GetxController {
     final stokStr = stokC.text.trim();
 
     if (nama.isEmpty || satuan.isEmpty || stokStr.isEmpty) {
-      Get.snackbar('Validasi', 'Nama, stok, dan satuan wajib diisi');
+      CherryToast.warning(
+        title: const Text('Validasi'),
+        description: const Text('Nama, stok, dan satuan wajib diisi'),
+      ).show(Get.context!);
       return;
     }
     final stok = int.tryParse(stokStr);
     if (stok == null) {
-      Get.snackbar('Validasi', 'Stok harus angka');
+      CherryToast.warning(
+        title: const Text('Validasi'),
+        description: const Text('Stok harus angka'),
+      ).show(Get.context!);
       return;
     }
 

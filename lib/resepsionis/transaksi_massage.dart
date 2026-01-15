@@ -1330,13 +1330,19 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
 
   @override
   Widget build(BuildContext context) {
+    // Variable untuk merapikan lebar label input (agar titik dua sejajar)
+    const double labelWidth = 140.0;
+
     return WillPopScope(
       onWillPop: () async {
         try {
           bool isDeleted = await removeIdDraft();
           return isDeleted;
         } catch (e) {
-          Get.snackbar("Error", "Gagal Remove Id Draft $e");
+          CherryToast.error(
+            title: const Text("Error"),
+            description: Text("Gagal Remove Id Draft $e"),
+          ).show(Get.context!);
           return false;
         }
       },
@@ -1345,234 +1351,114 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
           leading: Padding(
             padding: const EdgeInsets.only(left: 20),
             child: IconButton(
-              icon: Icon(Icons.arrow_back, size: 40), // Back Icon
+              icon: Icon(Icons.arrow_back, size: 40),
               onPressed: () async {
                 bool isDeleted = await removeIdDraft();
                 if (isDeleted) Get.back();
               },
             ),
           ),
-          title: Text('Transaksi Massage', style: TextStyle(fontSize: 60, fontFamily: 'Poppins')),
+          title: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text('Transaksi Massage', style: TextStyle(fontSize: 60, fontFamily: 'Poppins')),
+          ),
           centerTitle: true,
           toolbarHeight: 130,
           leadingWidth: 100,
           backgroundColor: Color(0XFFFFE0B2),
           automaticallyImplyLeading: false,
         ),
-        body: SingleChildScrollView(
-          child: Obx(
-            () => Container(
-              decoration: BoxDecoration(color: Color(0XFFFFE0B2)),
-              width: Get.width,
-              height: ischecked.value == false ? Get.height + 20 : Get.height + 120,
-              child: Padding(
-                padding: EdgeInsets.only(left: 20),
-                child: Column(
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Kolom Pertama
-                        Expanded(
-                          flex: 2,
-                          child: Column(
-                            children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    'No Transaksi :',
+        body: Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: BoxDecoration(color: Color(0XFFFFE0B2)),
+          child: SingleChildScrollView(
+            // Padding keseluruhan layar
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+            child: Column(
+              children: [
+                // ============================================================
+                // BAGIAN 1: SPLIT SCREEN (KIRI: FORM, KANAN: MEMBER INFO)
+                // ============================================================
+                Obx(
+                  () => Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // --- KOLOM KIRI (FORM INPUT) ---
+                      Expanded(
+                        flex: 6, // Lebar 60%
+                        child: Column(
+                          children: [
+                            _buildInputRow(
+                              label: 'No Transaksi :',
+                              controller: _txtIdTrans,
+                              labelWidth: labelWidth,
+                              readOnly: true,
+                            ),
+                            SizedBox(height: 15),
+                            _buildInputRow(
+                              label: 'No Locker :',
+                              controller: _txtNoLocker,
+                              labelWidth: labelWidth,
+                            ),
+                            SizedBox(height: 15),
+
+                            // Dropdown Jenis Tamu
+                            _buildCustomRow(
+                              label: 'Jenis Tamu :',
+                              labelWidth: labelWidth,
+                              child: DropdownButton<String>(
+                                value: dropdownValue,
+                                isExpanded: true,
+                                icon: const Icon(Icons.arrow_drop_down),
+                                underline: SizedBox(),
+                                onChanged: (String? value) {
+                                  setState(() {
+                                    dropdownValue = value;
+                                  });
+                                },
+                                items:
+                                    list.map<DropdownMenuItem<String>>((String value) {
+                                      return DropdownMenuItem<String>(
+                                        value: value,
+                                        child: Text(
+                                          value,
+                                          style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
+                                        ),
+                                      );
+                                    }).toList(),
+                              ),
+                            ),
+                            SizedBox(height: 15),
+
+                            _buildInputRow(
+                              label: 'No HP :',
+                              controller: _noHp,
+                              labelWidth: labelWidth,
+                              isNumber: true,
+                            ),
+                            SizedBox(height: 15),
+                            _buildInputRow(label: 'Nama :', controller: _namaTamu, labelWidth: labelWidth),
+                            SizedBox(height: 15),
+
+                            // Dropdown Jenis Pilihan & Tombol Show
+                            Row(
+                              children: [
+                                SizedBox(
+                                  width: labelWidth,
+                                  child: Text(
+                                    'Jenis Pilihan :',
                                     style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                   ),
-                                  Padding(
-                                    padding: EdgeInsets.only(left: 10),
-                                    child: Container(
-                                      width: 300,
-                                      height: 40,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10),
-                                        color: Colors.white,
-                                      ),
-                                      child: TextField(
-                                        controller: _txtIdTrans,
-                                        readOnly: true,
-                                        decoration: InputDecoration(
-                                          border: InputBorder.none,
-                                          contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 10),
-                                        ),
-                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Padding(
-                                    padding: EdgeInsets.only(top: 15),
-                                    child: Text(
-                                      'No Locker :',
-                                      style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: EdgeInsets.only(left: 38, top: 15),
-                                    child: Container(
-                                      width: 200,
-                                      height: 40,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10),
-                                        color: Colors.white,
-                                      ),
-                                      child: TextField(
-                                        controller: _txtNoLocker,
-                                        decoration: InputDecoration(
-                                          border: InputBorder.none,
-                                          contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 10),
-                                        ),
-                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Padding(
-                                    padding: EdgeInsets.only(top: 15),
-                                    child: Text(
-                                      'Jenis Tamu :',
-                                      style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: EdgeInsets.only(left: 22, top: 15),
-                                    child: Container(
-                                      width: 200,
-                                      height: 40,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10),
-                                        color: Colors.white,
-                                      ),
-                                      child: DropdownButton<String>(
-                                        value: dropdownValue,
-                                        isExpanded: true,
-                                        icon: const Icon(Icons.arrow_drop_down),
-                                        elevation: 16,
-                                        style: const TextStyle(color: Colors.deepPurple),
-                                        underline: SizedBox(),
-                                        padding: EdgeInsets.symmetric(horizontal: 10),
-                                        onChanged: (String? value) {
-                                          setState(() {
-                                            dropdownValue = value;
-                                          });
-                                        },
-                                        items:
-                                            list.map<DropdownMenuItem<String>>((String value) {
-                                              return DropdownMenuItem<String>(
-                                                value: value,
-                                                child: Align(
-                                                  alignment: Alignment.centerLeft,
-                                                  child: Text(
-                                                    value,
-                                                    style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
-                                                  ),
-                                                ),
-                                              );
-                                            }).toList(),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Padding(
-                                    padding: EdgeInsets.only(top: 15),
-                                    child: Text(
-                                      'No HP :',
-                                      style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: EdgeInsets.only(left: 74, top: 15),
-                                    child: Container(
-                                      width: 300,
-                                      height: 40,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10),
-                                        color: Colors.white,
-                                      ),
-                                      child: TextField(
-                                        maxLines: 1,
-                                        controller: _noHp,
-                                        keyboardType: TextInputType.number,
-                                        inputFormatters: <TextInputFormatter>[
-                                          FilteringTextInputFormatter.digitsOnly,
-                                        ],
-                                        textInputAction: TextInputAction.done,
-                                        textAlign: TextAlign.start,
-                                        scrollPhysics: BouncingScrollPhysics(),
-                                        decoration: InputDecoration(
-                                          border: InputBorder.none,
-                                          contentPadding: EdgeInsets.only(left: 10, bottom: 7),
-                                        ),
-                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Padding(
-                                    padding: EdgeInsets.only(top: 15),
-                                    child: Text(
-                                      'Nama :',
-                                      style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: EdgeInsets.only(left: 70, top: 15),
-                                    child: Container(
-                                      width: 300,
-                                      height: 40,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10),
-                                        color: Colors.white,
-                                      ),
-                                      child: TextField(
-                                        maxLines: 1,
-                                        controller: _namaTamu,
-                                        keyboardType: TextInputType.text,
-                                        textInputAction: TextInputAction.done,
-                                        textAlign: TextAlign.start,
-                                        scrollPhysics: BouncingScrollPhysics(),
-                                        decoration: InputDecoration(
-                                          border: InputBorder.none,
-                                          contentPadding: EdgeInsets.only(left: 10, bottom: 7),
-                                        ),
-                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Padding(
-                                    padding: EdgeInsets.only(top: 15),
-                                    child: Text(
-                                      'Jenis Pilihan :',
-                                      style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
-                                    ),
-                                  ),
-                                  Row(
+                                ),
+                                Expanded(
+                                  child: Row(
                                     children: [
-                                      Padding(
-                                        padding: EdgeInsets.only(left: 14, top: 15),
+                                      Expanded(
+                                        flex: 2,
                                         child: Container(
-                                          width: 300,
                                           height: 40,
+                                          padding: EdgeInsets.symmetric(horizontal: 10),
                                           decoration: BoxDecoration(
                                             borderRadius: BorderRadius.circular(10),
                                             color: Colors.white,
@@ -1580,11 +1466,7 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                           child: DropdownButton<String>(
                                             value: _dropdownJenisPilihan,
                                             isExpanded: true,
-                                            icon: const Icon(Icons.arrow_drop_down),
-                                            elevation: 16,
-                                            style: const TextStyle(color: Colors.deepPurple),
                                             underline: SizedBox(),
-                                            padding: EdgeInsets.symmetric(horizontal: 10),
                                             onChanged: (String? value) {
                                               setState(() {
                                                 _dropdownJenisPilihan = value;
@@ -1597,636 +1479,418 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                                 ) {
                                                   return DropdownMenuItem<String>(
                                                     value: value,
-                                                    child: Align(
-                                                      alignment: Alignment.centerLeft,
-                                                      child: Text(
-                                                        value,
-                                                        style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
-                                                      ),
+                                                    child: Text(
+                                                      value,
+                                                      style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
                                                     ),
                                                   );
                                                 }).toList(),
                                           ),
                                         ),
                                       ),
-                                      if (_dropdownJenisPilihan == 'Showing')
-                                        Obx(() {
-                                          return isbuttonvisible.value
-                                              ? Padding(
-                                                padding: EdgeInsets.only(top: 15, left: 20),
-                                                child: Container(
-                                                  decoration: BoxDecoration(
-                                                    color: Color(0XFFF6F7C4),
-                                                    borderRadius: BorderRadius.circular(10),
-                                                  ),
-                                                  height: 40,
-                                                  width: 130,
-                                                  child: TextButton(
-                                                    onPressed: () {
-                                                      daftarpanggilankerja('Showing Room', 'Semua Terapis');
-                                                      // var c = Get.put(ControllerPanggilanKerja());
-                                                      // c.refreshDataPanggilanKerja();
-                                                      CherryToast.success(
-                                                        title: Text('Notif berhasil dikirim'),
-                                                      ).show(context);
-                                                      isbuttonvisible.value = false;
-                                                      controllerPekerja.statusshowing.value = 'pressed';
-                                                    },
-                                                    style: TextButton.styleFrom(
-                                                      foregroundColor: Colors.black,
+                                      if (_dropdownJenisPilihan == 'Showing') ...[
+                                        SizedBox(width: 10),
+                                        Obx(
+                                          () =>
+                                              isbuttonvisible.value
+                                                  ? Container(
+                                                    height: 40,
+                                                    child: ElevatedButton(
+                                                      style: ElevatedButton.styleFrom(
+                                                        backgroundColor: Color(0XFFF6F7C4),
+                                                        foregroundColor: Colors.black,
+                                                      ),
+                                                      onPressed: () {
+                                                        daftarpanggilankerja('Showing Room', 'Semua Terapis');
+                                                        CherryToast.success(
+                                                          title: Text('Notif berhasil dikirim'),
+                                                        ).show(context);
+                                                        isbuttonvisible.value = false;
+                                                        controllerPekerja.statusshowing.value = 'pressed';
+                                                      },
+                                                      child: Text(
+                                                        'SEND NOTIF',
+                                                        style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
+                                                      ),
                                                     ),
-                                                    child: Text(
-                                                      'SEND NOTIF',
-                                                      style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
-                                                    ),
-                                                  ),
-                                                ),
-                                              )
-                                              : SizedBox.shrink();
-                                        }),
+                                                  )
+                                                  : SizedBox.shrink(),
+                                        ),
+                                      ],
                                     ],
                                   ),
-                                ],
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 15),
+
+                            // Terapis 1
+                            _buildButtonInputRow(
+                              label: 'Terapis :',
+                              labelWidth: labelWidth,
+                              controller: txtTerapis,
+                              buttonText: 'THERAPIST',
+                              onPressed:
+                                  () =>
+                                      _dropdownJenisPilihan == "Rolling"
+                                          ? _showDialogTherapistRolling()
+                                          : _showDialogTherapist(),
+                            ),
+
+                            // Terapis 2 & 3 (Conditional)
+                            if (ischecked.value) ...[
+                              SizedBox(height: 15),
+                              _buildButtonInputRow(
+                                label: '', // Kosongkan label agar sejajar
+                                labelWidth: labelWidth,
+                                controller: txtTerapis2,
+                                buttonText: 'THERAPIST 2',
+                                onPressed:
+                                    () =>
+                                        _dropdownJenisPilihan == "Rolling"
+                                            ? _showDialogTherapistRolling2()
+                                            : _showDialogTherapist2(),
                               ),
-                              Row(
-                                children: [
-                                  Padding(
-                                    padding: EdgeInsets.only(top: 15),
-                                    child: Text(
-                                      'Terapis :',
-                                      style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
-                                    ),
-                                  ),
-                                  Column(
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Padding(
-                                            padding: EdgeInsets.only(left: 60, top: 15),
-                                            child: Container(
-                                              width: 300,
-                                              height: 40,
-                                              decoration: BoxDecoration(
-                                                borderRadius: BorderRadius.circular(10),
-                                                color: Colors.white,
-                                              ),
-                                              child: TextField(
-                                                readOnly: true,
-                                                controller: txtTerapis,
-                                                decoration: InputDecoration(
-                                                  border: InputBorder.none,
-                                                  contentPadding: EdgeInsets.symmetric(
-                                                    vertical: 15,
-                                                    horizontal: 10,
-                                                  ),
-                                                ),
-                                                style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
-                                              ),
-                                            ),
-                                          ),
-                                          Padding(
-                                            padding: EdgeInsets.only(top: 15, left: 20),
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color: Color(0XFFF6F7C4),
-                                                borderRadius: BorderRadius.circular(10),
-                                              ),
-                                              height: 40,
-                                              width: 130,
-                                              child: TextButton(
-                                                onPressed: () {
-                                                  if (_dropdownJenisPilihan == "Rolling") {
-                                                    _showDialogTherapistRolling();
-                                                  } else {
-                                                    _showDialogTherapist();
-                                                  }
-                                                },
-                                                style: TextButton.styleFrom(foregroundColor: Colors.black),
-                                                child: Text(
-                                                  'THERAPIST',
-                                                  style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      Obx(
-                                        () =>
-                                            ischecked.value == true
-                                                ? Column(
-                                                  children: [
-                                                    Row(
-                                                      children: [
-                                                        Padding(
-                                                          padding: EdgeInsets.only(left: 60, top: 15),
-                                                          child: Container(
-                                                            width: 300,
-                                                            height: 40,
-                                                            decoration: BoxDecoration(
-                                                              borderRadius: BorderRadius.circular(10),
-                                                              color: Colors.white,
-                                                            ),
-                                                            child: TextField(
-                                                              readOnly: true,
-                                                              controller: txtTerapis2,
-                                                              decoration: InputDecoration(
-                                                                border: InputBorder.none,
-                                                                contentPadding: EdgeInsets.symmetric(
-                                                                  vertical: 15,
-                                                                  horizontal: 10,
-                                                                ),
-                                                              ),
-                                                              style: TextStyle(
-                                                                fontSize: 18,
-                                                                fontFamily: 'Poppins',
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                        Padding(
-                                                          padding: EdgeInsets.only(top: 15, left: 20),
-                                                          child: Container(
-                                                            decoration: BoxDecoration(
-                                                              color: Color(0XFFF6F7C4),
-                                                              borderRadius: BorderRadius.circular(10),
-                                                            ),
-                                                            height: 40,
-                                                            width: 130,
-                                                            child: TextButton(
-                                                              onPressed: () {
-                                                                if (_dropdownJenisPilihan == "Rolling") {
-                                                                  _showDialogTherapistRolling2();
-                                                                } else {
-                                                                  _showDialogTherapist2();
-                                                                }
-                                                              },
-                                                              style: TextButton.styleFrom(
-                                                                foregroundColor: Colors.black,
-                                                              ),
-                                                              child: Text(
-                                                                'THERAPIST 2',
-                                                                style: TextStyle(
-                                                                  fontSize: 18,
-                                                                  fontFamily: 'Poppins',
-                                                                ),
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    Row(
-                                                      children: [
-                                                        Padding(
-                                                          padding: EdgeInsets.only(left: 60, top: 15),
-                                                          child: Container(
-                                                            width: 300,
-                                                            height: 40,
-                                                            decoration: BoxDecoration(
-                                                              borderRadius: BorderRadius.circular(10),
-                                                              color: Colors.white,
-                                                            ),
-                                                            child: TextField(
-                                                              readOnly: true,
-                                                              controller: txtTerapis3,
-                                                              decoration: InputDecoration(
-                                                                border: InputBorder.none,
-                                                                contentPadding: EdgeInsets.symmetric(
-                                                                  vertical: 15,
-                                                                  horizontal: 10,
-                                                                ),
-                                                              ),
-                                                              style: TextStyle(
-                                                                fontSize: 18,
-                                                                fontFamily: 'Poppins',
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                        Padding(
-                                                          padding: EdgeInsets.only(top: 15, left: 20),
-                                                          child: Container(
-                                                            decoration: BoxDecoration(
-                                                              color: Color(0XFFF6F7C4),
-                                                              borderRadius: BorderRadius.circular(10),
-                                                            ),
-                                                            height: 40,
-                                                            width: 132,
-                                                            child: TextButton(
-                                                              onPressed: () {
-                                                                if (_dropdownJenisPilihan == "Rolling") {
-                                                                  _showDialogTherapistRolling3();
-                                                                } else {
-                                                                  _showDialogTherapist3();
-                                                                }
-                                                              },
-                                                              style: TextButton.styleFrom(
-                                                                foregroundColor: Colors.black,
-                                                              ),
-                                                              child: Text(
-                                                                'THERAPIST 3',
-                                                                style: TextStyle(
-                                                                  fontSize: 18,
-                                                                  fontFamily: 'Poppins',
-                                                                ),
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ],
-                                                )
-                                                : SizedBox.shrink(),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Padding(
-                                    padding: EdgeInsets.only(top: 15),
-                                    child: Text(
-                                      'Room :',
-                                      style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
-                                    ),
-                                  ),
-                                  Row(
-                                    children: [
-                                      Padding(
-                                        padding: EdgeInsets.only(left: 75, top: 15),
-                                        child: Container(
-                                          width: 300,
-                                          height: 40,
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(10),
-                                            color: Colors.white,
-                                          ),
-                                          child: TextField(
-                                            controller: txtRoom,
-                                            readOnly: true,
-                                            decoration: InputDecoration(
-                                              border: InputBorder.none,
-                                              contentPadding: EdgeInsets.symmetric(
-                                                vertical: 15,
-                                                horizontal: 10,
-                                              ),
-                                            ),
-                                            style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
-                                          ),
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: EdgeInsets.only(top: 15, left: 20),
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            color: Color(0XFFF6F7C4),
-                                            borderRadius: BorderRadius.circular(10),
-                                          ),
-                                          height: 40,
-                                          width: 130,
-                                          child: TextButton(
-                                            onPressed: () {
-                                              _showDialogRoom();
-                                            },
-                                            style: TextButton.styleFrom(foregroundColor: Colors.black),
-                                            child: Text(
-                                              'ROOM',
-                                              style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Padding(
-                                    padding: EdgeInsets.only(top: 15),
-                                    child: Text(
-                                      'GRO :',
-                                      style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
-                                    ),
-                                  ),
-                                  Row(
-                                    children: [
-                                      Padding(
-                                        padding: EdgeInsets.only(left: 88, top: 15),
-                                        child: Container(
-                                          width: 300,
-                                          height: 40,
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(10),
-                                            color: Colors.white,
-                                          ),
-                                          child: TextField(
-                                            readOnly: true,
-                                            controller: txtGRO,
-                                            decoration: InputDecoration(
-                                              border: InputBorder.none,
-                                              contentPadding: EdgeInsets.symmetric(
-                                                vertical: 15,
-                                                horizontal: 10,
-                                              ),
-                                            ),
-                                            style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
-                                          ),
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: EdgeInsets.only(top: 15, left: 20),
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            color: Color(0XFFF6F7C4),
-                                            borderRadius: BorderRadius.circular(10),
-                                          ),
-                                          height: 40,
-                                          width: 130,
-                                          child: TextButton(
-                                            onPressed: () {
-                                              _showDialogGRO();
-                                            },
-                                            style: TextButton.styleFrom(foregroundColor: Colors.black),
-                                            child: Text(
-                                              'GRO',
-                                              style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                              //  BAGIAN UNTUK MENGAKTIFKAN SELURUH FUNGSI KTV 3 TERAPIS
-                              Row(
-                                children: [
-                                  Padding(
-                                    padding: EdgeInsets.only(top: 15),
-                                    child: Text(
-                                      'TRANSAKSI KTV',
-                                      style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
-                                    ),
-                                  ),
-                                  Container(
-                                    margin: EdgeInsets.only(top: 13, left: 20),
-                                    width: 20,
-                                    height: 20,
-                                    child: Obx(
-                                      () => Checkbox(
-                                        value: ischecked.value,
-                                        onChanged: (bool? newvalue) {
-                                          if (ischecked.value == true) {
-                                            txtTerapis2.clear();
-                                            txtTerapis3.clear();
-                                            controllerPekerja.getidterapis2.value = '';
-                                            controllerPekerja.getidterapis3.value = '';
-                                          }
-                                          ischecked.value = newvalue!;
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                              SizedBox(height: 15),
+                              _buildButtonInputRow(
+                                label: '',
+                                labelWidth: labelWidth,
+                                controller: txtTerapis3,
+                                buttonText: 'THERAPIST 3',
+                                onPressed:
+                                    () =>
+                                        _dropdownJenisPilihan == "Rolling"
+                                            ? _showDialogTherapistRolling3()
+                                            : _showDialogTherapist3(),
                               ),
                             ],
-                          ),
+
+                            SizedBox(height: 15),
+                            // Room
+                            _buildButtonInputRow(
+                              label: 'Room :',
+                              labelWidth: labelWidth,
+                              controller: txtRoom,
+                              buttonText: 'ROOM',
+                              onPressed: () => _showDialogRoom(),
+                            ),
+
+                            SizedBox(height: 15),
+                            // GRO
+                            _buildButtonInputRow(
+                              label: 'GRO :',
+                              labelWidth: labelWidth,
+                              controller: txtGRO,
+                              buttonText: 'GRO',
+                              onPressed: () => _showDialogGRO(),
+                            ),
+
+                            SizedBox(height: 15),
+                            // Transaksi KTV Checkbox
+                            Row(
+                              children: [
+                                SizedBox(
+                                  width: labelWidth,
+                                  child: Text(
+                                    'TRANSAKSI KTV',
+                                    style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
+                                  ),
+                                ),
+                                Obx(
+                                  () => Checkbox(
+                                    value: ischecked.value,
+                                    onChanged: (bool? newvalue) {
+                                      if (ischecked.value == true) {
+                                        txtTerapis2.clear();
+                                        txtTerapis3.clear();
+                                        controllerPekerja.getidterapis2.value = '';
+                                        controllerPekerja.getidterapis3.value = '';
+                                      }
+                                      ischecked.value = newvalue!;
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                        // Kolom Kedua
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
+                      ),
+
+                      SizedBox(width: 20), // Jarak antara Form dan Info Member
+                      // --- KOLOM KANAN (INFO MEMBER & SCAN QR) ---
+                      Expanded(
+                        flex: 4, // Lebar 40%
+                        child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Align(
-                              alignment: Alignment.topLeft,
-                              child: Text(
-                                'Detail Member :',
-                                style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
+                            Text('Detail Member :', style: TextStyle(fontSize: 18, fontFamily: 'Poppins')),
+                            SizedBox(height: 10),
+                            Container(
+                              width: double.infinity,
+                              height: 280,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(15),
+                                color: Colors.white,
                               ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.only(top: 10),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(15),
-                                  color: Colors.white,
-                                ),
-                                width: 460,
-                                height: 280,
-                                child:
-                                    historyMember.isEmpty
-                                        ? Center(
-                                          child: Text(
-                                            "Silahkan Scan QR Terlebih Dahulu",
-                                            style: TextStyle(fontFamily: 'Poppins'),
-                                          ),
-                                        )
-                                        : ListView.builder(
-                                          itemCount: historyMember.length,
-                                          itemBuilder: (context, index) {
-                                            final item = historyMember[index];
-                                            return Column(
-                                              children: [
-                                                Padding(
-                                                  padding: const EdgeInsets.symmetric(
-                                                    vertical: 4.0,
-                                                    horizontal: 8.0,
-                                                  ),
-                                                  child: Column(
-                                                    children: [
-                                                      Row(
-                                                        children: [
-                                                          Container(
-                                                            width: 100,
-                                                            height: 25,
-                                                            child: Text(
-                                                              'Nama Promo',
-                                                              style: TextStyle(
-                                                                fontFamily: 'Poppins',
-                                                                fontSize: 14,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          SizedBox(width: 70),
-                                                          Container(
-                                                            width: 120,
-                                                            height: 25,
-                                                            child: Text(
-                                                              'Sisa Kunjungan',
-                                                              style: TextStyle(
-                                                                fontFamily: 'Poppins',
-                                                                fontSize: 14,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          SizedBox(width: 24),
-                                                          Container(
-                                                            width: 130,
-                                                            height: 25,
-                                                            child: Text(
-                                                              'Berlaku Sampai',
-                                                              style: TextStyle(
-                                                                fontFamily: 'Poppins',
-                                                                fontSize: 14,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      Divider(thickness: 1, color: Colors.black, height: 1),
-                                                      Row(
-                                                        children: [
-                                                          Container(
-                                                            width: 160,
-                                                            child: Text(
-                                                              item['nama_promo'] ?? '',
-                                                              style: TextStyle(fontFamily: 'Poppins'),
-                                                            ),
-                                                          ),
-                                                          SizedBox(
-                                                            width: 25,
-                                                            child: Text(
-                                                              "|",
-                                                              textAlign: TextAlign.left,
-                                                              style: TextStyle(fontSize: 21),
-                                                            ),
-                                                          ),
-                                                          Container(
-                                                            width: 90,
-                                                            child: Text(
-                                                              item['sisa_kunjungan'] != null &&
-                                                                      item['sisa_kunjungan'] != ''
-                                                                  ? '${item['sisa_kunjungan']} Kali'
-                                                                  : '',
-                                                              style: TextStyle(fontFamily: 'Poppins'),
-                                                              textAlign: TextAlign.center,
-                                                            ),
-                                                          ),
-                                                          SizedBox(
-                                                            width: 55,
-                                                            child: Text(
-                                                              "|",
-                                                              textAlign: TextAlign.center,
-                                                              style: TextStyle(fontSize: 21),
-                                                            ),
-                                                          ),
-                                                          Container(
-                                                            width: 90,
-                                                            child: Text(
-                                                              item['exp_kunjungan_label'] ?? '',
-                                                              style: const TextStyle(fontFamily: 'Poppins'),
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                Divider(thickness: 1, color: Colors.grey.shade300, height: 1),
-                                              ],
-                                            );
-                                          },
+                              child:
+                                  historyMember.isEmpty
+                                      ? Center(
+                                        child: Text(
+                                          "Silahkan Scan QR Terlebih Dahulu",
+                                          style: TextStyle(fontFamily: 'Poppins'),
                                         ),
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.only(top: 10),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(15),
-                                  color: Color(0XCCCDFADB),
-                                ),
-                                height: 100,
-                                width: 460,
-                                child: TextButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => QRScannerScreen(onScannedData: _updateFields),
+                                      )
+                                      : ListView.builder(
+                                        itemCount: historyMember.length,
+                                        itemBuilder: (context, index) {
+                                          final item = historyMember[index];
+                                          return Column(
+                                            children: [
+                                              ListTile(
+                                                title: Text(
+                                                  item['nama_promo'] ?? '',
+                                                  style: TextStyle(fontFamily: 'Poppins', fontSize: 14),
+                                                ),
+                                                trailing: Wrap(
+                                                  spacing: 12,
+                                                  children: [
+                                                    Text(
+                                                      item['sisa_kunjungan'] != null
+                                                          ? '${item['sisa_kunjungan']} Kali'
+                                                          : '',
+                                                      style: TextStyle(fontSize: 12),
+                                                    ),
+                                                    Text("|"),
+                                                    Text(
+                                                      item['exp_kunjungan_label'] ?? '',
+                                                      style: TextStyle(fontSize: 12),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              Divider(height: 1),
+                                            ],
+                                          );
+                                        },
                                       ),
-                                    );
-                                  },
-                                  style: TextButton.styleFrom(foregroundColor: Colors.black),
-                                  child: Text(
-                                    'SCAN QR',
-                                    style: TextStyle(fontSize: 30, fontFamily: 'Poppins'),
-                                  ),
+                            ),
+                            SizedBox(height: 10),
+                            // Tombol Scan QR (Tetap di kanan)
+                            Container(
+                              width: double.infinity,
+                              height: 80,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(15),
+                                color: Color(0XCCCDFADB),
+                              ),
+                              child: TextButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => QRScannerScreen(onScannedData: _updateFields),
+                                    ),
+                                  );
+                                },
+                                child: Text(
+                                  'SCAN QR',
+                                  style: TextStyle(fontSize: 24, fontFamily: 'Poppins', color: Colors.black),
                                 ),
                               ),
                             ),
                           ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
+                  ),
+                ),
 
-                    Padding(
-                      padding: EdgeInsets.only(left: 100, top: 30, right: 100),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(15),
-                              color: Color(0XFFF6F7C4),
-                            ),
-                            height: 120,
-                            width: 400,
-                            child: TextButton(
-                              onPressed: () {
-                                _updateLastTrans().then((_) {
-                                  controllerPekerja.getnotrans.value = _txtIdTrans.text;
-                                  controllerPekerja.getroom.value = txtRoom.text;
-                                  Get.to(
-                                    () => DetailPaketMassage(
-                                      idTrans: idTrans,
-                                      activePromos: _activePromos,
-                                      idMember: idMember,
-                                      namaRoom: txtRoom.text,
-                                      statusTamu: dropdownValue,
-                                    ),
-                                  );
-                                });
-                              },
-                              style: TextButton.styleFrom(foregroundColor: Colors.black),
+                SizedBox(height: 40), // Jarak Pemisah Bagian Atas dan Bawah
+                // ============================================================
+                // BAGIAN 2: TOMBOL BAWAH (PILIH PAKET & DAFTAR MEMBER)
+                // ============================================================
+                // Padding digunakan agar tombol tidak terlalu mepet pinggir layar
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 40.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Tombol 1: Pilih Paket
+                      Expanded(
+                        child: Container(
+                          height: 120, // Tinggi tetap
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(15),
+                            color: Color(0XFFF6F7C4),
+                          ),
+                          child: TextButton(
+                            onPressed: () {
+                              _updateLastTrans().then((_) {
+                                controllerPekerja.getnotrans.value = _txtIdTrans.text;
+                                controllerPekerja.getroom.value = txtRoom.text;
+                                Get.to(
+                                  () => DetailPaketMassage(
+                                    idTrans: idTrans,
+                                    activePromos: _activePromos,
+                                    idMember: idMember,
+                                    namaRoom: txtRoom.text,
+                                    statusTamu: dropdownValue,
+                                  ),
+                                );
+                              });
+                            },
+                            style: TextButton.styleFrom(foregroundColor: Colors.black),
+                            // FittedBox agar font 40 otomatis mengecil di layar sempit
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
                               child: Text(
                                 'Pilih Paket',
                                 style: TextStyle(fontSize: 40, fontFamily: 'Poppins'),
                               ),
                             ),
                           ),
-                          Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(15),
-                              color: Color(0XCCCDFADB),
-                            ),
-                            height: 120,
-                            width: 400,
-                            child: TextButton(
-                              onPressed: () {
-                                Get.to(() => DaftarMember());
-                              },
-                              style: TextButton.styleFrom(foregroundColor: Colors.black),
+                        ),
+                      ),
+
+                      SizedBox(width: 30), // Jarak antar tombol
+                      // Tombol 2: Daftar Member
+                      Expanded(
+                        child: Container(
+                          height: 120, // Tinggi tetap
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(15),
+                            color: Color(0XCCCDFADB),
+                          ),
+                          child: TextButton(
+                            onPressed: () {
+                              Get.to(() => DaftarMember());
+                            },
+                            style: TextButton.styleFrom(foregroundColor: Colors.black),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
                               child: Text(
                                 'Daftar Member',
                                 style: TextStyle(fontSize: 40, fontFamily: 'Poppins'),
                               ),
                             ),
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
+                ),
+                SizedBox(height: 20), // Jarak aman bawah
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- WIDGET HELPER (PASTE DI BAGIAN BAWAH CLASS ANDA) ---
+
+  Widget _buildInputRow({
+    required String label,
+    required TextEditingController controller,
+    required double labelWidth,
+    bool readOnly = false,
+    bool isNumber = false,
+  }) {
+    return Row(
+      children: [
+        SizedBox(
+          width: labelWidth,
+          child: Text(label, style: TextStyle(fontSize: 18, fontFamily: 'Poppins')),
+        ),
+        Expanded(
+          child: Container(
+            height: 40,
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
+            child: TextField(
+              controller: controller,
+              readOnly: readOnly,
+              keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+              inputFormatters: isNumber ? [FilteringTextInputFormatter.digitsOnly] : [],
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+              ),
+              style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCustomRow({required String label, required double labelWidth, required Widget child}) {
+    return Row(
+      children: [
+        SizedBox(
+          width: labelWidth,
+          child: Text(label, style: TextStyle(fontSize: 18, fontFamily: 'Poppins')),
+        ),
+        Expanded(
+          child: Container(
+            height: 40,
+            padding: EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
+            child: child,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildButtonInputRow({
+    required String label,
+    required double labelWidth,
+    required TextEditingController controller,
+    required String buttonText,
+    required VoidCallback onPressed,
+  }) {
+    return Row(
+      children: [
+        SizedBox(
+          width: labelWidth,
+          child: Text(label, style: TextStyle(fontSize: 18, fontFamily: 'Poppins')),
+        ),
+        Expanded(
+          flex: 2,
+          child: Container(
+            height: 40,
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
+            child: TextField(
+              controller: controller,
+              readOnly: true,
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+              ),
+              style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
+            ),
+          ),
+        ),
+        SizedBox(width: 10),
+        Expanded(
+          flex: 1,
+          child: Container(
+            height: 40,
+            decoration: BoxDecoration(color: Color(0XFFF6F7C4), borderRadius: BorderRadius.circular(10)),
+            child: TextButton(
+              onPressed: onPressed,
+              style: TextButton.styleFrom(padding: EdgeInsets.zero, foregroundColor: Colors.black),
+              child: FittedBox(
+                child: Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: Text(buttonText, style: TextStyle(fontSize: 16, fontFamily: 'Poppins')),
                 ),
               ),
             ),
           ),
         ),
-      ),
+      ],
     );
   }
 }
