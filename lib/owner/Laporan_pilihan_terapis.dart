@@ -119,7 +119,7 @@ class _laporanpilihanterapisState extends State<laporanpilihanterapis> with Sing
       log("Error di fn export laporan kerja terapis : $e");
       CherryToast.error(
         title: const Text("Download Failed"),
-        description: const Text("Gagal menyiapkan file laporan kerja terapis"),
+        description: const Text("Tidak ada transaksi"),
       ).show(Get.context!);
     }
   }
