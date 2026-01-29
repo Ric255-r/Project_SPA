@@ -40,7 +40,21 @@ class LaporanJenisTamuController extends GetxController {
       }
     } catch (e) {
       if (e is DioException) {
-        throw Exception("Gagal di Dio ${e.response!.data}");
+        final statusCode = e.response?.statusCode;
+        final data = e.response?.data;
+        final serverMessage = data is Map<String, dynamic> ? data['message']?.toString() : null;
+
+        if (statusCode == 404 &&
+            serverMessage == "Data transaksi tidak ditemukan untuk filter yang diberikan") {
+          laporanJenisTamu.clear();
+          CherryToast.info(
+            title: const Text("Informasi"),
+            description: Text(serverMessage ?? "Data tidak ditemukan"),
+          ).show(Get.context!);
+          return;
+        }
+
+        throw Exception("Gagal di Dio ${e.response?.data ?? e.message}");
       }
 
       throw Exception("Error Get Data Laporan Jenis Tamu $e");
@@ -82,6 +96,19 @@ class LaporanJenisTamuController extends GetxController {
     } catch (e) {
       if (e is DioException) {
         Get.back();
+        final statusCode = e.response?.statusCode;
+        final data = e.response?.data;
+        final serverMessage = data is Map<String, dynamic> ? data['message']?.toString() : null;
+
+        if (statusCode == 404 &&
+            serverMessage == "Data transaksi tidak ditemukan untuk filter yang diberikan") {
+          CherryToast.info(
+            title: const Text("Informasi"),
+            description: Text(serverMessage ?? "Data tidak ditemukan"),
+          ).show(Get.context!);
+          return;
+        }
+
         throw Exception("Gagal mengunduh laporan: ${e.response?.data ?? e.message}");
       }
       Get.back();
