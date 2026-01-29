@@ -242,7 +242,7 @@ class _OurDrawerState extends State<OurDrawer> {
                       ),
                       ListTile(
                         leading: const Icon(Icons.timeline_sharp),
-                        title: const Text('Laporan Terapis Dipilih', style: TextStyle(fontFamily: 'Poppins')),
+                        title: const Text('Laporan Kerja Terapis', style: TextStyle(fontFamily: 'Poppins')),
                         onTap: () {
                           Get.to(() => laporanpilihanterapis());
                         },

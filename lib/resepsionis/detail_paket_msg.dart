@@ -310,14 +310,20 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
       );
 
       setState(() {
-        _listHappyHour =
-            (response.data as List).map((item) {
-              return {
-                "kode_promo": item["kode_promo"],
-                "nama_promo": item["nama_promo"],
-                "disc": item["disc"],
-              };
-            }).toList();
+        final rawData = response.data as List;
+
+        if (rawData.isEmpty) {
+          _listHappyHour = [];
+        } else {
+          _listHappyHour =
+              rawData.map((item) {
+                return {
+                  "kode_promo": item["kode_promo"],
+                  "nama_promo": item["nama_promo"],
+                  "disc": item["disc"],
+                };
+              }).toList();
+        }
       });
     } catch (e) {
       log("Error di fn Get Data Terapis $e");
@@ -532,6 +538,19 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
       await Future.delayed(const Duration(seconds: 20));
       daftapanggilankerja(namaruangan, namaterapis3);
     }
+  }
+
+  bool _isHappyHourSelectionRequired() {
+    return _listHappyHour.isNotEmpty && dropdownHappyHour.value == null;
+  }
+
+  void _showHappyHourReminder() {
+    Get.defaultDialog(
+      title: 'Promo Happy Hour',
+      middleText: 'Silakan pilih promo Happy Hour terlebih dahulu.',
+      textConfirm: 'OK',
+      onConfirm: () => Get.back(),
+    );
   }
 
   void _showDialogConfirmPayment(BuildContext context) async {
@@ -1406,6 +1425,10 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                     alignment: Alignment.centerRight,
                                     child: ElevatedButton(
                                       onPressed: () {
+                                        if (_isHappyHourSelectionRequired()) {
+                                          _showHappyHourReminder();
+                                          return;
+                                        }
                                         _showDialogConfirmPayment(context);
                                       },
                                       child: Text(

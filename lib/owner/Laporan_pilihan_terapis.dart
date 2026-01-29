@@ -26,6 +26,7 @@ import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:dio/dio.dart';
+import 'package:cherry_toast/cherry_toast.dart';
 
 class laporanpilihanterapis extends StatefulWidget {
   const laporanpilihanterapis({super.key});
@@ -49,7 +50,7 @@ class _laporanpilihanterapisState extends State<laporanpilihanterapis> with Sing
   int pilihanbulan = 1;
   int pilihantahun = 1;
   late TabController _tabController;
-  int selectedtabindex = 1;
+
   RxInt total = 0.obs;
   RxInt totalharian = 0.obs;
   RxInt totaltahunan = 0.obs;
@@ -64,6 +65,8 @@ class _laporanpilihanterapisState extends State<laporanpilihanterapis> with Sing
   String isitekscetakkomisiharian = 'Cetak Komisi Gro';
   String isitekscetakkomisitahunan = 'Cetak Komisi Gro';
   RxList<Map<String, dynamic>> data_agency = <Map<String, dynamic>>[].obs;
+  RxList<Map<String, dynamic>> _listNamaTerapis = <Map<String, dynamic>>[].obs;
+  RxnString selectedidterapis = RxnString();
 
   DateTime? _getdateonly(DateTime? dateTime) {
     if (dateTime == null) {
@@ -73,17 +76,58 @@ class _laporanpilihanterapisState extends State<laporanpilihanterapis> with Sing
     return DateTime(dateTime.year, dateTime.month, dateTime.day);
   }
 
+  Future<void> getDataTerapis() async {
+    try {
+      var response = await dio.get('${myIpAddr()}/absen/dataTerapis');
+
+      final List<Map<String, dynamic>> data =
+          (response.data as List).map((item) {
+            return {"id_karyawan": item["id_karyawan"].toString(), "nama_karyawan": item["nama_karyawan"]};
+          }).toList();
+
+      _listNamaTerapis.assignAll([
+        {"id_karyawan": "all", "nama_karyawan": "Semua Terapis"},
+        ...data,
+      ]);
+    } catch (e) {
+      log("Error di fn Get Data Terapis $e");
+    }
+  }
+
+  Future<void> exportlaporankerjaterapis(startdate, enddate, id_terapis) async {
+    try {
+      print('ini jalan');
+      Get.dialog(const DownloadSplash(), barrierDismissible: false);
+      final filepath;
+      final dir = await getDownloadsDirectory();
+      filepath = '${dir!.path}/data laporan kerja terapis tanggal $startdate - $enddate.pdf';
+
+      String url = '${myIpAddr()}/main_owner/export_excel_laporankerjaterapis';
+      var response = await dio.download(
+        url,
+        filepath,
+        queryParameters: {'start_date': startdate, 'end_date': enddate, 'pilihan_terapis': id_terapis},
+        options: Options(responseType: ResponseType.bytes, headers: {'Accept': 'application/pdf'}),
+      );
+
+      Get.back();
+
+      await OpenFile.open(filepath);
+      log('file downloaded to $filepath');
+    } catch (e) {
+      Get.back();
+      log("Error di fn export laporan kerja terapis : $e");
+      CherryToast.error(
+        title: const Text("Download Failed"),
+        description: const Text("Tidak ada transaksi"),
+      ).show(Get.context!);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    pilihanbulan = currentmonth;
-    pilihantahun = currentyear;
-    _tabController = TabController(length: 2, initialIndex: 1, vsync: this);
-    _tabController.addListener(() {
-      setState(() {
-        selectedtabindex = _tabController.index;
-      });
-    });
+    getDataTerapis();
   }
 
   @override
@@ -120,7 +164,7 @@ class _laporanpilihanterapisState extends State<laporanpilihanterapis> with Sing
               alignment: Alignment.center,
               margin: EdgeInsets.only(right: 40),
               child: Text(
-                'Laporan Terapis Dipilih',
+                'Laporan Kerja Terapis',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontFamily: 'Poppins',
@@ -137,481 +181,154 @@ class _laporanpilihanterapisState extends State<laporanpilihanterapis> with Sing
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                selectedtabindex == 1
-                    ? Container(
-                      width: 1100.w,
-                      height: 100.w,
-                      margin: EdgeInsets.only(top: 50.w),
-                      child: Column(
+                Container(
+                  margin: EdgeInsets.only(top: 50.w),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                margin: EdgeInsets.only(top: 0.w),
-                                height: 50,
-                                alignment: Alignment.topCenter,
-                                child: Text(
-                                  'Bulan : ',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontFamily: 'Poppins',
-                                    height: 1,
-                                    fontSize: 20.w,
-                                  ),
-                                ),
-                              ),
-                              Obx(
-                                () => Container(
-                                  margin: EdgeInsets.only(top: 0.w),
-                                  width: 140.w,
-                                  height: 55.w,
-                                  child: DropdownButtonFormField<String>(
-                                    decoration: InputDecoration(
-                                      contentPadding: EdgeInsets.only(top: 0.w, bottom: 0.w, left: 10.w),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(color: Colors.blue, width: 2),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(color: Colors.red, width: 2),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      filled: true,
-                                      fillColor: Colors.grey[200],
-                                    ),
-                                    value: selectedvalue.value,
-                                    style: TextStyle(fontSize: 15.w, color: Colors.black),
-                                    items:
-                                        <String>[
-                                          '1',
-                                          '2',
-                                          '3',
-                                          '4',
-                                          '5',
-                                          '6',
-                                          '7',
-                                          '8',
-                                          '9',
-                                          '10',
-                                          '11',
-                                          '12',
-                                        ].map((String value) {
-                                          return DropdownMenuItem<String>(
-                                            value: value,
-                                            child: Text(
-                                              value == '1'
-                                                  ? 'Januari'
-                                                  : value == '2'
-                                                  ? 'Februari'
-                                                  : value == '3'
-                                                  ? 'Maret'
-                                                  : value == '4'
-                                                  ? 'April'
-                                                  : value == '5'
-                                                  ? 'Mei'
-                                                  : value == '6'
-                                                  ? 'Juni'
-                                                  : value == '7'
-                                                  ? 'Juli'
-                                                  : value == '8'
-                                                  ? 'Agustus'
-                                                  : value == '9'
-                                                  ? 'September'
-                                                  : value == '10'
-                                                  ? 'Oktober'
-                                                  : value == '11'
-                                                  ? 'September'
-                                                  : 'Desember',
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                            ),
+                            onPressed: () async {
+                              final results = await showDialog(
+                                context: context,
+                                builder: (context) {
+                                  List<DateTime?> tempdate = List.from(_rangedatepickervalue);
+                                  return Dialog(
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                                    child: SingleChildScrollView(
+                                      child: Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 16.w, horizontal: 16.w),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Text('Silahkan pilih rentang tanggal'),
+                                            SizedBox(height: 15.w),
+                                            CalendarDatePicker2(
+                                              config: CalendarDatePicker2Config(
+                                                calendarType: CalendarDatePicker2Type.range,
+                                                selectedDayHighlightColor: Colors.deepPurple,
+                                                dayTextStyle: TextStyle(fontSize: 15.w),
+                                              ),
+                                              value: tempdate,
+                                              onValueChanged: (dates) {
+                                                tempdate = dates.map((d) => _getdateonly(d)).toList();
+                                              },
                                             ),
-                                          );
-                                        }).toList(),
-                                    onChanged: (String? newValue) {
-                                      selectedvalue.value = newValue!;
-                                      pilihanbulan = int.parse(newValue);
-                                      print(pilihanbulan);
-                                    },
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: 20),
-                              Container(
-                                margin: EdgeInsets.only(top: 0.w),
-                                height: 50,
-                                alignment: Alignment.topCenter,
-                                child: Text(
-                                  'Tahun : ',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontFamily: 'Poppins',
-                                    height: 1,
-                                    fontSize: 20.w,
-                                  ),
-                                ),
-                              ),
-                              Obx(
-                                () => Container(
-                                  margin: EdgeInsets.only(top: 0.w),
-                                  width: 140.w,
-                                  height: 55.w,
-                                  child: DropdownButtonFormField<String>(
-                                    decoration: InputDecoration(
-                                      contentPadding: EdgeInsets.only(top: 0.w, bottom: 0.w, left: 10.w),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(color: Colors.blue, width: 2),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(color: Colors.red, width: 2),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      filled: true,
-                                      fillColor: Colors.grey[200],
-                                    ),
-                                    value: selectedyearvalue.value,
-                                    style: TextStyle(fontSize: 15.w, color: Colors.black),
-                                    items:
-                                        List.generate(
-                                          DateTime.now().year - 2000 + 1,
-                                          (index) => 2000 + index,
-                                        ).map((int year) {
-                                          return DropdownMenuItem<String>(
-                                            value: year.toString(),
-                                            child: Text(year.toString()),
-                                          );
-                                        }).toList(),
-                                    onChanged: (String? newValue) {
-                                      selectedyearvalue.value = newValue!;
-                                      pilihantahun = int.parse(newValue);
-                                      print(pilihantahun);
-                                    },
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 10.w),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                margin: EdgeInsets.only(top: 0.w),
-                                width: 200.w,
-                                height: 35.w,
-                                child: ElevatedButton(
-                                  //Untuk ambil value bulannya pakai variable pilihanbulan dan ambil
-                                  //tahunnya pakai variable pilihantahun
-                                  onPressed: () {},
-                                  child: Text(
-                                    'Cetak Laporan ',
-                                    style: TextStyle(fontSize: 15.w, color: Colors.black),
-                                  ),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Color(0xFFFCEFCB),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    )
-                    : Container(
-                      margin: EdgeInsets.only(top: 50.w),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                                ),
-                                onPressed: () async {
-                                  final results = await showDialog(
-                                    context: context,
-                                    builder: (context) {
-                                      List<DateTime?> tempdate = List.from(_rangedatepickervalue);
-                                      return Dialog(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(15),
-                                        ),
-                                        child: SingleChildScrollView(
-                                          child: Padding(
-                                            padding: EdgeInsets.symmetric(vertical: 16.w, horizontal: 16.w),
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.min,
+                                            SizedBox(height: 15.w),
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.end,
                                               children: [
-                                                const Text('Silahkan pilih rentang tanggal'),
-                                                SizedBox(height: 15.w),
-                                                CalendarDatePicker2(
-                                                  config: CalendarDatePicker2Config(
-                                                    calendarType: CalendarDatePicker2Type.range,
-                                                    selectedDayHighlightColor: Colors.deepPurple,
-                                                    dayTextStyle: TextStyle(fontSize: 15.w),
-                                                  ),
-                                                  value: tempdate,
-                                                  onValueChanged: (dates) {
-                                                    tempdate = dates.map((d) => _getdateonly(d)).toList();
-                                                  },
+                                                TextButton(
+                                                  child: const Text('Cancel'),
+                                                  onPressed: () => Navigator.of(context).pop(),
                                                 ),
-                                                SizedBox(height: 15.w),
-                                                Row(
-                                                  mainAxisAlignment: MainAxisAlignment.end,
-                                                  children: [
-                                                    TextButton(
-                                                      child: const Text('Cancel'),
-                                                      onPressed: () => Navigator.of(context).pop(),
-                                                    ),
-                                                    const SizedBox(width: 8),
-                                                    TextButton(
-                                                      child: const Text('OK'),
-                                                      onPressed: () => Navigator.of(context).pop(tempdate),
-                                                    ),
-                                                  ],
+                                                const SizedBox(width: 8),
+                                                TextButton(
+                                                  child: const Text('OK'),
+                                                  onPressed: () => Navigator.of(context).pop(tempdate),
                                                 ),
                                               ],
                                             ),
-                                          ),
+                                          ],
                                         ),
-                                      );
-                                    },
-                                  ).then((results) {
-                                    if (results != null) {
-                                      final List<DateTime?> cleanedResults =
-                                          (results as List)
-                                              .map((date) => _getdateonly(date) as DateTime?)
-                                              .toList();
-
-                                      _rangedatepickervalue.assignAll(cleanedResults);
-
-                                      startdate =
-                                          _rangedatepickervalue[0]?.toIso8601String().split('T').first ?? '';
-                                      enddate =
-                                          _rangedatepickervalue.length > 1
-                                              ? _rangedatepickervalue[1]
-                                                      ?.toIso8601String()
-                                                      .split('T')
-                                                      .first ??
-                                                  ''
-                                              : startdate;
-                                    }
-                                  });
+                                      ),
+                                    ),
+                                  );
                                 },
-                                child: Text('Pilih Tanggal', style: TextStyle(fontSize: 15.w)),
-                              ),
-                              SizedBox(width: 20),
-                              Obx(
-                                () => Container(
-                                  child: Text(
-                                    _rangedatepickervalue.isEmpty
-                                        ? 'Pilihan tanggal : - '
-                                        : 'Pilihan tanggal : ${startdate} - ${enddate}',
-                                    style: TextStyle(fontSize: 15.w),
-                                  ),
-                                ),
-                              ),
-                            ],
+                              ).then((results) {
+                                if (results != null) {
+                                  final List<DateTime?> cleanedResults =
+                                      (results as List)
+                                          .map((date) => _getdateonly(date) as DateTime?)
+                                          .toList();
+
+                                  _rangedatepickervalue.assignAll(cleanedResults);
+
+                                  startdate =
+                                      _rangedatepickervalue[0]?.toIso8601String().split('T').first ?? '';
+                                  enddate =
+                                      _rangedatepickervalue.length > 1
+                                          ? _rangedatepickervalue[1]?.toIso8601String().split('T').first ?? ''
+                                          : startdate;
+                                }
+                              });
+                            },
+                            child: Text('Pilih Tanggal', style: TextStyle(fontSize: 15.w)),
                           ),
-                          SizedBox(height: 10.w),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                margin: EdgeInsets.only(top: 0.w),
-                                width: 160.w,
-                                height: 35.w,
-                                child: ElevatedButton(
-                                  //Untuk ambil tanggal awal pakai variable startdate,
-                                  //untuk ambil tanggal akhir pakai variable enddate
-                                  onPressed: () {},
-                                  child: Text(
-                                    'Cetak Laporan',
-                                    style: TextStyle(fontSize: 15.w, color: Colors.black),
-                                  ),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Color(0xFFFCEFCB),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                  ),
-                                ),
+                          SizedBox(width: 20),
+                          Obx(
+                            () => Container(
+                              child: Text(
+                                _rangedatepickervalue.isEmpty
+                                    ? 'Pilihan tanggal : - '
+                                    : 'Pilihan tanggal : ${startdate} - ${enddate}',
+                                style: TextStyle(fontSize: 15.w),
                               ),
-                            ],
+                            ),
                           ),
                         ],
                       ),
-                    ),
-
-                Center(
-                  child: DefaultTabController(
-                    length: 2,
-                    child: Column(
-                      children: [
-                        Container(
-                          margin: EdgeInsets.only(top: 30),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(10),
+                      SizedBox(height: 10.w),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 200.w,
+                            height: 50.w,
+                            child: Obx(
+                              () => DropdownButtonFormField<String>(
+                                decoration: const InputDecoration(
+                                  labelText: "Pilih Terapis",
+                                  border: OutlineInputBorder(),
+                                ),
+                                value: selectedidterapis.value,
+                                items:
+                                    _listNamaTerapis.map((terapis) {
+                                      return DropdownMenuItem<String>(
+                                        value: terapis['id_karyawan'],
+                                        child: Text(terapis['nama_karyawan']),
+                                      );
+                                    }).toList(),
+                                onChanged: (value) {
+                                  selectedidterapis.value = value!;
+                                },
+                              ),
+                            ),
                           ),
-                          width: Get.width - 400,
-                          height: 30.w,
-                          child: TabBar(
-                            controller: _tabController,
-                            tabs: [Tab(text: 'Harian'), Tab(text: 'Bulanan')],
+                        ],
+                      ),
+                      SizedBox(height: 10.w),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            margin: EdgeInsets.only(top: 0.w),
+                            width: 160.w,
+                            height: 35.w,
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                await exportlaporankerjaterapis(startdate, enddate, selectedidterapis.value);
+                              },
+                              child: Text(
+                                'Cetak Laporan',
+                                style: TextStyle(fontSize: 15.w, color: Colors.black),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Color(0xFFFCEFCB),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                            ),
                           ),
-                        ),
-
-                        // Kalau mau hidupin fitur detail box nya, uncomment blok yang dibawah ini
-
-                        // Container(
-                        //   decoration: BoxDecoration(color: Colors.grey[200]),
-                        //   width: Get.width - 100,
-                        //   height: 350.w,
-                        //   child: TabBarView(
-                        //     controller: _tabController,
-                        //     children: [
-                        //       // ini tab 1
-                        //       datakomisiharian.isEmpty
-                        //           ? startdate == ''
-                        //               ? Center(child: Text('Silahkan pilih tanggal terlebih dahulu'))
-                        //               : Center(
-                        //                 child: Text(
-                        //                   'Data komisi untuk tanggal $startdate sampai dengan $enddate tidak tersedia',
-                        //                 ),
-                        //               )
-                        //           : ListView.builder(
-                        //             padding: EdgeInsets.only(top: 10),
-                        //             itemCount: datakomisiharian.length,
-                        //             itemBuilder: (context, index) {
-                        //               var item = datakomisiharian[index];
-                        //               return Column(
-                        //                 mainAxisAlignment: MainAxisAlignment.start,
-                        //                 crossAxisAlignment: CrossAxisAlignment.start,
-                        //                 children: [
-                        //                   Row(
-                        //                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        //                     children: [
-                        //                       Container(
-                        //                         margin: EdgeInsets.only(left: 20),
-                        //                         width: 60,
-                        //                         child: AutoSizeText(
-                        //                           item['id_karyawan'],
-                        //                           textAlign: TextAlign.left,
-                        //                           style: TextStyle(fontFamily: 'Poppins'),
-                        //                           minFontSize: 15,
-                        //                           maxFontSize: 20,
-                        //                           maxLines: 1,
-                        //                         ),
-                        //                       ),
-                        //                       SizedBox(width: 5),
-                        //                       SizedBox(
-                        //                         child: Text(
-                        //                           '-',
-                        //                           style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
-                        //                         ),
-                        //                       ),
-                        //                       SizedBox(width: 15),
-                        //                       Expanded(
-                        //                         child: AutoSizeText(
-                        //                           item['nama_karyawan'],
-                        //                           textAlign: TextAlign.left,
-                        //                           style: TextStyle(fontFamily: 'Poppins'),
-                        //                           minFontSize: 15,
-                        //                           maxFontSize: 20,
-                        //                           maxLines: 1,
-                        //                         ),
-                        //                       ),
-                        //                       SizedBox(width: 15),
-                        //                       Expanded(
-                        //                         child: Text(
-                        //                           formatnominal.format(item['total_komisi']).toString(),
-                        //                           textAlign: TextAlign.right,
-                        //                           style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
-                        //                         ),
-                        //                       ),
-                        //                     ],
-                        //                   ),
-                        //                   Divider(color: Colors.black),
-                        //                 ],
-                        //               );
-                        //             },
-                        //           ),
-
-                        //       // ini tab 2
-                        //       datakomisi.isEmpty
-                        //           ? Center(
-                        //             child: Text(
-                        //               'Data komisi untuk bulan $pilihanbulan di tahun $pilihantahun tidak tersedia',
-                        //             ),
-                        //           )
-                        //           : ListView.builder(
-                        //             padding: EdgeInsets.only(top: 10),
-                        //             itemCount: datakomisi.length,
-                        //             itemBuilder: (context, index) {
-                        //               var item = datakomisi[index];
-                        //               sum += int.parse(item['total_komisi'].toString());
-                        //               return Container(
-                        //                 child: Column(
-                        //                   mainAxisAlignment: MainAxisAlignment.start,
-                        //                   crossAxisAlignment: CrossAxisAlignment.start,
-                        //                   children: [
-                        //                     Row(
-                        //                       mainAxisAlignment: MainAxisAlignment.start,
-                        //                       crossAxisAlignment: CrossAxisAlignment.start,
-                        //                       children: [
-                        //                         Container(
-                        //                           margin: EdgeInsets.only(left: 20),
-                        //                           width: 60,
-                        //                           child: Text(
-                        //                             item['id_karyawan'],
-                        //                             textAlign: TextAlign.left,
-                        //                             style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
-                        //                           ),
-                        //                         ),
-                        //                         SizedBox(width: 5),
-                        //                         Container(
-                        //                           child: Text(
-                        //                             '-',
-                        //                             style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
-                        //                           ),
-                        //                         ),
-                        //                         SizedBox(width: 15),
-                        //                         Container(
-                        //                           width: 200,
-                        //                           child: AutoSizeText(
-                        //                             item['nama_karyawan'],
-                        //                             textAlign: TextAlign.left,
-                        //                             style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
-                        //                           ),
-                        //                         ),
-                        //                         Expanded(
-                        //                           child: Container(
-                        //                             margin: EdgeInsets.only(left: 20, right: 10),
-                        //                             width: 140,
-                        //                             child: Text(
-                        //                               formatnominal.format(item['total_komisi']).toString(),
-                        //                               textAlign: TextAlign.right,
-                        //                               style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
-                        //                             ),
-                        //                           ),
-                        //                         ),
-                        //                       ],
-                        //                     ),
-                        //                     Divider(color: Colors.black),
-                        //                   ],
-                        //                 ),
-                        //               );
-                        //             },
-                        //           ),
-                        //     ],
-                        //   ),
-                        // ),
-                      ],
-                    ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
 
