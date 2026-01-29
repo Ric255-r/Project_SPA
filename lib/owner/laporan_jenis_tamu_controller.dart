@@ -180,8 +180,6 @@ class LaporanJenisTamuController extends GetxController {
                           value: rangeDatePickerTamu,
                           onValueChanged: (dates) async {
                             rangeDatePickerTamu.assignAll(dates);
-                            await getDataLaporanJenisTamu();
-
                             log("Isi Range Date Tamu $rangeDatePickerTamu");
                           },
                         ),
@@ -196,8 +194,9 @@ class LaporanJenisTamuController extends GetxController {
 
         actions: [
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Get.back();
+              await getDataLaporanJenisTamu();
             },
             child: const Text("SUBMIT"),
           ),
