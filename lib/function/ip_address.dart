@@ -20,60 +20,69 @@ class ApiEndpointResolver {
   static bool _isInitialized = false;
 
   /// Panggil sekali saat app start (di main()).
-  static Future<void> init() async {
+  /// Return true jika ada endpoint yang bisa dijangkau.
+  static Future<bool> init() async {
     // Resolve awal secara sinkron ke default, lalu coba “perbaiki” via probe async
     _cachedBase = _tailscaleBase;
-    await _refresh(); // pastikan di-try resolve di awal
+    final ok = await _refresh(); // pastikan di-try resolve di awal
     _isInitialized = true;
 
     // Dengarkan perubahan konektivitas, refresh diam-diam
     Connectivity().onConnectivityChanged.listen((_) {
       _refresh(); // tidak perlu await; biarkan jalan di background
     });
+    return ok;
   }
 
   /// Alias agar nama fungsi lama tetap sama dan sinkron.
   /// ini untuk defaultnya.
   static String myIpAddr() => _cachedBase;
 
-  // --------------------------------------------------------------------------
+  /// Public wrapper untuk refresh koneksi saat dibutuhkan (mis. sebelum login).
+  /// Return true jika ada endpoint yang bisa dijangkau.
+  static Future<bool> refresh() => _refresh();
 
-  static Future<void> _refresh() async {
-    // 1) Coba reach Tailscale dulu
+  static Future<bool> _refresh() async {
+    final connectivity = await Connectivity().checkConnectivity();
+
+    // Tentukan apakah kita punya akses ke jaringan lokal
+    final bool onLocalNetwork =
+        connectivity == ConnectivityResult.wifi || connectivity == ConnectivityResult.ethernet;
+
+    // 1. PRIORITAS PERTAMA: Cek IP Lokal
+    // Jika kita terhubung ke Wi-Fi, cek apakah server lokal bisa dijangkau.
+    // Ini lebih cepat dan efisien jika Anda sedang berada di lokasi (kantor/toko).
+    if (onLocalNetwork) {
+      List<bool> localResults = await Future.wait([
+        _canReach(_mainLocalIp, 5500),
+        _canReach(_secondLocalIp, 5500),
+        _canReach(_thirdLocalIp, 5500),
+      ]);
+
+      if (localResults[0]) {
+        _cachedBase = _firstLocalBase;
+        return true;
+      } else if (localResults[1]) {
+        _cachedBase = _secondLocalBase;
+        return true;
+      } else if (localResults[2]) {
+        _cachedBase = _thirdLocalBase;
+        return true;
+      }
+    }
+
+    // 2. PRIORITAS KEDUA: Cek Tailscale
+    // Jika tidak di LAN atau server lokal tidak ketemu, baru coba Tailscale.
     final bool tailscaleOk = await _canReach(_tailscaleIp, 5500);
     if (tailscaleOk) {
-      // jika tailscale ok, myIpAddr di method class itu bkl set IP tailscale
       _cachedBase = _tailscaleBase;
-      return;
+      return true;
     }
 
-    // 2) Kalau tidak, dan ada Wi-Fi + server lokal reachable → pakai lokal
-    final connectivity = await Connectivity().checkConnectivity();
-    final onLan =
-        connectivity == ConnectivityResult.wifi ||
-        connectivity == ConnectivityResult.ethernet ||
-        connectivity == ConnectivityResult.vpn; // Tailscale reports vpn. Add This if Tailscale having issue
-
-    List<bool> localOk = await Future.wait([
-      _canReach(_mainLocalIp, 5500),
-      _canReach(_secondLocalIp, 5500),
-      _canReach(_thirdLocalIp, 5500),
-    ]);
-
-    if (onLan && localOk[0]) {
-      _cachedBase = _firstLocalBase;
-      return;
-    }
-    if (onLan && localOk[1]) {
-      _cachedBase = _secondLocalBase;
-      return;
-    }
-    if (onLan && localOk[2]) {
-      _cachedBase = _thirdLocalBase;
-      return;
-    }
-    // 3) Kalau semua gagal, tetap Tailscale (biar “pulih sendiri” saat internet balik)
+    // 3. FALLBACK: Jika semua gagal, tetap gunakan Tailscale sebagai default
+    // agar saat internet kembali stabil, aplikasi bisa terhubung otomatis.
     _cachedBase = _tailscaleBase;
+    return false;
   }
 
   static Future<bool> _canReach(String host, int port) async {
