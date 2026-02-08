@@ -449,13 +449,32 @@ class TotalSalesHarianChart extends StatelessWidget {
                 ),
 
                 // Judul center
-                const Expanded(
+                Expanded(
                   child: Center(
-                    child: Text(
-                      'Total Sales Harian',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, fontFamily: 'Poppins'),
-                      textAlign: TextAlign.center,
-                    ),
+                    child: Obx(() {
+                      final dates = c.rangeDatePickerOmset;
+                      String suffix = 'Per-Hari ini';
+                      if (dates.isNotEmpty && dates[0] != null) {
+                        final fmt = DateFormat('dd-MM-yyyy');
+                        final start = dates[0]!;
+                        final end = (dates.length > 1 && dates[1] != null) ? dates[1]! : start;
+                        if (start == end) {
+                          suffix = fmt.format(start);
+                        } else {
+                          suffix = '${fmt.format(start)} - ${fmt.format(end)}';
+                        }
+                      }
+                      return Text(
+                        'Total Sales Harian \n $suffix',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          fontFamily: 'Poppins',
+                          height: 1.2,
+                        ),
+                        textAlign: TextAlign.center,
+                      );
+                    }),
                   ),
                 ),
 
