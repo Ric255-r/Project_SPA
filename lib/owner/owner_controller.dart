@@ -67,6 +67,12 @@ class OwnerPageController extends GetxController {
   RxList<DateTime?> rangeDatePickerPenjualanTerapis = <DateTime?>[].obs;
   // End Penjualan Terapis
 
+  // Var Komisi Terapis
+  RxList<KomisiTerapisData> dataKomisiTerapis = <KomisiTerapisData>[].obs;
+  RxBool isLoadingKomisiTerapis = false.obs;
+  RxList<DateTime?> rangeDatePickerKomisiTerapis = <DateTime?>[].obs;
+  // End Komisi Terapis
+
   RxList<dynamic> get monthlySalesRaw => _monthlySales;
   RxList<dynamic> get paketSalesRaw => _paketSales;
   RxList<dynamic> get produkSalesRaw => _produkSales;
@@ -86,6 +92,7 @@ class OwnerPageController extends GetxController {
     _getDataTarget();
     _getDataTargetHarian();
     _getPenjualanTerapis();
+    _getKomisiTerapis();
     log("${DateTime.now().month}".padLeft(2, "0"));
   }
 
@@ -626,6 +633,120 @@ class OwnerPageController extends GetxController {
     });
   }
 
+  void showDialogKomisiPerTerapis() {
+    rangeDatePickerKomisiTerapis.clear();
+    final ScrollController scrollTglController = ScrollController();
+
+    Get.dialog(
+      AlertDialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        contentPadding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+        content: Builder(
+          builder: (context) {
+            final mq = MediaQuery.of(context);
+            final isPortrait = mq.orientation == Orientation.landscape;
+
+            // Tentukan ukuran dialog yang TEGAS (tight), responsif ke layar
+            final maxDialogWidth = 500.0; // cap untuk tablet/layar lebar
+            final dialogWidth = mq.size.width.clamp(0.0, maxDialogWidth);
+            final dialogHeight = (isPortrait ? mq.size.height * 0.7 : mq.size.height * 0.8) - 110;
+
+            return SizedBox(
+              width: dialogWidth,
+              height: dialogHeight, // <- TIGHT! tidak ada intrinsic ke anak
+              child: Scrollbar(
+                controller: scrollTglController,
+                thumbVisibility: true,
+                child: ListView(
+                  // Penting: biarkan default (shrinkWrap: false)
+                  controller: scrollTglController,
+                  padding: const EdgeInsets.only(right: 4, bottom: 8),
+                  children: [
+                    const Text(
+                      "Petunjuk : Anda bisa memilih lebih dari 1 Tanggal\nMaks 7 Hari",
+                      style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Isi lebar dialog
+                    SizedBox(
+                      width: double.infinity,
+                      child: Obx(
+                        () => CalendarDatePicker2(
+                          config: CalendarDatePicker2Config(
+                            calendarType: CalendarDatePicker2Type.range,
+                            selectedDayHighlightColor: Colors.deepPurple,
+                            selectedRangeHighlightColor: Colors.purpleAccent.withOpacity(0.2),
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime(2100),
+                          ),
+                          value: rangeDatePickerKomisiTerapis,
+                          onValueChanged: (dates) {
+                            if (dates.length >= 2) {
+                              final start = dates[0];
+                              final end = dates[1];
+                              final diffDays = end.difference(start).inDays.abs();
+                              // Maks 7 hari (inklusif)
+                              if (diffDays > 6) {
+                                final cappedEnd = start.add(const Duration(days: 6));
+                                rangeDatePickerKomisiTerapis.assignAll([start, cappedEnd]);
+                                CherryToast.warning(
+                                  title: const Text(
+                                    "Perhatian!",
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'Poppins',
+                                    ),
+                                  ),
+                                  description: const Text("Maksimal 7 hari."),
+                                  animationDuration: const Duration(milliseconds: 2000),
+                                  autoDismiss: true,
+                                ).show(Get.context!);
+                                return;
+                              }
+                            }
+
+                            rangeDatePickerKomisiTerapis.assignAll(dates);
+                            log("Isi Range Date $rangeDatePickerKomisiTerapis");
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+
+        actions: [
+          ElevatedButton(
+            onPressed: () async {
+              String startDate = rangeDatePickerKomisiTerapis[0].toString().split(" ")[0];
+              String endDate = "";
+              if (rangeDatePickerKomisiTerapis.length > 1) {
+                endDate = rangeDatePickerKomisiTerapis[1].toString().split(" ")[0];
+              } else {
+                endDate = startDate;
+              }
+              await _getKomisiTerapis(startDate: startDate, endDate: endDate);
+
+              Get.back();
+            },
+            child: const Text("SUBMIT"),
+          ),
+        ],
+      ),
+    ).then((_) async {
+      if (rangeDatePickerKomisiTerapis.isEmpty) {
+        await _getKomisiTerapis();
+      }
+    });
+  }
+
   Future<void> _getLineChart({String? startDate, String? endDate}) async {
     print("Eksekusi GetLineChart");
     try {
@@ -821,6 +942,35 @@ class OwnerPageController extends GetxController {
       log("Error di _getPenjualanTerapis $e");
     } finally {
       isLoadingPenjualanTerapis.value = false;
+    }
+  }
+
+  Future<void> _getKomisiTerapis({String? startDate, String? endDate}) async {
+    try {
+      isLoadingKomisiTerapis.value = true;
+      var url = '${myIpAddr()}/main_owner/get_graph_komisi_terapis';
+      if (startDate != null && endDate != null) {
+        url += '?start_date=$startDate&end_date=$endDate';
+      } else if (startDate != null) {
+        url += '?start_date=$startDate';
+      }
+
+      var response = await dio.get(url);
+      final dynamic body = response.data;
+      final List<dynamic> items = body is List ? body : (body['data'] ?? <dynamic>[]);
+
+      dataKomisiTerapis.assignAll(
+        items.map((el) {
+          return KomisiTerapisData(
+            (el['nama_karyawan'] ?? '').toString(),
+            (el['total'] as num?)?.toDouble() ?? 0.0,
+          );
+        }).toList(),
+      );
+    } catch (e) {
+      log("Error di _getKomisiTerapis $e");
+    } finally {
+      isLoadingKomisiTerapis.value = false;
     }
   }
 

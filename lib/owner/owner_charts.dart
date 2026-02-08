@@ -725,6 +725,147 @@ class PenjualanTerapisBarChart extends StatelessWidget {
   }
 }
 
+class KomisiTerapisBarChart extends StatelessWidget {
+  const KomisiTerapisBarChart({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Get.find<OwnerPageController>();
+    final data = c.dataKomisiTerapis;
+
+    if (data.isEmpty) return const SizedBox.shrink();
+
+    final double maxValue = data.map((e) => e.total).reduce(math.max);
+    final double maxY = (maxValue * 1.2).clamp(1.0, double.infinity);
+    final double interval = safeNiceInterval(maxY);
+    final double totalSum = data.fold<double>(0, (sum, item) => sum + item.total);
+
+    const double barWidth = 16;
+    const double groupSpace = 14;
+    final double minCanvasWidth = data.length * (barWidth + groupSpace) + 40;
+    final double canvasWidth = math.max(minCanvasWidth, MediaQuery.of(context).size.width - 40);
+
+    final barGroups = List.generate(data.length, (i) {
+      final d = data[i];
+      return BarChartGroupData(
+        x: i,
+        barsSpace: 4,
+        barRods: [
+          BarChartRodData(
+            toY: d.total,
+            width: barWidth,
+            borderRadius: const BorderRadius.only(topLeft: Radius.circular(6), topRight: Radius.circular(6)),
+            color: Colors.orange,
+          ),
+        ],
+      );
+    });
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          height: 260,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SizedBox(
+              width: canvasWidth,
+              child: BarChart(
+                BarChartData(
+                  barGroups: barGroups,
+                  alignment: BarChartAlignment.spaceAround,
+                  gridData: FlGridData(show: true, drawVerticalLine: false, horizontalInterval: interval),
+                  borderData: FlBorderData(
+                    show: true,
+                    border: const Border(
+                      bottom: BorderSide(color: Colors.black12, width: 1),
+                      left: BorderSide(color: Colors.black12, width: 1),
+                      right: BorderSide(color: Colors.transparent),
+                      top: BorderSide(color: Colors.transparent),
+                    ),
+                  ),
+                  titlesData: FlTitlesData(
+                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 36,
+                        getTitlesWidget: (value, meta) {
+                          final idx = value.toInt();
+                          if (idx < 0 || idx >= data.length) return const SizedBox.shrink();
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 6.0),
+                            child: SizedBox(
+                              width: 70,
+                              child: Text(
+                                data[idx].namaKaryawan,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontSize: 10),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 56,
+                        interval: interval,
+                        getTitlesWidget: (value, meta) {
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 4.0, left: 10.0),
+                            child: AutoSizeText(
+                              formatRupiahShort(value),
+                              style: const TextStyle(fontSize: 10),
+                              maxFontSize: 10,
+                              minFontSize: 8,
+                              stepGranularity: 1,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  barTouchData: BarTouchData(
+                    enabled: true,
+                    touchTooltipData: BarTouchTooltipData(
+                      tooltipRoundedRadius: 8,
+                      tooltipPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      tooltipMargin: 12,
+                      fitInsideHorizontally: true,
+                      fitInsideVertically: true,
+                      getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                        final d = data[group.x.toInt()];
+                        return BarTooltipItem(
+                          '${d.namaKaryawan}\n${formatRupiah(rod.toY)}',
+                          const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white),
+                        );
+                      },
+                    ),
+                  ),
+                  minY: 0,
+                  maxY: maxY,
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Total Komisi: ${formatRupiah(totalSum)}',
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+      ],
+    );
+  }
+}
+
 // Kode Awal Pake PieChart. Sementara Di Taruh sini Aja gpp, Takut Dia berubah pikiran
 class DynamicPieChart extends StatefulWidget {
   // parameter. diambil dari list pieChartData di OwnerPageState

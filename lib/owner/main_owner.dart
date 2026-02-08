@@ -551,6 +551,92 @@ class _IsiOwnerPageState extends State<IsiOwnerPage> {
                     ),
 
                     SizedBox(height: 10.w),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            margin: const EdgeInsets.only(left: 10, right: 10),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            padding: const EdgeInsets.only(top: 20, bottom: 10),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(left: 100),
+                                        child: Obx(() {
+                                          final dates = c.rangeDatePickerKomisiTerapis;
+                                          String suffix = 'Per-Hari ini';
+                                          if (dates.isNotEmpty && dates[0] != null) {
+                                            final fmt = DateFormat('dd-MM-yyyy');
+                                            final start = dates[0]!;
+                                            final end =
+                                                (dates.length > 1 && dates[1] != null) ? dates[1]! : start;
+                                            if (start == end) {
+                                              suffix = fmt.format(start);
+                                            } else {
+                                              suffix = '${fmt.format(start)} - ${fmt.format(end)}';
+                                            }
+                                          }
+                                          return Text(
+                                            'Rank Komisi Terapis \n $suffix',
+                                            style: TextStyle(
+                                              fontSize: 11.w,
+                                              fontWeight: FontWeight.bold,
+                                              height: 1.2,
+                                              fontFamily: 'Poppins',
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          );
+                                        }),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(right: 15),
+                                      child: SizedBox(
+                                        height: 20.w, // samain dengan fontSize Text kiri
+                                        width: 80.w,
+                                        child: ElevatedButton(
+                                          onPressed: () {
+                                            c.showDialogKomisiPerTerapis();
+                                          },
+                                          child: Text("Filter"),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+
+                                SizedBox(height: 8.w),
+                                Obx(() {
+                                  if (c.isLoadingKomisiTerapis.value) {
+                                    return const SizedBox(
+                                      height: 260,
+                                      child: Center(child: CircularProgressIndicator()),
+                                    );
+                                  }
+                                  if (c.dataKomisiTerapis.isEmpty) {
+                                    return const SizedBox(
+                                      height: 260,
+                                      child: Center(child: Text('Tidak ada data')),
+                                    );
+                                  }
+                                  return const KomisiTerapisBarChart();
+                                }),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: 10.w),
                     Container(
                       margin: const EdgeInsets.only(left: 10, right: 10),
                       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),

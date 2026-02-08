@@ -56,6 +56,12 @@ class PenjualanTerapisData {
   PenjualanTerapisData(this.namaKaryawan, this.total);
 }
 
+class KomisiTerapisData {
+  final String namaKaryawan;
+  final double total;
+  KomisiTerapisData(this.namaKaryawan, this.total);
+}
+
 // Helper for nice Y-axis interval
 // Minimal 1 supaya tidak pernah 0 (pakai 1000/100000 kalau mau skala Rupiah besar)
 double safeNiceInterval(double maxY) {
