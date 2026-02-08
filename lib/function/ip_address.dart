@@ -1,4 +1,5 @@
 // ip_address.dart
+import 'dart:async';
 import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
@@ -18,6 +19,7 @@ class ApiEndpointResolver {
   // Selalu punya nilai default → tidak akan null.
   static String _cachedBase = _tailscaleBase;
   static bool _isInitialized = false;
+  static Timer? _pollTimer;
 
   /// Panggil sekali saat app start (di main()).
   /// Return true jika ada endpoint yang bisa dijangkau.
@@ -30,6 +32,13 @@ class ApiEndpointResolver {
     // Dengarkan perubahan konektivitas, refresh diam-diam
     Connectivity().onConnectivityChanged.listen((_) {
       _refresh(); // tidak perlu await; biarkan jalan di background
+    });
+
+    // Fallback tambahan: polling ringan untuk kasus VPN terputus
+    // tanpa event konektivitas yang jelas.
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      _refresh();
     });
     return ok;
   }
@@ -47,11 +56,19 @@ class ApiEndpointResolver {
 
     // Tentukan apakah kita punya akses ke jaringan lokal
     final bool onLocalNetwork =
-        connectivity == ConnectivityResult.wifi || connectivity == ConnectivityResult.ethernet;
+        connectivity == ConnectivityResult.wifi ||
+        connectivity == ConnectivityResult.ethernet ||
+        connectivity == ConnectivityResult.vpn;
 
-    // 1. PRIORITAS PERTAMA: Cek IP Lokal
-    // Jika kita terhubung ke Wi-Fi, cek apakah server lokal bisa dijangkau.
-    // Ini lebih cepat dan efisien jika Anda sedang berada di lokasi (kantor/toko).
+    // 1. PRIORITAS PERTAMA: Cek Tailscale (VPN)
+    final bool tailscaleOk = await _canReach(_tailscaleIp, 5500);
+    if (tailscaleOk) {
+      _cachedBase = _tailscaleBase;
+      return true;
+    }
+
+    // 2. FALLBACK: Cek IP Lokal
+    // Jika VPN gagal dan kita di Wi-Fi/Ethernet, coba server lokal.
     if (onLocalNetwork) {
       List<bool> localResults = await Future.wait([
         _canReach(_mainLocalIp, 5500),
@@ -71,15 +88,7 @@ class ApiEndpointResolver {
       }
     }
 
-    // 2. PRIORITAS KEDUA: Cek Tailscale
-    // Jika tidak di LAN atau server lokal tidak ketemu, baru coba Tailscale.
-    final bool tailscaleOk = await _canReach(_tailscaleIp, 5500);
-    if (tailscaleOk) {
-      _cachedBase = _tailscaleBase;
-      return true;
-    }
-
-    // 3. FALLBACK: Jika semua gagal, tetap gunakan Tailscale sebagai default
+    // 3. DEFAULT: Jika semua gagal, tetap gunakan Tailscale sebagai default
     // agar saat internet kembali stabil, aplikasi bisa terhubung otomatis.
     _cachedBase = _tailscaleBase;
     return false;
