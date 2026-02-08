@@ -1,7 +1,7 @@
-// ignore_for_file: prefer_final_fields
+// ignore_for_file: prefer_final_fields, use_super_parameters
 
+import 'dart:async';
 import 'dart:developer';
-import 'dart:ffi';
 
 import 'package:Project_SPA/resepsionis/store_locker.dart';
 import 'package:flutter/material.dart';
@@ -53,7 +53,7 @@ class DetailPaketMassage extends StatefulWidget {
 }
 
 List<Map<String, dynamic>> _listHappyHour = [];
-List<Map<String, dynamic>> Listbonusitem = [];
+List<Map<String, dynamic>> listBonusItem = [];
 // String? dropdownHappyHour;
 RxnString dropdownHappyHour = RxnString(null);
 List<String> jenisPembayaran = ["awal", "akhir"];
@@ -80,19 +80,9 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
   RxString loadupdatetransaksi = 'belum'.obs;
   RxList<Map<String, dynamic>> hargavip = <Map<String, dynamic>>[].obs;
 
-  void _handleScannedData(String val0, String val1, String val2, String val3) {
-    setState(() {
-      idMember = val3;
-      nama = val0;
-      noHp = val1;
-      status = val2;
-    });
-  }
-
   Future<void> gethargavip() async {
     try {
       namaroom = controllerPekerja.getroom.value.substring(5);
-      print(namaroom);
       var response = await dio.get('${myIpAddr()}/ruangan/datahargavip', data: {"nama_ruangan": namaroom});
 
       List<Map<String, dynamic>> fetcheddata =
@@ -103,7 +93,6 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
       setState(() {
         hargavip.assignAll(fetcheddata);
       });
-      print(hargavip.toString());
     } catch (e) {
       log("Error di fn getstatusruangan : $e");
     }
@@ -116,7 +105,6 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
     getDataHappyHour();
     gethargavip();
     dropdownHappyHour.value = null;
-    print('Received idMember: ${widget.idMember}');
     itemTapCounts.clear();
 
     // Listen kalo ad perubahan pada discSetelahPromo
@@ -144,20 +132,20 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
       log('isi data jual : $dataJual');
 
       checkpaketadapromoitem(newItem['id_paket_msg']).then((_) {
-        log(Listbonusitem.toString());
-        if (Listbonusitem.isNotEmpty) {
+        log(listBonusItem.toString());
+        if (listBonusItem.isNotEmpty) {
           final existbonusitemidx = dataJual.indexWhere(
-            (item) => item['nama_paket_msg'] == Listbonusitem[0]['nama_fnb'],
+            (item) => item['nama_paket_msg'] == listBonusItem[0]['nama_fnb'],
           );
 
           if (existbonusitemidx != -1) {
             dataJual[existbonusitemidx]['jlh'] =
-                (dataJual[existbonusitemidx]['jlh'] as num).toInt() + Listbonusitem[0]['qty'];
+                (dataJual[existbonusitemidx]['jlh'] as num).toInt() + listBonusItem[0]['qty'];
           } else {
             dataJual.add({
-              "id_paket_msg": Listbonusitem[0]['id_fnb'],
-              'nama_paket_msg': Listbonusitem[0]['nama_fnb'],
-              'jlh': Listbonusitem[0]['qty'],
+              "id_paket_msg": listBonusItem[0]['id_fnb'],
+              'nama_paket_msg': listBonusItem[0]['nama_fnb'],
+              'jlh': listBonusItem[0]['qty'],
               'satuan': 'Paket',
               'durasi_awal': 0,
               'harga_paket_msg': 0,
@@ -171,11 +159,11 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
     });
   }
 
-  Future<void> checkpaketadapromoitem(id_paket) async {
+  Future<void> checkpaketadapromoitem(idPaket) async {
     try {
       var response = await dio.get(
         '${myIpAddr()}/massages/checkpaketadapromoitem',
-        data: {"id_paket_msg": id_paket},
+        data: {"id_paket_msg": idPaket},
       );
 
       List<Map<String, dynamic>> fetcheddata =
@@ -190,14 +178,14 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
       log('ini fetchnya : $fetcheddata');
       setState(() {
-        Listbonusitem.assignAll(fetcheddata);
+        listBonusItem.assignAll(fetcheddata);
       });
     } catch (e) {
       log("Error di fn Get Data Terapis $e");
     }
   }
 
-  final formatCurrency = new NumberFormat.currency(locale: "id_ID", decimalDigits: 0, symbol: 'Rp. ');
+  final formatCurrency = NumberFormat.currency(locale: "id_ID", decimalDigits: 0, symbol: 'Rp. ');
 
   double getHargaBeforeDisc() {
     double total = 0.0;
@@ -383,7 +371,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
           data['jumlah_bayar'] = hrgStlhPjk.value;
           data['nama_akun'] = _namaAkun.text;
           data['no_rek'] = _noRek.text;
-          data['nama_bank'] = _selectedBank!.value;
+          data['nama_bank'] = _selectedBank.value;
         }
       } else {
         // Panggil Ini Krn Ga lewat dialog
@@ -441,7 +429,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
   Future<void> updatedataloker(statusloker, nomor_locker) async {
     try {
-      var response = await dio.put(
+      await dio.put(
         '${myIpAddr()}/billinglocker/updatelocker',
         data: {"status": statusloker, "nomor_locker": nomor_locker},
       );
@@ -452,7 +440,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
   Future<void> daftapanggilankerja(namaruangan, namaterapis) async {
     try {
-      var response = await dio.post(
+      await dio.post(
         '${myIpAddr()}/spv/daftarpanggilankerja',
         data: {"ruangan": namaruangan, "nama_terapis": namaterapis},
       );
@@ -464,7 +452,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
   Future<void> daftarruangtunggu(idtransaksi, namaruangan, idterapis, namaterapis) async {
     try {
-      var response = await dio.post(
+      await dio.post(
         '${myIpAddr()}/spv/daftarruangtunggu',
         data: {
           "id_transaksi": idtransaksi,
@@ -544,13 +532,29 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
     return _listHappyHour.isNotEmpty && dropdownHappyHour.value == null;
   }
 
-  void _showHappyHourReminder() {
+  Future<bool> _showHappyHourReminder() async {
+    final completer = Completer<bool>();
+
     Get.defaultDialog(
       title: 'Promo Happy Hour',
       middleText: 'Silakan pilih promo Happy Hour terlebih dahulu.',
-      textConfirm: 'OK',
-      onConfirm: () => Get.back(),
+      textCancel: 'Kembali. Pilih Diskon',
+      textConfirm: 'Yakin. Tanpa Diskon!',
+      barrierDismissible: false,
+      onConfirm: () {
+        if (!completer.isCompleted) {
+          completer.complete(true);
+        }
+        Get.back();
+      },
+      onCancel: () {
+        if (!completer.isCompleted) {
+          completer.complete(false);
+        }
+      },
     );
+
+    return completer.future;
   }
 
   void _showDialogConfirmPayment(BuildContext context) async {
@@ -796,9 +800,9 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                   flex: 3,
                                   child: Obx(
                                     () => DropdownButtonFormField<String>(
-                                      value: _selectedBank!.value,
+                                      value: _selectedBank.value,
                                       onChanged: (String? value) {
-                                        _selectedBank!.value = value!;
+                                        _selectedBank.value = value!;
                                       },
                                       items:
                                           _bankList.map((String bank) {
@@ -936,7 +940,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
     Future<void> updatedataloker(statusloker, nomor_locker) async {
       try {
-        var response = await dio.put(
+        await dio.put(
           '${myIpAddr()}/billinglocker/updatelocker',
           data: {"status": statusloker, "nomor_locker": nomor_locker},
         );
@@ -1424,12 +1428,16 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                   child: Align(
                                     alignment: Alignment.centerRight,
                                     child: ElevatedButton(
-                                      onPressed: () {
+                                      onPressed: () async {
                                         if (_isHappyHourSelectionRequired()) {
-                                          _showHappyHourReminder();
-                                          return;
+                                          bool isConfirmed = await _showHappyHourReminder();
+
+                                          if (!isConfirmed) {
+                                            return;
+                                          }
                                         }
-                                        _showDialogConfirmPayment(context);
+
+                                        _showDialogConfirmPayment(Get.context!);
                                       },
                                       child: Text(
                                         "Konfirmasi Pembayaran",
@@ -1443,7 +1451,15 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                   child: Align(
                                     alignment: Alignment.centerRight,
                                     child: ElevatedButton(
-                                      onPressed: () {
+                                      onPressed: () async {
+                                        if (_isHappyHourSelectionRequired()) {
+                                          bool isConfirmed = await _showHappyHourReminder();
+
+                                          if (!isConfirmed) {
+                                            return;
+                                          }
+                                        }
+
                                         _storeTrans().then((_) {
                                           statusloker = statusloker == 0 ? 1 : 0;
                                           updatedataloker(statusloker, inputlocker);
@@ -1969,7 +1985,7 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
       );
 
       setState(() {
-        Listbonusitem =
+        listBonusItem =
             (response.data as List).map((item) {
               return {"id_fnb": item["id_fnb"], "nama_fnb": item["nama_fnb"], "qty": item["qty"]};
             }).toList();
@@ -2072,17 +2088,17 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                             ).show(context);
                           } else {
                             checkpaketadapromoitem(widget.dataJual[index]['id_paket_msg']).then((_) {
-                              if (Listbonusitem.isNotEmpty) {
+                              if (listBonusItem.isNotEmpty) {
                                 final existbonusitemidx = widget.dataJual.indexWhere(
-                                  (item) => item['nama_paket_msg'] == Listbonusitem[0]['nama_fnb'],
+                                  (item) => item['nama_paket_msg'] == listBonusItem[0]['nama_fnb'],
                                 );
 
                                 if (existbonusitemidx != -1) {
-                                  if (widget.dataJual[existbonusitemidx]['jlh'] > Listbonusitem[0]['qty'] &&
+                                  if (widget.dataJual[existbonusitemidx]['jlh'] > listBonusItem[0]['qty'] &&
                                       widget.dataJual[index]['jlh'] > 1) {
                                     widget.dataJual[existbonusitemidx]['jlh'] =
                                         (widget.dataJual[existbonusitemidx]['jlh'] as num).toInt() -
-                                        Listbonusitem[0]['qty'];
+                                        listBonusItem[0]['qty'];
                                   }
                                 }
                               }
@@ -2187,15 +2203,15 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                                 ).show(context);
                               } else {
                                 checkpaketadapromoitem(widget.dataJual[index]['id_paket_msg']).then((_) {
-                                  if (Listbonusitem.isNotEmpty) {
+                                  if (listBonusItem.isNotEmpty) {
                                     final existbonusitemidx = widget.dataJual.indexWhere(
-                                      (item) => item['nama_paket_msg'] == Listbonusitem[0]['nama_fnb'],
+                                      (item) => item['nama_paket_msg'] == listBonusItem[0]['nama_fnb'],
                                     );
 
                                     if (existbonusitemidx != -1) {
                                       widget.dataJual[existbonusitemidx]['jlh'] =
                                           (widget.dataJual[existbonusitemidx]['jlh'] as num).toInt() +
-                                          Listbonusitem[0]['qty'];
+                                          listBonusItem[0]['qty'];
                                     }
                                   }
                                   widget.dataJual[index]['jlh']++;
@@ -2284,22 +2300,22 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                               ).show(context);
                             } else {
                               checkpaketadapromoitem(currentIdPaket).then((_) {
-                                if (Listbonusitem.isNotEmpty) {
+                                if (listBonusItem.isNotEmpty) {
                                   final existbonusitemidx = widget.dataJual.indexWhere(
-                                    (item) => item['nama_paket_msg'] == Listbonusitem[0]['nama_fnb'],
+                                    (item) => item['nama_paket_msg'] == listBonusItem[0]['nama_fnb'],
                                   );
 
                                   if (existbonusitemidx != -1) {
-                                    if (widget.dataJual[existbonusitemidx]['jlh'] > Listbonusitem[0]['qty'] &&
+                                    if (widget.dataJual[existbonusitemidx]['jlh'] > listBonusItem[0]['qty'] &&
                                         currentQty > 1) {
                                       log(currentQty.toString());
                                       widget.dataJual[existbonusitemidx]['jlh'] =
                                           (widget.dataJual[existbonusitemidx]['jlh'] as num).toInt() -
-                                          Listbonusitem[0]['qty'] * currentQty;
+                                          listBonusItem[0]['qty'] * currentQty;
                                     }
 
                                     if (widget.dataJual[existbonusitemidx]['jlh'] <=
-                                        Listbonusitem[0]['qty']) {
+                                        listBonusItem[0]['qty']) {
                                       widget.dataJual.removeAt(existbonusitemidx);
                                     }
                                   }
