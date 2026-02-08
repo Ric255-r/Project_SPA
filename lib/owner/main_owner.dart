@@ -537,8 +537,6 @@ class OwnerPageController extends GetxController {
   RxList<dynamic> dataOmset = [].obs;
   RxList<String> tahunTransaksiTarget = <String>[].obs;
   RxList<int> listYear = List<int>.generate(100, (index) => 2020 + index).obs;
-  ScrollController scrollControllerTarget = ScrollController();
-  ScrollController scrollTglController = ScrollController();
   RxList<DateTime?> rangeDatePickerOmset = <DateTime?>[].obs;
   // End 1 Paket Target Sales Bulanan
 
@@ -718,6 +716,7 @@ class OwnerPageController extends GetxController {
 
   void showDialogFilterTargetHarian() {
     rangeDatePickerOmset.clear();
+    final ScrollController scrollTglController = ScrollController();
 
     Get.dialog(
       AlertDialog(
@@ -800,6 +799,7 @@ class OwnerPageController extends GetxController {
         ],
       ),
     ).then((_) {
+      scrollTglController.dispose();
       if (rangeDatePickerOmset.isEmpty) {
         _getDataTargetHarian();
       }
@@ -893,13 +893,6 @@ class OwnerPageController extends GetxController {
     try {
       _endYearTargetOmset.close();
     } catch (_) {}
-    try {
-      scrollControllerTarget.dispose();
-    } catch (_) {}
-    try {
-      scrollTglController.dispose();
-    } catch (_) {}
-
     super.onClose();
   }
 }
@@ -957,8 +950,21 @@ class _OwnerPageState extends State<OwnerPage> {
   }
 }
 
-class IsiOwnerPage extends StatelessWidget {
+class IsiOwnerPage extends StatefulWidget {
   const IsiOwnerPage({super.key});
+
+  @override
+  State<IsiOwnerPage> createState() => _IsiOwnerPageState();
+}
+
+class _IsiOwnerPageState extends State<IsiOwnerPage> {
+  final ScrollController _scrollControllerTarget = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollControllerTarget.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1401,12 +1407,12 @@ class IsiOwnerPage extends StatelessWidget {
                             return SizedBox(
                               height: c.dataOmset.length > 1 ? 170 : 90,
                               child: Scrollbar(
-                                controller: c.scrollControllerTarget,
+                                controller: _scrollControllerTarget,
                                 thumbVisibility: true,
                                 thickness: 4.0,
                                 radius: Radius.circular(10),
                                 child: ListView.builder(
-                                  controller: c.scrollControllerTarget,
+                                  controller: _scrollControllerTarget,
                                   itemCount: c.dataTargetOmset.length,
                                   itemBuilder: (context, index) {
                                     var item = c.dataTargetOmset[index];
