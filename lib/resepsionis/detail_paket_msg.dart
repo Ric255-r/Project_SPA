@@ -100,7 +100,6 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     getDataHappyHour();
     gethargavip();
@@ -217,7 +216,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
     if (hargavip.isNotEmpty) {
       totalStlhDisc += hargavip[0]["harga_vip"];
     } else {
-      print('kosong harga vip');
+      log('kosong harga vip');
     }
 
     // tak boleh disini. error. kupisah ke updateUIWithDiscount()
@@ -333,7 +332,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
       Get.dialog(
         AlertDialog(
           title: Center(child: Text('Loading')),
-          content: Container(width: 100, height: 100, child: Center(child: CircularProgressIndicator())),
+          content: SizedBox(width: 100, height: 100, child: Center(child: CircularProgressIndicator())),
         ),
       );
       var rincian = getHargaAfterDisc();
@@ -392,12 +391,13 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
       var response = await dio.post(
         '${myIpAddr()}/massages/store',
-        options: Options(headers: {"Authorization": "Bearer " + token!}),
+        options: Options(headers: {"Authorization": "Bearer $token"}),
         data: data,
       );
 
       loadupdatetransaksi.value = 'sukses';
 
+      if (!mounted) return;
       CherryToast.success(
         title: Text(
           "Transaksi Sukses!",
@@ -410,6 +410,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
       log("Isi data jual $dataJual");
       log("Sukses SImpan $response");
     } catch (e) {
+      if (!mounted) return;
       CherryToast.error(
         title: Text(
           "Transaksi Gagal!",
@@ -425,13 +426,11 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
     }
   }
 
-  RxList<Map<String, dynamic>> databillinglocker = <Map<String, dynamic>>[].obs;
-
-  Future<void> updatedataloker(statusloker, nomor_locker) async {
+  Future<void> updatedataloker(statusLocker, nomorLocker) async {
     try {
       await dio.put(
         '${myIpAddr()}/billinglocker/updatelocker',
-        data: {"status": statusloker, "nomor_locker": nomor_locker},
+        data: {"status": statusLocker, "nomor_locker": nomorLocker},
       );
     } catch (e) {
       log("Error di fn updatedataloker : $e");
@@ -469,7 +468,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
   Future<void> postterapis2(idtransaksi, idterapis2, idterapis3) async {
     try {
-      var response = await dio.post(
+      await dio.post(
         '${myIpAddr()}/massages/saveterapis',
         data: {"id_transaksi": idtransaksi, "idterapis2": idterapis2, "idterapis3": idterapis3},
       );
@@ -480,7 +479,6 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
   @override
   void dispose() {
-    // TODO: implement dispose
     _namaAkun.dispose();
     _namaBank.dispose();
     _noRek.dispose();
@@ -559,12 +557,13 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
   void _showDialogConfirmPayment(BuildContext context) async {
     await _getPajak();
+    if (!mounted) return;
 
     List<String> metodeByr = ["cash", "debit", "kredit", "qris"];
     String dropdownValue = metodeByr.first;
-    int statusloker = 0;
-    final LockerManager LockerInput = LockerManager();
-    int inputlocker = LockerInput.getLocker();
+    int statusLocker = 0;
+    final LockerManager lockerInput = LockerManager();
+    int inputlocker = lockerInput.getLocker();
 
     updateUIWithDiscount();
     // Hitung Harga Setelah Pajak & Pembulatan
@@ -595,7 +594,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
             return AlertDialog(
               title: Text("Pembayaran", textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Poppins')),
               content: SingleChildScrollView(
-                child: Container(
+                child: SizedBox(
                   width: MediaQuery.of(context).size.width,
                   // height: MediaQuery.of(context).size.height - 300,
                   child: Column(
@@ -832,8 +831,8 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
                       String cleanedtotalbayar = cleaned.replaceAll('.', '');
 
-                      print(_totalBayarController.text);
-                      print(cleanedtotalbayar);
+                      log(_totalBayarController.text);
+                      log(cleanedtotalbayar);
 
                       if (_totalBayarController.text == "" ||
                           _totalBayarController.text.isEmpty ||
@@ -857,8 +856,8 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                       ).show(context);
                     } else {
                       _storeTrans().then((_) async {
-                        statusloker = statusloker == 0 ? 1 : 0;
-                        updatedataloker(statusloker, inputlocker);
+                        statusLocker = statusLocker == 0 ? 1 : 0;
+                        updatedataloker(statusLocker, inputlocker);
                         idtransaksi = controllerPekerja.getnotrans.value;
                         namaruangan = controllerPekerja.getroom.value;
                         idterapis = controllerPekerja.getidterapis.value;
@@ -932,22 +931,9 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
   Widget build(BuildContext context) {
     final discountData = getHargaAfterDisc();
 
-    int statusloker = 0;
-    final LockerManager LockerInput = LockerManager();
-    int inputlocker = LockerInput.getLocker();
-
-    RxList<Map<String, dynamic>> databillinglocker = <Map<String, dynamic>>[].obs;
-
-    Future<void> updatedataloker(statusloker, nomor_locker) async {
-      try {
-        await dio.put(
-          '${myIpAddr()}/billinglocker/updatelocker',
-          data: {"status": statusloker, "nomor_locker": nomor_locker},
-        );
-      } catch (e) {
-        log("Error di fn updatedataloker : $e");
-      }
-    }
+    int statusLocker = 0;
+    final LockerManager lockerInput = LockerManager();
+    int inputlocker = lockerInput.getLocker();
 
     var storage = GetStorage();
 
@@ -1004,7 +990,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                               ),
                               child: TabBar(
                                 onTap: (index) {
-                                  print("Tab Aktif Sekarang $index");
+                                  log("Tab Aktif Sekarang $index");
                                 },
                                 indicator: BoxDecoration(
                                   color: Colors.blue,
@@ -1125,7 +1111,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                             Expanded(
                               flex: 6,
                               child: AutoSizeText(
-                                "${LockerInput.getLocker()}",
+                                "${lockerInput.getLocker()}",
                                 minFontSize: 15,
                                 style: TextStyle(fontFamily: 'Poppins'),
                               ),
@@ -1371,7 +1357,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
                   SizedBox(height: 10),
 
-                  Container(
+                  SizedBox(
                     width: MediaQuery.of(context).size.width - 200,
                     child: Column(
                       children: [
@@ -1461,8 +1447,8 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                         }
 
                                         _storeTrans().then((_) {
-                                          statusloker = statusloker == 0 ? 1 : 0;
-                                          updatedataloker(statusloker, inputlocker);
+                                          statusLocker = statusLocker == 0 ? 1 : 0;
+                                          updatedataloker(statusLocker, inputlocker);
 
                                           idtransaksi = controllerPekerja.getnotrans.value;
                                           namaruangan = controllerPekerja.getroom.value;
@@ -1798,11 +1784,11 @@ class _MassageItemGridState extends State<MassageItemGrid> {
                           },
                           onTapUp: (_) async {
                             await _playClickSound();
+                            if (!mounted) return;
                             // Lepaskan Animasi
                             _itemTapStates[index] = false;
                             _itemTapStates.refresh();
                             // End Lepaskan Animasi
-                            Map<String, dynamic> itemToAdd = Map.from(item);
 
                             if (promoExists) {
                               String itemname = item['nama_paket_msg'];
@@ -1832,11 +1818,6 @@ class _MassageItemGridState extends State<MassageItemGrid> {
                               }
 
                               if (kondisilebih == 'salah') {
-                                Map<String, dynamic> itemToAdd = Map.from(item);
-                                if (promoExists) {
-                                  itemToAdd['harga_paket_msg'] = 0;
-                                  itemToAdd['harga_total'] = 0;
-                                }
                                 widget.onAddItem({
                                   "id_paket_msg": item['id_paket_msg'],
                                   "nama_paket_msg": item['nama_paket_msg'],
@@ -1975,13 +1956,13 @@ class DataTransaksiMassages extends StatefulWidget {
 }
 
 class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
-  final formatCurrency = new NumberFormat.currency(locale: "id_ID", decimalDigits: 0, symbol: 'Rp. ');
+  final formatCurrency = NumberFormat.currency(locale: "id_ID", decimalDigits: 0, symbol: 'Rp. ');
 
-  Future<void> checkpaketadapromoitem(id_paket) async {
+  Future<void> checkpaketadapromoitem(idPaket) async {
     try {
       var response = await dio.get(
         '${myIpAddr()}/massages/checkpaketadapromoitem',
-        data: {"id_paket_msg": id_paket},
+        data: {"id_paket_msg": idPaket},
       );
 
       setState(() {
@@ -2236,13 +2217,13 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
               Expanded(child: AutoSizeText(widget.dataJual[index]['satuan'], minFontSize: 15)),
               Expanded(
                 child: AutoSizeText(
-                  "${formatCurrency.format(widget.dataJual[index]['harga_paket_msg'])}",
+                  formatCurrency.format(widget.dataJual[index]['harga_paket_msg']),
                   minFontSize: 15,
                 ),
               ),
               Expanded(
                 child: Text(
-                  "${formatCurrency.format(widget.dataJual[index]['harga_total'])}",
+                  formatCurrency.format(widget.dataJual[index]['harga_total']),
                   style: TextStyle(fontFamily: 'Poppins'),
                 ),
               ),
