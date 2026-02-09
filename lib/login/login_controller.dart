@@ -33,6 +33,15 @@ class LoginController extends GetxController {
   Future<void> login(BuildContext context) async {
     log("Login WOi");
     try {
+      final hasConnection = await ApiEndpointResolver.refresh();
+      if (!hasConnection) {
+        CherryToast.warning(
+          title: const Text('Koneksi belum tersedia'),
+          description: const Text('Silakan cek jaringan lalu coba lagi'),
+        ).show(Get.context!);
+        return;
+      }
+
       final resp = await dio.post(
         '${myIpAddr()}/login',
         data: {'id_karyawan': userC.text, 'passwd': passC.text},
@@ -45,7 +54,7 @@ class LoginController extends GetxController {
         CherryToast.error(
           title: const Text('Error'),
           description: const Text('Invalid server response'),
-        ).show(context);
+        ).show(Get.context!);
         return;
       }
 
@@ -56,7 +65,7 @@ class LoginController extends GetxController {
         CherryToast.error(
           title: const Text('Error'),
           description: const Text('Failed to save login session'),
-        ).show(context);
+        ).show(Get.context!);
         return;
       }
 
@@ -97,20 +106,20 @@ class LoginController extends GetxController {
         if (e.type == DioExceptionType.connectionTimeout ||
             e.type == DioExceptionType.receiveTimeout ||
             e.type == DioExceptionType.sendTimeout) {
-          CherryToast.warning(title: const Text('Koneksi timeout')).show(context);
+          CherryToast.warning(title: const Text('Koneksi timeout')).show(Get.context!);
           return;
         }
 
         final code = e.response?.statusCode;
         if (code == 401) {
-          CherryToast.warning(title: const Text('Username Atau Password Tidak sesuai')).show(context);
+          CherryToast.warning(title: const Text('Username Atau Password Tidak sesuai')).show(Get.context!);
         } else if (code == 404) {
-          CherryToast.warning(title: const Text('User Tidak Ditemukan')).show(context);
+          CherryToast.warning(title: const Text('User Tidak Ditemukan')).show(Get.context!);
         } else {
-          CherryToast.warning(title: Text('HTTP Error $code')).show(context);
+          CherryToast.warning(title: Text('HTTP Error $code')).show(Get.context!);
         }
       } else {
-        CherryToast.warning(title: Text('Error $e')).show(context);
+        CherryToast.warning(title: Text('Error $e')).show(Get.context!);
         log("Error : $e");
       }
     }

@@ -82,7 +82,7 @@ void startbackgroundservice() async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await ApiEndpointResolver.init(); // <<— cukup sekali di sini
+  final bool hasConnection = await ApiEndpointResolver.init(); // <<— cukup sekali di sini
 
   // Add this error handler
   FlutterError.onError = (details) {
@@ -120,7 +120,7 @@ void main() async {
   // Inisiasikan widget mana mw ditembak nnti
   Widget initialPage = LoginPage();
 
-  if (token != null) {
+  if (token != null && hasConnection) {
     var response = await getMyData(token);
     log("Main.dart Response $response");
     if (response != null && response['is_logged_in'] == true) {

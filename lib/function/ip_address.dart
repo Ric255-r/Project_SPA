@@ -1,4 +1,5 @@
 // ip_address.dart
+import 'dart:async';
 import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
@@ -18,62 +19,79 @@ class ApiEndpointResolver {
   // Selalu punya nilai default → tidak akan null.
   static String _cachedBase = _tailscaleBase;
   static bool _isInitialized = false;
+  static Timer? _pollTimer;
 
   /// Panggil sekali saat app start (di main()).
-  static Future<void> init() async {
+  /// Return true jika ada endpoint yang bisa dijangkau.
+  static Future<bool> init() async {
     // Resolve awal secara sinkron ke default, lalu coba “perbaiki” via probe async
     _cachedBase = _tailscaleBase;
-    await _refresh(); // pastikan di-try resolve di awal
+    final ok = await _refresh(); // pastikan di-try resolve di awal
     _isInitialized = true;
 
     // Dengarkan perubahan konektivitas, refresh diam-diam
     Connectivity().onConnectivityChanged.listen((_) {
       _refresh(); // tidak perlu await; biarkan jalan di background
     });
+
+    // Fallback tambahan: polling ringan untuk kasus VPN terputus
+    // tanpa event konektivitas yang jelas.
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      _refresh();
+    });
+    return ok;
   }
 
   /// Alias agar nama fungsi lama tetap sama dan sinkron.
   /// ini untuk defaultnya.
   static String myIpAddr() => _cachedBase;
 
-  // --------------------------------------------------------------------------
+  /// Public wrapper untuk refresh koneksi saat dibutuhkan (mis. sebelum login).
+  /// Return true jika ada endpoint yang bisa dijangkau.
+  static Future<bool> refresh() => _refresh();
 
-  static Future<void> _refresh() async {
-    // 1) Coba reach Tailscale dulu
-    final bool tailscaleOk = await _canReach(_tailscaleIp, 5500);
-    if (tailscaleOk) {
-      // jika tailscale ok, myIpAddr di method class itu bkl set IP tailscale
-      _cachedBase = _tailscaleBase;
-      return;
-    }
-
-    // 2) Kalau tidak, dan ada Wi-Fi + server lokal reachable → pakai lokal
+  static Future<bool> _refresh() async {
     final connectivity = await Connectivity().checkConnectivity();
-    final onLan =
+
+    // Tentukan apakah kita punya akses ke jaringan lokal
+    final bool onLocalNetwork =
         connectivity == ConnectivityResult.wifi ||
         connectivity == ConnectivityResult.ethernet ||
-        connectivity == ConnectivityResult.vpn; // Tailscale reports vpn. Add This if Tailscale having issue
+        connectivity == ConnectivityResult.vpn;
 
-    List<bool> localOk = await Future.wait([
-      _canReach(_mainLocalIp, 5500),
-      _canReach(_secondLocalIp, 5500),
-      _canReach(_thirdLocalIp, 5500),
-    ]);
+    // 1. PRIORITAS PERTAMA: Cek Tailscale (VPN)
+    final bool tailscaleOk = await _canReach(_tailscaleIp, 5500);
+    if (tailscaleOk) {
+      _cachedBase = _tailscaleBase;
+      return true;
+    }
 
-    if (onLan && localOk[0]) {
-      _cachedBase = _firstLocalBase;
-      return;
+    // 2. FALLBACK: Cek IP Lokal
+    // Jika VPN gagal dan kita di Wi-Fi/Ethernet, coba server lokal.
+    if (onLocalNetwork) {
+      List<bool> localResults = await Future.wait([
+        _canReach(_mainLocalIp, 5500),
+        _canReach(_secondLocalIp, 5500),
+        _canReach(_thirdLocalIp, 5500),
+      ]);
+
+      if (localResults[0]) {
+        _cachedBase = _firstLocalBase;
+        return true;
+      } else if (localResults[1]) {
+        _cachedBase = _secondLocalBase;
+        return true;
+      } else if (localResults[2]) {
+        _cachedBase = _thirdLocalBase;
+        return true;
+      }
     }
-    if (onLan && localOk[1]) {
-      _cachedBase = _secondLocalBase;
-      return;
-    }
-    if (onLan && localOk[2]) {
-      _cachedBase = _thirdLocalBase;
-      return;
-    }
-    // 3) Kalau semua gagal, tetap Tailscale (biar “pulih sendiri” saat internet balik)
+
+    // 3. DEFAULT: Jika semua gagal, tetap gunakan Tailscale sebagai default
+    // agar saat internet kembali stabil, aplikasi bisa terhubung otomatis.
     _cachedBase = _tailscaleBase;
+    return false;
   }
 
   static Future<bool> _canReach(String host, int port) async {

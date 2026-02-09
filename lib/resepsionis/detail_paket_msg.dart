@@ -1,7 +1,7 @@
-// ignore_for_file: prefer_final_fields
+// ignore_for_file: prefer_final_fields, use_super_parameters
 
+import 'dart:async';
 import 'dart:developer';
-import 'dart:ffi';
 
 import 'package:Project_SPA/resepsionis/store_locker.dart';
 import 'package:flutter/material.dart';
@@ -53,7 +53,7 @@ class DetailPaketMassage extends StatefulWidget {
 }
 
 List<Map<String, dynamic>> _listHappyHour = [];
-List<Map<String, dynamic>> Listbonusitem = [];
+List<Map<String, dynamic>> listBonusItem = [];
 // String? dropdownHappyHour;
 RxnString dropdownHappyHour = RxnString(null);
 List<String> jenisPembayaran = ["awal", "akhir"];
@@ -80,19 +80,9 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
   RxString loadupdatetransaksi = 'belum'.obs;
   RxList<Map<String, dynamic>> hargavip = <Map<String, dynamic>>[].obs;
 
-  void _handleScannedData(String val0, String val1, String val2, String val3) {
-    setState(() {
-      idMember = val3;
-      nama = val0;
-      noHp = val1;
-      status = val2;
-    });
-  }
-
   Future<void> gethargavip() async {
     try {
       namaroom = controllerPekerja.getroom.value.substring(5);
-      print(namaroom);
       var response = await dio.get('${myIpAddr()}/ruangan/datahargavip', data: {"nama_ruangan": namaroom});
 
       List<Map<String, dynamic>> fetcheddata =
@@ -103,7 +93,6 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
       setState(() {
         hargavip.assignAll(fetcheddata);
       });
-      print(hargavip.toString());
     } catch (e) {
       log("Error di fn getstatusruangan : $e");
     }
@@ -111,12 +100,10 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     getDataHappyHour();
     gethargavip();
     dropdownHappyHour.value = null;
-    print('Received idMember: ${widget.idMember}');
     itemTapCounts.clear();
 
     // Listen kalo ad perubahan pada discSetelahPromo
@@ -144,20 +131,20 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
       log('isi data jual : $dataJual');
 
       checkpaketadapromoitem(newItem['id_paket_msg']).then((_) {
-        log(Listbonusitem.toString());
-        if (Listbonusitem.isNotEmpty) {
+        log(listBonusItem.toString());
+        if (listBonusItem.isNotEmpty) {
           final existbonusitemidx = dataJual.indexWhere(
-            (item) => item['nama_paket_msg'] == Listbonusitem[0]['nama_fnb'],
+            (item) => item['nama_paket_msg'] == listBonusItem[0]['nama_fnb'],
           );
 
           if (existbonusitemidx != -1) {
             dataJual[existbonusitemidx]['jlh'] =
-                (dataJual[existbonusitemidx]['jlh'] as num).toInt() + Listbonusitem[0]['qty'];
+                (dataJual[existbonusitemidx]['jlh'] as num).toInt() + listBonusItem[0]['qty'];
           } else {
             dataJual.add({
-              "id_paket_msg": Listbonusitem[0]['id_fnb'],
-              'nama_paket_msg': Listbonusitem[0]['nama_fnb'],
-              'jlh': Listbonusitem[0]['qty'],
+              "id_paket_msg": listBonusItem[0]['id_fnb'],
+              'nama_paket_msg': listBonusItem[0]['nama_fnb'],
+              'jlh': listBonusItem[0]['qty'],
               'satuan': 'Paket',
               'durasi_awal': 0,
               'harga_paket_msg': 0,
@@ -171,11 +158,11 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
     });
   }
 
-  Future<void> checkpaketadapromoitem(id_paket) async {
+  Future<void> checkpaketadapromoitem(idPaket) async {
     try {
       var response = await dio.get(
         '${myIpAddr()}/massages/checkpaketadapromoitem',
-        data: {"id_paket_msg": id_paket},
+        data: {"id_paket_msg": idPaket},
       );
 
       List<Map<String, dynamic>> fetcheddata =
@@ -190,14 +177,14 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
       log('ini fetchnya : $fetcheddata');
       setState(() {
-        Listbonusitem.assignAll(fetcheddata);
+        listBonusItem.assignAll(fetcheddata);
       });
     } catch (e) {
       log("Error di fn Get Data Terapis $e");
     }
   }
 
-  final formatCurrency = new NumberFormat.currency(locale: "id_ID", decimalDigits: 0, symbol: 'Rp. ');
+  final formatCurrency = NumberFormat.currency(locale: "id_ID", decimalDigits: 0, symbol: 'Rp. ');
 
   double getHargaBeforeDisc() {
     double total = 0.0;
@@ -229,7 +216,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
     if (hargavip.isNotEmpty) {
       totalStlhDisc += hargavip[0]["harga_vip"];
     } else {
-      print('kosong harga vip');
+      log('kosong harga vip');
     }
 
     // tak boleh disini. error. kupisah ke updateUIWithDiscount()
@@ -345,7 +332,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
       Get.dialog(
         AlertDialog(
           title: Center(child: Text('Loading')),
-          content: Container(width: 100, height: 100, child: Center(child: CircularProgressIndicator())),
+          content: SizedBox(width: 100, height: 100, child: Center(child: CircularProgressIndicator())),
         ),
       );
       var rincian = getHargaAfterDisc();
@@ -383,7 +370,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
           data['jumlah_bayar'] = hrgStlhPjk.value;
           data['nama_akun'] = _namaAkun.text;
           data['no_rek'] = _noRek.text;
-          data['nama_bank'] = _selectedBank!.value;
+          data['nama_bank'] = _selectedBank.value;
         }
       } else {
         // Panggil Ini Krn Ga lewat dialog
@@ -404,12 +391,13 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
       var response = await dio.post(
         '${myIpAddr()}/massages/store',
-        options: Options(headers: {"Authorization": "Bearer " + token!}),
+        options: Options(headers: {"Authorization": "Bearer $token"}),
         data: data,
       );
 
       loadupdatetransaksi.value = 'sukses';
 
+      if (!mounted) return;
       CherryToast.success(
         title: Text(
           "Transaksi Sukses!",
@@ -422,6 +410,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
       log("Isi data jual $dataJual");
       log("Sukses SImpan $response");
     } catch (e) {
+      if (!mounted) return;
       CherryToast.error(
         title: Text(
           "Transaksi Gagal!",
@@ -437,13 +426,11 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
     }
   }
 
-  RxList<Map<String, dynamic>> databillinglocker = <Map<String, dynamic>>[].obs;
-
-  Future<void> updatedataloker(statusloker, nomor_locker) async {
+  Future<void> updatedataloker(statusLocker, nomorLocker) async {
     try {
-      var response = await dio.put(
+      await dio.put(
         '${myIpAddr()}/billinglocker/updatelocker',
-        data: {"status": statusloker, "nomor_locker": nomor_locker},
+        data: {"status": statusLocker, "nomor_locker": nomorLocker},
       );
     } catch (e) {
       log("Error di fn updatedataloker : $e");
@@ -452,7 +439,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
   Future<void> daftapanggilankerja(namaruangan, namaterapis) async {
     try {
-      var response = await dio.post(
+      await dio.post(
         '${myIpAddr()}/spv/daftarpanggilankerja',
         data: {"ruangan": namaruangan, "nama_terapis": namaterapis},
       );
@@ -464,7 +451,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
   Future<void> daftarruangtunggu(idtransaksi, namaruangan, idterapis, namaterapis) async {
     try {
-      var response = await dio.post(
+      await dio.post(
         '${myIpAddr()}/spv/daftarruangtunggu',
         data: {
           "id_transaksi": idtransaksi,
@@ -481,7 +468,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
   Future<void> postterapis2(idtransaksi, idterapis2, idterapis3) async {
     try {
-      var response = await dio.post(
+      await dio.post(
         '${myIpAddr()}/massages/saveterapis',
         data: {"id_transaksi": idtransaksi, "idterapis2": idterapis2, "idterapis3": idterapis3},
       );
@@ -492,7 +479,6 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
   @override
   void dispose() {
-    // TODO: implement dispose
     _namaAkun.dispose();
     _namaBank.dispose();
     _noRek.dispose();
@@ -544,23 +530,40 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
     return _listHappyHour.isNotEmpty && dropdownHappyHour.value == null;
   }
 
-  void _showHappyHourReminder() {
+  Future<bool> _showHappyHourReminder() async {
+    final completer = Completer<bool>();
+
     Get.defaultDialog(
       title: 'Promo Happy Hour',
       middleText: 'Silakan pilih promo Happy Hour terlebih dahulu.',
-      textConfirm: 'OK',
-      onConfirm: () => Get.back(),
+      textCancel: 'Kembali. Pilih Diskon',
+      textConfirm: 'Yakin. Tanpa Diskon!',
+      barrierDismissible: false,
+      onConfirm: () {
+        if (!completer.isCompleted) {
+          completer.complete(true);
+        }
+        Get.back();
+      },
+      onCancel: () {
+        if (!completer.isCompleted) {
+          completer.complete(false);
+        }
+      },
     );
+
+    return completer.future;
   }
 
   void _showDialogConfirmPayment(BuildContext context) async {
     await _getPajak();
+    if (!mounted) return;
 
     List<String> metodeByr = ["cash", "debit", "kredit", "qris"];
     String dropdownValue = metodeByr.first;
-    int statusloker = 0;
-    final LockerManager LockerInput = LockerManager();
-    int inputlocker = LockerInput.getLocker();
+    int statusLocker = 0;
+    final LockerManager lockerInput = LockerManager();
+    int inputlocker = lockerInput.getLocker();
 
     updateUIWithDiscount();
     // Hitung Harga Setelah Pajak & Pembulatan
@@ -591,7 +594,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
             return AlertDialog(
               title: Text("Pembayaran", textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Poppins')),
               content: SingleChildScrollView(
-                child: Container(
+                child: SizedBox(
                   width: MediaQuery.of(context).size.width,
                   // height: MediaQuery.of(context).size.height - 300,
                   child: Column(
@@ -796,9 +799,9 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                   flex: 3,
                                   child: Obx(
                                     () => DropdownButtonFormField<String>(
-                                      value: _selectedBank!.value,
+                                      value: _selectedBank.value,
                                       onChanged: (String? value) {
-                                        _selectedBank!.value = value!;
+                                        _selectedBank.value = value!;
                                       },
                                       items:
                                           _bankList.map((String bank) {
@@ -828,8 +831,8 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
                       String cleanedtotalbayar = cleaned.replaceAll('.', '');
 
-                      print(_totalBayarController.text);
-                      print(cleanedtotalbayar);
+                      log(_totalBayarController.text);
+                      log(cleanedtotalbayar);
 
                       if (_totalBayarController.text == "" ||
                           _totalBayarController.text.isEmpty ||
@@ -853,8 +856,8 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                       ).show(context);
                     } else {
                       _storeTrans().then((_) async {
-                        statusloker = statusloker == 0 ? 1 : 0;
-                        updatedataloker(statusloker, inputlocker);
+                        statusLocker = statusLocker == 0 ? 1 : 0;
+                        updatedataloker(statusLocker, inputlocker);
                         idtransaksi = controllerPekerja.getnotrans.value;
                         namaruangan = controllerPekerja.getroom.value;
                         idterapis = controllerPekerja.getidterapis.value;
@@ -928,22 +931,9 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
   Widget build(BuildContext context) {
     final discountData = getHargaAfterDisc();
 
-    int statusloker = 0;
-    final LockerManager LockerInput = LockerManager();
-    int inputlocker = LockerInput.getLocker();
-
-    RxList<Map<String, dynamic>> databillinglocker = <Map<String, dynamic>>[].obs;
-
-    Future<void> updatedataloker(statusloker, nomor_locker) async {
-      try {
-        var response = await dio.put(
-          '${myIpAddr()}/billinglocker/updatelocker',
-          data: {"status": statusloker, "nomor_locker": nomor_locker},
-        );
-      } catch (e) {
-        log("Error di fn updatedataloker : $e");
-      }
-    }
+    int statusLocker = 0;
+    final LockerManager lockerInput = LockerManager();
+    int inputlocker = lockerInput.getLocker();
 
     var storage = GetStorage();
 
@@ -1000,7 +990,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                               ),
                               child: TabBar(
                                 onTap: (index) {
-                                  print("Tab Aktif Sekarang $index");
+                                  log("Tab Aktif Sekarang $index");
                                 },
                                 indicator: BoxDecoration(
                                   color: Colors.blue,
@@ -1121,7 +1111,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                             Expanded(
                               flex: 6,
                               child: AutoSizeText(
-                                "${LockerInput.getLocker()}",
+                                "${lockerInput.getLocker()}",
                                 minFontSize: 15,
                                 style: TextStyle(fontFamily: 'Poppins'),
                               ),
@@ -1367,7 +1357,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
                   SizedBox(height: 10),
 
-                  Container(
+                  SizedBox(
                     width: MediaQuery.of(context).size.width - 200,
                     child: Column(
                       children: [
@@ -1424,12 +1414,16 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                   child: Align(
                                     alignment: Alignment.centerRight,
                                     child: ElevatedButton(
-                                      onPressed: () {
+                                      onPressed: () async {
                                         if (_isHappyHourSelectionRequired()) {
-                                          _showHappyHourReminder();
-                                          return;
+                                          bool isConfirmed = await _showHappyHourReminder();
+
+                                          if (!isConfirmed) {
+                                            return;
+                                          }
                                         }
-                                        _showDialogConfirmPayment(context);
+
+                                        _showDialogConfirmPayment(Get.context!);
                                       },
                                       child: Text(
                                         "Konfirmasi Pembayaran",
@@ -1443,10 +1437,18 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                   child: Align(
                                     alignment: Alignment.centerRight,
                                     child: ElevatedButton(
-                                      onPressed: () {
+                                      onPressed: () async {
+                                        if (_isHappyHourSelectionRequired()) {
+                                          bool isConfirmed = await _showHappyHourReminder();
+
+                                          if (!isConfirmed) {
+                                            return;
+                                          }
+                                        }
+
                                         _storeTrans().then((_) {
-                                          statusloker = statusloker == 0 ? 1 : 0;
-                                          updatedataloker(statusloker, inputlocker);
+                                          statusLocker = statusLocker == 0 ? 1 : 0;
+                                          updatedataloker(statusLocker, inputlocker);
 
                                           idtransaksi = controllerPekerja.getnotrans.value;
                                           namaruangan = controllerPekerja.getroom.value;
@@ -1782,11 +1784,11 @@ class _MassageItemGridState extends State<MassageItemGrid> {
                           },
                           onTapUp: (_) async {
                             await _playClickSound();
+                            if (!mounted) return;
                             // Lepaskan Animasi
                             _itemTapStates[index] = false;
                             _itemTapStates.refresh();
                             // End Lepaskan Animasi
-                            Map<String, dynamic> itemToAdd = Map.from(item);
 
                             if (promoExists) {
                               String itemname = item['nama_paket_msg'];
@@ -1816,11 +1818,6 @@ class _MassageItemGridState extends State<MassageItemGrid> {
                               }
 
                               if (kondisilebih == 'salah') {
-                                Map<String, dynamic> itemToAdd = Map.from(item);
-                                if (promoExists) {
-                                  itemToAdd['harga_paket_msg'] = 0;
-                                  itemToAdd['harga_total'] = 0;
-                                }
                                 widget.onAddItem({
                                   "id_paket_msg": item['id_paket_msg'],
                                   "nama_paket_msg": item['nama_paket_msg'],
@@ -1959,17 +1956,17 @@ class DataTransaksiMassages extends StatefulWidget {
 }
 
 class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
-  final formatCurrency = new NumberFormat.currency(locale: "id_ID", decimalDigits: 0, symbol: 'Rp. ');
+  final formatCurrency = NumberFormat.currency(locale: "id_ID", decimalDigits: 0, symbol: 'Rp. ');
 
-  Future<void> checkpaketadapromoitem(id_paket) async {
+  Future<void> checkpaketadapromoitem(idPaket) async {
     try {
       var response = await dio.get(
         '${myIpAddr()}/massages/checkpaketadapromoitem',
-        data: {"id_paket_msg": id_paket},
+        data: {"id_paket_msg": idPaket},
       );
 
       setState(() {
-        Listbonusitem =
+        listBonusItem =
             (response.data as List).map((item) {
               return {"id_fnb": item["id_fnb"], "nama_fnb": item["nama_fnb"], "qty": item["qty"]};
             }).toList();
@@ -2000,7 +1997,7 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                   children: [
                     IconButton(
                       icon: Icon(Icons.remove, size: 18),
-                      onPressed: () {
+                      onPressed: () async {
                         setState(() {
                           final promoExists = widget.datapromo.any(
                             (promo) => promo['nama_promo'] == widget.dataJual[index]['nama_paket_msg'],
@@ -2070,29 +2067,36 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                               title: Text('Error'),
                               description: Text('Item bonus tidak dapat dikurangkan manual'),
                             ).show(context);
-                          } else {
-                            checkpaketadapromoitem(widget.dataJual[index]['id_paket_msg']).then((_) {
-                              if (Listbonusitem.isNotEmpty) {
-                                final existbonusitemidx = widget.dataJual.indexWhere(
-                                  (item) => item['nama_paket_msg'] == Listbonusitem[0]['nama_fnb'],
-                                );
+                          }
+                        });
 
-                                if (existbonusitemidx != -1) {
-                                  if (widget.dataJual[existbonusitemidx]['jlh'] > Listbonusitem[0]['qty'] &&
-                                      widget.dataJual[index]['jlh'] > 1) {
-                                    widget.dataJual[existbonusitemidx]['jlh'] =
-                                        (widget.dataJual[existbonusitemidx]['jlh'] as num).toInt() -
-                                        Listbonusitem[0]['qty'];
-                                  }
-                                }
+                        if (widget.dataJual[index]['id_paket_msg'][0] == 'F') {
+                          return;
+                        }
+
+                        await checkpaketadapromoitem(widget.dataJual[index]['id_paket_msg']);
+                        if (!mounted) return;
+
+                        setState(() {
+                          if (listBonusItem.isNotEmpty) {
+                            final existbonusitemidx = widget.dataJual.indexWhere(
+                              (item) => item['nama_paket_msg'] == listBonusItem[0]['nama_fnb'],
+                            );
+
+                            if (existbonusitemidx != -1) {
+                              if (widget.dataJual[existbonusitemidx]['jlh'] > listBonusItem[0]['qty'] &&
+                                  widget.dataJual[index]['jlh'] > 1) {
+                                widget.dataJual[existbonusitemidx]['jlh'] =
+                                    (widget.dataJual[existbonusitemidx]['jlh'] as num).toInt() -
+                                    listBonusItem[0]['qty'];
                               }
-                              if (widget.dataJual[index]['jlh'] > 1) {
-                                widget.dataJual[index]['jlh']--;
-                                // Update Harga Total Juga
-                                widget.dataJual[index]['harga_total'] =
-                                    widget.dataJual[index]['harga_paket_msg'] * widget.dataJual[index]['jlh'];
-                              }
-                            });
+                            }
+                          }
+                          if (widget.dataJual[index]['jlh'] > 1) {
+                            widget.dataJual[index]['jlh']--;
+                            // Update Harga Total Juga
+                            widget.dataJual[index]['harga_total'] =
+                                widget.dataJual[index]['harga_paket_msg'] * widget.dataJual[index]['jlh'];
                           }
                         });
 
@@ -2105,7 +2109,7 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                     ),
                     IconButton(
                       icon: Icon(Icons.add, size: 18),
-                      onPressed: () {
+                      onPressed: () async {
                         setState(() {
                           final promoExists = widget.datapromo.any(
                             (promo) => promo['nama_promo'] == widget.dataJual[index]['nama_paket_msg'],
@@ -2136,12 +2140,12 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                             }
                           }
 
-                          if (kondisilebih == 'benar') {
-                            CherryToast.error(
-                              title: Text('Error'),
-                              description: Text('melebihi pemakaian'),
-                            ).show(context);
-                          } else {
+                            if (kondisilebih == 'benar') {
+                              CherryToast.error(
+                                title: Text('Error'),
+                                description: Text('melebihi pemakaian'),
+                              ).show(context);
+                            } else {
                             for (var produk in dataproduk.where(
                               (p) => p['nama_produk'] == widget.dataJual[index]['nama_paket_msg'],
                             )) {
@@ -2185,25 +2189,6 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                                   title: Text('Error'),
                                   description: Text('Item bonus tidak dapat ditambahkan manual'),
                                 ).show(context);
-                              } else {
-                                checkpaketadapromoitem(widget.dataJual[index]['id_paket_msg']).then((_) {
-                                  if (Listbonusitem.isNotEmpty) {
-                                    final existbonusitemidx = widget.dataJual.indexWhere(
-                                      (item) => item['nama_paket_msg'] == Listbonusitem[0]['nama_fnb'],
-                                    );
-
-                                    if (existbonusitemidx != -1) {
-                                      widget.dataJual[existbonusitemidx]['jlh'] =
-                                          (widget.dataJual[existbonusitemidx]['jlh'] as num).toInt() +
-                                          Listbonusitem[0]['qty'];
-                                    }
-                                  }
-                                  widget.dataJual[index]['jlh']++;
-                                  // Update Harga Total Juga
-                                  widget.dataJual[index]['harga_total'] =
-                                      widget.dataJual[index]['harga_paket_msg'] *
-                                      widget.dataJual[index]['jlh'];
-                                });
                               }
                             }
                           }
@@ -2211,6 +2196,36 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                           log(promoExists.toString());
                           log('tapped : $itemTapCounts');
                         });
+
+                        if (widget.dataJual[index]['id_paket_msg'][0] == 'F') {
+                          return;
+                        }
+
+                        if (kondisilebih == 'benar') {
+                          return;
+                        }
+
+                        await checkpaketadapromoitem(widget.dataJual[index]['id_paket_msg']);
+                        if (!mounted) return;
+
+                        setState(() {
+                          if (listBonusItem.isNotEmpty) {
+                            final existbonusitemidx = widget.dataJual.indexWhere(
+                              (item) => item['nama_paket_msg'] == listBonusItem[0]['nama_fnb'],
+                            );
+
+                            if (existbonusitemidx != -1) {
+                              widget.dataJual[existbonusitemidx]['jlh'] =
+                                  (widget.dataJual[existbonusitemidx]['jlh'] as num).toInt() +
+                                  listBonusItem[0]['qty'];
+                            }
+                          }
+                          widget.dataJual[index]['jlh']++;
+                          // Update Harga Total Juga
+                          widget.dataJual[index]['harga_total'] =
+                              widget.dataJual[index]['harga_paket_msg'] * widget.dataJual[index]['jlh'];
+                        });
+
                         widget.onChangeHrg();
                       },
                     ),
@@ -2220,13 +2235,13 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
               Expanded(child: AutoSizeText(widget.dataJual[index]['satuan'], minFontSize: 15)),
               Expanded(
                 child: AutoSizeText(
-                  "${formatCurrency.format(widget.dataJual[index]['harga_paket_msg'])}",
+                  formatCurrency.format(widget.dataJual[index]['harga_paket_msg']),
                   minFontSize: 15,
                 ),
               ),
               Expanded(
                 child: Text(
-                  "${formatCurrency.format(widget.dataJual[index]['harga_total'])}",
+                  formatCurrency.format(widget.dataJual[index]['harga_total']),
                   style: TextStyle(fontFamily: 'Poppins'),
                 ),
               ),
@@ -2237,8 +2252,8 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       IconButton(
-                        icon: Icon(Icons.delete, size: 18),
-                        onPressed: () {
+                        icon: Icon(Icons.delete_forever_outlined, size: 18),
+                        onPressed: () async {
                           // Guard against stale index when list already changed
                           if (index < 0 || index >= widget.dataJual.length) return;
 
@@ -2282,41 +2297,48 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                                 title: Text('Error'),
                                 description: Text('Item bonus tidak dapat dihapus manual'),
                               ).show(context);
-                            } else {
-                              checkpaketadapromoitem(currentIdPaket).then((_) {
-                                if (Listbonusitem.isNotEmpty) {
-                                  final existbonusitemidx = widget.dataJual.indexWhere(
-                                    (item) => item['nama_paket_msg'] == Listbonusitem[0]['nama_fnb'],
-                                  );
-
-                                  if (existbonusitemidx != -1) {
-                                    if (widget.dataJual[existbonusitemidx]['jlh'] > Listbonusitem[0]['qty'] &&
-                                        currentQty > 1) {
-                                      log(currentQty.toString());
-                                      widget.dataJual[existbonusitemidx]['jlh'] =
-                                          (widget.dataJual[existbonusitemidx]['jlh'] as num).toInt() -
-                                          Listbonusitem[0]['qty'] * currentQty;
-                                    }
-
-                                    if (widget.dataJual[existbonusitemidx]['jlh'] <=
-                                        Listbonusitem[0]['qty']) {
-                                      widget.dataJual.removeAt(existbonusitemidx);
-                                    }
-                                  }
-                                }
-
-                                final removeIdx = widget.dataJual.indexWhere(
-                                  (item) =>
-                                      item['id_paket_msg'] == currentIdPaket &&
-                                      item['nama_paket_msg'] == currentNamaPaket,
-                                );
-                                if (removeIdx != -1) {
-                                  widget.dataJual.removeAt(removeIdx);
-                                }
-                              });
                             }
-                            widget.onChangeHrg();
                           });
+
+                          if (currentIdPaket.startsWith('F')) {
+                            return;
+                          }
+
+                          await checkpaketadapromoitem(currentIdPaket);
+                          if (!mounted) return;
+
+                          setState(() {
+                            if (listBonusItem.isNotEmpty) {
+                              final existbonusitemidx = widget.dataJual.indexWhere(
+                                (item) => item['nama_paket_msg'] == listBonusItem[0]['nama_fnb'],
+                              );
+
+                              if (existbonusitemidx != -1) {
+                                if (widget.dataJual[existbonusitemidx]['jlh'] > listBonusItem[0]['qty'] &&
+                                    currentQty > 1) {
+                                  log(currentQty.toString());
+                                  widget.dataJual[existbonusitemidx]['jlh'] =
+                                      (widget.dataJual[existbonusitemidx]['jlh'] as num).toInt() -
+                                      listBonusItem[0]['qty'] * currentQty;
+                                }
+
+                                if (widget.dataJual[existbonusitemidx]['jlh'] <= listBonusItem[0]['qty']) {
+                                  widget.dataJual.removeAt(existbonusitemidx);
+                                }
+                              }
+                            }
+
+                            final removeIdx = widget.dataJual.indexWhere(
+                              (item) =>
+                                  item['id_paket_msg'] == currentIdPaket &&
+                                  item['nama_paket_msg'] == currentNamaPaket,
+                            );
+                            if (removeIdx != -1) {
+                              widget.dataJual.removeAt(removeIdx);
+                            }
+                          });
+
+                          widget.onChangeHrg();
                         },
                       ),
                     ],
