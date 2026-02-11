@@ -981,6 +981,7 @@ class OwnerPageController extends GetxController {
   void showDialogFilterTargetHarian() {
     rangeDatePickerOmset.clear();
     final ScrollController scrollTglController = ScrollController();
+    bool submittedWithButton = false;
 
     Get.dialog(
       AlertDialog(
@@ -1090,6 +1091,7 @@ class OwnerPageController extends GetxController {
                 endDate = startDate;
               }
 
+              submittedWithButton = true;
               await _getDataTargetHarian(startDate: startDate, endDate: endDate);
 
               Get.back();
@@ -1100,8 +1102,24 @@ class OwnerPageController extends GetxController {
       ),
     ).then((_) {
       scrollTglController.dispose();
-      if (rangeDatePickerOmset.isEmpty) {
-        _getDataTargetHarian();
+      if (submittedWithButton) return;
+      switch (rangeDatePickerOmset.length) {
+        case 1:
+          _getDataTargetHarian(
+            startDate: rangeDatePickerOmset[0].toString().split(" ")[0],
+            endDate: rangeDatePickerOmset[0].toString().split(" ")[0],
+          );
+          break;
+        case 2:
+          _getDataTargetHarian(
+            startDate: rangeDatePickerOmset[0].toString().split(" ")[0],
+            endDate: rangeDatePickerOmset[1].toString().split(" ")[0],
+          );
+          break;
+        default:
+          rangeDatePickerOmset.clear();
+          _getDataTargetHarian();
+          break;
       }
     });
   }
