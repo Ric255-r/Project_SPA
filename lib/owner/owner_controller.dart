@@ -895,6 +895,7 @@ class OwnerPageController extends GetxController {
     } catch (e) {
       if (e is DioException) {
         if (e.response!.statusCode == 400) {
+          rangeDatePickerOmset.clear();
           CherryToast.error(
             title: Text(
               "Error!",
@@ -939,6 +940,9 @@ class OwnerPageController extends GetxController {
         }).toList(),
       );
     } catch (e) {
+      if (e is DioException) {
+        log("Error di _getPenjualanTerapis dio ${e.response!.data}");
+      }
       log("Error di _getPenjualanTerapis $e");
     } finally {
       isLoadingPenjualanTerapis.value = false;
@@ -1025,6 +1029,30 @@ class OwnerPageController extends GetxController {
                           ),
                           value: rangeDatePickerOmset,
                           onValueChanged: (dates) {
+                            if (dates.length >= 2) {
+                              final start = dates[0];
+                              final end = dates[1];
+                              final diffDays = end.difference(start).inDays.abs();
+                              if (diffDays > 6) {
+                                final cappedEnd = start.add(const Duration(days: 6));
+                                rangeDatePickerOmset.assignAll([start, cappedEnd]);
+                                CherryToast.warning(
+                                  title: const Text(
+                                    "Perhatian!",
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'Poppins',
+                                    ),
+                                  ),
+                                  description: const Text("Maksimal 7 hari."),
+                                  animationDuration: const Duration(milliseconds: 2000),
+                                  autoDismiss: true,
+                                ).show(Get.context!);
+                                return;
+                              }
+                            }
+
                             rangeDatePickerOmset.assignAll(dates);
                             log("Isi Range Date $rangeDatePickerOmset");
                           },
@@ -1042,6 +1070,18 @@ class OwnerPageController extends GetxController {
           ElevatedButton(
             onPressed: () async {
               // refreshData();
+              if (rangeDatePickerOmset.isEmpty || rangeDatePickerOmset[0] == null) {
+                CherryToast.warning(
+                  title: const Text(
+                    "Perhatian!",
+                    style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
+                  ),
+                  description: const Text("Pilih tanggal terlebih dahulu."),
+                  animationDuration: const Duration(milliseconds: 2000),
+                  autoDismiss: true,
+                ).show(Get.context!);
+                return;
+              }
               String startDate = rangeDatePickerOmset[0].toString().split(" ")[0];
               String endDate = "";
               if (rangeDatePickerOmset.length > 1) {

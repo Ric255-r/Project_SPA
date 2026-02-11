@@ -453,7 +453,7 @@ class TotalSalesHarianChart extends StatelessWidget {
                   child: Center(
                     child: Obx(() {
                       final dates = c.rangeDatePickerOmset;
-                      String suffix = 'Per-Hari ini';
+                      String suffix = 'Per-Minggu ini';
                       if (dates.isNotEmpty && dates[0] != null) {
                         final fmt = DateFormat('dd-MM-yyyy');
                         final start = dates[0]!;
