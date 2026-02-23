@@ -51,6 +51,7 @@ class OwnerPageController extends GetxController {
   //  satu paket utk get target sales
   RxList<dynamic> dataTargetOmset = [].obs;
   RxList<dynamic> dataOmset = [].obs;
+  RxList<dynamic> dataOmsetBerjalan = [].obs;
   RxList<String> tahunTransaksiTarget = <String>[].obs;
   RxList<int> listYear = List<int>.generate(100, (index) => 2020 + index).obs;
   RxList<DateTime?> rangeDatePickerOmset = <DateTime?>[].obs;
@@ -856,7 +857,7 @@ class OwnerPageController extends GetxController {
       Map<String, dynamic> responseData = response.data;
       dataTargetOmset.assignAll(responseData['get_sales_target']);
       dataOmset.assignAll(responseData['get_omset']);
-
+      dataOmsetBerjalan.assignAll(responseData['get_omset_berjalan']);
       tahunTransaksiTarget.assignAll(
         (responseData['tahun_target'] as List).map((el) => el['year'].toString()),
       );
