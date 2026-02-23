@@ -523,6 +523,7 @@ class OwnerPageController extends GetxController {
   void showDialogPenjualanPerTerapis() {
     rangeDatePickerPenjualanTerapis.clear();
     final ScrollController scrollTglController = ScrollController();
+    bool isSubmittedWithButton = false;
 
     Get.dialog(
       AlertDialog(
@@ -619,6 +620,7 @@ class OwnerPageController extends GetxController {
               } else {
                 endDate = startDate;
               }
+              isSubmittedWithButton = true;
               await _getPenjualanTerapis(startDate: startDate, endDate: endDate);
 
               Get.back();
@@ -628,8 +630,23 @@ class OwnerPageController extends GetxController {
         ],
       ),
     ).then((_) async {
-      if (rangeDatePickerPenjualanTerapis.isEmpty) {
-        await _getPenjualanTerapis();
+      scrollTglController.dispose();
+      if (isSubmittedWithButton) return;
+
+      switch (rangeDatePickerPenjualanTerapis.length) {
+        case 1:
+          await _getPenjualanTerapis(startDate: rangeDatePickerPenjualanTerapis[0].toString().split(" ")[0]);
+          break;
+        case 2:
+          await _getPenjualanTerapis(
+            startDate: rangeDatePickerPenjualanTerapis[0].toString().split(" ")[0],
+            endDate: rangeDatePickerPenjualanTerapis[1].toString().split(" ")[0],
+          );
+          break;
+        default:
+          rangeDatePickerPenjualanTerapis.clear();
+          await _getPenjualanTerapis();
+          break;
       }
     });
   }
@@ -637,6 +654,7 @@ class OwnerPageController extends GetxController {
   void showDialogKomisiPerTerapis() {
     rangeDatePickerKomisiTerapis.clear();
     final ScrollController scrollTglController = ScrollController();
+    bool isSubmittedWithButton = false;
 
     Get.dialog(
       AlertDialog(
@@ -733,6 +751,7 @@ class OwnerPageController extends GetxController {
               } else {
                 endDate = startDate;
               }
+              isSubmittedWithButton = true;
               await _getKomisiTerapis(startDate: startDate, endDate: endDate);
 
               Get.back();
@@ -742,8 +761,23 @@ class OwnerPageController extends GetxController {
         ],
       ),
     ).then((_) async {
-      if (rangeDatePickerKomisiTerapis.isEmpty) {
-        await _getKomisiTerapis();
+      scrollTglController.dispose();
+      if (isSubmittedWithButton) return;
+
+      switch (rangeDatePickerKomisiTerapis.length) {
+        case 1:
+          await _getKomisiTerapis(startDate: rangeDatePickerKomisiTerapis[0].toString().split(" ")[0]);
+          break;
+        case 2:
+          await _getKomisiTerapis(
+            startDate: rangeDatePickerKomisiTerapis[0].toString().split(" ")[0],
+            endDate: rangeDatePickerKomisiTerapis[1].toString().split(" ")[0],
+          );
+          break;
+        default:
+          rangeDatePickerKomisiTerapis.clear();
+          await _getKomisiTerapis();
+          break;
       }
     });
   }
@@ -896,6 +930,7 @@ class OwnerPageController extends GetxController {
     } catch (e) {
       if (e is DioException) {
         if (e.response!.statusCode == 400) {
+          rangeDatePickerOmset.clear();
           CherryToast.error(
             title: Text(
               "Error!",
@@ -940,6 +975,9 @@ class OwnerPageController extends GetxController {
         }).toList(),
       );
     } catch (e) {
+      if (e is DioException) {
+        log("Error di _getPenjualanTerapis dio ${e.response!.data}");
+      }
       log("Error di _getPenjualanTerapis $e");
     } finally {
       isLoadingPenjualanTerapis.value = false;
@@ -978,6 +1016,7 @@ class OwnerPageController extends GetxController {
   void showDialogFilterTargetHarian() {
     rangeDatePickerOmset.clear();
     final ScrollController scrollTglController = ScrollController();
+    bool submittedWithButton = false;
 
     Get.dialog(
       AlertDialog(
@@ -1026,6 +1065,30 @@ class OwnerPageController extends GetxController {
                           ),
                           value: rangeDatePickerOmset,
                           onValueChanged: (dates) {
+                            if (dates.length >= 2) {
+                              final start = dates[0];
+                              final end = dates[1];
+                              final diffDays = end.difference(start).inDays.abs();
+                              if (diffDays > 6) {
+                                final cappedEnd = start.add(const Duration(days: 6));
+                                rangeDatePickerOmset.assignAll([start, cappedEnd]);
+                                CherryToast.warning(
+                                  title: const Text(
+                                    "Perhatian!",
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'Poppins',
+                                    ),
+                                  ),
+                                  description: const Text("Maksimal 7 hari."),
+                                  animationDuration: const Duration(milliseconds: 2000),
+                                  autoDismiss: true,
+                                ).show(Get.context!);
+                                return;
+                              }
+                            }
+
                             rangeDatePickerOmset.assignAll(dates);
                             log("Isi Range Date $rangeDatePickerOmset");
                           },
@@ -1043,6 +1106,18 @@ class OwnerPageController extends GetxController {
           ElevatedButton(
             onPressed: () async {
               // refreshData();
+              if (rangeDatePickerOmset.isEmpty || rangeDatePickerOmset[0] == null) {
+                CherryToast.warning(
+                  title: const Text(
+                    "Perhatian!",
+                    style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
+                  ),
+                  description: const Text("Pilih tanggal terlebih dahulu."),
+                  animationDuration: const Duration(milliseconds: 2000),
+                  autoDismiss: true,
+                ).show(Get.context!);
+                return;
+              }
               String startDate = rangeDatePickerOmset[0].toString().split(" ")[0];
               String endDate = "";
               if (rangeDatePickerOmset.length > 1) {
@@ -1051,6 +1126,7 @@ class OwnerPageController extends GetxController {
                 endDate = startDate;
               }
 
+              submittedWithButton = true;
               await _getDataTargetHarian(startDate: startDate, endDate: endDate);
 
               Get.back();
@@ -1061,8 +1137,24 @@ class OwnerPageController extends GetxController {
       ),
     ).then((_) {
       scrollTglController.dispose();
-      if (rangeDatePickerOmset.isEmpty) {
-        _getDataTargetHarian();
+      if (submittedWithButton) return;
+      switch (rangeDatePickerOmset.length) {
+        case 1:
+          _getDataTargetHarian(
+            startDate: rangeDatePickerOmset[0].toString().split(" ")[0],
+            endDate: rangeDatePickerOmset[0].toString().split(" ")[0],
+          );
+          break;
+        case 2:
+          _getDataTargetHarian(
+            startDate: rangeDatePickerOmset[0].toString().split(" ")[0],
+            endDate: rangeDatePickerOmset[1].toString().split(" ")[0],
+          );
+          break;
+        default:
+          rangeDatePickerOmset.clear();
+          _getDataTargetHarian();
+          break;
       }
     });
   }
