@@ -2,14 +2,11 @@ import 'dart:developer';
 
 import 'package:Project_SPA/function/ip_address.dart';
 import 'package:Project_SPA/function/token.dart';
-import 'package:Project_SPA/kamar_terapis/main_kamar_terapis.dart';
 import 'package:Project_SPA/kamar_terapis/terapis_bekerja.dart';
-import 'package:Project_SPA/resepsionis/main_resepsionis.dart';
-import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:cherry_toast/cherry_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 import 'package:Project_SPA/kamar_terapis/terapis_mgr.dart';
 
 class TerapisConfirmController extends GetxController {
@@ -36,15 +33,10 @@ class TerapisConfirmController extends GetxController {
   RxBool _popScopeReady = false.obs;
   RxInt _sumDurasiMenit = 0.obs;
 
-  var dio = Dio();
+  var dio = DioClient();
   Future<void> _getLatestTrans() async {
     try {
-      final prefs = await getTokenSharedPref();
-
-      var response = await dio.get(
-        '${myIpAddr()}/kamar_terapis/latest_trans',
-        options: Options(headers: {"Authorization": "Bearer " + prefs!}),
-      );
+      var response = await dio.get('${myIpAddr()}/kamar_terapis/latest_trans');
 
       List<dynamic> responsePaket = response.data['data_paket'];
       List<dynamic> responseProduk = response.data['data_produk'];
@@ -108,7 +100,6 @@ class TerapisConfirmController extends GetxController {
 
       var response2 = await dio.get(
         '${myIpAddr()}/fnb/selected_food?id_trans=${_idTransaksi.value}',
-        options: Options(headers: {"Authorization": "bearer " + prefs}),
       );
 
       List<dynamic> responseFood = response2.data;
@@ -202,13 +193,11 @@ class TerapisConfirmController extends GetxController {
 
   Future<void> _updateJamMulai() async {
     try {
-      final prefs = await getTokenSharedPref();
       final now = DateTime.now();
       final formattedTime = '${now.hour}:${now.minute}:${now.second}';
 
       var response = await dio.put(
         '${myIpAddr()}/kamar_terapis/update_mulai',
-        options: Options(headers: {"Authorization": "Bearer " + prefs!}),
         data: {
           "id_transaksi": _idTransaksi.value,
           "id_terapis": _idTerapis.value,

@@ -1,15 +1,12 @@
 // ignore_for_file: camel_case_types, prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import 'dart:async';
-import 'package:Project_SPA/kamar_terapis/terapis_confirm.dart';
 import 'package:Project_SPA/resepsionis/detail_fnb_addon.dart';
 import 'package:Project_SPA/resepsionis/store_locker.dart';
-import 'package:Project_SPA/resepsionis/transaksi_massage.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:cherry_toast/cherry_toast.dart';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:get/get.dart';
 import 'package:Project_SPA/resepsionis/jenis_transaksi.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,7 +23,7 @@ class BillingLocker extends StatefulWidget {
 class _BillingLockerState extends State<BillingLocker> {
   var i = 1;
 
-  var dio = Dio();
+  var dio = DioClient();
 
   int statusloker = 0;
 
@@ -209,7 +206,9 @@ class _BillingLockerState extends State<BillingLocker> {
                                                   );
                                                   CherryToast.error(
                                                     title: const Text("Error"),
-                                                    description: const Text("Gagal mengambil transaksi."),
+                                                    description: const Text(
+                                                      "Gagal mengambil transaksi.",
+                                                    ),
                                                   ).show(Get.context!);
                                                 }
                                               },

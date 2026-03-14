@@ -11,7 +11,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/io.dart';
 import 'dart:async';
 import 'dart:developer';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 
 class Hp_Ob extends StatefulWidget {
   Hp_Ob({super.key});
@@ -28,7 +28,7 @@ class _Hp_ObState extends State<Hp_Ob> with WidgetsBindingObserver {
   bool _isconnected = false;
   RxList<Map<String, dynamic>> dataruanganbersihkan =
       <Map<String, dynamic>>[].obs;
-  var dio = Dio();
+  var dio = DioClient();
 
   @override
   void initState() {

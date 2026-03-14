@@ -1,12 +1,12 @@
 // stok_opname.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 import 'package:cherry_toast/cherry_toast.dart';
 
 class StokOpnameController extends GetxController {
-  final dio = Dio();
+  final dio = DioClient();
 
   /// Semua item gabungan dari backend /opname/getmasternama
   /// Elemen: { 'nama': String, 'sumber': 'barang'|'menu_produk'|'menu_fnb', 'stok': int, 'satuan': String }
@@ -85,11 +85,16 @@ class StokOpnameController extends GetxController {
 
   // Ringkasan batch
   int get totalBaris => batchItems.length;
-  int get totalPenambahan =>
-      batchItems.fold<int>(0, (a, b) => a + ((b['perubahan'] as int) > 0 ? (b['perubahan'] as int) : 0));
-  int get totalPengurangan =>
-      batchItems.fold<int>(0, (a, b) => a + ((b['perubahan'] as int) < 0 ? -(b['perubahan'] as int) : 0));
-  int get totalNet => batchItems.fold<int>(0, (a, b) => a + (b['perubahan'] as int));
+  int get totalPenambahan => batchItems.fold<int>(
+    0,
+    (a, b) => a + ((b['perubahan'] as int) > 0 ? (b['perubahan'] as int) : 0),
+  );
+  int get totalPengurangan => batchItems.fold<int>(
+    0,
+    (a, b) => a + ((b['perubahan'] as int) < 0 ? -(b['perubahan'] as int) : 0),
+  );
+  int get totalNet =>
+      batchItems.fold<int>(0, (a, b) => a + (b['perubahan'] as int));
 
   // ====== Lifecycle ======
   @override
@@ -111,7 +116,10 @@ class StokOpnameController extends GetxController {
   Future<void> fetchMasterGabungan() async {
     isLoadingMaster.value = true;
     try {
-      final res = await dio.get('$_base/opname/getmasternama?_ts=${_ts()}', options: _noCache);
+      final res = await dio.get(
+        '$_base/opname/getmasternama?_ts=${_ts()}',
+        options: _noCache,
+      );
       final data = res.data;
       if (data is List) {
         // Normalisasi field agar selalu ada 'satuan'
@@ -122,7 +130,10 @@ class StokOpnameController extends GetxController {
                 'nama': e['nama'],
                 'sumber': e['sumber'],
                 'stok': e['stok'] ?? 0,
-                'satuan': (satuan.isNotEmpty ? satuan : 'pcs'), // fallback pcs bila kosong
+                'satuan':
+                    (satuan.isNotEmpty
+                        ? satuan
+                        : 'pcs'), // fallback pcs bila kosong
               };
             }).toList();
         allItems.assignAll(list);
@@ -152,14 +163,20 @@ class StokOpnameController extends GetxController {
   void _toastSuccess(String title, String desc) {
     final ctx = Get.context;
     if (ctx != null) {
-      CherryToast.success(title: Text(title), description: Text(desc)).show(ctx);
+      CherryToast.success(
+        title: Text(title),
+        description: Text(desc),
+      ).show(ctx);
     }
   }
 
   void _toastWarning(String title, String desc) {
     final ctx = Get.context;
     if (ctx != null) {
-      CherryToast.warning(title: Text(title), description: Text(desc)).show(ctx);
+      CherryToast.warning(
+        title: Text(title),
+        description: Text(desc),
+      ).show(ctx);
     }
   }
 
@@ -193,7 +210,9 @@ class StokOpnameController extends GetxController {
     final perubahan = isAdd.value ? qty : -qty;
 
     // Jika item sama (nama+sumber) sudah ada, gabungkan quantity
-    final idx = batchItems.indexWhere((e) => e['nama'] == it['nama'] && e['sumber'] == it['sumber']);
+    final idx = batchItems.indexWhere(
+      (e) => e['nama'] == it['nama'] && e['sumber'] == it['sumber'],
+    );
     if (idx >= 0) {
       final merged = Map<String, dynamic>.from(batchItems[idx]);
       merged['perubahan'] = (merged['perubahan'] as int) + perubahan;
@@ -239,7 +258,8 @@ class StokOpnameController extends GetxController {
                     "sumber": e["sumber"],
                     "nama": e["nama"],
                     "perubahan": e["perubahan"],
-                    "satuan": e["satuan"], // opsional, backend punya default/meta
+                    "satuan":
+                        e["satuan"], // opsional, backend punya default/meta
                   },
                 )
                 .toList(),
@@ -257,7 +277,9 @@ class StokOpnameController extends GetxController {
       await fetchMasterGabungan();
 
       // Kosongkan batch & form
-      final jml = int.tryParse('${res.data['jumlah_baris'] ?? batchItems.length}') ?? batchItems.length;
+      final jml =
+          int.tryParse('${res.data['jumlah_baris'] ?? batchItems.length}') ??
+          batchItems.length;
       final plus = totalPenambahan;
       final minus = totalPengurangan;
       final net = totalNet;
@@ -309,11 +331,15 @@ class StokOpnameController extends GetxController {
 
       // Ambil stok_awal & stok_akhir dari backend untuk akurasi toast
       final itemResp = (res.data["item"] ?? {}) as Map;
-      final int stokAwalResp = int.tryParse("${itemResp["stok_awal"] ?? 0}") ?? 0;
-      final int stokAkhirResp = int.tryParse("${itemResp["stok_akhir"] ?? 0}") ?? 0;
+      final int stokAwalResp =
+          int.tryParse("${itemResp["stok_awal"] ?? 0}") ?? 0;
+      final int stokAkhirResp =
+          int.tryParse("${itemResp["stok_akhir"] ?? 0}") ?? 0;
 
       // Sinkron list allItems
-      final idx = allItems.indexWhere((e) => (e['sumber'] == it['sumber']) && (e['nama'] == it['nama']));
+      final idx = allItems.indexWhere(
+        (e) => (e['sumber'] == it['sumber']) && (e['nama'] == it['nama']),
+      );
       if (idx >= 0) {
         final copy = Map<String, dynamic>.from(allItems[idx]);
         copy['stok'] = stokAkhirResp;
@@ -352,7 +378,10 @@ class StokOpnamePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFFFE0B2),
       appBar: AppBar(
-        title: const Text('Stok Opname', style: TextStyle(fontFamily: 'Poppins', fontSize: 24)),
+        title: const Text(
+          'Stok Opname',
+          style: TextStyle(fontFamily: 'Poppins', fontSize: 24),
+        ),
         backgroundColor: const Color(0xFFFFE0B2),
         actions: [
           IconButton(
@@ -382,7 +411,11 @@ class StokOpnamePage extends StatelessWidget {
                       )
                       : SingleChildScrollView(
                         child: Column(
-                          children: [_panelDaftar(context), const SizedBox(height: 12), _panelBatch(context)],
+                          children: [
+                            _panelDaftar(context),
+                            const SizedBox(height: 12),
+                            _panelBatch(context),
+                          ],
                         ),
                       ),
             );
@@ -407,9 +440,17 @@ class StokOpnamePage extends StatelessWidget {
               children: [
                 const Icon(Icons.inventory_2_outlined),
                 const SizedBox(width: 8),
-                const Text('Pilih Barang/Menu', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                const Text(
+                  'Pilih Barang/Menu',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                ),
                 const Spacer(),
-                Obx(() => Text('Total: ${c.allItems.length}', style: const TextStyle(color: Colors.brown))),
+                Obx(
+                  () => Text(
+                    'Total: ${c.allItems.length}',
+                    style: const TextStyle(color: Colors.brown),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 10),
@@ -436,7 +477,9 @@ class StokOpnamePage extends StatelessWidget {
                   filled: true,
                   isDense: true,
                   fillColor: Colors.white,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               );
             }),
@@ -461,11 +504,18 @@ class StokOpnamePage extends StatelessWidget {
                     dividerColor: const Color(0xFFBCAAA4),
                     listTileTheme: ListTileThemeData(
                       tileColor: Colors.white,
-                      selectedTileColor: const Color(0xFF8D6E63).withOpacity(.12),
+                      selectedTileColor: const Color(
+                        0xFF8D6E63,
+                      ).withOpacity(.12),
                       iconColor: const Color(0xFF6D4C41),
                       textColor: const Color(0xFF3E2723),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 2,
+                      ),
                     ),
                   ),
                   child: ListView(
@@ -477,9 +527,11 @@ class StokOpnamePage extends StatelessWidget {
                           return _selectableTile(
                             index: i + 1,
                             title: it['nama'] ?? '',
-                            subtitle: 'Stok: ${it['stok']}  •  Satuan: ${it['satuan']}',
+                            subtitle:
+                                'Stok: ${it['stok']}  •  Satuan: ${it['satuan']}',
                             selected:
-                                (c.selectedItem.value?['sumber'] == it['sumber']) &&
+                                (c.selectedItem.value?['sumber'] ==
+                                    it['sumber']) &&
                                 (c.selectedItem.value?['nama'] == it['nama']),
                             onTap: () => c.pilihItem(it),
                           );
@@ -487,15 +539,20 @@ class StokOpnamePage extends StatelessWidget {
                         const SizedBox(height: 8),
                       ],
                       if (produk.isNotEmpty) ...[
-                        _sectionHeader(Icons.shopping_bag_outlined, 'Menu Produk'),
+                        _sectionHeader(
+                          Icons.shopping_bag_outlined,
+                          'Menu Produk',
+                        ),
                         ...List.generate(produk.length, (i) {
                           final it = produk[i];
                           return _selectableTile(
                             index: i + 1,
                             title: it['nama'] ?? '',
-                            subtitle: 'Stok: ${it['stok']}  •  Satuan: ${it['satuan']}',
+                            subtitle:
+                                'Stok: ${it['stok']}  •  Satuan: ${it['satuan']}',
                             selected:
-                                (c.selectedItem.value?['sumber'] == it['sumber']) &&
+                                (c.selectedItem.value?['sumber'] ==
+                                    it['sumber']) &&
                                 (c.selectedItem.value?['nama'] == it['nama']),
                             onTap: () => c.pilihItem(it),
                           );
@@ -509,9 +566,11 @@ class StokOpnamePage extends StatelessWidget {
                           return _selectableTile(
                             index: i + 1,
                             title: it['nama'] ?? '',
-                            subtitle: 'Stok: ${it['stok']}  •  Satuan: ${it['satuan']}',
+                            subtitle:
+                                'Stok: ${it['stok']}  •  Satuan: ${it['satuan']}',
                             selected:
-                                (c.selectedItem.value?['sumber'] == it['sumber']) &&
+                                (c.selectedItem.value?['sumber'] ==
+                                    it['sumber']) &&
                                 (c.selectedItem.value?['nama'] == it['nama']),
                             onTap: () => c.pilihItem(it),
                           );
@@ -553,7 +612,10 @@ class StokOpnamePage extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       onTap: onTap,
       child: ListTile(
-        leading: CircleAvatar(backgroundColor: Colors.white, child: Text('$index')),
+        leading: CircleAvatar(
+          backgroundColor: Colors.white,
+          child: Text('$index'),
+        ),
         title: Text(title),
         subtitle: Text(subtitle),
         trailing: Icon(
@@ -582,7 +644,10 @@ class StokOpnamePage extends StatelessWidget {
                 children: const [
                   Icon(Icons.edit_note_outlined),
                   SizedBox(width: 8),
-                  Text('Form Batch Opname', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                  Text(
+                    'Form Batch Opname',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -603,10 +668,15 @@ class StokOpnamePage extends StatelessWidget {
                           children: [
                             Text(
                               '${it['nama'] ?? ''}',
-                              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
+                              ),
                             ),
                             const SizedBox(height: 4),
-                            Text('Stok saat ini: ${it['stok']} ${it['satuan'] ?? "pcs"}'),
+                            Text(
+                              'Stok saat ini: ${it['stok']} ${it['satuan'] ?? "pcs"}',
+                            ),
                           ],
                         ),
               ),
@@ -674,7 +744,10 @@ class StokOpnamePage extends StatelessWidget {
                   border: Border.all(color: const Color(0xFFBCAAA4)),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 12),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 5,
+                  horizontal: 12,
+                ),
                 child: Row(
                   children: [
                     const Icon(Icons.calculate_outlined),
@@ -704,7 +777,9 @@ class StokOpnamePage extends StatelessWidget {
 
               // Ringkasan batch + tombol simpan semua
               Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 elevation: 1,
                 child: Padding(
                   padding: const EdgeInsets.all(10),
@@ -722,20 +797,26 @@ class StokOpnamePage extends StatelessWidget {
                         Text('Net: ${c.totalNet}'),
                         const Spacer(),
                         ElevatedButton.icon(
-                          onPressed: c.isSaving.value ? null : () => c.saveBatch(),
+                          onPressed:
+                              c.isSaving.value ? null : () => c.saveBatch(),
                           icon:
                               c.isSaving.value
                                   ? const SizedBox(
                                     width: 18,
                                     height: 18,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
                                   )
                                   : const Icon(Icons.save_outlined),
                           label: const Text('Simpan Semua'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF6D4C41),
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                              vertical: 12,
+                            ),
                           ),
                         ),
                       ],
@@ -751,10 +832,14 @@ class StokOpnamePage extends StatelessWidget {
                 child: Obx(() {
                   final data = c.batchItems;
                   if (data.isEmpty) {
-                    return const Center(child: Text('Daftar batch masih kosong'));
+                    return const Center(
+                      child: Text('Daftar batch masih kosong'),
+                    );
                   }
                   return Card(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     elevation: 2,
                     child: Scrollbar(
                       thumbVisibility: true,
@@ -766,7 +851,9 @@ class StokOpnamePage extends StatelessWidget {
                           // <-- HORIZONTAL scroll
                           scrollDirection: Axis.horizontal,
                           child: DataTable(
-                            headingTextStyle: const TextStyle(fontWeight: FontWeight.bold),
+                            headingTextStyle: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
                             columns: const [
                               DataColumn(label: Text('No')),
                               DataColumn(label: Text('Nama')),
@@ -787,7 +874,10 @@ class StokOpnamePage extends StatelessWidget {
                                   DataCell(
                                     IconButton(
                                       tooltip: 'Hapus',
-                                      icon: const Icon(Icons.delete_forever, color: Colors.red),
+                                      icon: const Icon(
+                                        Icons.delete_forever,
+                                        color: Colors.red,
+                                      ),
                                       onPressed: () => c.removeFromBatch(i),
                                     ),
                                   ),

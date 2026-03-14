@@ -10,13 +10,17 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 import 'package:intl/intl.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 
 String formatrupiah(num amount) {
-  final formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+  final formatter = NumberFormat.currency(
+    locale: 'id_ID',
+    symbol: 'Rp ',
+    decimalDigits: 0,
+  );
   return formatter.format(amount);
 }
 
@@ -30,7 +34,7 @@ class HistoryPembelianController extends GetxController {
 
   RxList<DateTime?> rangeDatePickerSupplier = <DateTime?>[].obs;
   ScrollController scrollTglController = ScrollController();
-  Dio dio = Dio();
+  Dio dio = DioClient();
   RxList<Map<String, dynamic>> suppliers = <Map<String, dynamic>>[].obs;
   RxnString selectedSupplierId = RxnString(null);
   TextEditingController txtTglController = TextEditingController();
@@ -106,7 +110,10 @@ class HistoryPembelianController extends GetxController {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Detail Faktur", style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(
+                  "Detail Faktur",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 Obx(
                   () => Text(
                     "Total: ${formatrupiah(diskonPembelian[0]['total_net'])}",
@@ -130,7 +137,10 @@ class HistoryPembelianController extends GetxController {
                       width: 200,
                       child: Text(
                         "Netto: ${formatrupiah(totalHargaDetailFaktur.value)}",
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
                       ),
                     ),
                     Container(
@@ -138,7 +148,10 @@ class HistoryPembelianController extends GetxController {
                       width: 200,
                       child: Text(
                         "Disc: ${formatrupiah(diskonPembelian[0]['total_diskon'])}",
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
                       ),
                     ),
                     Container(
@@ -146,7 +159,10 @@ class HistoryPembelianController extends GetxController {
                       width: 200,
                       child: Text(
                         "Pajak: ${formatrupiah(diskonPembelian[0]['pajak'])}",
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
                       ),
                     ),
                   ],
@@ -158,7 +174,10 @@ class HistoryPembelianController extends GetxController {
         content: Obx(() {
           // Tampilkan loading spinner jika sedang mengambil data
           if (isDetailLoading.isTrue) {
-            return SizedBox(height: 100, child: Center(child: CircularProgressIndicator()));
+            return SizedBox(
+              height: 100,
+              child: Center(child: CircularProgressIndicator()),
+            );
           }
 
           // Tampilkan list item jika data sudah ada
@@ -188,7 +207,11 @@ class HistoryPembelianController extends GetxController {
                     ),
                     trailing: Text(
                       "Rp ${currencyFormat.format(item['total'] ?? 0)}",
-                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurple, fontSize: 18),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.deepPurple,
+                        fontSize: 18,
+                      ),
                     ),
                   ),
                 );
@@ -196,7 +219,9 @@ class HistoryPembelianController extends GetxController {
             ),
           );
         }),
-        actions: [TextButton(onPressed: () => Get.back(), child: const Text("TUTUP"))],
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text("TUTUP")),
+        ],
       ),
       // Mencegah dialog tertutup saat disentuh di luar area
       barrierDismissible: false,
@@ -205,11 +230,15 @@ class HistoryPembelianController extends GetxController {
     // 3. Ambil data dari API setelah dialog muncul
     try {
       final idForm = faktur['id_form'];
-      final response = await dio.get('${myIpAddr()}/pembelian/detail_faktur_pembelian?id_form=$idForm');
+      final response = await dio.get(
+        '${myIpAddr()}/pembelian/detail_faktur_pembelian?id_form=$idForm',
+      );
 
       final List<dynamic> responseData = response.data;
 
-      detailFakturItems.assignAll(responseData.map((e) => e as Map<String, dynamic>).toList());
+      detailFakturItems.assignAll(
+        responseData.map((e) => e as Map<String, dynamic>).toList(),
+      );
       recalculateTotal();
     } catch (e) {
       log("Gagal mengambil detail faktur: $e");
@@ -273,7 +302,10 @@ class HistoryPembelianController extends GetxController {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Detail Faktur", style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(
+                  "Detail Faktur",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 Obx(
                   () => Text(
                     "Total: ${formatrupiah(diskonPembelian[0]['total_net'])}",
@@ -297,7 +329,10 @@ class HistoryPembelianController extends GetxController {
                       width: 200,
                       child: Text(
                         "Netto: ${formatrupiah(totalHargaDetailFaktur.value)}",
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
                       ),
                     ),
                     Container(
@@ -305,7 +340,10 @@ class HistoryPembelianController extends GetxController {
                       width: 200,
                       child: Text(
                         "Disc: ${formatrupiah(diskonPembelian[0]['total_diskon'])}",
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
                       ),
                     ),
                     Container(
@@ -313,7 +351,10 @@ class HistoryPembelianController extends GetxController {
                       width: 200,
                       child: Text(
                         "Pajak: ${formatrupiah(diskonPembelian[0]['pajak'])}",
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
                       ),
                     ),
                   ],
@@ -324,7 +365,10 @@ class HistoryPembelianController extends GetxController {
         ),
         content: Obx(() {
           if (isDetailLoading.isTrue) {
-            return SizedBox(height: 100, child: Center(child: CircularProgressIndicator()));
+            return SizedBox(
+              height: 100,
+              child: Center(child: CircularProgressIndicator()),
+            );
           }
           if (detailFakturItems.isEmpty) {
             return Text("Tidak ada item detail.");
@@ -383,7 +427,9 @@ class HistoryPembelianController extends GetxController {
                               child: TextField(
                                 controller: hargaControllers[index],
                                 keyboardType: TextInputType.number,
-                                inputFormatters: <TextInputFormatter>[RupiahInputFormatter()],
+                                inputFormatters: <TextInputFormatter>[
+                                  RupiahInputFormatter(),
+                                ],
                                 decoration: InputDecoration(
                                   labelText: 'Harga Beli',
                                   prefixText: 'Rp ',
@@ -439,16 +485,24 @@ class HistoryPembelianController extends GetxController {
     // --- Ambil data dan BUAT TEXTEDITINGCONTROLLER ---
     try {
       final idForm = faktur['id_form'];
-      final response = await dio.get('${myIpAddr()}/pembelian/detail_faktur_pembelian?id_form=$idForm');
+      final response = await dio.get(
+        '${myIpAddr()}/pembelian/detail_faktur_pembelian?id_form=$idForm',
+      );
       final List<dynamic> responseData = response.data;
 
       for (var data in responseData) {
         final itemMap = data as Map<String, dynamic>;
 
         // Buat controller untuk setiap item
-        final qtyController = TextEditingController(text: itemMap['qty_purchase'].toString());
-        final purchaseUnitController = TextEditingController(text: itemMap['purchase_unit']);
-        final hargaController = TextEditingController(text: itemMap['harga_per_purchase_unit'].toString());
+        final qtyController = TextEditingController(
+          text: itemMap['qty_purchase'].toString(),
+        );
+        final purchaseUnitController = TextEditingController(
+          text: itemMap['purchase_unit'],
+        );
+        final hargaController = TextEditingController(
+          text: itemMap['harga_per_purchase_unit'].toString(),
+        );
 
         // Tambahkan listener untuk update otomatis
         void updateItemTotal() {
@@ -458,7 +512,10 @@ class HistoryPembelianController extends GetxController {
 
           // 2. Bersihkan teks dari karakter non-digit (titik, koma, dll.)
           final cleanQtyString = rawQtyText.replaceAll(RegExp(r'[^0-9]'), '');
-          final cleanHargaString = rawHargaText.replaceAll(RegExp(r'[^0-9]'), '');
+          final cleanHargaString = rawHargaText.replaceAll(
+            RegExp(r'[^0-9]'),
+            '',
+          );
 
           // 3. Parsing string yang sudah bersih. Jika gagal, hasilnya 0.
           final qty = int.tryParse(cleanQtyString) ?? 0;
@@ -505,7 +562,10 @@ class HistoryPembelianController extends GetxController {
   ) async {
     try {
       // Tampilkan loading overlay
-      Get.dialog(Center(child: CircularProgressIndicator()), barrierDismissible: false);
+      Get.dialog(
+        Center(child: CircularProgressIndicator()),
+        barrierDismissible: false,
+      );
 
       // Siapkan data untuk dikirim
       final List<Map<String, dynamic>> updatedItems = [];
@@ -524,7 +584,10 @@ class HistoryPembelianController extends GetxController {
       final payload = {"id_form": idForm, "items": updatedItems};
 
       // Kirim ke API
-      await dio.put('${myIpAddr()}/pembelian/update_detail_faktur', data: payload);
+      await dio.put(
+        '${myIpAddr()}/pembelian/update_detail_faktur',
+        data: payload,
+      );
 
       Get.back(); // Tutup loading overlay
       Get.back(); // Tutup dialog edit
@@ -560,7 +623,9 @@ class HistoryPembelianController extends GetxController {
           // KIRIM ULANG dengan objek FormData yang BARU
           await dio.put('${myIpAddr()}/pembelian/pelunasan_pembelian/$idForm');
 
-          CherryToast.info(title: const Text("Faktur berhasil dilunasi")).show(Get.context!);
+          CherryToast.info(
+            title: const Text("Faktur berhasil dilunasi"),
+          ).show(Get.context!);
 
           fetchFakturPembelian();
         } on DioException catch (e) {
@@ -570,7 +635,9 @@ class HistoryPembelianController extends GetxController {
             ).show(Get.context!);
           } else {
             log("Error saat mengirim ulang: $e");
-            CherryToast.error(title: Text("Tidak dapat terhubung ke server")).show(Get.context!);
+            CherryToast.error(
+              title: Text("Tidak dapat terhubung ke server"),
+            ).show(Get.context!);
           }
         }
       },
@@ -593,7 +660,9 @@ class HistoryPembelianController extends GetxController {
           // KIRIM ULANG dengan objek FormData yang BARU
           await dio.put('${myIpAddr()}/pembelian/cancel_pembelian/$idForm');
 
-          CherryToast.info(title: const Text("Faktur berhasil Dibatalkan")).show(Get.context!);
+          CherryToast.info(
+            title: const Text("Faktur berhasil Dibatalkan"),
+          ).show(Get.context!);
 
           fetchFakturPembelian();
         } on DioException catch (e) {
@@ -603,7 +672,9 @@ class HistoryPembelianController extends GetxController {
             ).show(Get.context!);
           } else {
             log("Error saat mengirim ulang: $e");
-            CherryToast.error(title: const Text("Tidak dapat terhubung ke server")).show(Get.context!);
+            CherryToast.error(
+              title: const Text("Tidak dapat terhubung ke server"),
+            ).show(Get.context!);
           }
         }
       },
@@ -614,7 +685,8 @@ class HistoryPembelianController extends GetxController {
   Future<void> cetakLaporan() async {
     Get.dialog(
       const DownloadSplash(),
-      barrierDismissible: true, // Prevent user from dismissing by tapping outside
+      barrierDismissible:
+          true, // Prevent user from dismissing by tapping outside
     );
 
     try {
@@ -653,7 +725,10 @@ class HistoryPembelianController extends GetxController {
         url,
         filePath,
         queryParameters: queryParams, // <--- Perubahan di sini
-        options: Options(responseType: ResponseType.bytes, headers: {'Accept': 'application/pdf'}),
+        options: Options(
+          responseType: ResponseType.bytes,
+          headers: {'Accept': 'application/pdf'},
+        ),
       );
 
       Get.back();
@@ -663,7 +738,9 @@ class HistoryPembelianController extends GetxController {
       log('File downloaded to: $filePath');
     } catch (e) {
       if (e is DioException) {
-        log("Error di fn cetakLaporan DioException : ${e.response?.data['message']}");
+        log(
+          "Error di fn cetakLaporan DioException : ${e.response?.data['message']}",
+        );
       }
       log("Error di fn cetakLaporan : $e");
     }
@@ -751,7 +828,9 @@ class HistoryPembelianController extends GetxController {
     dataFaktur.assignAll(_applyStatusFilter(allFaktur));
   }
 
-  List<Map<String, dynamic>> _applyStatusFilter(List<Map<String, dynamic>> source) {
+  List<Map<String, dynamic>> _applyStatusFilter(
+    List<Map<String, dynamic>> source,
+  ) {
     final filter = selectedStatus.value;
     if (filter == statusAll) return List<Map<String, dynamic>>.from(source);
     return source.where((item) => _deriveStatus(item) == filter).toList();
@@ -817,7 +896,9 @@ class HistoryPembelianController extends GetxController {
             // Tentukan ukuran dialog yang TEGAS (tight), responsif ke layar
             final maxDialogWidth = 500.0; // cap untuk tablet/layar lebar
             final dialogWidth = mq.size.width.clamp(0.0, maxDialogWidth);
-            final dialogHeight = (isPortrait ? mq.size.height * 0.7 : mq.size.height * 0.8) - 110;
+            final dialogHeight =
+                (isPortrait ? mq.size.height * 0.7 : mq.size.height * 0.8) -
+                110;
 
             return SizedBox(
               width: dialogWidth,
@@ -832,7 +913,10 @@ class HistoryPembelianController extends GetxController {
                   children: [
                     const Text(
                       "Petunjuk : Anda bisa memilih lebih dari 1 Tanggal",
-                      style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Poppins',
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 10),
@@ -845,7 +929,8 @@ class HistoryPembelianController extends GetxController {
                           config: CalendarDatePicker2Config(
                             calendarType: CalendarDatePicker2Type.range,
                             selectedDayHighlightColor: Colors.deepPurple,
-                            selectedRangeHighlightColor: Colors.purpleAccent.withOpacity(0.2),
+                            selectedRangeHighlightColor: Colors.purpleAccent
+                                .withOpacity(0.2),
                             firstDate: DateTime(2000),
                             lastDate: DateTime(2100),
                           ),
@@ -886,7 +971,10 @@ class HistoryPembelian extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('History Pembelian', style: TextStyle(fontFamily: 'Poppins', fontSize: 40)),
+        title: const Text(
+          'History Pembelian',
+          style: TextStyle(fontFamily: 'Poppins', fontSize: 40),
+        ),
         centerTitle: true,
         backgroundColor: const Color(0XFFFFE0B2),
       ),
@@ -919,7 +1007,9 @@ class HistoryPembelian extends StatelessWidget {
                         c.txtTglController.text =
                             "${indonesianDateFormat(startDate)} s/d ${indonesianDateFormat(endDate)}";
                       } else {
-                        c.txtTglController.text = indonesianDateFormat(startDate);
+                        c.txtTglController.text = indonesianDateFormat(
+                          startDate,
+                        );
                       }
                     },
                     controller: c.txtTglController,
@@ -931,11 +1021,17 @@ class HistoryPembelian extends StatelessWidget {
                       floatingLabelBehavior: FloatingLabelBehavior.always,
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.brown.shade300, width: 1.2),
+                        borderSide: BorderSide(
+                          color: Colors.brown.shade300,
+                          width: 1.2,
+                        ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.brown.shade700, width: 2),
+                        borderSide: BorderSide(
+                          color: Colors.brown.shade700,
+                          width: 2,
+                        ),
                       ),
                     ),
                   ),
@@ -947,12 +1043,14 @@ class HistoryPembelian extends StatelessWidget {
                       asyncItems: (String? filter) async {
                         await c.fetchSuppliers();
                         final q = (filter ?? '').trim().toLowerCase();
-                        if (q.isEmpty) return List<Map<String, dynamic>>.from(c.suppliers);
+                        if (q.isEmpty)
+                          return List<Map<String, dynamic>>.from(c.suppliers);
                         final seen = <String>{};
                         final list = <Map<String, dynamic>>[];
                         for (final s in c.suppliers) {
                           final id = s['id_supplier'].toString().toLowerCase();
-                          final name = s['nama_supplier'].toString().toLowerCase();
+                          final name =
+                              s['nama_supplier'].toString().toLowerCase();
                           if (id.contains(q) || name.contains(q)) {
                             final key = s['id_supplier'].toString();
                             if (seen.add(key)) list.add(s);
@@ -961,13 +1059,16 @@ class HistoryPembelian extends StatelessWidget {
                         return list;
                       },
                       selectedItem: c.uiSelectedSupplier.value,
-                      itemAsString: (m) => "${m?['id_supplier']} - ${m?['nama_supplier']}",
+                      itemAsString:
+                          (m) =>
+                              "${m?['id_supplier']} - ${m?['nama_supplier']}",
                       onChanged: (myMap) async {
                         c.uiSelectedSupplier.value = myMap;
                         c.hasSearched.value = false;
                         c.dataFaktur.assignAll([]);
                       },
-                      compareFn: (a, b) => a?['id_supplier'] == b?['id_supplier'],
+                      compareFn:
+                          (a, b) => a?['id_supplier'] == b?['id_supplier'],
                       clearButtonProps: const ClearButtonProps(isVisible: true),
                       popupProps: PopupProps.menu(
                         showSearchBox: true,
@@ -980,7 +1081,10 @@ class HistoryPembelian extends StatelessWidget {
                         ),
                       ),
                       dropdownDecoratorProps: DropDownDecoratorProps(
-                        baseStyle: TextStyle(color: Colors.brown.shade900, fontWeight: FontWeight.w500),
+                        baseStyle: TextStyle(
+                          color: Colors.brown.shade900,
+                          fontWeight: FontWeight.w500,
+                        ),
                         dropdownSearchDecoration: InputDecoration(
                           labelText: "Pilih Supplier",
                           labelStyle: TextStyle(color: Colors.brown.shade700),
@@ -990,11 +1094,17 @@ class HistoryPembelian extends StatelessWidget {
 
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.brown.shade300, width: 1.2),
+                            borderSide: BorderSide(
+                              color: Colors.brown.shade300,
+                              width: 1.2,
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.brown.shade700, width: 2),
+                            borderSide: BorderSide(
+                              color: Colors.brown.shade700,
+                              width: 2,
+                            ),
                           ),
                         ),
                       ),
@@ -1014,11 +1124,17 @@ class HistoryPembelian extends StatelessWidget {
                         floatingLabelBehavior: FloatingLabelBehavior.always,
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.brown.shade300, width: 1.2),
+                          borderSide: BorderSide(
+                            color: Colors.brown.shade300,
+                            width: 1.2,
+                          ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.brown.shade700, width: 2),
+                          borderSide: BorderSide(
+                            color: Colors.brown.shade700,
+                            width: 2,
+                          ),
                         ),
                       ),
                       items: [
@@ -1027,12 +1143,15 @@ class HistoryPembelian extends StatelessWidget {
                           child: Text('Semua Status'),
                         ),
                         ...HistoryPembelianController.statusFilters.map(
-                          (value) =>
-                              DropdownMenuItem(value: value, child: Text(value.capitalizeFirst ?? value)),
+                          (value) => DropdownMenuItem(
+                            value: value,
+                            child: Text(value.capitalizeFirst ?? value),
+                          ),
                         ),
                       ],
                       onChanged: (value) {
-                        final newValue = value ?? HistoryPembelianController.statusAll;
+                        final newValue =
+                            value ?? HistoryPembelianController.statusAll;
                         c.uiSelectedStatus.value = newValue;
                         if (c.hasSearched.isTrue && c.allFaktur.isNotEmpty) {
                           c.selectedStatus.value = newValue;
@@ -1050,7 +1169,9 @@ class HistoryPembelian extends StatelessWidget {
                   child: ElevatedButton.icon(
                     onPressed: () {
                       // 1. Ambil ID dari state UI (pilihan dropdown terakhir)
-                      final id = c.uiSelectedSupplier.value?['id_supplier']?.toString();
+                      final id =
+                          c.uiSelectedSupplier.value?['id_supplier']
+                              ?.toString();
 
                       // 2. "Commit" atau simpan ID tersebut ke state utama
                       c.selectedSupplierId.value = id;
@@ -1064,7 +1185,11 @@ class HistoryPembelian extends StatelessWidget {
                     icon: const Icon(Icons.search),
                     label: const Text(
                       "Tampil",
-                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, fontFamily: 'Poppins'),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                        fontFamily: 'Poppins',
+                      ),
                     ),
                   ),
                 ),
@@ -1113,7 +1238,9 @@ class HistoryPembelian extends StatelessWidget {
                   // int totalDataFakturTerbayar = c.dataFaktur.where((element) => element['status'] == 'Lunas').length;
 
                   Map selectedSupplier = c.suppliers.firstWhere(
-                    (element) => element['id_supplier'].toString() == c.selectedSupplierId.value.toString(),
+                    (element) =>
+                        element['id_supplier'].toString() ==
+                        c.selectedSupplierId.value.toString(),
                   );
 
                   return Row(
@@ -1134,7 +1261,8 @@ class HistoryPembelian extends StatelessWidget {
                             ),
                             Row(
                               children: [
-                                c.selectedStatus == HistoryPembelianController.statusAll
+                                c.selectedStatus ==
+                                        HistoryPembelianController.statusAll
                                     ? Container(
                                       width: 130,
                                       child: Text(
@@ -1173,7 +1301,8 @@ class HistoryPembelian extends StatelessWidget {
                                   ),
                                 ),
                                 SizedBox(width: 20),
-                                c.selectedStatus == HistoryPembelianController.statusAll
+                                c.selectedStatus ==
+                                        HistoryPembelianController.statusAll
                                     ? Text(
                                       "Total Pembelian Dibatalkan: ${formatrupiah(totalHargaFakturVoid)}",
                                       style: const TextStyle(
@@ -1185,7 +1314,8 @@ class HistoryPembelian extends StatelessWidget {
                                     : SizedBox.shrink(),
                               ],
                             ),
-                            c.selectedStatus == HistoryPembelianController.statusAll
+                            c.selectedStatus ==
+                                    HistoryPembelianController.statusAll
                                 ? Row(
                                   children: [
                                     Container(
@@ -1211,7 +1341,8 @@ class HistoryPembelian extends StatelessWidget {
                                   ],
                                 )
                                 : SizedBox.shrink(),
-                            c.selectedStatus == HistoryPembelianController.statusAll
+                            c.selectedStatus ==
+                                    HistoryPembelianController.statusAll
                                 ? Row(
                                   children: [
                                     Container(
@@ -1247,7 +1378,9 @@ class HistoryPembelian extends StatelessWidget {
                           onPressed: c.cetakLaporan,
                           style: TextButton.styleFrom(),
 
-                          child: Text("Cetak Laporan - (${selectedSupplier['nama_supplier']})"),
+                          child: Text(
+                            "Cetak Laporan - (${selectedSupplier['nama_supplier']})",
+                          ),
                         ),
                       ),
                     ],
@@ -1272,7 +1405,8 @@ class HistoryPembelian extends StatelessWidget {
                           ),
                           Row(
                             children: [
-                              c.selectedStatus == HistoryPembelianController.statusAll
+                              c.selectedStatus ==
+                                      HistoryPembelianController.statusAll
                                   ? Container(
                                     width: 130,
                                     child: Text(
@@ -1311,7 +1445,8 @@ class HistoryPembelian extends StatelessWidget {
                                 ),
                               ),
                               SizedBox(width: 20),
-                              c.selectedStatus == HistoryPembelianController.statusAll
+                              c.selectedStatus ==
+                                      HistoryPembelianController.statusAll
                                   ? Text(
                                     "Total Pembelian Dibatalkan: ${formatrupiah(totalHargaFakturVoid)}",
                                     style: const TextStyle(
@@ -1323,7 +1458,8 @@ class HistoryPembelian extends StatelessWidget {
                                   : SizedBox.shrink(),
                             ],
                           ),
-                          c.selectedStatus == HistoryPembelianController.statusAll
+                          c.selectedStatus ==
+                                  HistoryPembelianController.statusAll
                               ? Row(
                                 children: [
                                   Container(
@@ -1349,7 +1485,8 @@ class HistoryPembelian extends StatelessWidget {
                                 ],
                               )
                               : SizedBox.shrink(),
-                          c.selectedStatus == HistoryPembelianController.statusAll
+                          c.selectedStatus ==
+                                  HistoryPembelianController.statusAll
                               ? Row(
                                 children: [
                                   Container(
@@ -1385,7 +1522,11 @@ class HistoryPembelian extends StatelessWidget {
                         onPressed: c.cetakLaporan,
                         child: const Text(
                           "Cetak Laporan",
-                          style: TextStyle(color: Colors.black, fontSize: 17, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
@@ -1465,14 +1606,24 @@ class ContainerDataFaktur extends StatelessWidget {
       fontWeight: FontWeight.w600,
       height: 1.2,
     );
-    final valueStyle = const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, height: 1.2);
+    final valueStyle = const TextStyle(
+      fontSize: 14,
+      fontWeight: FontWeight.w500,
+      height: 1.2,
+    );
 
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade200),
-        boxShadow: const [BoxShadow(blurRadius: 10, offset: Offset(0, 2), color: Color(0x14000000))],
+        boxShadow: const [
+          BoxShadow(
+            blurRadius: 10,
+            offset: Offset(0, 2),
+            color: Color(0x14000000),
+          ),
+        ],
       ),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Row(
@@ -1489,7 +1640,11 @@ class ContainerDataFaktur extends StatelessWidget {
                   children: [
                     SizedBox(
                       width: 110,
-                      child: Text("Id Form :", style: labelStyle, overflow: TextOverflow.ellipsis),
+                      child: Text(
+                        "Id Form :",
+                        style: labelStyle,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -1510,7 +1665,11 @@ class ContainerDataFaktur extends StatelessWidget {
                   children: [
                     SizedBox(
                       width: 110,
-                      child: Text("No Faktur :", style: labelStyle, overflow: TextOverflow.ellipsis),
+                      child: Text(
+                        "No Faktur :",
+                        style: labelStyle,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -1531,13 +1690,19 @@ class ContainerDataFaktur extends StatelessWidget {
                   children: [
                     SizedBox(
                       width: 110,
-                      child: Text("Tanggal Form :", style: labelStyle, overflow: TextOverflow.ellipsis),
+                      child: Text(
+                        "Tanggal Form :",
+                        style: labelStyle,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Builder(
                         builder: (context) {
-                          DateTime tanggalForm = DateTime.parse(item['tanggal_form']);
+                          DateTime tanggalForm = DateTime.parse(
+                            item['tanggal_form'],
+                          );
                           return Text(
                             indonesianDateFormat(tanggalForm),
                             style: valueStyle,
@@ -1557,7 +1722,11 @@ class ContainerDataFaktur extends StatelessWidget {
                   children: [
                     SizedBox(
                       width: 110,
-                      child: Text("Total :", style: labelStyle, overflow: TextOverflow.ellipsis),
+                      child: Text(
+                        "Total :",
+                        style: labelStyle,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -1579,7 +1748,11 @@ class ContainerDataFaktur extends StatelessWidget {
                   children: [
                     SizedBox(
                       width: 110,
-                      child: Text("Status: ", style: labelStyle, overflow: TextOverflow.ellipsis),
+                      child: Text(
+                        "Status: ",
+                        style: labelStyle,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -1633,7 +1806,9 @@ class ContainerDataFaktur extends StatelessWidget {
                                   minimumSize: const Size(40, 40),
                                   padding: EdgeInsets.zero,
                                   visualDensity: VisualDensity.compact,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
                                 ),
                                 child: const Icon(Icons.edit, size: 20),
                               ),
@@ -1649,9 +1824,14 @@ class ContainerDataFaktur extends StatelessWidget {
                                 minimumSize: const Size(40, 40),
                                 padding: EdgeInsets.zero,
                                 visualDensity: VisualDensity.compact,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                               ),
-                              child: const Icon(Icons.visibility_outlined, size: 20),
+                              child: const Icon(
+                                Icons.visibility_outlined,
+                                size: 20,
+                              ),
                             ),
                           ),
 
@@ -1668,7 +1848,9 @@ class ContainerDataFaktur extends StatelessWidget {
                                   padding: EdgeInsets.zero,
                                   foregroundColor: Colors.red.shade600,
                                   visualDensity: VisualDensity.compact,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
                                 ),
                                 child: const Icon(Icons.block, size: 20),
                               ),
@@ -1687,9 +1869,15 @@ class ContainerDataFaktur extends StatelessWidget {
                                   minimumSize: const Size(40, 40),
                                   padding: EdgeInsets.zero,
                                   visualDensity: VisualDensity.compact,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
                                 ),
-                                child: const Icon(Icons.check, size: 20, color: Colors.green),
+                                child: const Icon(
+                                  Icons.check,
+                                  size: 20,
+                                  color: Colors.green,
+                                ),
                               ),
                             ),
                         ],

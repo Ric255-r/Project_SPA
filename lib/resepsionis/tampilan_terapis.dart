@@ -2,14 +2,10 @@ import 'dart:developer';
 
 import 'package:Project_SPA/function/ip_address.dart';
 import 'package:Project_SPA/function/our_drawer.dart';
-import 'package:Project_SPA/resepsionis/transaksi_fasilitas.dart';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'dart:async';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:Project_SPA/resepsionis/transaksi_food.dart';
-import 'package:Project_SPA/resepsionis/transaksi_massage.dart';
 
 class TampilanTerapis extends StatefulWidget {
   const TampilanTerapis({super.key});
@@ -19,7 +15,7 @@ class TampilanTerapis extends StatefulWidget {
 }
 
 class _TampilanTerapisState extends State<TampilanTerapis> {
-  var dio = Dio();
+  var dio = DioClient();
   Timer? _refreshTimer;
   RxList<Map<String, dynamic>> dataTerapis = <Map<String, dynamic>>[].obs;
   Future<void> getdataTerapis() async {

@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:Project_SPA/function/ip_address.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cherry_toast/cherry_toast.dart';
@@ -12,7 +12,7 @@ import 'package:open_file/open_file.dart';
 
 class LaporanJenisTamuController extends GetxController {
   ScrollController scrollTglController = ScrollController();
-  final dio = Dio();
+  final dio = DioClient();
   RxList laporanJenisTamu = <Map<String, dynamic>>[].obs;
   RxList<DateTime?> rangeDatePickerTamu = <DateTime?>[].obs;
   ScrollController laporanScrollController = ScrollController();
@@ -25,7 +25,10 @@ class LaporanJenisTamuController extends GetxController {
       var response = await dio.get(
         '${myIpAddr()}/laporan_jenis_tamu',
         queryParameters: {
-          "start_date": formatDate(rangeDatePickerTamu[0], format: 'yyyy-MM-dd'),
+          "start_date": formatDate(
+            rangeDatePickerTamu[0],
+            format: 'yyyy-MM-dd',
+          ),
           "end_date":
               rangeDatePickerTamu.length > 1
                   ? formatDate(rangeDatePickerTamu[1], format: 'yyyy-MM-dd')
@@ -34,7 +37,9 @@ class LaporanJenisTamuController extends GetxController {
       );
 
       if (response.statusCode == 200) {
-        laporanJenisTamu.assignAll(List<Map<String, dynamic>>.from(response.data));
+        laporanJenisTamu.assignAll(
+          List<Map<String, dynamic>>.from(response.data),
+        );
 
         log("Isi Laporan Jenis Tamu $laporanJenisTamu");
       }
@@ -42,10 +47,12 @@ class LaporanJenisTamuController extends GetxController {
       if (e is DioException) {
         final statusCode = e.response?.statusCode;
         final data = e.response?.data;
-        final serverMessage = data is Map<String, dynamic> ? data['message']?.toString() : null;
+        final serverMessage =
+            data is Map<String, dynamic> ? data['message']?.toString() : null;
 
         if (statusCode == 404 &&
-            serverMessage == "Data transaksi tidak ditemukan untuk filter yang diberikan") {
+            serverMessage ==
+                "Data transaksi tidak ditemukan untuk filter yang diberikan") {
           laporanJenisTamu.clear();
           CherryToast.info(
             title: const Text("Informasi"),
@@ -74,15 +81,22 @@ class LaporanJenisTamuController extends GetxController {
 
     final startDate = formatDate(rangeDatePickerTamu[0], format: 'yyyy-MM-dd');
     final endDate =
-        rangeDatePickerTamu.length > 1 ? formatDate(rangeDatePickerTamu[1], format: 'yyyy-MM-dd') : startDate;
+        rangeDatePickerTamu.length > 1
+            ? formatDate(rangeDatePickerTamu[1], format: 'yyyy-MM-dd')
+            : startDate;
 
     final fileName = 'laporan_jenis_tamu_${startDate}_$endDate.pdf';
     final savePath = '${Directory.systemTemp.path}/$fileName';
 
-    Map<String, String> queryParams = {"start_date": startDate, "end_date": endDate};
+    Map<String, String> queryParams = {
+      "start_date": startDate,
+      "end_date": endDate,
+    };
 
-    if (selectedJenisPilihan.value != null) queryParams['jenis_tamu'] = selectedJenisPilihan.value ?? '';
-    if (selectedStatus.value != null) queryParams['status'] = selectedStatus.value ?? '';
+    if (selectedJenisPilihan.value != null)
+      queryParams['jenis_tamu'] = selectedJenisPilihan.value ?? '';
+    if (selectedStatus.value != null)
+      queryParams['status'] = selectedStatus.value ?? '';
 
     try {
       await dio.download(
@@ -98,10 +112,12 @@ class LaporanJenisTamuController extends GetxController {
         Get.back();
         final statusCode = e.response?.statusCode;
         final data = e.response?.data;
-        final serverMessage = data is Map<String, dynamic> ? data['message']?.toString() : null;
+        final serverMessage =
+            data is Map<String, dynamic> ? data['message']?.toString() : null;
 
         if (statusCode == 404 &&
-            serverMessage == "Data transaksi tidak ditemukan untuk filter yang diberikan") {
+            serverMessage ==
+                "Data transaksi tidak ditemukan untuk filter yang diberikan") {
           CherryToast.info(
             title: const Text("Informasi"),
             description: Text(serverMessage ?? "Data tidak ditemukan"),
@@ -109,7 +125,9 @@ class LaporanJenisTamuController extends GetxController {
           return;
         }
 
-        throw Exception("Gagal mengunduh laporan: ${e.response?.data ?? e.message}");
+        throw Exception(
+          "Gagal mengunduh laporan: ${e.response?.data ?? e.message}",
+        );
       }
       Get.back();
       throw Exception("Error download laporan jenis tamu: $e");
@@ -145,7 +163,9 @@ class LaporanJenisTamuController extends GetxController {
             // Tentukan ukuran dialog yang TEGAS (tight), responsif ke layar
             final maxDialogWidth = 500.0; // cap untuk tablet/layar lebar
             final dialogWidth = mq.size.width.clamp(0.0, maxDialogWidth);
-            final dialogHeight = (isPortrait ? mq.size.height * 0.7 : mq.size.height * 0.8) - 110;
+            final dialogHeight =
+                (isPortrait ? mq.size.height * 0.7 : mq.size.height * 0.8) -
+                110;
 
             return SizedBox(
               width: dialogWidth,
@@ -160,7 +180,10 @@ class LaporanJenisTamuController extends GetxController {
                   children: [
                     const Text(
                       "Petunjuk : Anda bisa memilih lebih dari 1 Tanggal",
-                      style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Poppins',
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 10),
@@ -173,7 +196,8 @@ class LaporanJenisTamuController extends GetxController {
                           config: CalendarDatePicker2Config(
                             calendarType: CalendarDatePicker2Type.range,
                             selectedDayHighlightColor: Colors.deepPurple,
-                            selectedRangeHighlightColor: Colors.purpleAccent.withOpacity(0.2),
+                            selectedRangeHighlightColor: Colors.purpleAccent
+                                .withOpacity(0.2),
                             firstDate: DateTime(2000),
                             lastDate: DateTime(2100),
                           ),
@@ -216,7 +240,10 @@ class LaporanJenisTamuController extends GetxController {
 
   void _showDownloadLoading() {
     Get.dialog(
-      WillPopScope(onWillPop: () async => false, child: const Center(child: CircularProgressIndicator())),
+      WillPopScope(
+        onWillPop: () async => false,
+        child: const Center(child: CircularProgressIndicator()),
+      ),
       barrierDismissible: false,
     );
   }

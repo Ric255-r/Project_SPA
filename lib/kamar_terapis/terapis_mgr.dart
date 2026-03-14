@@ -2,7 +2,7 @@
 
 import 'dart:developer';
 import 'package:cherry_toast/cherry_toast.dart';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 import 'package:Project_SPA/function/token.dart';
 import 'package:flutter/material.dart';
@@ -53,7 +53,7 @@ class KamarTerapisMgr {
     try {
       final prefs = await getTokenSharedPref();
 
-      var response = await Dio().get(
+      var response = await DioClient().get(
         '${myIpAddr()}/kamar_terapis/latest_trans?id_trans=$idTrans',
         options: Options(headers: {"Authorization": "bearer " + prefs!}),
       );
@@ -107,7 +107,7 @@ class KamarTerapisMgr {
     try {
       final prefs = await getTokenSharedPref();
 
-      var response = await Dio().get(
+      var response = await DioClient().get(
         '${myIpAddr()}/fnb/selected_food?id_trans=$idTrans',
         options: Options(headers: {"Authorization": "bearer " + prefs!}),
       );
@@ -131,7 +131,10 @@ class KamarTerapisMgr {
     }
   }
 
-  Future<bool> setSelesai({bool cepatSelesai = false, String alasan = ""}) async {
+  Future<bool> setSelesai({
+    bool cepatSelesai = false,
+    String alasan = "",
+  }) async {
     try {
       var url = '${myIpAddr()}/kamar_terapis/selesai';
 
@@ -139,7 +142,10 @@ class KamarTerapisMgr {
         url = '${myIpAddr()}/kamar_terapis/selesai?selesai_awal=$alasan';
       }
 
-      var response = await Dio().put(url, data: {"id_transaksi": idTransaksi});
+      var response = await DioClient().put(
+        url,
+        data: {"id_transaksi": idTransaksi},
+      );
 
       if (response.statusCode == 200) {
         resetLimitChange();
@@ -202,10 +208,13 @@ class KamarTerapisMgr {
 
   Future<bool?> askSpvForChanges(String password, context) async {
     try {
-      var response = await Dio().put(
+      var response = await DioClient().put(
         '${myIpAddr()}/kamar_terapis/ask_spv_approval',
         data: {"passwd": password},
-        options: Options(contentType: Headers.jsonContentType, responseType: ResponseType.json),
+        options: Options(
+          contentType: Headers.jsonContentType,
+          responseType: ResponseType.json,
+        ),
       );
 
       return (response.data as bool);

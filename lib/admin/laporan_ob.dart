@@ -1,29 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
-import 'package:Project_SPA/admin/listpaket.dart';
-import 'package:Project_SPA/admin/listpekerja.dart';
-import 'package:Project_SPA/admin/listpromo.dart';
-import 'package:Project_SPA/admin/listroom.dart';
-import 'package:Project_SPA/admin/listuser.dart';
-import 'package:Project_SPA/admin/regis_locker.dart';
-import 'package:Project_SPA/admin/regis_paket.dart';
-import 'package:Project_SPA/admin/regis_pekerja.dart';
-import 'package:Project_SPA/admin/regis_promo.dart';
-import 'package:Project_SPA/admin/regis_room.dart';
-import 'package:Project_SPA/admin/regis_users.dart';
 import 'package:Project_SPA/function/admin_drawer.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 import 'package:Project_SPA/function/ip_address.dart';
-import 'package:Project_SPA/kamar_terapis/terapis_bekerja.dart';
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:cherry_toast/cherry_toast.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 import 'package:get/get.dart';
-import 'package:Project_SPA/main.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class LaporanOB extends StatefulWidget {
   const LaporanOB({super.key});
@@ -45,7 +29,7 @@ class _LaporanOBState extends State<LaporanOB> {
     });
   }
 
-  var dio = Dio();
+  var dio = DioClient();
 
   Timer? _debounce;
 
@@ -55,7 +39,7 @@ class _LaporanOBState extends State<LaporanOB> {
 
   Future<List<Map<String, dynamic>>> fetchData() async {
     try {
-      final response = await Dio().get('${myIpAddr()}/laporan/laporanob');
+      final response = await dio.get('${myIpAddr()}/laporan/laporanob');
 
       if (response.statusCode == 200) {
         return List<Map<String, dynamic>>.from(response.data);
@@ -550,7 +534,7 @@ class _LaporanOBState extends State<LaporanOB> {
 
                                                         try {
                                                           final response =
-                                                              await Dio().put(
+                                                              await dio.put(
                                                                 '${myIpAddr()}/laporan/updatelaporanob/$idLaporan',
                                                               );
 

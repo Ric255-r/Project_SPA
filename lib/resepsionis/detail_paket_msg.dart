@@ -7,7 +7,7 @@ import 'package:Project_SPA/resepsionis/store_locker.dart';
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:get/get.dart';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:Project_SPA/function/ip_address.dart';
@@ -83,7 +83,10 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
   Future<void> gethargavip() async {
     try {
       namaroom = controllerPekerja.getroom.value.substring(5);
-      var response = await dio.get('${myIpAddr()}/ruangan/datahargavip', data: {"nama_ruangan": namaroom});
+      var response = await dio.get(
+        '${myIpAddr()}/ruangan/datahargavip',
+        data: {"nama_ruangan": namaroom},
+      );
 
       List<Map<String, dynamic>> fetcheddata =
           (response.data as List).map((item) {
@@ -118,12 +121,17 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
   // Function to update `dataJual` (like React's `setState`)
   void addToDataJual(Map<String, dynamic> newItem) {
     setState(() {
-      final existsIdx = dataJual.indexWhere((item) => item['id_paket_msg'] == newItem['id_paket_msg']);
+      final existsIdx = dataJual.indexWhere(
+        (item) => item['id_paket_msg'] == newItem['id_paket_msg'],
+      );
 
       if (existsIdx != -1) {
-        dataJual[existsIdx]['jlh'] = (dataJual[existsIdx]['jlh'] as num).toInt() + 1;
+        dataJual[existsIdx]['jlh'] =
+            (dataJual[existsIdx]['jlh'] as num).toInt() + 1;
         dataJual[existsIdx]['harga_total'] =
-            ((dataJual[existsIdx]['harga_paket_msg'] as num) * (dataJual[existsIdx]['jlh'] as num)).toInt();
+            ((dataJual[existsIdx]['harga_paket_msg'] as num) *
+                    (dataJual[existsIdx]['jlh'] as num))
+                .toInt();
       } else {
         dataJual.add({...newItem, 'harga_total': newItem['harga_paket_msg']});
       }
@@ -139,7 +147,8 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
 
           if (existbonusitemidx != -1) {
             dataJual[existbonusitemidx]['jlh'] =
-                (dataJual[existbonusitemidx]['jlh'] as num).toInt() + listBonusItem[0]['qty'];
+                (dataJual[existbonusitemidx]['jlh'] as num).toInt() +
+                listBonusItem[0]['qty'];
           } else {
             dataJual.add({
               "id_paket_msg": listBonusItem[0]['id_fnb'],
@@ -184,7 +193,11 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
     }
   }
 
-  final formatCurrency = NumberFormat.currency(locale: "id_ID", decimalDigits: 0, symbol: 'Rp. ');
+  final formatCurrency = NumberFormat.currency(
+    locale: "id_ID",
+    decimalDigits: 0,
+    symbol: 'Rp. ',
+  );
 
   double getHargaBeforeDisc() {
     double total = 0.0;
@@ -282,7 +295,9 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
   void updateUIWithDiscount() {
     final result = getHargaAfterDisc();
     setState(() {
-      _dialogTxtTotalFormatted.text = formatCurrency.format((result["stlh_disc"]! / 1000).round() * 1000);
+      _dialogTxtTotalFormatted.text = formatCurrency.format(
+        (result["stlh_disc"]! / 1000).round() * 1000,
+      );
       _dialogTxtTotalOri = (result["stlh_disc"]! / 1000).round() * 1000;
     });
   }
@@ -332,7 +347,11 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
       Get.dialog(
         AlertDialog(
           title: Center(child: Text('Loading')),
-          content: SizedBox(width: 100, height: 100, child: Center(child: CircularProgressIndicator())),
+          content: SizedBox(
+            width: 100,
+            height: 100,
+            child: Center(child: CircularProgressIndicator()),
+          ),
         ),
       );
       var rincian = getHargaAfterDisc();
@@ -389,11 +408,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
       data['pajak'] = desimalPjk.value;
       data["gtotal_stlh_pajak"] = hrgStlhPjk.value;
 
-      var response = await dio.post(
-        '${myIpAddr()}/massages/store',
-        options: Options(headers: {"Authorization": "Bearer $token"}),
-        data: data,
-      );
+      var response = await dio.post('${myIpAddr()}/massages/store', data: data);
 
       loadupdatetransaksi.value = 'sukses';
 
@@ -401,7 +416,11 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
       CherryToast.success(
         title: Text(
           "Transaksi Sukses!",
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Poppins',
+          ),
         ),
         animationDuration: const Duration(milliseconds: 2000),
         autoDismiss: true,
@@ -414,7 +433,11 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
       CherryToast.error(
         title: Text(
           "Transaksi Gagal!",
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Poppins',
+          ),
         ),
         animationDuration: const Duration(milliseconds: 2000),
         autoDismiss: true,
@@ -449,7 +472,12 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
     }
   }
 
-  Future<void> daftarruangtunggu(idtransaksi, namaruangan, idterapis, namaterapis) async {
+  Future<void> daftarruangtunggu(
+    idtransaksi,
+    namaruangan,
+    idterapis,
+    namaterapis,
+  ) async {
     try {
       await dio.post(
         '${myIpAddr()}/spv/daftarruangtunggu',
@@ -470,7 +498,11 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
     try {
       await dio.post(
         '${myIpAddr()}/massages/saveterapis',
-        data: {"id_transaksi": idtransaksi, "idterapis2": idterapis2, "idterapis3": idterapis3},
+        data: {
+          "id_transaksi": idtransaksi,
+          "idterapis2": idterapis2,
+          "idterapis3": idterapis3,
+        },
       );
     } catch (e) {
       log("error: ${e.toString()}");
@@ -498,7 +530,8 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
       List<dynamic> data = response.data;
       if (data.isNotEmpty) {
         var firstRecord = data[0];
-        double pjk = double.tryParse(firstRecord['pajak_msg'].toString()) ?? 0.0;
+        double pjk =
+            double.tryParse(firstRecord['pajak_msg'].toString()) ?? 0.0;
 
         desimalPjk.value = pjk;
       } else {
@@ -592,7 +625,11 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
             // }
 
             return AlertDialog(
-              title: Text("Pembayaran", textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Poppins')),
+              title: Text(
+                "Pembayaran",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontFamily: 'Poppins'),
+              ),
               content: SingleChildScrollView(
                 child: SizedBox(
                   width: MediaQuery.of(context).size.width,
@@ -605,12 +642,18 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                           Expanded(
                             child: Padding(
                               padding: const EdgeInsets.only(top: 20),
-                              child: Text("Total Harga: ", style: TextStyle(fontFamily: 'Poppins')),
+                              child: Text(
+                                "Total Harga: ",
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
                             ),
                           ),
                           Expanded(
                             flex: 3,
-                            child: TextField(controller: _dialogTxtTotalFormatted, readOnly: true),
+                            child: TextField(
+                              controller: _dialogTxtTotalFormatted,
+                              readOnly: true,
+                            ),
                           ),
                         ],
                       ),
@@ -619,14 +662,19 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                           Expanded(
                             child: Padding(
                               padding: const EdgeInsets.only(top: 10),
-                              child: Text("Pajak: ", style: TextStyle(fontFamily: 'Poppins')),
+                              child: Text(
+                                "Pajak: ",
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
                             ),
                           ),
                           Expanded(
                             flex: 3,
                             child: Obx(
                               () => TextField(
-                                controller: TextEditingController(text: "${(desimalPjk.value * 100)}%"),
+                                controller: TextEditingController(
+                                  text: "${(desimalPjk.value * 100)}%",
+                                ),
                                 readOnly: true,
                               ),
                             ),
@@ -638,7 +686,10 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                           Expanded(
                             child: Padding(
                               padding: const EdgeInsets.only(top: 10),
-                              child: Text("Harga Setelah Pajak: ", style: TextStyle(fontFamily: 'Poppins')),
+                              child: Text(
+                                "Harga Setelah Pajak: ",
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
                             ),
                           ),
                           Expanded(
@@ -657,7 +708,10 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                       Row(
                         children: [
                           Expanded(
-                            child: Text("Metode Pembayaran: ", style: TextStyle(fontFamily: 'Poppins')),
+                            child: Text(
+                              "Metode Pembayaran: ",
+                              style: TextStyle(fontFamily: 'Poppins'),
+                            ),
                           ),
                           Expanded(
                             flex: 3,
@@ -705,10 +759,15 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                               },
                               icon: SizedBox.shrink(),
                               items:
-                                  metodeByr.map<DropdownMenuItem<String>>((String value) {
+                                  metodeByr.map<DropdownMenuItem<String>>((
+                                    String value,
+                                  ) {
                                     return DropdownMenuItem(
                                       value: value,
-                                      child: AutoSizeText(value, minFontSize: 20),
+                                      child: AutoSizeText(
+                                        value,
+                                        minFontSize: 20,
+                                      ),
                                     );
                                   }).toList(),
                             ),
@@ -723,7 +782,10 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                               children: [
                                 Text(
                                   "Rincian Biaya",
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'Poppins',
+                                  ),
                                 ),
                               ],
                             ),
@@ -732,7 +794,10 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                 Expanded(
                                   child: Padding(
                                     padding: const EdgeInsets.only(top: 20),
-                                    child: Text("Total Bayar: ", style: TextStyle(fontFamily: 'Poppins')),
+                                    child: Text(
+                                      "Total Bayar: ",
+                                      style: TextStyle(fontFamily: 'Poppins'),
+                                    ),
                                   ),
                                 ),
                                 Expanded(
@@ -755,12 +820,18 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                 Expanded(
                                   child: Padding(
                                     padding: const EdgeInsets.only(top: 20),
-                                    child: Text("Kembalian: ", style: TextStyle(fontFamily: 'Poppins')),
+                                    child: Text(
+                                      "Kembalian: ",
+                                      style: TextStyle(fontFamily: 'Poppins'),
+                                    ),
                                   ),
                                 ),
                                 Expanded(
                                   flex: 3,
-                                  child: TextField(controller: _kembalianController, readOnly: true),
+                                  child: TextField(
+                                    controller: _kembalianController,
+                                    readOnly: true,
+                                  ),
                                 ),
                               ],
                             ),
@@ -774,27 +845,49 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                               children: [
                                 Text(
                                   "Informasi Bank Pemilik",
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'Poppins',
+                                  ),
                                 ),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                Expanded(child: Text("Nama Akun: ", style: TextStyle(fontFamily: 'Poppins'))),
-                                Expanded(flex: 3, child: TextField(controller: _namaAkun)),
                               ],
                             ),
                             Row(
                               children: [
                                 Expanded(
-                                  child: Text("Nomor Rekening: ", style: TextStyle(fontFamily: 'Poppins')),
+                                  child: Text(
+                                    "Nama Akun: ",
+                                    style: TextStyle(fontFamily: 'Poppins'),
+                                  ),
                                 ),
-                                Expanded(flex: 3, child: TextField(controller: _noRek)),
+                                Expanded(
+                                  flex: 3,
+                                  child: TextField(controller: _namaAkun),
+                                ),
                               ],
                             ),
                             Row(
                               children: [
-                                Expanded(child: Text("Nama Bank: ", style: TextStyle(fontFamily: 'Poppins'))),
+                                Expanded(
+                                  child: Text(
+                                    "Nomor Rekening: ",
+                                    style: TextStyle(fontFamily: 'Poppins'),
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 3,
+                                  child: TextField(controller: _noRek),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    "Nama Bank: ",
+                                    style: TextStyle(fontFamily: 'Poppins'),
+                                  ),
+                                ),
                                 Expanded(
                                   flex: 3,
                                   child: Obx(
@@ -805,11 +898,17 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                       },
                                       items:
                                           _bankList.map((String bank) {
-                                            return DropdownMenuItem<String>(value: bank, child: Text(bank));
+                                            return DropdownMenuItem<String>(
+                                              value: bank,
+                                              child: Text(bank),
+                                            );
                                           }).toList(),
                                       decoration: InputDecoration(
                                         border: OutlineInputBorder(),
-                                        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                                        contentPadding: EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 12,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -827,7 +926,10 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                   onPressed: () {
                     // if(_kembalianController.text)
                     if (isCash) {
-                      String cleaned = _totalBayarController.text.replaceAll("Rp. ", "");
+                      String cleaned = _totalBayarController.text.replaceAll(
+                        "Rp. ",
+                        "",
+                      );
 
                       String cleanedtotalbayar = cleaned.replaceAll('.', '');
 
@@ -875,20 +977,37 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                           idterapis2 = 'noterapis';
                         }
 
-                        if (controllerPekerja.statusshowing.value != 'pressed') {
+                        if (controllerPekerja.statusshowing.value !=
+                            'pressed') {
                           panggilsemuaterapis();
                         }
-                        daftarruangtunggu(idtransaksi, namaruangan, idterapis, namaterapis);
+                        daftarruangtunggu(
+                          idtransaksi,
+                          namaruangan,
+                          idterapis,
+                          namaterapis,
+                        );
 
                         if (idterapis2 != 'noterapis') {
-                          daftarruangtunggu(idtransaksi, namaruangan, idterapis2, namaterapis2);
+                          daftarruangtunggu(
+                            idtransaksi,
+                            namaruangan,
+                            idterapis2,
+                            namaterapis2,
+                          );
                         }
 
                         if (idterapis3 != 'noterapis') {
-                          daftarruangtunggu(idtransaksi, namaruangan, idterapis3, namaterapis3);
+                          daftarruangtunggu(
+                            idtransaksi,
+                            namaruangan,
+                            idterapis3,
+                            namaterapis3,
+                          );
                         }
 
-                        if (idterapis2 != 'noterapis' || idterapis3 != 'noterapis') {
+                        if (idterapis2 != 'noterapis' ||
+                            idterapis3 != 'noterapis') {
                           postterapis2(idtransaksi, idterapis2, idterapis3);
                         }
 
@@ -905,7 +1024,10 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                       });
                     }
                   },
-                  child: Text("Proses Pembayaran", style: TextStyle(fontFamily: 'Poppins')),
+                  child: Text(
+                    "Proses Pembayaran",
+                    style: TextStyle(fontFamily: 'Poppins'),
+                  ),
                 ),
               ],
             );
@@ -925,7 +1047,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
     });
   }
 
-  var dio = Dio();
+  var dio = DioClient();
 
   @override
   Widget build(BuildContext context) {
@@ -974,7 +1096,11 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                       child: Column(
                         children: [
                           Container(
-                            margin: const EdgeInsets.only(top: 20, left: 40, right: 40),
+                            margin: const EdgeInsets.only(
+                              top: 20,
+                              left: 40,
+                              right: 40,
+                            ),
                             width: Get.width - 200,
                             decoration: BoxDecoration(
                               color: Colors.grey[200],
@@ -1002,8 +1128,13 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                 indicatorSize: TabBarIndicatorSize.tab,
                                 labelColor: Colors.black,
                                 unselectedLabelColor: Colors.black38,
-                                labelStyle: TextStyle(fontWeight: FontWeight.bold),
-                                tabs: const [Tab(text: "Paketan"), Tab(text: "Produk")],
+                                labelStyle: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                tabs: const [
+                                  Tab(text: "Paketan"),
+                                  Tab(text: "Produk"),
+                                ],
                               ),
                             ),
                           ),
@@ -1023,7 +1154,11 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                 // Konten 1
                                 Container(
                                   width: Get.width - 200,
-                                  padding: const EdgeInsets.only(left: 10, top: 20, right: 10),
+                                  padding: const EdgeInsets.only(
+                                    left: 10,
+                                    top: 20,
+                                    right: 10,
+                                  ),
                                   // child: IsiPaketMassages(
                                   //   onAddItem: addToDataJual,
                                   // ),
@@ -1033,15 +1168,20 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                     icon: Icons.spa,
                                     onAddItem: (item) {
                                       // Check if this package has a promo
-                                      final promoExists = widget.activePromos.any(
-                                        (promo) => promo['nama_promo'] == item['nama_paket_msg'],
-                                      );
+                                      final promoExists = widget.activePromos
+                                          .any(
+                                            (promo) =>
+                                                promo['nama_promo'] ==
+                                                item['nama_paket_msg'],
+                                          );
 
                                       if (promoExists) {
                                         // Create a mutable copy of the item to modify its price
-                                        Map<String, dynamic> promoItem = Map.from(item);
+                                        Map<String, dynamic> promoItem =
+                                            Map.from(item);
                                         promoItem['harga_paket_msg'] = 0;
-                                        promoItem['harga_total'] = 0; // Also set total price to 0
+                                        promoItem['harga_total'] =
+                                            0; // Also set total price to 0
                                         addToDataJual(promoItem);
                                         CherryToast.success(
                                           title: Text(
@@ -1052,20 +1192,28 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                               fontFamily: 'Poppins',
                                             ),
                                           ),
-                                          animationDuration: const Duration(milliseconds: 2000),
+                                          animationDuration: const Duration(
+                                            milliseconds: 2000,
+                                          ),
                                           autoDismiss: true,
                                         ).show(context);
                                       } else {
                                         addToDataJual(item);
                                       }
                                     },
-                                    activePromos: widget.activePromos, // Pass promos to MassageItemGrid
+                                    activePromos:
+                                        widget
+                                            .activePromos, // Pass promos to MassageItemGrid
                                   ),
                                 ),
                                 // Konten 2 - Massage Produk (assuming no promo applies here for now)
                                 Container(
                                   width: Get.width - 200,
-                                  padding: const EdgeInsets.only(left: 10, top: 20, right: 10),
+                                  padding: const EdgeInsets.only(
+                                    left: 10,
+                                    top: 20,
+                                    right: 10,
+                                  ),
                                   child: MassageItemGrid(
                                     apiEndpoint: '/massages/produk',
                                     defaultUnit: 'Pcs',
@@ -1087,7 +1235,10 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                     padding: const EdgeInsets.only(left: 10, top: 15),
                     // height: Get.height - 145,
                     width: Get.width - 200,
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                     child: Column(
                       children: [
                         Row(
@@ -1206,19 +1357,37 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                         () => DropdownButton<String>(
                                           value: dropdownHappyHour.value,
                                           isExpanded: true,
-                                          icon: const Icon(Icons.arrow_drop_down),
+                                          icon: const Icon(
+                                            Icons.arrow_drop_down,
+                                          ),
                                           elevation: 16,
-                                          style: const TextStyle(color: Colors.deepPurple),
+                                          style: const TextStyle(
+                                            color: Colors.deepPurple,
+                                          ),
                                           underline: SizedBox(),
-                                          padding: EdgeInsets.symmetric(horizontal: 10),
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                          ),
                                           onChanged: (String? value) async {
-                                            var selectedPromo = _listHappyHour.firstWhere(
-                                              (item) => item['nama_promo'] == value,
-                                              orElse: () => {"kode_promo": "", "nama_promo": "", "disc": 0},
-                                            );
+                                            var selectedPromo = _listHappyHour
+                                                .firstWhere(
+                                                  (item) =>
+                                                      item['nama_promo'] ==
+                                                      value,
+                                                  orElse:
+                                                      () => {
+                                                        "kode_promo": "",
+                                                        "nama_promo": "",
+                                                        "disc": 0,
+                                                      },
+                                                );
 
                                             discSetelahPromo.value =
-                                                int.tryParse(selectedPromo['disc'].toString()) ?? 0;
+                                                int.tryParse(
+                                                  selectedPromo['disc']
+                                                      .toString(),
+                                                ) ??
+                                                0;
                                             dropdownHappyHour.value = value;
 
                                             // setState(() {
@@ -1227,13 +1396,18 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                             // });
                                           },
                                           items:
-                                              _listHappyHour.map<DropdownMenuItem<String>>((item) {
+                                              _listHappyHour.map<
+                                                DropdownMenuItem<String>
+                                              >((item) {
                                                 return DropdownMenuItem<String>(
-                                                  value: item['nama_promo'], // Use ID as value
+                                                  value:
+                                                      item['nama_promo'], // Use ID as value
                                                   child: Align(
-                                                    alignment: Alignment.centerLeft,
+                                                    alignment:
+                                                        Alignment.centerLeft,
                                                     child: Text(
-                                                      item['nama_promo'].toString(), // Display category name
+                                                      item['nama_promo']
+                                                          .toString(), // Display category name
                                                       style: const TextStyle(
                                                         fontSize: 16,
                                                         fontFamily: 'Poppins',
@@ -1267,16 +1441,39 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                         Center(
                           child: Row(
                             children: [
-                              Expanded(child: Text("Nama Item", style: TextStyle(fontFamily: 'Poppins'))),
+                              Expanded(
+                                child: Text(
+                                  "Nama Item",
+                                  style: TextStyle(fontFamily: 'Poppins'),
+                                ),
+                              ),
                               Expanded(
                                 child: Padding(
                                   padding: const EdgeInsets.only(left: 18),
-                                  child: Text("Jumlah", style: TextStyle(fontFamily: 'Poppins')),
+                                  child: Text(
+                                    "Jumlah",
+                                    style: TextStyle(fontFamily: 'Poppins'),
+                                  ),
                                 ),
                               ),
-                              Expanded(child: Text("Satuan", style: TextStyle(fontFamily: 'Poppins'))),
-                              Expanded(child: Text("Harga", style: TextStyle(fontFamily: 'Poppins'))),
-                              Expanded(child: Text("Total", style: TextStyle(fontFamily: 'Poppins'))),
+                              Expanded(
+                                child: Text(
+                                  "Satuan",
+                                  style: TextStyle(fontFamily: 'Poppins'),
+                                ),
+                              ),
+                              Expanded(
+                                child: Text(
+                                  "Harga",
+                                  style: TextStyle(fontFamily: 'Poppins'),
+                                ),
+                              ),
+                              Expanded(
+                                child: Text(
+                                  "Total",
+                                  style: TextStyle(fontFamily: 'Poppins'),
+                                ),
+                              ),
                               Flexible(child: Text("")),
                             ],
                           ),
@@ -1296,10 +1493,17 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                             Expanded(child: Text("")),
                             Expanded(child: Text("")),
                             Expanded(child: Text("")),
-                            Expanded(child: Text("Jumlah", style: TextStyle(fontFamily: 'Poppins'))),
                             Expanded(
                               child: Text(
-                                formatCurrency.format(discountData['sblm_disc']),
+                                "Jumlah",
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                formatCurrency.format(
+                                  discountData['sblm_disc'],
+                                ),
                                 style: TextStyle(fontFamily: 'Poppins'),
                               ),
                             ),
@@ -1310,7 +1514,12 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                             Expanded(child: Text("")),
                             Expanded(child: Text("")),
                             Expanded(child: Text("")),
-                            Expanded(child: Text("Disc", style: TextStyle(fontFamily: 'Poppins'))),
+                            Expanded(
+                              child: Text(
+                                "Disc",
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                            ),
                             Expanded(
                               child: Text(
                                 formatCurrency.format(discountData['potongan']),
@@ -1324,11 +1533,18 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                             Expanded(child: Text("")),
                             Expanded(child: Text("")),
                             Expanded(child: Text("")),
-                            Expanded(child: Text("VIP", style: TextStyle(fontFamily: 'Poppins'))),
+                            Expanded(
+                              child: Text(
+                                "VIP",
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                            ),
                             Expanded(
                               child: Text(
                                 hargavip.isNotEmpty
-                                    ? formatCurrency.format(hargavip[0]["harga_vip"])
+                                    ? formatCurrency.format(
+                                      hargavip[0]["harga_vip"],
+                                    )
                                     : formatCurrency.format(0),
                                 style: TextStyle(fontFamily: 'Poppins'),
                               ),
@@ -1340,10 +1556,18 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                             Expanded(child: Text("")),
                             Expanded(child: Text("")),
                             Expanded(child: Text("")),
-                            Expanded(child: Text("Total", style: TextStyle(fontFamily: 'Poppins'))),
                             Expanded(
                               child: Text(
-                                formatCurrency.format((discountData['stlh_disc']! / 1000).round() * 1000),
+                                "Total",
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                formatCurrency.format(
+                                  (discountData['stlh_disc']! / 1000).round() *
+                                      1000,
+                                ),
                                 style: TextStyle(fontFamily: 'Poppins'),
                               ),
                             ),
@@ -1369,7 +1593,10 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text("Jenis Pembayaran", style: TextStyle(fontFamily: 'Poppins')),
+                                    Text(
+                                      "Jenis Pembayaran",
+                                      style: TextStyle(fontFamily: 'Poppins'),
+                                    ),
                                     SizedBox(
                                       width: 170,
                                       child: Obx(
@@ -1377,26 +1604,37 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                           value: varJenisPembayaran.value,
                                           isExpanded: true,
                                           elevation: 18,
-                                          style: const TextStyle(color: Colors.deepPurple),
+                                          style: const TextStyle(
+                                            color: Colors.deepPurple,
+                                          ),
                                           onChanged: (String? value) {
                                             // dipanggil kalo user select item
                                             // setState(() {
                                             //   varJenisPembayaran.value = value!;
                                             // });
                                             varJenisPembayaran.value = value!;
-                                            log("Jenis Pembayaran skrg ${varJenisPembayaran.value}");
+                                            log(
+                                              "Jenis Pembayaran skrg ${varJenisPembayaran.value}",
+                                            );
                                           },
-                                          icon: Icon(Icons.arrow_drop_down_circle),
+                                          icon: Icon(
+                                            Icons.arrow_drop_down_circle,
+                                          ),
                                           items:
-                                              jenisPembayaran.map<DropdownMenuItem<String>>((String value) {
+                                              jenisPembayaran.map<
+                                                DropdownMenuItem<String>
+                                              >((String value) {
                                                 return DropdownMenuItem(
                                                   value: value,
                                                   child: Align(
-                                                    alignment: Alignment.centerLeft,
+                                                    alignment:
+                                                        Alignment.centerLeft,
                                                     child: AutoSizeText(
                                                       "Pembayaran di $value",
                                                       minFontSize: 15,
-                                                      style: TextStyle(fontFamily: 'Poppins'),
+                                                      style: TextStyle(
+                                                        fontFamily: 'Poppins',
+                                                      ),
                                                     ),
                                                   ),
                                                 );
@@ -1416,7 +1654,8 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                     child: ElevatedButton(
                                       onPressed: () async {
                                         if (_isHappyHourSelectionRequired()) {
-                                          bool isConfirmed = await _showHappyHourReminder();
+                                          bool isConfirmed =
+                                              await _showHappyHourReminder();
 
                                           if (!isConfirmed) {
                                             return;
@@ -1439,7 +1678,8 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                     child: ElevatedButton(
                                       onPressed: () async {
                                         if (_isHappyHourSelectionRequired()) {
-                                          bool isConfirmed = await _showHappyHourReminder();
+                                          bool isConfirmed =
+                                              await _showHappyHourReminder();
 
                                           if (!isConfirmed) {
                                             return;
@@ -1447,17 +1687,43 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                         }
 
                                         _storeTrans().then((_) {
-                                          statusLocker = statusLocker == 0 ? 1 : 0;
-                                          updatedataloker(statusLocker, inputlocker);
+                                          statusLocker =
+                                              statusLocker == 0 ? 1 : 0;
+                                          updatedataloker(
+                                            statusLocker,
+                                            inputlocker,
+                                          );
 
-                                          idtransaksi = controllerPekerja.getnotrans.value;
-                                          namaruangan = controllerPekerja.getroom.value;
-                                          idterapis = controllerPekerja.getidterapis.value;
-                                          idterapis2 = controllerPekerja.getidterapis2.value;
-                                          idterapis3 = controllerPekerja.getidterapis3.value;
-                                          namaterapis = controllerPekerja.getnamaterapis.value;
-                                          namaterapis2 = controllerPekerja.getnamaterapis2.value;
-                                          namaterapis3 = controllerPekerja.getnamaterapis3.value;
+                                          idtransaksi =
+                                              controllerPekerja
+                                                  .getnotrans
+                                                  .value;
+                                          namaruangan =
+                                              controllerPekerja.getroom.value;
+                                          idterapis =
+                                              controllerPekerja
+                                                  .getidterapis
+                                                  .value;
+                                          idterapis2 =
+                                              controllerPekerja
+                                                  .getidterapis2
+                                                  .value;
+                                          idterapis3 =
+                                              controllerPekerja
+                                                  .getidterapis3
+                                                  .value;
+                                          namaterapis =
+                                              controllerPekerja
+                                                  .getnamaterapis
+                                                  .value;
+                                          namaterapis2 =
+                                              controllerPekerja
+                                                  .getnamaterapis2
+                                                  .value;
+                                          namaterapis3 =
+                                              controllerPekerja
+                                                  .getnamaterapis3
+                                                  .value;
 
                                           if (idterapis3 == '') {
                                             idterapis3 = 'noterapis';
@@ -1467,11 +1733,19 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                             idterapis2 = 'noterapis';
                                           }
 
-                                          if (controllerPekerja.statusshowing.value != 'pressed') {
+                                          if (controllerPekerja
+                                                  .statusshowing
+                                                  .value !=
+                                              'pressed') {
                                             panggilsemuaterapis();
                                           }
 
-                                          daftarruangtunggu(idtransaksi, namaruangan, idterapis, namaterapis);
+                                          daftarruangtunggu(
+                                            idtransaksi,
+                                            namaruangan,
+                                            idterapis,
+                                            namaterapis,
+                                          );
 
                                           if (idterapis2 != 'noterapis') {
                                             daftarruangtunggu(
@@ -1490,19 +1764,37 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                               namaterapis3,
                                             );
 
-                                            if (idterapis2 != 'noterapis' || idterapis3 != 'noterapis') {
-                                              postterapis2(idtransaksi, idterapis2, idterapis3);
+                                            if (idterapis2 != 'noterapis' ||
+                                                idterapis3 != 'noterapis') {
+                                              postterapis2(
+                                                idtransaksi,
+                                                idterapis2,
+                                                idterapis3,
+                                              );
                                             }
 
-                                            controllerPekerja.getidterapis.value = '';
-                                            controllerPekerja.getidterapis2.value = '';
-                                            controllerPekerja.getidterapis3.value = '';
-                                            controllerPekerja.getnamaterapis.value = '';
-                                            controllerPekerja.getnamaterapis2.value = '';
-                                            controllerPekerja.getnamaterapis3.value = '';
+                                            controllerPekerja
+                                                .getidterapis
+                                                .value = '';
+                                            controllerPekerja
+                                                .getidterapis2
+                                                .value = '';
+                                            controllerPekerja
+                                                .getidterapis3
+                                                .value = '';
+                                            controllerPekerja
+                                                .getnamaterapis
+                                                .value = '';
+                                            controllerPekerja
+                                                .getnamaterapis2
+                                                .value = '';
+                                            controllerPekerja
+                                                .getnamaterapis3
+                                                .value = '';
                                           }
 
-                                          if (loadupdatetransaksi.value == 'sukses') {
+                                          if (loadupdatetransaksi.value ==
+                                              'sukses') {
                                             Get.offAll(() => MainResepsionis());
                                           }
                                         });
@@ -1604,9 +1896,13 @@ class _MassageItemGridState extends State<MassageItemGrid> {
   ScrollController _scrollController = ScrollController();
   RxList<Map<String, dynamic>> items = <Map<String, dynamic>>[].obs;
   RxList<bool> _itemTapStates = <bool>[].obs;
-  var dio = Dio();
+  var dio = DioClient();
 
-  final formatCurrency = NumberFormat.currency(locale: "id_ID", decimalDigits: 0, symbol: 'Rp. ');
+  final formatCurrency = NumberFormat.currency(
+    locale: "id_ID",
+    decimalDigits: 0,
+    symbol: 'Rp. ',
+  );
   final AudioPlayer _audioPlayer = AudioPlayer();
 
   // set awal loading true, kalo datanya udh kefetch maka false
@@ -1753,22 +2049,25 @@ class _MassageItemGridState extends State<MassageItemGrid> {
                   return GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4,
-                      crossAxisSpacing: 30,
-                      mainAxisSpacing: 25,
-                      childAspectRatio: 2 / 1.5,
-                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          crossAxisSpacing: 30,
+                          mainAxisSpacing: 25,
+                          childAspectRatio: 2 / 1.5,
+                        ),
                     itemCount: items.length,
                     itemBuilder: (context, index) {
                       final item = items[index];
                       double displayPrice = item['harga_paket_msg'].toDouble();
                       final promoExists = widget.activePromos.any(
-                        (promo) => promo['nama_promo'] == item['nama_paket_msg'],
+                        (promo) =>
+                            promo['nama_promo'] == item['nama_paket_msg'],
                       );
 
                       if (promoExists) {
-                        displayPrice = 0.0; // Set display price to 0 if promo applies
+                        displayPrice =
+                            0.0; // Set display price to 0 if promo applies
                       }
                       int sisakunjungan = 0;
                       int sisastok = 0;
@@ -1796,12 +2095,20 @@ class _MassageItemGridState extends State<MassageItemGrid> {
                               // retrieveindex = selecteditemindex[itemname];
                               retrieveindex = itemname;
                               for (var promo in widget.activePromos.where(
-                                (p) => p['nama_paket_msg'] == item['nama_paket_msg'],
+                                (p) =>
+                                    p['nama_paket_msg'] ==
+                                    item['nama_paket_msg'],
                               )) {
-                                sisakunjungan = int.tryParse(promo['sisa_kunjungan'].toString()) ?? 0;
+                                sisakunjungan =
+                                    int.tryParse(
+                                      promo['sisa_kunjungan'].toString(),
+                                    ) ??
+                                    0;
                               }
-                              if (retrieveindex != null && itemTapCounts.containsKey(retrieveindex)) {
-                                itemTapCounts[retrieveindex!] = itemTapCounts[retrieveindex]! + 1;
+                              if (retrieveindex != null &&
+                                  itemTapCounts.containsKey(retrieveindex)) {
+                                itemTapCounts[retrieveindex!] =
+                                    itemTapCounts[retrieveindex]! + 1;
                               } else if (retrieveindex != null) {
                                 itemTapCounts[retrieveindex!] = 1;
                               }
@@ -1810,7 +2117,8 @@ class _MassageItemGridState extends State<MassageItemGrid> {
                               log('tapped : ${itemTapCounts[retrieveindex]}');
 
                               if (retrieveindex != null) {
-                                if (itemTapCounts[retrieveindex]! > sisakunjungan) {
+                                if (itemTapCounts[retrieveindex]! >
+                                    sisakunjungan) {
                                   kondisilebih = 'benar';
                                 } else {
                                   kondisilebih = 'salah';
@@ -1838,9 +2146,14 @@ class _MassageItemGridState extends State<MassageItemGrid> {
                               }
                             } else {
                               for (var produk in dataproduk.where(
-                                (p) => p['nama_produk'] == item['nama_paket_msg'],
+                                (p) =>
+                                    p['nama_produk'] == item['nama_paket_msg'],
                               )) {
-                                sisastok = int.tryParse(produk['stok_produk'].toString()) ?? 0;
+                                sisastok =
+                                    int.tryParse(
+                                      produk['stok_produk'].toString(),
+                                    ) ??
+                                    0;
                                 tipepaket = 'produk';
                               }
 
@@ -1849,8 +2162,10 @@ class _MassageItemGridState extends State<MassageItemGrid> {
                                 // selecteditemindex[itemname] = index;
                                 // retrieveindex = selecteditemindex[itemname];
                                 retrieveindex = itemname;
-                                if (retrieveindex != null && itemTapCounts.containsKey(retrieveindex)) {
-                                  itemTapCounts[retrieveindex!] = itemTapCounts[retrieveindex]! + 1;
+                                if (retrieveindex != null &&
+                                    itemTapCounts.containsKey(retrieveindex)) {
+                                  itemTapCounts[retrieveindex!] =
+                                      itemTapCounts[retrieveindex]! + 1;
                                 } else if (retrieveindex != null) {
                                   itemTapCounts[retrieveindex!] = 1;
                                 }
@@ -1861,10 +2176,13 @@ class _MassageItemGridState extends State<MassageItemGrid> {
                                     description: Text('Stok sudah kosong'),
                                   ).show(context);
                                 } else if (retrieveindex != null) {
-                                  if (itemTapCounts[retrieveindex]! > sisastok) {
+                                  if (itemTapCounts[retrieveindex]! >
+                                      sisastok) {
                                     CherryToast.error(
                                       title: Text('Error'),
-                                      description: Text('Penggunaan item melebihi stok'),
+                                      description: Text(
+                                        'Penggunaan item melebihi stok',
+                                      ),
                                     ).show(context);
                                   } else {
                                     widget.onAddItem({
@@ -1873,7 +2191,8 @@ class _MassageItemGridState extends State<MassageItemGrid> {
                                       "detail_paket": item['detail_paket'],
                                       "jlh": 1,
                                       "satuan": widget.defaultUnit,
-                                      "harga_paket_msg": item['harga_paket_msg'],
+                                      "harga_paket_msg":
+                                          item['harga_paket_msg'],
                                       "harga_total": item['harga_paket_msg'],
                                       "durasi_awal": item['durasi_awal'],
                                       // "status": "unpaid",
@@ -1911,15 +2230,25 @@ class _MassageItemGridState extends State<MassageItemGrid> {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(widget.icon, size: 50, color: Colors.white),
+                                  Icon(
+                                    widget.icon,
+                                    size: 50,
+                                    color: Colors.white,
+                                  ),
                                   Text(
                                     item['nama_paket_msg'],
-                                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
                                     textAlign: TextAlign.center,
                                   ),
                                   Text(
                                     formatCurrency.format(displayPrice),
-                                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -1956,7 +2285,11 @@ class DataTransaksiMassages extends StatefulWidget {
 }
 
 class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
-  final formatCurrency = NumberFormat.currency(locale: "id_ID", decimalDigits: 0, symbol: 'Rp. ');
+  final formatCurrency = NumberFormat.currency(
+    locale: "id_ID",
+    decimalDigits: 0,
+    symbol: 'Rp. ',
+  );
 
   Future<void> checkpaketadapromoitem(idPaket) async {
     try {
@@ -1968,7 +2301,11 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
       setState(() {
         listBonusItem =
             (response.data as List).map((item) {
-              return {"id_fnb": item["id_fnb"], "nama_fnb": item["nama_fnb"], "qty": item["qty"]};
+              return {
+                "id_fnb": item["id_fnb"],
+                "nama_fnb": item["nama_fnb"],
+                "qty": item["qty"],
+              };
             }).toList();
       });
     } catch (e) {
@@ -1990,7 +2327,12 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
           String tipepaket = '';
           return Row(
             children: [
-              Expanded(child: AutoSizeText(widget.dataJual[index]['nama_paket_msg'], minFontSize: 15)),
+              Expanded(
+                child: AutoSizeText(
+                  widget.dataJual[index]['nama_paket_msg'],
+                  minFontSize: 15,
+                ),
+              ),
               Expanded(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
@@ -2000,31 +2342,45 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                       onPressed: () async {
                         setState(() {
                           final promoExists = widget.datapromo.any(
-                            (promo) => promo['nama_promo'] == widget.dataJual[index]['nama_paket_msg'],
+                            (promo) =>
+                                promo['nama_promo'] ==
+                                widget.dataJual[index]['nama_paket_msg'],
                           );
 
                           if (promoExists) {
                             for (var promo in widget.datapromo.where(
-                              (p) => p['nama_paket_msg'] == widget.dataJual[index]['nama_paket_msg'],
+                              (p) =>
+                                  p['nama_paket_msg'] ==
+                                  widget.dataJual[index]['nama_paket_msg'],
                             )) {
-                              sisakunjungan = int.tryParse(promo['sisa_kunjungan'].toString()) ?? 0;
+                              sisakunjungan =
+                                  int.tryParse(
+                                    promo['sisa_kunjungan'].toString(),
+                                  ) ??
+                                  0;
                             }
-                            String itemname = widget.dataJual[index]['nama_paket_msg'];
+                            String itemname =
+                                widget.dataJual[index]['nama_paket_msg'];
                             // retrieveindex = selecteditemindex[itemname];
                             retrieveindex = itemname;
 
-                            if (retrieveindex != null && itemTapCounts.containsKey(retrieveindex)) {
-                              if (retrieveindex != null && itemTapCounts[retrieveindex]! <= 1) {
+                            if (retrieveindex != null &&
+                                itemTapCounts.containsKey(retrieveindex)) {
+                              if (retrieveindex != null &&
+                                  itemTapCounts[retrieveindex]! <= 1) {
                                 itemTapCounts[retrieveindex!] = 1;
                               } else if (retrieveindex != null &&
-                                  itemTapCounts[retrieveindex]! >= sisakunjungan) {
+                                  itemTapCounts[retrieveindex]! >=
+                                      sisakunjungan) {
                                 if (sisakunjungan == 1) {
                                   itemTapCounts[retrieveindex!] = 1;
                                 } else {
-                                  itemTapCounts[retrieveindex!] = sisakunjungan - 1;
+                                  itemTapCounts[retrieveindex!] =
+                                      sisakunjungan - 1;
                                 }
                               } else if (retrieveindex != null) {
-                                itemTapCounts[retrieveindex!] = itemTapCounts[retrieveindex]! - 1;
+                                itemTapCounts[retrieveindex!] =
+                                    itemTapCounts[retrieveindex]! - 1;
                               }
                             } else if (retrieveindex != null) {
                               itemTapCounts[retrieveindex!] = 1;
@@ -2032,29 +2388,40 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                             log('tapped : $itemTapCounts');
                           } else {
                             for (var produk in dataproduk.where(
-                              (p) => p['nama_produk'] == widget.dataJual[index]['nama_paket_msg'],
+                              (p) =>
+                                  p['nama_produk'] ==
+                                  widget.dataJual[index]['nama_paket_msg'],
                             )) {
-                              sisastok = int.tryParse(produk['stok_produk'].toString()) ?? 0;
+                              sisastok =
+                                  int.tryParse(
+                                    produk['stok_produk'].toString(),
+                                  ) ??
+                                  0;
                               tipepaket = 'produk';
                             }
 
                             if (tipepaket == 'produk') {
-                              String itemname = widget.dataJual[index]['nama_paket_msg'];
+                              String itemname =
+                                  widget.dataJual[index]['nama_paket_msg'];
                               // retrieveindex = selecteditemindex[itemname];
                               retrieveindex = itemname;
 
-                              if (retrieveindex != null && itemTapCounts.containsKey(retrieveindex)) {
-                                if (retrieveindex != null && itemTapCounts[retrieveindex]! <= 1) {
+                              if (retrieveindex != null &&
+                                  itemTapCounts.containsKey(retrieveindex)) {
+                                if (retrieveindex != null &&
+                                    itemTapCounts[retrieveindex]! <= 1) {
                                   itemTapCounts[retrieveindex!] = 1;
                                 } else if (retrieveindex != null &&
                                     itemTapCounts[retrieveindex]! >= sisastok) {
                                   if (sisastok == 1) {
                                     itemTapCounts[retrieveindex!] = 1;
                                   } else {
-                                    itemTapCounts[retrieveindex!] = sisastok - 1;
+                                    itemTapCounts[retrieveindex!] =
+                                        sisastok - 1;
                                   }
                                 } else if (retrieveindex != null) {
-                                  itemTapCounts[retrieveindex!] = itemTapCounts[retrieveindex]! - 1;
+                                  itemTapCounts[retrieveindex!] =
+                                      itemTapCounts[retrieveindex]! - 1;
                                 }
                               } else if (retrieveindex != null) {
                                 itemTapCounts[retrieveindex!] = 1;
@@ -2062,10 +2429,13 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                               log('tapped : $itemTapCounts');
                             }
                           }
-                          if (widget.dataJual[index]['id_paket_msg'][0] == 'F') {
+                          if (widget.dataJual[index]['id_paket_msg'][0] ==
+                              'F') {
                             CherryToast.error(
                               title: Text('Error'),
-                              description: Text('Item bonus tidak dapat dikurangkan manual'),
+                              description: Text(
+                                'Item bonus tidak dapat dikurangkan manual',
+                              ),
                             ).show(context);
                           }
                         });
@@ -2074,20 +2444,28 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                           return;
                         }
 
-                        await checkpaketadapromoitem(widget.dataJual[index]['id_paket_msg']);
+                        await checkpaketadapromoitem(
+                          widget.dataJual[index]['id_paket_msg'],
+                        );
                         if (!mounted) return;
 
                         setState(() {
                           if (listBonusItem.isNotEmpty) {
-                            final existbonusitemidx = widget.dataJual.indexWhere(
-                              (item) => item['nama_paket_msg'] == listBonusItem[0]['nama_fnb'],
-                            );
+                            final existbonusitemidx = widget.dataJual
+                                .indexWhere(
+                                  (item) =>
+                                      item['nama_paket_msg'] ==
+                                      listBonusItem[0]['nama_fnb'],
+                                );
 
                             if (existbonusitemidx != -1) {
-                              if (widget.dataJual[existbonusitemidx]['jlh'] > listBonusItem[0]['qty'] &&
+                              if (widget.dataJual[existbonusitemidx]['jlh'] >
+                                      listBonusItem[0]['qty'] &&
                                   widget.dataJual[index]['jlh'] > 1) {
                                 widget.dataJual[existbonusitemidx]['jlh'] =
-                                    (widget.dataJual[existbonusitemidx]['jlh'] as num).toInt() -
+                                    (widget.dataJual[existbonusitemidx]['jlh']
+                                            as num)
+                                        .toInt() -
                                     listBonusItem[0]['qty'];
                               }
                             }
@@ -2096,7 +2474,8 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                             widget.dataJual[index]['jlh']--;
                             // Update Harga Total Juga
                             widget.dataJual[index]['harga_total'] =
-                                widget.dataJual[index]['harga_paket_msg'] * widget.dataJual[index]['jlh'];
+                                widget.dataJual[index]['harga_paket_msg'] *
+                                widget.dataJual[index]['jlh'];
                           }
                         });
 
@@ -2105,34 +2484,49 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                     ),
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: AutoSizeText("${widget.dataJual[index]['jlh']}", minFontSize: 15),
+                      child: AutoSizeText(
+                        "${widget.dataJual[index]['jlh']}",
+                        minFontSize: 15,
+                      ),
                     ),
                     IconButton(
                       icon: Icon(Icons.add, size: 18),
                       onPressed: () async {
                         setState(() {
                           final promoExists = widget.datapromo.any(
-                            (promo) => promo['nama_promo'] == widget.dataJual[index]['nama_paket_msg'],
+                            (promo) =>
+                                promo['nama_promo'] ==
+                                widget.dataJual[index]['nama_paket_msg'],
                           );
 
                           if (promoExists) {
                             for (var promo in widget.datapromo.where(
-                              (p) => p['nama_paket_msg'] == widget.dataJual[index]['nama_paket_msg'],
+                              (p) =>
+                                  p['nama_paket_msg'] ==
+                                  widget.dataJual[index]['nama_paket_msg'],
                             )) {
-                              sisakunjungan = int.tryParse(promo['sisa_kunjungan'].toString()) ?? 0;
+                              sisakunjungan =
+                                  int.tryParse(
+                                    promo['sisa_kunjungan'].toString(),
+                                  ) ??
+                                  0;
                             }
-                            String itemname = widget.dataJual[index]['nama_paket_msg'];
+                            String itemname =
+                                widget.dataJual[index]['nama_paket_msg'];
                             // retrieveindex = selecteditemindex[itemname];
                             retrieveindex = itemname;
 
-                            if (retrieveindex != null && itemTapCounts.containsKey(retrieveindex)) {
-                              itemTapCounts[retrieveindex!] = itemTapCounts[retrieveindex]! + 1;
+                            if (retrieveindex != null &&
+                                itemTapCounts.containsKey(retrieveindex)) {
+                              itemTapCounts[retrieveindex!] =
+                                  itemTapCounts[retrieveindex]! + 1;
                             } else if (retrieveindex != null) {
                               itemTapCounts[retrieveindex!] = 1;
                             }
 
                             if (retrieveindex != null) {
-                              if (itemTapCounts[retrieveindex]! > sisakunjungan) {
+                              if (itemTapCounts[retrieveindex]! >
+                                  sisakunjungan) {
                                 kondisilebih = 'benar';
                               } else {
                                 kondisilebih = 'salah';
@@ -2140,26 +2534,35 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                             }
                           }
 
-                            if (kondisilebih == 'benar') {
-                              CherryToast.error(
-                                title: Text('Error'),
-                                description: Text('melebihi pemakaian'),
-                              ).show(context);
-                            } else {
+                          if (kondisilebih == 'benar') {
+                            CherryToast.error(
+                              title: Text('Error'),
+                              description: Text('melebihi pemakaian'),
+                            ).show(context);
+                          } else {
                             for (var produk in dataproduk.where(
-                              (p) => p['nama_produk'] == widget.dataJual[index]['nama_paket_msg'],
+                              (p) =>
+                                  p['nama_produk'] ==
+                                  widget.dataJual[index]['nama_paket_msg'],
                             )) {
-                              sisastok = int.tryParse(produk['stok_produk'].toString()) ?? 0;
+                              sisastok =
+                                  int.tryParse(
+                                    produk['stok_produk'].toString(),
+                                  ) ??
+                                  0;
                               tipepaket = 'produk';
                             }
 
                             if (tipepaket == 'produk') {
-                              String itemname = widget.dataJual[index]['nama_paket_msg'];
+                              String itemname =
+                                  widget.dataJual[index]['nama_paket_msg'];
                               // selecteditemindex[itemname] = index;
                               // retrieveindex = selecteditemindex[itemname];
                               retrieveindex = itemname;
-                              if (retrieveindex != null && itemTapCounts.containsKey(retrieveindex)) {
-                                itemTapCounts[retrieveindex!] = itemTapCounts[retrieveindex]! + 1;
+                              if (retrieveindex != null &&
+                                  itemTapCounts.containsKey(retrieveindex)) {
+                                itemTapCounts[retrieveindex!] =
+                                    itemTapCounts[retrieveindex]! + 1;
                               } else if (retrieveindex != null) {
                                 itemTapCounts[retrieveindex!] = 1;
                               }
@@ -2173,21 +2576,27 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                                 if (itemTapCounts[retrieveindex]! > sisastok) {
                                   CherryToast.error(
                                     title: Text('Error'),
-                                    description: Text('Penggunaan item melebihi stok'),
+                                    description: Text(
+                                      'Penggunaan item melebihi stok',
+                                    ),
                                   ).show(context);
                                 } else {
                                   widget.dataJual[index]['jlh']++;
                                   // Update Harga Total Juga
                                   widget.dataJual[index]['harga_total'] =
-                                      widget.dataJual[index]['harga_paket_msg'] *
+                                      widget
+                                          .dataJual[index]['harga_paket_msg'] *
                                       widget.dataJual[index]['jlh'];
                                 }
                               }
                             } else {
-                              if (widget.dataJual[index]['id_paket_msg'][0] == 'F') {
+                              if (widget.dataJual[index]['id_paket_msg'][0] ==
+                                  'F') {
                                 CherryToast.error(
                                   title: Text('Error'),
-                                  description: Text('Item bonus tidak dapat ditambahkan manual'),
+                                  description: Text(
+                                    'Item bonus tidak dapat ditambahkan manual',
+                                  ),
                                 ).show(context);
                               }
                             }
@@ -2205,25 +2614,33 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                           return;
                         }
 
-                        await checkpaketadapromoitem(widget.dataJual[index]['id_paket_msg']);
+                        await checkpaketadapromoitem(
+                          widget.dataJual[index]['id_paket_msg'],
+                        );
                         if (!mounted) return;
 
                         setState(() {
                           if (listBonusItem.isNotEmpty) {
-                            final existbonusitemidx = widget.dataJual.indexWhere(
-                              (item) => item['nama_paket_msg'] == listBonusItem[0]['nama_fnb'],
-                            );
+                            final existbonusitemidx = widget.dataJual
+                                .indexWhere(
+                                  (item) =>
+                                      item['nama_paket_msg'] ==
+                                      listBonusItem[0]['nama_fnb'],
+                                );
 
                             if (existbonusitemidx != -1) {
                               widget.dataJual[existbonusitemidx]['jlh'] =
-                                  (widget.dataJual[existbonusitemidx]['jlh'] as num).toInt() +
+                                  (widget.dataJual[existbonusitemidx]['jlh']
+                                          as num)
+                                      .toInt() +
                                   listBonusItem[0]['qty'];
                             }
                           }
                           widget.dataJual[index]['jlh']++;
                           // Update Harga Total Juga
                           widget.dataJual[index]['harga_total'] =
-                              widget.dataJual[index]['harga_paket_msg'] * widget.dataJual[index]['jlh'];
+                              widget.dataJual[index]['harga_paket_msg'] *
+                              widget.dataJual[index]['jlh'];
                         });
 
                         widget.onChangeHrg();
@@ -2232,10 +2649,17 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                   ],
                 ),
               ),
-              Expanded(child: AutoSizeText(widget.dataJual[index]['satuan'], minFontSize: 15)),
               Expanded(
                 child: AutoSizeText(
-                  formatCurrency.format(widget.dataJual[index]['harga_paket_msg']),
+                  widget.dataJual[index]['satuan'],
+                  minFontSize: 15,
+                ),
+              ),
+              Expanded(
+                child: AutoSizeText(
+                  formatCurrency.format(
+                    widget.dataJual[index]['harga_paket_msg'],
+                  ),
                   minFontSize: 15,
                 ),
               ),
@@ -2255,17 +2679,24 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                         icon: Icon(Icons.delete_forever_outlined, size: 18),
                         onPressed: () async {
                           // Guard against stale index when list already changed
-                          if (index < 0 || index >= widget.dataJual.length) return;
+                          if (index < 0 || index >= widget.dataJual.length)
+                            return;
 
                           // Snapshot current item to avoid range errors if the list mutates later
-                          final currentItem = Map<String, dynamic>.from(widget.dataJual[index]);
-                          final currentNamaPaket = currentItem['nama_paket_msg'];
-                          final currentIdPaket = (currentItem['id_paket_msg'] ?? '').toString();
-                          final currentQty = (currentItem['jlh'] as num?)?.toInt() ?? 0;
+                          final currentItem = Map<String, dynamic>.from(
+                            widget.dataJual[index],
+                          );
+                          final currentNamaPaket =
+                              currentItem['nama_paket_msg'];
+                          final currentIdPaket =
+                              (currentItem['id_paket_msg'] ?? '').toString();
+                          final currentQty =
+                              (currentItem['jlh'] as num?)?.toInt() ?? 0;
 
                           setState(() {
                             final promoExists = widget.datapromo.any(
-                              (promo) => promo['nama_promo'] == currentNamaPaket,
+                              (promo) =>
+                                  promo['nama_promo'] == currentNamaPaket,
                             );
 
                             if (promoExists) {
@@ -2280,7 +2711,11 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                               for (var produk in dataproduk.where(
                                 (p) => p['nama_produk'] == currentNamaPaket,
                               )) {
-                                sisastok = int.tryParse(produk['stok_produk'].toString()) ?? 0;
+                                sisastok =
+                                    int.tryParse(
+                                      produk['stok_produk'].toString(),
+                                    ) ??
+                                    0;
                                 tipepaket = 'produk';
                               }
 
@@ -2295,7 +2730,9 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
                             if (currentIdPaket.startsWith('F')) {
                               CherryToast.error(
                                 title: Text('Error'),
-                                description: Text('Item bonus tidak dapat dihapus manual'),
+                                description: Text(
+                                  'Item bonus tidak dapat dihapus manual',
+                                ),
                               ).show(context);
                             }
                           });
@@ -2309,20 +2746,27 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
 
                           setState(() {
                             if (listBonusItem.isNotEmpty) {
-                              final existbonusitemidx = widget.dataJual.indexWhere(
-                                (item) => item['nama_paket_msg'] == listBonusItem[0]['nama_fnb'],
-                              );
+                              final existbonusitemidx = widget.dataJual
+                                  .indexWhere(
+                                    (item) =>
+                                        item['nama_paket_msg'] ==
+                                        listBonusItem[0]['nama_fnb'],
+                                  );
 
                               if (existbonusitemidx != -1) {
-                                if (widget.dataJual[existbonusitemidx]['jlh'] > listBonusItem[0]['qty'] &&
+                                if (widget.dataJual[existbonusitemidx]['jlh'] >
+                                        listBonusItem[0]['qty'] &&
                                     currentQty > 1) {
                                   log(currentQty.toString());
                                   widget.dataJual[existbonusitemidx]['jlh'] =
-                                      (widget.dataJual[existbonusitemidx]['jlh'] as num).toInt() -
+                                      (widget.dataJual[existbonusitemidx]['jlh']
+                                              as num)
+                                          .toInt() -
                                       listBonusItem[0]['qty'] * currentQty;
                                 }
 
-                                if (widget.dataJual[existbonusitemidx]['jlh'] <= listBonusItem[0]['qty']) {
+                                if (widget.dataJual[existbonusitemidx]['jlh'] <=
+                                    listBonusItem[0]['qty']) {
                                   widget.dataJual.removeAt(existbonusitemidx);
                                 }
                               }
@@ -2353,8 +2797,6 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
   }
 }
 
-
-
 // Kode awal. udah diganti sama MassageItemGrid
 // class IsiPaketMassages extends StatefulWidget {
 //   final Function(Map<String, dynamic>) onAddItem;
@@ -2371,7 +2813,7 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
 //   List<Map<String, dynamic>> items = [];
 //   List<bool> _itemTapStates = [];
 
-//   var dio = Dio();
+//   var dio = DioClient();
 
 //   Future<void> _getMenu() async {
 //     try {
@@ -2535,7 +2977,7 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
 //   List<Map<String, dynamic>> items = [];
 //   List<bool> _itemTapStates = [];
 
-//   var dio = Dio();
+//   var dio = DioClient();
 
 //   // Untuk yang produk, sesuaikan nama keynya dengan nama paket,
 //   // karena anggapannya nanti digabung jadi 1 struk.
@@ -2575,7 +3017,7 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
 //   }
 
 //   @override
-//   void dispose() 
+//   void dispose()
 //     // TODO: implement dispose
 //     _scrollController.dispose();
 //     super.dispose();
@@ -2684,4 +3126,3 @@ class _DataTransaksiMassagesState extends State<DataTransaksiMassages> {
 //     );
 //   }
 // }
-

@@ -1,11 +1,10 @@
-import 'dart:convert';
 import 'dart:developer';
 
 import 'package:Project_SPA/function/admin_drawer.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:Project_SPA/function/ip_address.dart';
-import 'package:dio/dio.dart';
 import 'package:cherry_toast/cherry_toast.dart';
 
 class ListMember extends StatefulWidget {
@@ -19,7 +18,7 @@ class _ListMemberState extends State<ListMember> {
   ScrollController _scrollController = ScrollController();
   RxList<dynamic> _ListMember = [].obs;
 
-  var dio = Dio();
+  var dio = DioClient();
   Future<void> _getMember() async {
     try {
       var response = await dio.get('${myIpAddr()}/listmember/member');
@@ -718,7 +717,7 @@ class _WidgetListMemberMobileState extends State<WidgetListMemberMobile> {
   ScrollController _scrollController = ScrollController();
   RxList<dynamic> _ListMember = [].obs;
 
-  var dio = Dio();
+  var dio = DioClient();
   Future<void> _getMember() async {
     try {
       var response = await dio.get('${myIpAddr()}/listmember/member');

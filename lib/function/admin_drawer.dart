@@ -9,27 +9,18 @@ import 'package:Project_SPA/admin/opname_history/opname_history.dart';
 import 'package:Project_SPA/admin/pajak.dart';
 import 'package:Project_SPA/admin/regis_agency.dart';
 import 'package:Project_SPA/admin/list_supplier.dart';
-import 'package:Project_SPA/admin/listterapis.dart';
-import 'package:Project_SPA/admin/pajak.dart';
 import 'package:Project_SPA/admin/pesanan_pembelian.dart';
 import 'package:Project_SPA/resepsionis/list_transaksi.dart';
 // import 'package:Project_SPA/admin/list_transaksi.dart';
-import 'package:Project_SPA/resepsionis/list_transaksi.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
-import 'package:Project_SPA/admin/main_admin.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 import 'package:Project_SPA/function/me.dart';
 import 'package:Project_SPA/function/token.dart';
-import 'package:Project_SPA/kamar_terapis/main_kamar_terapis.dart';
-import 'package:Project_SPA/kitchen/main_kitchen.dart';
-import 'package:Project_SPA/komisi/main_komisi_pekerja.dart';
 import 'package:Project_SPA/owner/main_owner.dart';
 import 'package:Project_SPA/resepsionis/main_resepsionis.dart';
-import 'package:Project_SPA/ruang_tunggu/main_rt.dart';
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 import 'package:Project_SPA/admin/laporan_ob.dart';
 import 'package:Project_SPA/admin/listpaket.dart';
 import 'package:Project_SPA/admin/listpekerja.dart';
@@ -42,11 +33,6 @@ import 'package:Project_SPA/admin/regis_pekerja.dart';
 import 'package:Project_SPA/admin/regis_promo.dart';
 import 'package:Project_SPA/admin/regis_room.dart';
 import 'package:Project_SPA/admin/regis_users.dart';
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:Project_SPA/resepsionis/billing_locker.dart';
-import 'package:Project_SPA/resepsionis/jenis_transaksi.dart';
-import 'package:Project_SPA/main.dart';
 
 class AdminDrawer extends StatefulWidget {
   const AdminDrawer({super.key});
@@ -97,7 +83,7 @@ class _AdminDrawerState extends State<AdminDrawer> {
     return text[0].toUpperCase() + text.substring(1);
   }
 
-  var dio = Dio();
+  var dio = DioClient();
   String _firstHakAkses = "";
   List<String> _listSecondHakAkses = [];
 
@@ -148,16 +134,24 @@ class _AdminDrawerState extends State<AdminDrawer> {
                       () => DrawerHeader(
                         padding: EdgeInsets.zero,
                         margin: EdgeInsets.zero,
-                        decoration: const BoxDecoration(color: Color(0XFFFFE0B2)),
+                        decoration: const BoxDecoration(
+                          color: Color(0XFFFFE0B2),
+                        ),
                         child: Theme(
                           data: ThemeData().copyWith(
-                            dividerTheme: DividerThemeData(color: Colors.transparent),
+                            dividerTheme: DividerThemeData(
+                              color: Colors.transparent,
+                            ),
                           ),
                           child: UserAccountsDrawerHeader(
                             decoration: BoxDecoration(color: Color(0XFFFFE0B2)),
                             accountName: Text(
                               namaKaryawan.value,
-                              style: TextStyle(color: Colors.black, fontFamily: 'Poppins', fontSize: 25),
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontFamily: 'Poppins',
+                                fontSize: 25,
+                              ),
                             ),
                             accountEmail: Text(
                               capitalize(
@@ -165,7 +159,11 @@ class _AdminDrawerState extends State<AdminDrawer> {
                                     ? _firstHakAkses
                                     : jabatan.value,
                               ),
-                              style: TextStyle(color: Colors.black, fontFamily: 'Poppins', fontSize: 20),
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontFamily: 'Poppins',
+                                fontSize: 20,
+                              ),
                             ),
                             currentAccountPictureSize: Size.square(60),
                             currentAccountPicture: CircleAvatar(
@@ -197,7 +195,10 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           padding: const EdgeInsets.only(left: 20),
                           child: AutoSizeText(
                             'Pendaftaran',
-                            style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.bold,
+                            ),
                             minFontSize: 18,
                             maxFontSize: 25,
                             maxLines: 1,
@@ -207,7 +208,10 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           Material(
                             color: Colors.white,
                             child: ListTile(
-                              title: const Text('Daftar Pekerja', style: TextStyle(fontFamily: 'Poppins')),
+                              title: const Text(
+                                'Daftar Pekerja',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
                               onTap: () {
                                 Get.off(() => RegisPekerja());
                               },
@@ -216,7 +220,10 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           Material(
                             color: Colors.white,
                             child: ListTile(
-                              title: const Text('Daftar Paket', style: TextStyle(fontFamily: 'Poppins')),
+                              title: const Text(
+                                'Daftar Paket',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
                               onTap: () {
                                 Get.off(() => RegisPaket());
                               },
@@ -225,7 +232,10 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           Material(
                             color: Colors.white,
                             child: ListTile(
-                              title: const Text('Daftar Ruangan', style: TextStyle(fontFamily: 'Poppins')),
+                              title: const Text(
+                                'Daftar Ruangan',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
                               onTap: () {
                                 Get.off(() => RegisRoom());
                               },
@@ -234,7 +244,10 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           Material(
                             color: Colors.white,
                             child: ListTile(
-                              title: const Text('Daftar Promo', style: TextStyle(fontFamily: 'Poppins')),
+                              title: const Text(
+                                'Daftar Promo',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
                               onTap: () {
                                 Get.off(() => RegisPromo());
                               },
@@ -243,7 +256,10 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           Material(
                             color: Colors.white,
                             child: ListTile(
-                              title: const Text('Daftar Users', style: TextStyle(fontFamily: 'Poppins')),
+                              title: const Text(
+                                'Daftar Users',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
                               onTap: () {
                                 Get.off(() => RegisUser());
                               },
@@ -252,7 +268,10 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           Material(
                             color: Colors.white,
                             child: ListTile(
-                              title: const Text('Daftar Locker', style: TextStyle(fontFamily: 'Poppins')),
+                              title: const Text(
+                                'Daftar Locker',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
                               onTap: () {
                                 Get.off(() => RegisLocker());
                               },
@@ -261,7 +280,10 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           Material(
                             color: Colors.white,
                             child: ListTile(
-                              title: const Text('Daftar Agency', style: TextStyle(fontFamily: 'Poppins')),
+                              title: const Text(
+                                'Daftar Agency',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
                               onTap: () {
                                 Get.off(() => RegisAgency());
                               },
@@ -270,7 +292,10 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           Material(
                             color: Colors.white,
                             child: ListTile(
-                              title: const Text('Pajak', style: TextStyle(fontFamily: 'Poppins')),
+                              title: const Text(
+                                'Pajak',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
                               onTap: () {
                                 Get.off(() => Pajak());
                               },
@@ -297,7 +322,10 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           padding: const EdgeInsets.only(left: 20),
                           child: AutoSizeText(
                             'List Data',
-                            style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.bold,
+                            ),
                             minFontSize: 18,
                             maxFontSize: 25,
                             maxLines: 1,
@@ -307,7 +335,10 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           Material(
                             color: Colors.white,
                             child: ListTile(
-                              title: const Text('List Pekerja', style: TextStyle(fontFamily: 'Poppins')),
+                              title: const Text(
+                                'List Pekerja',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
                               onTap: () {
                                 Get.off(() => Listpekerja());
                               },
@@ -316,7 +347,10 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           Material(
                             color: Colors.white,
                             child: ListTile(
-                              title: const Text('List Paket', style: TextStyle(fontFamily: 'Poppins')),
+                              title: const Text(
+                                'List Paket',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
                               onTap: () {
                                 Get.off(() => Listpaket());
                               },
@@ -325,7 +359,10 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           Material(
                             color: Colors.white,
                             child: ListTile(
-                              title: const Text('List Barang', style: TextStyle(fontFamily: 'Poppins')),
+                              title: const Text(
+                                'List Barang',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
                               onTap: () {
                                 Get.off(() => ListBarang());
                               },
@@ -334,7 +371,10 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           Material(
                             color: Colors.white,
                             child: ListTile(
-                              title: const Text('List Ruangan', style: TextStyle(fontFamily: 'Poppins')),
+                              title: const Text(
+                                'List Ruangan',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
                               onTap: () {
                                 Get.off(() => ListRoom());
                               },
@@ -343,7 +383,10 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           Material(
                             color: Colors.white,
                             child: ListTile(
-                              title: const Text('List Promo', style: TextStyle(fontFamily: 'Poppins')),
+                              title: const Text(
+                                'List Promo',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
                               onTap: () {
                                 Get.off(() => Listpromo());
                               },
@@ -352,7 +395,10 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           Material(
                             color: Colors.white,
                             child: ListTile(
-                              title: const Text('List Users', style: TextStyle(fontFamily: 'Poppins')),
+                              title: const Text(
+                                'List Users',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
                               onTap: () {
                                 Get.off(() => ListUser());
                               },
@@ -361,7 +407,10 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           Material(
                             color: Colors.white,
                             child: ListTile(
-                              title: const Text('List Member', style: TextStyle(fontFamily: 'Poppins')),
+                              title: const Text(
+                                'List Member',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
                               onTap: () {
                                 Get.off(() => ListMember());
                               },
@@ -370,7 +419,10 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           Material(
                             color: Colors.white,
                             child: ListTile(
-                              title: const Text('List Terapis', style: TextStyle(fontFamily: 'Poppins')),
+                              title: const Text(
+                                'List Terapis',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
                               onTap: () {
                                 Get.off(() => ListTerapis());
                               },
@@ -379,7 +431,10 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           Material(
                             color: Colors.white,
                             child: ListTile(
-                              title: const Text('List Agency', style: TextStyle(fontFamily: 'Poppins')),
+                              title: const Text(
+                                'List Agency',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
                               onTap: () {
                                 Get.off(() => ListAgency());
                               },
@@ -388,7 +443,10 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           Material(
                             color: Colors.white,
                             child: ListTile(
-                              title: const Text('List Supplier', style: TextStyle(fontFamily: 'Poppins')),
+                              title: const Text(
+                                'List Supplier',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
                               onTap: () {
                                 Get.off(() => ListSupplierPage());
                               },
@@ -415,7 +473,10 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           padding: const EdgeInsets.only(left: 20),
                           child: AutoSizeText(
                             'Transaksi',
-                            style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.bold,
+                            ),
                             minFontSize: 18,
                             maxFontSize: 25,
                             maxLines: 1,
@@ -425,7 +486,10 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           Material(
                             color: Colors.white,
                             child: ListTile(
-                              title: const Text('Detail Transaksi', style: TextStyle(fontFamily: 'Poppins')),
+                              title: const Text(
+                                'Detail Transaksi',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
                               onTap: () {
                                 Get.off(() => ListTransaksi());
                               },
@@ -452,7 +516,10 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           padding: const EdgeInsets.only(left: 20),
                           child: AutoSizeText(
                             'Laporan',
-                            style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.bold,
+                            ),
                             minFontSize: 18,
                             maxFontSize: 25,
                             maxLines: 1,
@@ -462,7 +529,10 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           Material(
                             color: Colors.white,
                             child: ListTile(
-                              title: const Text('Laporan OB', style: TextStyle(fontFamily: 'Poppins')),
+                              title: const Text(
+                                'Laporan OB',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
                               onTap: () {
                                 Get.off(() => LaporanOB());
                               },
@@ -471,7 +541,10 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           Material(
                             color: Colors.white,
                             child: ListTile(
-                              title: const Text('History Opname', style: TextStyle(fontFamily: 'Poppins')),
+                              title: const Text(
+                                'History Opname',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
                               onTap: () {
                                 Get.off(() => OpnameHistoryPage());
                               },
@@ -498,7 +571,10 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           padding: const EdgeInsets.only(left: 20),
                           child: AutoSizeText(
                             'Pembelian',
-                            style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.bold,
+                            ),
                             minFontSize: 18,
                             maxFontSize: 25,
                             maxLines: 1,
@@ -508,7 +584,10 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           Material(
                             color: Colors.white,
                             child: ListTile(
-                              title: const Text('History Pembelian', style: TextStyle(fontFamily: 'Poppins')),
+                              title: const Text(
+                                'History Pembelian',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
                               onTap: () {
                                 Get.off(() => HistoryPembelian());
                               },
@@ -517,7 +596,10 @@ class _AdminDrawerState extends State<AdminDrawer> {
                           Material(
                             color: Colors.white,
                             child: ListTile(
-                              title: const Text('Pesanan Pembelian', style: TextStyle(fontFamily: 'Poppins')),
+                              title: const Text(
+                                'Pesanan Pembelian',
+                                style: TextStyle(fontFamily: 'Poppins'),
+                              ),
                               onTap: () {
                                 Get.off(() => PesananPembelian());
                               },
@@ -530,7 +612,10 @@ class _AdminDrawerState extends State<AdminDrawer> {
                   if (_firstHakAkses == "owner") ...[
                     ListTile(
                       leading: const Icon(Icons.admin_panel_settings_rounded),
-                      title: const Text('Owner', style: TextStyle(fontFamily: 'Poppins')),
+                      title: const Text(
+                        'Owner',
+                        style: TextStyle(fontFamily: 'Poppins'),
+                      ),
                       onTap: () {
                         Get.off(() => OwnerPage());
                       },
@@ -546,7 +631,10 @@ class _AdminDrawerState extends State<AdminDrawer> {
                   children: [
                     const Icon(Icons.logout),
                     SizedBox(width: 5),
-                    Text('Log Out', style: TextStyle(fontFamily: 'Poppins', fontSize: 16)),
+                    Text(
+                      'Log Out',
+                      style: TextStyle(fontFamily: 'Poppins', fontSize: 16),
+                    ),
                   ],
                 ),
               ),

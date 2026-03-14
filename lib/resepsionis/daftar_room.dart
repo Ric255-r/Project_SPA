@@ -5,10 +5,9 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 import 'dart:developer';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class daftarRoom extends StatefulWidget {
   const daftarRoom({super.key});
@@ -19,7 +18,7 @@ class daftarRoom extends StatefulWidget {
 
 class _daftarRoomState extends State<daftarRoom> {
   RxList<Map<String, dynamic>> dataruangan = <Map<String, dynamic>>[].obs;
-  var dio = Dio();
+  var dio = DioClient();
   var statusruangan = 0;
 
   SharedPreferences? _prefs;
@@ -448,11 +447,11 @@ class _daftarRoomState extends State<daftarRoom> {
 //     });
 //   }
 
-  // @override
-  // void dispose() {
-  //   _timer?.cancel();
-  //   super.dispose();
-  // }
+// @override
+// void dispose() {
+//   _timer?.cancel();
+//   super.dispose();
+// }
 
 //   void _resetTimer() async {
 //     await _prefs?.remove(savedtimerkey); // Remove stored time

@@ -1,21 +1,17 @@
 import 'package:Project_SPA/login/login_page.dart';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 import 'package:Project_SPA/function/token.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:Project_SPA/main.dart';
 import 'package:flutter/services.dart';
 
 Future<Map<String, dynamic>> getMyData(jwt) async {
   Map<String, dynamic> responseData;
-  var dio = Dio();
+  var dio = DioClient();
 
   try {
-    var response = await dio.get(
-      '${myIpAddr()}/user',
-      options: Options(headers: {"Authorization": "Bearer $jwt"}),
-    );
+    var response = await dio.get('${myIpAddr()}/user');
 
     responseData = response.data;
 

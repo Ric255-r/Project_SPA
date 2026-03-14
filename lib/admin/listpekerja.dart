@@ -1,32 +1,16 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
-import 'package:Project_SPA/admin/laporan_ob.dart';
-import 'package:Project_SPA/admin/listpaket.dart';
-import 'package:Project_SPA/admin/listpromo.dart';
-import 'package:Project_SPA/admin/listroom.dart';
-import 'package:Project_SPA/admin/listuser.dart';
-import 'package:Project_SPA/admin/regis_locker.dart';
-import 'package:Project_SPA/admin/regis_paket.dart';
 import 'package:Project_SPA/admin/regis_pekerja.dart';
-import 'package:Project_SPA/admin/regis_promo.dart';
-import 'package:Project_SPA/admin/regis_room.dart';
-import 'package:Project_SPA/admin/regis_users.dart';
 import 'package:Project_SPA/function/admin_drawer.dart';
 import 'package:Project_SPA/function/ip_address.dart';
-import 'package:Project_SPA/kamar_terapis/terapis_bekerja.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:cherry_toast/cherry_toast.dart';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 import 'package:get/get.dart' hide FormData, MultipartFile;
-import 'package:Project_SPA/main.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:android_intent_plus/android_intent.dart';
 
 class Listpekerja extends StatefulWidget {
@@ -43,7 +27,7 @@ class _ListpekerjaState extends State<Listpekerja> {
   @override
   void initState() {
     super.initState();
-    dio = Dio();
+    dio = DioClient();
     getdataagency();
     futureData = fetchData();
     futureData.then((data) {
@@ -1339,7 +1323,7 @@ class _WidgetListPekerjaMobileState extends State<WidgetListPekerjaMobile> {
   @override
   void initState() {
     super.initState();
-    dio = Dio();
+    dio = DioClient();
 
     getdataagency();
 

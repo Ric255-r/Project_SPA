@@ -1,24 +1,10 @@
 import 'dart:developer';
-import 'package:Project_SPA/admin/laporan_ob.dart';
-import 'package:Project_SPA/admin/listpaket.dart';
-import 'package:Project_SPA/admin/listpekerja.dart';
-import 'package:Project_SPA/admin/listpromo.dart';
-import 'package:Project_SPA/admin/listroom.dart';
-import 'package:Project_SPA/admin/listuser.dart';
-import 'package:Project_SPA/admin/regis_paket.dart';
-import 'package:Project_SPA/admin/regis_pekerja.dart';
-import 'package:Project_SPA/admin/regis_promo.dart';
-import 'package:Project_SPA/admin/regis_room.dart';
-import 'package:Project_SPA/admin/regis_users.dart';
 import 'package:Project_SPA/function/admin_drawer.dart';
 import 'package:cherry_toast/cherry_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:Project_SPA/resepsionis/billing_locker.dart';
-import 'package:Project_SPA/resepsionis/jenis_transaksi.dart';
-import 'package:Project_SPA/main.dart';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 
 class Pajak extends StatefulWidget {
@@ -31,7 +17,7 @@ class Pajak extends StatefulWidget {
 class _PajakState extends State<Pajak> {
   TextEditingController controller_pajak_msg = TextEditingController();
   TextEditingController controller_pajak_fnb = TextEditingController();
-  var dio = Dio();
+  var dio = DioClient();
 
   Future<List<Map<String, dynamic>>> getPajak() async {
     try {

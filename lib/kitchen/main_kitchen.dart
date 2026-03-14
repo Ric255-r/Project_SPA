@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:get/get.dart';
 import 'package:cherry_toast/cherry_toast.dart';
 import 'package:Project_SPA/function/ip_address.dart';
@@ -12,7 +11,7 @@ import 'package:Project_SPA/function/our_drawer.dart';
 import 'package:Project_SPA/function/token.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/io.dart';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 
 class MainKitchen extends StatefulWidget {
   const MainKitchen({super.key});
@@ -97,7 +96,7 @@ class _MainKitchenState extends State<MainKitchen>
     );
   }
 
-  var dio = Dio();
+  var dio = DioClient();
   // RxInt activeTab = 0.obs;
   // Loading Tab Bar
   bool isLoading = false;
@@ -273,7 +272,9 @@ class _MainKitchenState extends State<MainKitchen>
     if (dataDetailPesanan.isEmpty) {
       CherryToast.warning(
         title: const Text("Data Kosong"),
-        description: const Text("Gagal mengambil detail pesanan. Silakan coba lagi."),
+        description: const Text(
+          "Gagal mengambil detail pesanan. Silakan coba lagi.",
+        ),
       ).show(Get.context!);
       return;
     }

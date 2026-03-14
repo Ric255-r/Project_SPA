@@ -1,4 +1,3 @@
-import 'dart:collection';
 
 import 'package:Project_SPA/function/ip_address.dart';
 import 'package:Project_SPA/function/me.dart';
@@ -12,8 +11,7 @@ import 'package:cherry_toast/cherry_toast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:Project_SPA/kamar_terapis/terapis_confirm.dart';
 import 'dart:developer';
-import 'package:dio/dio.dart';
-import 'package:get_storage/get_storage.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 
 class MainKamarTerapis extends StatefulWidget {
   const MainKamarTerapis({super.key});
@@ -30,7 +28,7 @@ class _MainKamarTerapisState extends State<MainKamarTerapis> {
   int _idRuangan = 0;
   String _namaRuangan = '';
 
-  var dio = Dio();
+  var dio = DioClient();
 
   Future<void> _verifikasiOb() async {
     try {
@@ -74,7 +72,9 @@ class _MainKamarTerapisState extends State<MainKamarTerapis> {
         } else {
           CherryToast.error(
             title: const Text("Error"),
-            description: const Text("Gagal Login fnverif_mainkamarterapis.dart"),
+            description: const Text(
+              "Gagal Login fnverif_mainkamarterapis.dart",
+            ),
           ).show(Get.context!);
         }
       }
