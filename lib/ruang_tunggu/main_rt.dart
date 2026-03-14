@@ -4,20 +4,20 @@ import 'package:Project_SPA/function/our_drawer.dart';
 import 'package:cherry_toast/cherry_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 import 'dart:developer';
-import 'package:get_storage/get_storage.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
-var dio = Dio();
+var dio = DioClient();
 
 class ControllerPanggilanKerja extends GetxController {
   late IOWebSocketChannel channel;
-  RxList<Map<String, dynamic>> datapanggilankerja = <Map<String, dynamic>>[].obs;
+  RxList<Map<String, dynamic>> datapanggilankerja =
+      <Map<String, dynamic>>[].obs;
 
   var refreshtrigger = false.obs;
   Timer? notifytimer;
@@ -92,11 +92,15 @@ class ControllerPanggilanKerja extends GetxController {
       await flutterTts.awaitSpeakCompletion(true);
 
       log('Speaking first message...');
-      await flutterTts.speak("Panggilan Kepada $namaTerapis, Harap Menuju ${_convertNamaRuangan(namaRuangan)}");
+      await flutterTts.speak(
+        "Panggilan Kepada $namaTerapis, Harap Menuju ${_convertNamaRuangan(namaRuangan)}",
+      );
       await Future.delayed(Duration(seconds: 1));
 
       log('Speaking reminder...');
-      await flutterTts.speak("Sekali Lagi, Panggilan Kepada $namaTerapis, Harap Menuju  ${_convertNamaRuangan(namaRuangan)}");
+      await flutterTts.speak(
+        "Sekali Lagi, Panggilan Kepada $namaTerapis, Harap Menuju  ${_convertNamaRuangan(namaRuangan)}",
+      );
 
       log('TTS finished');
       log('TTS spoken');
@@ -182,7 +186,10 @@ class ControllerPanggilanKerja extends GetxController {
       _heartbeatws!.cancel();
     }
     _heartbeatws = Timer.periodic(const Duration(seconds: 30), (timer) {
-      if (channel != null && channel.sink != null && channel.stream != null && channel.closeCode == null) {
+      if (channel != null &&
+          channel.sink != null &&
+          channel.stream != null &&
+          channel.closeCode == null) {
         final pingmsg = jsonEncode({"type": "ping"});
         channel.sink.add(pingmsg);
         log('send heartbeat to ws spv');
@@ -201,7 +208,9 @@ class ControllerPanggilanKerja extends GetxController {
     List<Map<String, dynamic>> newdata = parseWebSocketData(message);
     log('parsed data:$newdata');
     for (var item in newdata) {
-      var existingindex = datapanggilankerja.indexWhere((existing) => existing['id_panggilan'] == item['id_panggilan']);
+      var existingindex = datapanggilankerja.indexWhere(
+        (existing) => existing['id_panggilan'] == item['id_panggilan'],
+      );
       if (existingindex == -1) {
         datapanggilankerja.add(item);
         // NgeScroll Ke Index Terakhir
@@ -226,10 +235,18 @@ class ControllerPanggilanKerja extends GetxController {
         log("Isi decodedata $decodedata");
 
         // Ambil Index Terakhir utk data terbaru
-        _speak(decodedata[decodedata.length - 1]['nama_terapis'], decodedata[decodedata.length - 1]['ruangan']);
+        _speak(
+          decodedata[decodedata.length - 1]['nama_terapis'],
+          decodedata[decodedata.length - 1]['ruangan'],
+        );
 
         return decodedata.map((item) {
-          return {"ruangan": item['ruangan'], "nama_terapis": item['nama_terapis'], "id_panggilan": item['id_panggilan'], "timestamp": item['timestamp']};
+          return {
+            "ruangan": item['ruangan'],
+            "nama_terapis": item['nama_terapis'],
+            "id_panggilan": item['id_panggilan'],
+            "timestamp": item['timestamp'],
+          };
         }).toList();
       } else {
         log('websocket data is not a list : $decodedata');
@@ -246,11 +263,17 @@ class ControllerPanggilanKerja extends GetxController {
       var response = await dio.get('${myIpAddr()}/spv/getdatapanggilankerja');
       List<Map<String, dynamic>> fetcheddata =
           (response.data as List).map((item) {
-            return {"ruangan": item['ruangan'], "nama_terapis": item['nama_terapis'], "id_panggilan": item['id_panggilan']};
+            return {
+              "ruangan": item['ruangan'],
+              "nama_terapis": item['nama_terapis'],
+              "id_panggilan": item['id_panggilan'],
+            };
           }).toList();
 
       for (var item in fetcheddata) {
-        var existingindex = datapanggilankerja.indexWhere((existing) => existing['id_panggilan'] == item['id_panggilan']);
+        var existingindex = datapanggilankerja.indexWhere(
+          (existing) => existing['id_panggilan'] == item['id_panggilan'],
+        );
         if (existingindex == -1) {
           datapanggilankerja.add(item);
         } else {
@@ -265,7 +288,10 @@ class ControllerPanggilanKerja extends GetxController {
 
   Future<void> deletepanggilankerja(id_panggilan) async {
     try {
-      var response = await dio.delete('${myIpAddr()}/spv/deletepanggilankerja', data: {"id_panggilan": id_panggilan});
+      var response = await dio.delete(
+        '${myIpAddr()}/spv/deletepanggilankerja',
+        data: {"id_panggilan": id_panggilan},
+      );
     } catch (e) {
       log("Error di fn deletepanggilankerja : $e");
     }
@@ -293,13 +319,18 @@ class _MainRtState extends State<MainRt> {
   final ItemScrollController itemSctr = ItemScrollController();
   // ScrollController _scrollControllerLV = ScrollController();
 
-  final ControllerPanggilanKerja controllerPanggilanKerja = Get.find<ControllerPanggilanKerja>();
+  final ControllerPanggilanKerja controllerPanggilanKerja =
+      Get.find<ControllerPanggilanKerja>();
 
-  RxList<Map<String, dynamic>> datapanggilankerja = <Map<String, dynamic>>[].obs;
+  RxList<Map<String, dynamic>> datapanggilankerja =
+      <Map<String, dynamic>>[].obs;
 
   Future<void> deletepanggilankerja(id_panggilan) async {
     try {
-      var response = await dio.delete('${myIpAddr()}/spv/deletepanggilankerja', data: {"id_panggilan": id_panggilan});
+      var response = await dio.delete(
+        '${myIpAddr()}/spv/deletepanggilankerja',
+        data: {"id_panggilan": id_panggilan},
+      );
     } catch (e) {
       log("Error di fn deletepanggilankerja : $e");
     }
@@ -315,10 +346,15 @@ class _MainRtState extends State<MainRt> {
     // Used ever() from GetX to listen to changes in newestItemIndex
     // Now we only scroll when the index is valid (>= 0 and < list length)
     ever(controllerPanggilanKerja.newestItemIndex, (index) {
-      if (index >= 0 && index < controllerPanggilanKerja.datapanggilankerja.length) {
+      if (index >= 0 &&
+          index < controllerPanggilanKerja.datapanggilankerja.length) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (itemSctr.isAttached) {
-            itemSctr.scrollTo(index: index, duration: Duration(milliseconds: 500), curve: Curves.easeOut);
+            itemSctr.scrollTo(
+              index: index,
+              duration: Duration(milliseconds: 500),
+              curve: Curves.easeOut,
+            );
           }
         });
       }
@@ -327,7 +363,8 @@ class _MainRtState extends State<MainRt> {
 
   @override
   void dispose() {
-    Get.find<ControllerPanggilanKerja>().activescreen.value = 'not_ruang_tunggu';
+    Get.find<ControllerPanggilanKerja>().activescreen.value =
+        'not_ruang_tunggu';
     Get.delete<ControllerPanggilanKerja>(force: true);
     super.dispose();
   }
@@ -340,7 +377,13 @@ class _MainRtState extends State<MainRt> {
         title: Center(
           child: Padding(
             padding: const EdgeInsets.only(right: 50),
-            child: Text("PANGGILAN KERJA", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
+            child: Text(
+              "PANGGILAN KERJA",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Poppins',
+              ),
+            ),
           ),
         ),
       ),
@@ -355,7 +398,10 @@ class _MainRtState extends State<MainRt> {
               height: Get.height - 150,
               width: Get.width - 100,
               margin: const EdgeInsets.only(left: 40, right: 40),
-              decoration: BoxDecoration(borderRadius: BorderRadius.circular(20), color: Colors.white),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                color: Colors.white,
+              ),
               // Ak Ganti Scrollbar & ListView jadi ScrollConfiguration & ScrollablePositionedList
               child: ScrollConfiguration(
                 behavior: _ScrollbarBehavior(),
@@ -374,7 +420,10 @@ class _MainRtState extends State<MainRt> {
                         child: Text(
                           "(∪.∪ )...zzz\nBelum Ada Panggilan",
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Poppins',
+                          ),
                         ),
                       );
                     }
@@ -388,24 +437,56 @@ class _MainRtState extends State<MainRt> {
                         return Column(
                           children: [
                             SizedBox(height: 70),
-                            Text(item['nama_terapis'], style: TextStyle(fontSize: 100, height: 1, fontFamily: 'Poppins')),
-                            Text(item['ruangan'], style: TextStyle(fontSize: 110, height: 1, fontFamily: 'Poppins')),
+                            Text(
+                              item['nama_terapis'],
+                              style: TextStyle(
+                                fontSize: 100,
+                                height: 1,
+                                fontFamily: 'Poppins',
+                              ),
+                            ),
+                            Text(
+                              item['ruangan'],
+                              style: TextStyle(
+                                fontSize: 110,
+                                height: 1,
+                                fontFamily: 'Poppins',
+                              ),
+                            ),
                             SizedBox(height: 40),
                             ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color.fromARGB(255, 168, 232, 170),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                backgroundColor: const Color.fromARGB(
+                                  255,
+                                  168,
+                                  232,
+                                  170,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                                 minimumSize: Size(100, 100),
                               ),
                               onPressed: () {
                                 log(item['id_panggilan'].toString());
-                                controller.datapanggilankerja.removeWhere((element) => element['id_panggilan'] == item['id_panggilan']);
+                                controller.datapanggilankerja.removeWhere(
+                                  (element) =>
+                                      element['id_panggilan'] ==
+                                      item['id_panggilan'],
+                                );
                                 deletepanggilankerja(item['id_panggilan']);
                                 // Redudant. ak Comment. krn RemoveWhere udh auto refresh list Rx
                                 // controller.datapanggilankerja.refresh();
                               },
                               child: Column(
-                                children: [Icon(Icons.check, size: 50), SizedBox(height: 10), Text("Confirm", style: TextStyle(fontFamily: 'Poppins'))],
+                                children: [
+                                  Icon(Icons.check, size: 50),
+                                  SizedBox(height: 10),
+                                  Text(
+                                    "Confirm",
+                                    style: TextStyle(fontFamily: 'Poppins'),
+                                  ),
+                                ],
                               ),
                             ),
                             SizedBox(height: 80),
@@ -421,12 +502,17 @@ class _MainRtState extends State<MainRt> {
             Container(
               margin: const EdgeInsets.only(top: 20, right: 50),
               alignment: Alignment.centerRight,
-              child: Text("PLATINUM", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30)),
+              child: Text(
+                "PLATINUM",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
+              ),
             ),
             Obx(() {
               if (Get.find<ControllerPanggilanKerja>().showtoast.value) {
                 Future.delayed(Duration.zero, () {
-                  CherryToast.success(title: Text('Panggilan Kerja Masuk')).show(context);
+                  CherryToast.success(
+                    title: Text('Panggilan Kerja Masuk'),
+                  ).show(context);
                   Get.find<ControllerPanggilanKerja>().showtoast.value = false;
                 });
               }
@@ -441,7 +527,17 @@ class _MainRtState extends State<MainRt> {
 
 class _ScrollbarBehavior extends ScrollBehavior {
   @override
-  Widget buildScrollbar(BuildContext context, Widget child, ScrollableDetails details) {
-    return Scrollbar(controller: details.controller, thickness: 15, radius: Radius.circular(20), thumbVisibility: true, child: child);
+  Widget buildScrollbar(
+    BuildContext context,
+    Widget child,
+    ScrollableDetails details,
+  ) {
+    return Scrollbar(
+      controller: details.controller,
+      thickness: 15,
+      radius: Radius.circular(20),
+      thumbVisibility: true,
+      child: child,
+    );
   }
 }

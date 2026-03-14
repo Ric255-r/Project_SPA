@@ -1,13 +1,13 @@
 import 'package:Project_SPA/admin/stok_opname.dart';
 import 'package:Project_SPA/function/admin_drawer.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cherry_toast/cherry_toast.dart';
-import 'package:dio/dio.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 
 class BarangController extends GetxController {
-  final dio = Dio();
+  final dio = DioClient();
 
   final RxList<Map<String, dynamic>> items = <Map<String, dynamic>>[].obs;
 
@@ -58,7 +58,10 @@ class BarangController extends GetxController {
 
   /// ---------- API ----------
   Future<void> fetchBarang() async {
-    final res = await dio.get('$_base/listbarang/getbarang?_ts=${_ts()}', options: _noCache);
+    final res = await dio.get(
+      '$_base/listbarang/getbarang?_ts=${_ts()}',
+      options: _noCache,
+    );
     final List data = res.data;
     items.assignAll(
       data.map<Map<String, dynamic>>(
@@ -143,11 +146,17 @@ class ListBarang extends StatelessWidget {
       backgroundColor: const Color(0xFFFFE0B2),
       appBar: AppBar(
         backgroundColor: const Color(0xFFFFE0B2),
-        title: const Text("List Barang", style: TextStyle(fontFamily: 'Poppins', fontSize: 30)),
+        title: const Text(
+          "List Barang",
+          style: TextStyle(fontFamily: 'Poppins', fontSize: 30),
+        ),
         actions: [
           TextButton(
             onPressed: () => Get.to(() => StokOpnamePage()),
-            child: const Text('Stok Opname', style: TextStyle(fontFamily: 'Poppins', fontSize: 30)),
+            child: const Text(
+              'Stok Opname',
+              style: TextStyle(fontFamily: 'Poppins', fontSize: 30),
+            ),
           ),
           const SizedBox(width: 8),
         ],
@@ -170,7 +179,9 @@ class ListBarang extends StatelessWidget {
                 prefixIcon: const Icon(Icons.search),
                 filled: true,
                 fillColor: Colors.white,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
             const SizedBox(height: 10),
@@ -188,11 +199,18 @@ class ListBarang extends StatelessWidget {
                     // default untuk semua ListTile di dalamnya
                     listTileTheme: ListTileThemeData(
                       tileColor: Colors.white, // bg item
-                      selectedTileColor: const Color(0xFF8D6E63).withOpacity(.12),
+                      selectedTileColor: const Color(
+                        0xFF8D6E63,
+                      ).withOpacity(.12),
                       iconColor: const Color(0xFF6D4C41), // warna ikon
                       textColor: const Color(0xFF3E2723), // warna teks
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 2,
+                      ),
                     ),
                   ),
                   child: ListView.separated(
@@ -206,7 +224,9 @@ class ListBarang extends StatelessWidget {
                           child: Text('${i + 1}'), // <<< nomor urut otomatis
                         ),
                         title: Text(it['nama_brg'] ?? ''),
-                        subtitle: Text("Stok: ${it['stok_brg']}  •  Satuan: ${it['satuan']}"),
+                        subtitle: Text(
+                          "Stok: ${it['stok_brg']}  •  Satuan: ${it['satuan']}",
+                        ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -247,13 +267,19 @@ class ListBarang extends StatelessWidget {
             children: [
               TextField(
                 controller: c.namaC,
-                decoration: const InputDecoration(labelText: "Nama Barang", border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                  labelText: "Nama Barang",
+                  border: OutlineInputBorder(),
+                ),
               ),
               const SizedBox(height: 10),
               TextField(
                 controller: c.stokC,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: "Stok", border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                  labelText: "Stok",
+                  border: OutlineInputBorder(),
+                ),
               ),
               const SizedBox(height: 10),
               TextField(
@@ -276,9 +302,15 @@ class ListBarang extends StatelessWidget {
   }
 
   void _showEditDialog(BuildContext context, Map<String, dynamic> row) {
-    final namaEC = TextEditingController(text: row['nama_brg']?.toString() ?? '');
-    final stokEC = TextEditingController(text: row['stok_brg']?.toString() ?? '');
-    final satuanEC = TextEditingController(text: row['satuan']?.toString() ?? '');
+    final namaEC = TextEditingController(
+      text: row['nama_brg']?.toString() ?? '',
+    );
+    final stokEC = TextEditingController(
+      text: row['stok_brg']?.toString() ?? '',
+    );
+    final satuanEC = TextEditingController(
+      text: row['satuan']?.toString() ?? '',
+    );
 
     Get.dialog(
       AlertDialog(
@@ -290,18 +322,27 @@ class ListBarang extends StatelessWidget {
             children: [
               TextField(
                 controller: namaEC,
-                decoration: const InputDecoration(labelText: "Nama Barang", border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                  labelText: "Nama Barang",
+                  border: OutlineInputBorder(),
+                ),
               ),
               const SizedBox(height: 10),
               TextField(
                 controller: stokEC,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: "Stok", border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                  labelText: "Stok",
+                  border: OutlineInputBorder(),
+                ),
               ),
               const SizedBox(height: 10),
               TextField(
                 controller: satuanEC,
-                decoration: const InputDecoration(labelText: "Satuan", border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                  labelText: "Satuan",
+                  border: OutlineInputBorder(),
+                ),
               ),
             ],
           ),
@@ -329,13 +370,19 @@ class ListBarang extends StatelessWidget {
 }
 
 /// konfirmasi hapus
-Future<bool> _confirmDelete(BuildContext context, {required String name}) async {
+Future<bool> _confirmDelete(
+  BuildContext context, {
+  required String name,
+}) async {
   final res = await Get.dialog<bool>(
     AlertDialog(
       title: const Text('Hapus Barang?'),
       content: Text('Yakin ingin menghapus "$name"?'),
       actions: [
-        TextButton(onPressed: () => Get.back(result: false), child: const Text('Tidak')),
+        TextButton(
+          onPressed: () => Get.back(result: false),
+          child: const Text('Tidak'),
+        ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
           onPressed: () => Get.back(result: true),

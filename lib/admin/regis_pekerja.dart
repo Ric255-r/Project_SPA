@@ -2,27 +2,14 @@ import 'dart:developer';
 import 'dart:io';
 
 // import 'package:Project_SPA/admin/laporan_ob.dart';
-import 'package:Project_SPA/admin/listpaket.dart';
-import 'package:Project_SPA/admin/listpekerja.dart';
-import 'package:Project_SPA/admin/listpromo.dart';
-import 'package:Project_SPA/admin/listroom.dart';
-import 'package:Project_SPA/admin/listuser.dart';
-import 'package:Project_SPA/admin/regis_locker.dart';
-import 'package:Project_SPA/admin/regis_paket.dart';
-import 'package:Project_SPA/admin/regis_promo.dart';
-import 'package:Project_SPA/admin/regis_room.dart';
-import 'package:Project_SPA/admin/regis_users.dart';
 import 'package:Project_SPA/function/admin_drawer.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 import 'package:cherry_toast/cherry_toast.dart';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart' hide FormData, MultipartFile;
-import 'package:Project_SPA/resepsionis/billing_locker.dart';
-import 'package:Project_SPA/resepsionis/jenis_transaksi.dart';
-import 'package:Project_SPA/main.dart';
 
 const List<String> list = <String>[
   'admin',
@@ -50,7 +37,7 @@ class RegisPekerja extends StatefulWidget {
 class _RegisPekerjaState extends State<RegisPekerja> {
   List<PlatformFile> selectedFiles = [];
   final TextEditingController _textController = TextEditingController();
-  var dio = Dio();
+  var dio = DioClient();
   var txtNik = TextEditingController();
   var txtNamaKaryawan = TextEditingController();
   var txtAlamat = TextEditingController();

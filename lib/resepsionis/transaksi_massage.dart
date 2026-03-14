@@ -6,13 +6,11 @@ import 'package:Project_SPA/resepsionis/daftar_member.dart';
 import 'package:Project_SPA/resepsionis/detail_paket_msg.dart';
 import 'package:Project_SPA/resepsionis/scannerQR.dart';
 import 'package:Project_SPA/resepsionis/store_locker.dart';
-import 'package:Project_SPA/ruang_tunggu/main_rt.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:cherry_toast/cherry_toast.dart';
-import 'billing_locker.dart';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 
 const List<String> list = <String>['Umum', 'Member', 'VIP'];
 String? dropdownValue;
@@ -51,7 +49,7 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
   LockerManager _lockerManager = LockerManager();
   TextEditingController _txtNoLocker = TextEditingController();
 
-  var dio = Dio();
+  var dio = DioClient();
   var idTrans = "";
   TextEditingController _txtIdTrans = TextEditingController();
 
@@ -59,7 +57,12 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
 
   final ischecked = false.obs;
 
-  List<String> listJenisPilihan = <String>['Showing', 'Pilih Bawah', 'Request', 'Rolling'];
+  List<String> listJenisPilihan = <String>[
+    'Showing',
+    'Pilih Bawah',
+    'Request',
+    'Rolling',
+  ];
   String? _dropdownJenisPilihan;
 
   Future<void> _createDraftLastTrans() async {
@@ -71,7 +74,6 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
       var response = await dio.post(
         '${myIpAddr()}/id_trans/createDraft',
         data: {"no_loker": _lockerManager.getLocker().toString()},
-        options: Options(headers: {"Authorization": "Bearer ${token!}"}),
       );
 
       var newId = response.data['id_transaksi'];
@@ -145,7 +147,9 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
 
   Future<void> _getTerapisRolling() async {
     try {
-      var response = await dio.get('${myIpAddr()}/listpekerja/dataterapisrolling');
+      var response = await dio.get(
+        '${myIpAddr()}/listpekerja/dataterapisrolling',
+      );
 
       setState(() {
         _listTerapisRolling =
@@ -194,7 +198,6 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
 
       var response = await dio.put(
         '${myIpAddr()}/id_trans/updateDraft/${idTrans}',
-        options: Options(headers: {"Authorization": "Bearer " + token!}),
         data: {
           "no_loker": _txtNoLocker.text,
           "jenis_tamu": dropdownValue,
@@ -224,7 +227,6 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
 
       var response = await dio.delete(
         '${myIpAddr()}/id_trans/deleteDraftId/$idTrans',
-        options: Options(headers: {"Authorization": "Bearer " + token!}),
       );
 
       if (response.statusCode == 200) {
@@ -246,7 +248,12 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
     _createDraftLastTrans().then((_) async {
       // Berjalan scr paralel. g ush saling nunggu krn g ad kaitan
       try {
-        await Future.wait([_getRuangan(), _getTerapis(), _getGRO(), _getTerapisRolling()]);
+        await Future.wait([
+          _getRuangan(),
+          _getTerapis(),
+          _getGRO(),
+          _getTerapisRolling(),
+        ]);
       } catch (e) {
         log("Error Get Data ruangan, gro & terapis $e");
       }
@@ -289,7 +296,9 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
 
   Future<void> _fetchHistoryMember(String id_member) async {
     try {
-      final response = await dio.get('${myIpAddr()}/history/historymemberkunjungan/$id_member');
+      final response = await dio.get(
+        '${myIpAddr()}/history/historymemberkunjungan/$id_member',
+      );
 
       if (response.statusCode == 200) {
         final now = DateTime.now();
@@ -298,7 +307,9 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
         setState(() {
           historyMember =
               (response.data as List).map((raw) {
-                final Map<String, dynamic> item = Map<String, dynamic>.from(raw);
+                final Map<String, dynamic> item = Map<String, dynamic>.from(
+                  raw,
+                );
 
                 String expLabel = '';
                 final expStr = item['exp_kunjungan']?.toString() ?? '';
@@ -306,7 +317,11 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                 if (expStr.isNotEmpty) {
                   final expDate = DateTime.tryParse(expStr);
                   if (expDate != null) {
-                    final expOnlyDate = DateTime(expDate.year, expDate.month, expDate.day);
+                    final expOnlyDate = DateTime(
+                      expDate.year,
+                      expDate.month,
+                      expDate.day,
+                    );
 
                     // kalau lewat hari ini -> Expired
                     expLabel = expOnlyDate.isBefore(today) ? 'Expired' : '';
@@ -315,20 +330,23 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
 
                 // gabungkan tanggal + label
                 // contoh: "2026-07-03 (Expired)" atau cuma "2026-07-03"
-                final labelExpired = expLabel.isNotEmpty ? '$expStr ($expLabel)' : expStr;
+                final labelExpired =
+                    expLabel.isNotEmpty ? '$expStr ($expLabel)' : expStr;
 
                 item['exp_kunjungan_label'] = labelExpired;
                 return item;
               }).toList();
         });
       } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Error fetching ID: ${response.statusCode}")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error fetching ID: ${response.statusCode}")),
+        );
       }
     } catch (e) {
       print("Error fetching ID: $e");
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error fetching ID")));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error fetching ID")));
     }
   }
 
@@ -336,7 +354,12 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
   List<Map<String, dynamic>> _activePromos = [];
   bool _isLoadingPromos = false;
 
-  void _updateFields(String nama, String noHp, String status, String id_member) {
+  void _updateFields(
+    String nama,
+    String noHp,
+    String status,
+    String id_member,
+  ) {
     setState(() {
       _namaTamu.text = nama;
       _noHp.text = noHp;
@@ -357,7 +380,9 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
     });
 
     try {
-      var response = await dio.get('${myIpAddr()}/history/historymember/$id_member');
+      var response = await dio.get(
+        '${myIpAddr()}/history/historymember/$id_member',
+      );
 
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
@@ -367,15 +392,24 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
             (response.data as List)
                 .where((promo) {
                   // ---- cek sisa kunjungan ----
-                  final sisa = int.tryParse(promo['sisa_kunjungan']?.toString() ?? '0') ?? 0;
+                  final sisa =
+                      int.tryParse(
+                        promo['sisa_kunjungan']?.toString() ?? '0',
+                      ) ??
+                      0;
                   if (sisa <= 0) return false; // kalau sisa 0, tidak bisa apply
 
                   // ---- cek exp_kunjungan ----
                   final expKunjungan = promo['exp_kunjungan'];
-                  if (expKunjungan != null && expKunjungan.toString().isNotEmpty) {
+                  if (expKunjungan != null &&
+                      expKunjungan.toString().isNotEmpty) {
                     final expDate = DateTime.tryParse(expKunjungan.toString());
                     if (expDate != null) {
-                      final expOnlyDate = DateTime(expDate.year, expDate.month, expDate.day);
+                      final expOnlyDate = DateTime(
+                        expDate.year,
+                        expDate.month,
+                        expDate.day,
+                      );
 
                       // sama dengan kondisi: exp_kunjungan >= CURDATE()
                       final isExpired = expOnlyDate.isBefore(today);
@@ -393,8 +427,13 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                   if (expStr.isNotEmpty) {
                     final expDate = DateTime.tryParse(expStr);
                     if (expDate != null) {
-                      final expOnlyDate = DateTime(expDate.year, expDate.month, expDate.day);
-                      expLabel = expOnlyDate.isBefore(today) ? 'Expired' : expStr;
+                      final expOnlyDate = DateTime(
+                        expDate.year,
+                        expDate.month,
+                        expDate.day,
+                      );
+                      expLabel =
+                          expOnlyDate.isBefore(today) ? 'Expired' : expStr;
                     } else {
                       expLabel = expStr;
                     }
@@ -406,7 +445,8 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                     'nama_paket_msg': promo['nama_paket_msg'],
                     'sisa_kunjungan': promo['sisa_kunjungan'],
                     'exp_kunjungan': promo['exp_kunjungan'],
-                    'exp_kunjungan_label': expLabel, // <-- bisa dipakai di Text()
+                    'exp_kunjungan_label':
+                        expLabel, // <-- bisa dipakai di Text()
                     'exp_tahunan': promo['exp_tahunan'],
                   };
                 })
@@ -422,7 +462,11 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
       CherryToast.error(
         title: Text(
           "Failed to load member promos.",
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Poppins',
+          ),
         ),
         animationDuration: const Duration(milliseconds: 1500),
         autoDismiss: true,
@@ -435,7 +479,12 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
       StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
-            title: const Center(child: Text("List Room Tersedia", style: TextStyle(fontFamily: 'Poppins'))),
+            title: const Center(
+              child: Text(
+                "List Room Tersedia",
+                style: TextStyle(fontFamily: 'Poppins'),
+              ),
+            ),
             content: SizedBox(
               height: Get.height - 200,
               width: Get.width,
@@ -444,30 +493,40 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                   GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4,
-                      crossAxisSpacing: 30,
-                      mainAxisSpacing: 25,
-                      childAspectRatio: 2 / 1.5,
-                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          crossAxisSpacing: 30,
+                          mainAxisSpacing: 25,
+                          childAspectRatio: 2 / 1.5,
+                        ),
                     itemCount: _listRoom.length,
                     itemBuilder: (context, index) {
                       var data = _listRoom[index];
                       // int noRoom = index + 1;
                       // Kondisi Ecek2 buat room penuh
-                      bool isFull = data['status'] == "maintenance" || data['status'] == "occupied";
+                      bool isFull =
+                          data['status'] == "maintenance" ||
+                          data['status'] == "occupied";
                       Color roomColor = Colors.grey;
                       if (data['status'] == "maintenance") {
-                        roomColor = const Color.fromARGB(255, 238, 5, 40); // Red for maintenance
+                        roomColor = const Color.fromARGB(
+                          255,
+                          238,
+                          5,
+                          40,
+                        ); // Red for maintenance
                       } else if (data['status'] == "occupied") {
                         roomColor = const Color.fromARGB(255, 238, 5, 40);
-                      } else if ((data['status'] as String).toLowerCase() == "aktif") {
+                      } else if ((data['status'] as String).toLowerCase() ==
+                          "aktif") {
                         roomColor = const Color.fromARGB(255, 64, 97, 55);
                       }
 
                       return InkWell(
                         onTap: () {
-                          if (data['status'] == "maintenance" || data['status'] == "occupied") {
+                          if (data['status'] == "maintenance" ||
+                              data['status'] == "occupied") {
                             CherryToast.error(
                               title: Text(
                                 "Ruangan Sedang ${data['status']}!",
@@ -477,7 +536,9 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                   fontFamily: 'Poppins',
                                 ),
                               ),
-                              animationDuration: const Duration(milliseconds: 1500),
+                              animationDuration: const Duration(
+                                milliseconds: 1500,
+                              ),
                               autoDismiss: true,
                             ).show(Get.context!); // Use Get.context!
                           } else {
@@ -503,10 +564,18 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.door_back_door, size: 50, color: Colors.white),
+                              Icon(
+                                Icons.door_back_door,
+                                size: 50,
+                                color: Colors.white,
+                              ),
                               Text(
                                 "Room ${data['nama_ruangan']}",
-                                style: TextStyle(color: Colors.white, fontSize: 16, fontFamily: 'Poppins'),
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontFamily: 'Poppins',
+                                ),
                               ),
                             ],
                           ),
@@ -528,7 +597,12 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
       StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
-            title: Center(child: Text("Choose Therapist", style: TextStyle(fontFamily: 'Poppins'))),
+            title: Center(
+              child: Text(
+                "Choose Therapist",
+                style: TextStyle(fontFamily: 'Poppins'),
+              ),
+            ),
             content: Container(
               width: Get.width,
               height: Get.height - 200,
@@ -561,12 +635,16 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                 fontFamily: 'Poppins',
                               ),
                             ),
-                            animationDuration: const Duration(milliseconds: 1500),
+                            animationDuration: const Duration(
+                              milliseconds: 1500,
+                            ),
                             autoDismiss: true,
                           ).show(Get.context!); // Use Get.context!
                         }
-                        if (txtTerapis.text == "${data['id_karyawan']} - ${data['nama_karyawan']}" ||
-                            txtTerapis3.text == "${data['id_karyawan']} - ${data['nama_karyawan']}") {
+                        if (txtTerapis.text ==
+                                "${data['id_karyawan']} - ${data['nama_karyawan']}" ||
+                            txtTerapis3.text ==
+                                "${data['id_karyawan']} - ${data['nama_karyawan']}") {
                           CherryToast.error(
                             title: Text(
                               'Terapis sudah dipilih',
@@ -576,11 +654,15 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                 fontFamily: 'Poppins',
                               ),
                             ),
-                            animationDuration: const Duration(milliseconds: 1500),
+                            animationDuration: const Duration(
+                              milliseconds: 1500,
+                            ),
                           ).show(Get.context!);
                         }
-                        if (txtTerapis.text == "${data['id_karyawan']} - ${data['nama_karyawan']}" ||
-                            txtTerapis3.text == "${data['id_karyawan']} - ${data['nama_karyawan']}") {
+                        if (txtTerapis.text ==
+                                "${data['id_karyawan']} - ${data['nama_karyawan']}" ||
+                            txtTerapis3.text ==
+                                "${data['id_karyawan']} - ${data['nama_karyawan']}") {
                           CherryToast.error(
                             title: Text(
                               'Terapis sudah dipilih',
@@ -590,11 +672,15 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                 fontFamily: 'Poppins',
                               ),
                             ),
-                            animationDuration: const Duration(milliseconds: 1500),
+                            animationDuration: const Duration(
+                              milliseconds: 1500,
+                            ),
                           ).show(Get.context!);
                         } else {
-                          if (txtTerapis2.text == "${data['id_karyawan']} - ${data['nama_karyawan']}" ||
-                              txtTerapis3.text == "${data['id_karyawan']} - ${data['nama_karyawan']}") {
+                          if (txtTerapis2.text ==
+                                  "${data['id_karyawan']} - ${data['nama_karyawan']}" ||
+                              txtTerapis3.text ==
+                                  "${data['id_karyawan']} - ${data['nama_karyawan']}") {
                             CherryToast.error(
                               title: Text(
                                 'Terapis sudah dipilih',
@@ -604,16 +690,21 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                   fontFamily: 'Poppins',
                                 ),
                               ),
-                              animationDuration: const Duration(milliseconds: 1500),
+                              animationDuration: const Duration(
+                                milliseconds: 1500,
+                              ),
                             ).show(Get.context!);
                           } else {
                             setState(() {
                               try {
                                 // Attempt to access txtTerapis directly (if in the same widget)
-                                txtTerapis.text = "${data['id_karyawan']} - ${data['nama_karyawan']}";
+                                txtTerapis.text =
+                                    "${data['id_karyawan']} - ${data['nama_karyawan']}";
                                 _idTerapis = data['id_karyawan'];
-                                controllerPekerja.getidterapis.value = data['id_karyawan'];
-                                controllerPekerja.getnamaterapis.value = data['nama_karyawan'];
+                                controllerPekerja.getidterapis.value =
+                                    data['id_karyawan'];
+                                controllerPekerja.getnamaterapis.value =
+                                    data['nama_karyawan'];
                               } catch (e) {
                                 print(
                                   "Error: txtTerapis is not directly accessible here. Ensure it's properly managed by GetX.",
@@ -638,8 +729,15 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
                               Container(
-                                margin: const EdgeInsets.only(top: 20, left: 12, right: 12),
-                                child: Text(data['id_karyawan'], style: TextStyle(fontSize: 30)),
+                                margin: const EdgeInsets.only(
+                                  top: 20,
+                                  left: 12,
+                                  right: 12,
+                                ),
+                                child: Text(
+                                  data['id_karyawan'],
+                                  style: TextStyle(fontSize: 30),
+                                ),
                               ),
                               Expanded(
                                 child: Column(
@@ -648,7 +746,10 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                     SizedBox(height: 10),
                                     Text(
                                       data['nama_karyawan'],
-                                      style: TextStyle(fontSize: 30, fontFamily: 'Poppins'),
+                                      style: TextStyle(
+                                        fontSize: 30,
+                                        fontFamily: 'Poppins',
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -673,7 +774,12 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
       StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
-            title: Center(child: Text("Choose Therapist", style: TextStyle(fontFamily: 'Poppins'))),
+            title: Center(
+              child: Text(
+                "Choose Therapist",
+                style: TextStyle(fontFamily: 'Poppins'),
+              ),
+            ),
             content: Container(
               width: Get.width,
               height: Get.height - 200,
@@ -706,12 +812,16 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                 fontFamily: 'Poppins',
                               ),
                             ),
-                            animationDuration: const Duration(milliseconds: 1500),
+                            animationDuration: const Duration(
+                              milliseconds: 1500,
+                            ),
                             autoDismiss: true,
                           ).show(Get.context!); // Use Get.context!
                         } else {
-                          if (txtTerapis.text == "${data['id_karyawan']} - ${data['nama_karyawan']}" ||
-                              txtTerapis3.text == "${data['id_karyawan']} - ${data['nama_karyawan']}") {
+                          if (txtTerapis.text ==
+                                  "${data['id_karyawan']} - ${data['nama_karyawan']}" ||
+                              txtTerapis3.text ==
+                                  "${data['id_karyawan']} - ${data['nama_karyawan']}") {
                             CherryToast.error(
                               title: Text(
                                 'Terapis sudah dipilih',
@@ -721,16 +831,21 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                   fontFamily: 'Poppins',
                                 ),
                               ),
-                              animationDuration: const Duration(milliseconds: 1500),
+                              animationDuration: const Duration(
+                                milliseconds: 1500,
+                              ),
                             ).show(Get.context!);
                           } else {
                             setState(() {
                               try {
                                 // Attempt to access txtTerapis directly (if in the same widget)
-                                txtTerapis2.text = "${data['id_karyawan']} - ${data['nama_karyawan']}";
+                                txtTerapis2.text =
+                                    "${data['id_karyawan']} - ${data['nama_karyawan']}";
                                 _idTerapis2 = data['id_karyawan'];
-                                controllerPekerja.getidterapis2.value = data['id_karyawan'];
-                                controllerPekerja.getnamaterapis2.value = data['nama_karyawan'];
+                                controllerPekerja.getidterapis2.value =
+                                    data['id_karyawan'];
+                                controllerPekerja.getnamaterapis2.value =
+                                    data['nama_karyawan'];
                               } catch (e) {
                                 print(
                                   "Error: txtTerapis is not directly accessible here. Ensure it's properly managed by GetX.",
@@ -755,8 +870,15 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
                               Container(
-                                margin: const EdgeInsets.only(top: 20, left: 12, right: 12),
-                                child: Text(data['id_karyawan'], style: TextStyle(fontSize: 30)),
+                                margin: const EdgeInsets.only(
+                                  top: 20,
+                                  left: 12,
+                                  right: 12,
+                                ),
+                                child: Text(
+                                  data['id_karyawan'],
+                                  style: TextStyle(fontSize: 30),
+                                ),
                               ),
                               Expanded(
                                 child: Column(
@@ -765,7 +887,10 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                     SizedBox(height: 10),
                                     Text(
                                       data['nama_karyawan'],
-                                      style: TextStyle(fontSize: 30, fontFamily: 'Poppins'),
+                                      style: TextStyle(
+                                        fontSize: 30,
+                                        fontFamily: 'Poppins',
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -790,7 +915,12 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
       StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
-            title: Center(child: Text("Choose Therapist", style: TextStyle(fontFamily: 'Poppins'))),
+            title: Center(
+              child: Text(
+                "Choose Therapist",
+                style: TextStyle(fontFamily: 'Poppins'),
+              ),
+            ),
             content: Container(
               width: Get.width,
               height: Get.height - 200,
@@ -823,12 +953,16 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                 fontFamily: 'Poppins',
                               ),
                             ),
-                            animationDuration: const Duration(milliseconds: 1500),
+                            animationDuration: const Duration(
+                              milliseconds: 1500,
+                            ),
                             autoDismiss: true,
                           ).show(Get.context!); // Use Get.context!
                         } else {
-                          if (txtTerapis.text == "${data['id_karyawan']} - ${data['nama_karyawan']}" ||
-                              txtTerapis2.text == "${data['id_karyawan']} - ${data['nama_karyawan']}") {
+                          if (txtTerapis.text ==
+                                  "${data['id_karyawan']} - ${data['nama_karyawan']}" ||
+                              txtTerapis2.text ==
+                                  "${data['id_karyawan']} - ${data['nama_karyawan']}") {
                             CherryToast.error(
                               title: Text(
                                 'Terapis sudah dipilih',
@@ -838,16 +972,21 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                   fontFamily: 'Poppins',
                                 ),
                               ),
-                              animationDuration: const Duration(milliseconds: 1500),
+                              animationDuration: const Duration(
+                                milliseconds: 1500,
+                              ),
                             ).show(Get.context!);
                           } else {
                             setState(() {
                               try {
                                 // Attempt to access txtTerapis directly (if in the same widget)
-                                txtTerapis3.text = "${data['id_karyawan']} - ${data['nama_karyawan']}";
+                                txtTerapis3.text =
+                                    "${data['id_karyawan']} - ${data['nama_karyawan']}";
                                 _idTerapis3 = data['id_karyawan'];
-                                controllerPekerja.getidterapis3.value = data['id_karyawan'];
-                                controllerPekerja.getnamaterapis3.value = data['nama_karyawan'];
+                                controllerPekerja.getidterapis3.value =
+                                    data['id_karyawan'];
+                                controllerPekerja.getnamaterapis3.value =
+                                    data['nama_karyawan'];
                               } catch (e) {
                                 print(
                                   "Error: txtTerapis is not directly accessible here. Ensure it's properly managed by GetX.",
@@ -873,8 +1012,15 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
                               Container(
-                                margin: const EdgeInsets.only(top: 20, left: 12, right: 12),
-                                child: Text(data['id_karyawan'], style: TextStyle(fontSize: 30)),
+                                margin: const EdgeInsets.only(
+                                  top: 20,
+                                  left: 12,
+                                  right: 12,
+                                ),
+                                child: Text(
+                                  data['id_karyawan'],
+                                  style: TextStyle(fontSize: 30),
+                                ),
                               ),
                               Expanded(
                                 child: Column(
@@ -883,7 +1029,10 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                     SizedBox(height: 10),
                                     Text(
                                       data['nama_karyawan'],
-                                      style: TextStyle(fontSize: 30, fontFamily: 'Poppins'),
+                                      style: TextStyle(
+                                        fontSize: 30,
+                                        fontFamily: 'Poppins',
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -908,7 +1057,12 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
       StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
-            title: Center(child: Text("Choose Therapist", style: TextStyle(fontFamily: 'Poppins'))),
+            title: Center(
+              child: Text(
+                "Choose Therapist",
+                style: TextStyle(fontFamily: 'Poppins'),
+              ),
+            ),
             content: Container(
               width: Get.width,
               height: Get.height - 200,
@@ -941,12 +1095,16 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                 fontFamily: 'Poppins',
                               ),
                             ),
-                            animationDuration: const Duration(milliseconds: 1500),
+                            animationDuration: const Duration(
+                              milliseconds: 1500,
+                            ),
                             autoDismiss: true,
                           ).show(Get.context!); // Use Get.context!
                         } else {
-                          if (txtTerapis2.text == "${data['id_karyawan']} - ${data['nama_karyawan']}" ||
-                              txtTerapis3.text == "${data['id_karyawan']} - ${data['nama_karyawan']}") {
+                          if (txtTerapis2.text ==
+                                  "${data['id_karyawan']} - ${data['nama_karyawan']}" ||
+                              txtTerapis3.text ==
+                                  "${data['id_karyawan']} - ${data['nama_karyawan']}") {
                             CherryToast.error(
                               title: Text(
                                 'Terapis sudah dipilih',
@@ -956,16 +1114,21 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                   fontFamily: 'Poppins',
                                 ),
                               ),
-                              animationDuration: const Duration(milliseconds: 1500),
+                              animationDuration: const Duration(
+                                milliseconds: 1500,
+                              ),
                             ).show(Get.context!);
                           } else {
                             setState(() {
                               try {
                                 // Attempt to access txtTerapis directly (if in the same widget)
-                                txtTerapis.text = "${data['id_karyawan']} - ${data['nama_karyawan']}";
+                                txtTerapis.text =
+                                    "${data['id_karyawan']} - ${data['nama_karyawan']}";
                                 _idTerapis = data['id_karyawan'];
-                                controllerPekerja.getidterapis.value = data['id_karyawan'];
-                                controllerPekerja.getnamaterapis.value = data['nama_karyawan'];
+                                controllerPekerja.getidterapis.value =
+                                    data['id_karyawan'];
+                                controllerPekerja.getnamaterapis.value =
+                                    data['nama_karyawan'];
                               } catch (e) {
                                 print(
                                   "Error: txtTerapis is not directly accessible here. Ensure it's properly managed by GetX.",
@@ -991,8 +1154,15 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
                               Container(
-                                margin: const EdgeInsets.only(top: 20, left: 12, right: 12),
-                                child: Text(data['id_karyawan'], style: TextStyle(fontSize: 30)),
+                                margin: const EdgeInsets.only(
+                                  top: 20,
+                                  left: 12,
+                                  right: 12,
+                                ),
+                                child: Text(
+                                  data['id_karyawan'],
+                                  style: TextStyle(fontSize: 30),
+                                ),
                               ),
                               Expanded(
                                 child: Column(
@@ -1001,7 +1171,10 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                     SizedBox(height: 10),
                                     Text(
                                       data['nama_karyawan'],
-                                      style: TextStyle(fontSize: 30, fontFamily: 'Poppins'),
+                                      style: TextStyle(
+                                        fontSize: 30,
+                                        fontFamily: 'Poppins',
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -1026,7 +1199,12 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
       StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
-            title: Center(child: Text("Choose Therapist", style: TextStyle(fontFamily: 'Poppins'))),
+            title: Center(
+              child: Text(
+                "Choose Therapist",
+                style: TextStyle(fontFamily: 'Poppins'),
+              ),
+            ),
             content: Container(
               width: Get.width,
               height: Get.height - 200,
@@ -1059,12 +1237,16 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                 fontFamily: 'Poppins',
                               ),
                             ),
-                            animationDuration: const Duration(milliseconds: 1500),
+                            animationDuration: const Duration(
+                              milliseconds: 1500,
+                            ),
                             autoDismiss: true,
                           ).show(Get.context!); // Use Get.context!
                         } else {
-                          if (txtTerapis.text == "${data['id_karyawan']} - ${data['nama_karyawan']}" ||
-                              txtTerapis3.text == "${data['id_karyawan']} - ${data['nama_karyawan']}") {
+                          if (txtTerapis.text ==
+                                  "${data['id_karyawan']} - ${data['nama_karyawan']}" ||
+                              txtTerapis3.text ==
+                                  "${data['id_karyawan']} - ${data['nama_karyawan']}") {
                             CherryToast.error(
                               title: Text(
                                 'Terapis sudah dipilih',
@@ -1074,16 +1256,21 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                   fontFamily: 'Poppins',
                                 ),
                               ),
-                              animationDuration: const Duration(milliseconds: 1500),
+                              animationDuration: const Duration(
+                                milliseconds: 1500,
+                              ),
                             ).show(Get.context!);
                           } else {
                             setState(() {
                               try {
                                 // Attempt to access txtTerapis directly (if in the same widget)
-                                txtTerapis2.text = "${data['id_karyawan']} - ${data['nama_karyawan']}";
+                                txtTerapis2.text =
+                                    "${data['id_karyawan']} - ${data['nama_karyawan']}";
                                 _idTerapis2 = data['id_karyawan'];
-                                controllerPekerja.getidterapis2.value = data['id_karyawan'];
-                                controllerPekerja.getnamaterapis2.value = data['nama_karyawan'];
+                                controllerPekerja.getidterapis2.value =
+                                    data['id_karyawan'];
+                                controllerPekerja.getnamaterapis2.value =
+                                    data['nama_karyawan'];
                               } catch (e) {
                                 print(
                                   "Error: txtTerapis is not directly accessible here. Ensure it's properly managed by GetX.",
@@ -1109,8 +1296,15 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
                               Container(
-                                margin: const EdgeInsets.only(top: 20, left: 12, right: 12),
-                                child: Text(data['id_karyawan'], style: TextStyle(fontSize: 30)),
+                                margin: const EdgeInsets.only(
+                                  top: 20,
+                                  left: 12,
+                                  right: 12,
+                                ),
+                                child: Text(
+                                  data['id_karyawan'],
+                                  style: TextStyle(fontSize: 30),
+                                ),
                               ),
                               Expanded(
                                 child: Column(
@@ -1119,7 +1313,10 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                     SizedBox(height: 10),
                                     Text(
                                       data['nama_karyawan'],
-                                      style: TextStyle(fontSize: 30, fontFamily: 'Poppins'),
+                                      style: TextStyle(
+                                        fontSize: 30,
+                                        fontFamily: 'Poppins',
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -1144,7 +1341,12 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
       StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
-            title: Center(child: Text("Choose Therapist", style: TextStyle(fontFamily: 'Poppins'))),
+            title: Center(
+              child: Text(
+                "Choose Therapist",
+                style: TextStyle(fontFamily: 'Poppins'),
+              ),
+            ),
             content: Container(
               width: Get.width,
               height: Get.height - 200,
@@ -1177,12 +1379,16 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                 fontFamily: 'Poppins',
                               ),
                             ),
-                            animationDuration: const Duration(milliseconds: 1500),
+                            animationDuration: const Duration(
+                              milliseconds: 1500,
+                            ),
                             autoDismiss: true,
                           ).show(Get.context!); // Use Get.context!
                         } else {
-                          if (txtTerapis.text == "${data['id_karyawan']} - ${data['nama_karyawan']}" ||
-                              txtTerapis2.text == "${data['id_karyawan']} - ${data['nama_karyawan']}") {
+                          if (txtTerapis.text ==
+                                  "${data['id_karyawan']} - ${data['nama_karyawan']}" ||
+                              txtTerapis2.text ==
+                                  "${data['id_karyawan']} - ${data['nama_karyawan']}") {
                             CherryToast.error(
                               title: Text(
                                 'Terapis sudah dipilih',
@@ -1192,16 +1398,21 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                   fontFamily: 'Poppins',
                                 ),
                               ),
-                              animationDuration: const Duration(milliseconds: 1500),
+                              animationDuration: const Duration(
+                                milliseconds: 1500,
+                              ),
                             ).show(Get.context!);
                           } else {
                             setState(() {
                               try {
                                 // Attempt to access txtTerapis directly (if in the same widget)
-                                txtTerapis3.text = "${data['id_karyawan']} - ${data['nama_karyawan']}";
+                                txtTerapis3.text =
+                                    "${data['id_karyawan']} - ${data['nama_karyawan']}";
                                 _idTerapis3 = data['id_karyawan'];
-                                controllerPekerja.getidterapis3.value = data['id_karyawan'];
-                                controllerPekerja.getnamaterapis3.value = data['nama_karyawan'];
+                                controllerPekerja.getidterapis3.value =
+                                    data['id_karyawan'];
+                                controllerPekerja.getnamaterapis3.value =
+                                    data['nama_karyawan'];
                               } catch (e) {
                                 print(
                                   "Error: txtTerapis is not directly accessible here. Ensure it's properly managed by GetX.",
@@ -1226,8 +1437,15 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
                               Container(
-                                margin: const EdgeInsets.only(top: 20, left: 12, right: 12),
-                                child: Text(data['id_karyawan'], style: TextStyle(fontSize: 30)),
+                                margin: const EdgeInsets.only(
+                                  top: 20,
+                                  left: 12,
+                                  right: 12,
+                                ),
+                                child: Text(
+                                  data['id_karyawan'],
+                                  style: TextStyle(fontSize: 30),
+                                ),
                               ),
                               Expanded(
                                 child: Column(
@@ -1236,7 +1454,10 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                     SizedBox(height: 10),
                                     Text(
                                       data['nama_karyawan'],
-                                      style: TextStyle(fontSize: 30, fontFamily: 'Poppins'),
+                                      style: TextStyle(
+                                        fontSize: 30,
+                                        fontFamily: 'Poppins',
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -1261,7 +1482,12 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
       StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
-            title: Center(child: Text("Choose GRO", style: TextStyle(fontFamily: 'Poppins'))),
+            title: Center(
+              child: Text(
+                "Choose GRO",
+                style: TextStyle(fontFamily: 'Poppins'),
+              ),
+            ),
             content: Container(
               width: Get.width,
               height: Get.height - 200,
@@ -1283,7 +1509,8 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                     splashColor: Colors.transparent,
                     onTap: () {
                       setState(() {
-                        txtGRO.text = "${data['id_karyawan']} - ${data['nama_karyawan']}";
+                        txtGRO.text =
+                            "${data['id_karyawan']} - ${data['nama_karyawan']}";
                         _idGRO = data['id_karyawan'];
                       });
                       Get.back();
@@ -1299,8 +1526,15 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             Container(
-                              margin: const EdgeInsets.only(top: 20, left: 12, right: 12),
-                              child: Text(data['id_karyawan'], style: TextStyle(fontSize: 30)),
+                              margin: const EdgeInsets.only(
+                                top: 20,
+                                left: 12,
+                                right: 12,
+                              ),
+                              child: Text(
+                                data['id_karyawan'],
+                                style: TextStyle(fontSize: 30),
+                              ),
                             ),
                             Expanded(
                               child: Column(
@@ -1309,7 +1543,10 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                   SizedBox(height: 10),
                                   Text(
                                     data['nama_karyawan'],
-                                    style: TextStyle(fontSize: 30, fontFamily: 'Poppins'),
+                                    style: TextStyle(
+                                      fontSize: 30,
+                                      fontFamily: 'Poppins',
+                                    ),
                                   ),
                                 ],
                               ),
@@ -1360,7 +1597,10 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
           ),
           title: FittedBox(
             fit: BoxFit.scaleDown,
-            child: Text('Transaksi Massage', style: TextStyle(fontSize: 60, fontFamily: 'Poppins')),
+            child: Text(
+              'Transaksi Massage',
+              style: TextStyle(fontSize: 60, fontFamily: 'Poppins'),
+            ),
           ),
           centerTitle: true,
           toolbarHeight: 130,
@@ -1418,12 +1658,17 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                   });
                                 },
                                 items:
-                                    list.map<DropdownMenuItem<String>>((String value) {
+                                    list.map<DropdownMenuItem<String>>((
+                                      String value,
+                                    ) {
                                       return DropdownMenuItem<String>(
                                         value: value,
                                         child: Text(
                                           value,
-                                          style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontFamily: 'Poppins',
+                                          ),
                                         ),
                                       );
                                     }).toList(),
@@ -1438,7 +1683,11 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                               isNumber: true,
                             ),
                             SizedBox(height: 15),
-                            _buildInputRow(label: 'Nama :', controller: _namaTamu, labelWidth: labelWidth),
+                            _buildInputRow(
+                              label: 'Nama :',
+                              controller: _namaTamu,
+                              labelWidth: labelWidth,
+                            ),
                             SizedBox(height: 15),
 
                             // Dropdown Jenis Pilihan & Tombol Show
@@ -1448,7 +1697,10 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                   width: labelWidth,
                                   child: Text(
                                     'Jenis Pilihan :',
-                                    style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontFamily: 'Poppins',
+                                    ),
                                   ),
                                 ),
                                 Expanded(
@@ -1458,9 +1710,13 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                         flex: 2,
                                         child: Container(
                                           height: 40,
-                                          padding: EdgeInsets.symmetric(horizontal: 10),
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                          ),
                                           decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(10),
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
                                             color: Colors.white,
                                           ),
                                           child: DropdownButton<String>(
@@ -1474,21 +1730,27 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                               });
                                             },
                                             items:
-                                                listJenisPilihan.map<DropdownMenuItem<String>>((
-                                                  String value,
-                                                ) {
-                                                  return DropdownMenuItem<String>(
+                                                listJenisPilihan.map<
+                                                  DropdownMenuItem<String>
+                                                >((String value) {
+                                                  return DropdownMenuItem<
+                                                    String
+                                                  >(
                                                     value: value,
                                                     child: Text(
                                                       value,
-                                                      style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
+                                                      style: TextStyle(
+                                                        fontSize: 18,
+                                                        fontFamily: 'Poppins',
+                                                      ),
                                                     ),
                                                   );
                                                 }).toList(),
                                           ),
                                         ),
                                       ),
-                                      if (_dropdownJenisPilihan == 'Showing') ...[
+                                      if (_dropdownJenisPilihan ==
+                                          'Showing') ...[
                                         SizedBox(width: 10),
                                         Obx(
                                           () =>
@@ -1496,21 +1758,37 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                                   ? Container(
                                                     height: 40,
                                                     child: ElevatedButton(
-                                                      style: ElevatedButton.styleFrom(
-                                                        backgroundColor: Color(0XFFF6F7C4),
-                                                        foregroundColor: Colors.black,
-                                                      ),
+                                                      style:
+                                                          ElevatedButton.styleFrom(
+                                                            backgroundColor:
+                                                                Color(
+                                                                  0XFFF6F7C4,
+                                                                ),
+                                                            foregroundColor:
+                                                                Colors.black,
+                                                          ),
                                                       onPressed: () {
-                                                        daftarpanggilankerja('Showing Room', 'Semua Terapis');
+                                                        daftarpanggilankerja(
+                                                          'Showing Room',
+                                                          'Semua Terapis',
+                                                        );
                                                         CherryToast.success(
-                                                          title: Text('Notif berhasil dikirim'),
+                                                          title: Text(
+                                                            'Notif berhasil dikirim',
+                                                          ),
                                                         ).show(context);
-                                                        isbuttonvisible.value = false;
-                                                        controllerPekerja.statusshowing.value = 'pressed';
+                                                        isbuttonvisible.value =
+                                                            false;
+                                                        controllerPekerja
+                                                            .statusshowing
+                                                            .value = 'pressed';
                                                       },
                                                       child: Text(
                                                         'SEND NOTIF',
-                                                        style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
+                                                        style: TextStyle(
+                                                          fontSize: 14,
+                                                          fontFamily: 'Poppins',
+                                                        ),
                                                       ),
                                                     ),
                                                   )
@@ -1593,7 +1871,10 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                   width: labelWidth,
                                   child: Text(
                                     'TRANSAKSI KTV',
-                                    style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontFamily: 'Poppins',
+                                    ),
                                   ),
                                 ),
                                 Obx(
@@ -1603,8 +1884,10 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                       if (ischecked.value == true) {
                                         txtTerapis2.clear();
                                         txtTerapis3.clear();
-                                        controllerPekerja.getidterapis2.value = '';
-                                        controllerPekerja.getidterapis3.value = '';
+                                        controllerPekerja.getidterapis2.value =
+                                            '';
+                                        controllerPekerja.getidterapis3.value =
+                                            '';
                                       }
                                       ischecked.value = newvalue!;
                                     },
@@ -1623,7 +1906,13 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Detail Member :', style: TextStyle(fontSize: 18, fontFamily: 'Poppins')),
+                            Text(
+                              'Detail Member :',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontFamily: 'Poppins',
+                              ),
+                            ),
                             SizedBox(height: 10),
                             Container(
                               width: double.infinity,
@@ -1637,7 +1926,9 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                       ? Center(
                                         child: Text(
                                           "Silahkan Scan QR Terlebih Dahulu",
-                                          style: TextStyle(fontFamily: 'Poppins'),
+                                          style: TextStyle(
+                                            fontFamily: 'Poppins',
+                                          ),
                                         ),
                                       )
                                       : ListView.builder(
@@ -1649,21 +1940,30 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                               ListTile(
                                                 title: Text(
                                                   item['nama_promo'] ?? '',
-                                                  style: TextStyle(fontFamily: 'Poppins', fontSize: 14),
+                                                  style: TextStyle(
+                                                    fontFamily: 'Poppins',
+                                                    fontSize: 14,
+                                                  ),
                                                 ),
                                                 trailing: Wrap(
                                                   spacing: 12,
                                                   children: [
                                                     Text(
-                                                      item['sisa_kunjungan'] != null
+                                                      item['sisa_kunjungan'] !=
+                                                              null
                                                           ? '${item['sisa_kunjungan']} Kali'
                                                           : '',
-                                                      style: TextStyle(fontSize: 12),
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                      ),
                                                     ),
                                                     Text("|"),
                                                     Text(
-                                                      item['exp_kunjungan_label'] ?? '',
-                                                      style: TextStyle(fontSize: 12),
+                                                      item['exp_kunjungan_label'] ??
+                                                          '',
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                      ),
                                                     ),
                                                   ],
                                                 ),
@@ -1688,13 +1988,20 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => QRScannerScreen(onScannedData: _updateFields),
+                                      builder:
+                                          (context) => QRScannerScreen(
+                                            onScannedData: _updateFields,
+                                          ),
                                     ),
                                   );
                                 },
                                 child: Text(
                                   'SCAN QR',
-                                  style: TextStyle(fontSize: 24, fontFamily: 'Poppins', color: Colors.black),
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    fontFamily: 'Poppins',
+                                    color: Colors.black,
+                                  ),
                                 ),
                               ),
                             ),
@@ -1726,7 +2033,8 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                           child: TextButton(
                             onPressed: () {
                               _updateLastTrans().then((_) {
-                                controllerPekerja.getnotrans.value = _txtIdTrans.text;
+                                controllerPekerja.getnotrans.value =
+                                    _txtIdTrans.text;
                                 controllerPekerja.getroom.value = txtRoom.text;
                                 Get.to(
                                   () => DetailPaketMassage(
@@ -1739,13 +2047,18 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                                 );
                               });
                             },
-                            style: TextButton.styleFrom(foregroundColor: Colors.black),
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.black,
+                            ),
                             // FittedBox agar font 40 otomatis mengecil di layar sempit
                             child: FittedBox(
                               fit: BoxFit.scaleDown,
                               child: Text(
                                 'Pilih Paket',
-                                style: TextStyle(fontSize: 40, fontFamily: 'Poppins'),
+                                style: TextStyle(
+                                  fontSize: 40,
+                                  fontFamily: 'Poppins',
+                                ),
                               ),
                             ),
                           ),
@@ -1765,12 +2078,17 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
                             onPressed: () {
                               Get.to(() => DaftarMember());
                             },
-                            style: TextButton.styleFrom(foregroundColor: Colors.black),
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.black,
+                            ),
                             child: FittedBox(
                               fit: BoxFit.scaleDown,
                               child: Text(
                                 'Daftar Member',
-                                style: TextStyle(fontSize: 40, fontFamily: 'Poppins'),
+                                style: TextStyle(
+                                  fontSize: 40,
+                                  fontFamily: 'Poppins',
+                                ),
                               ),
                             ),
                           ),
@@ -1801,20 +2119,31 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
       children: [
         SizedBox(
           width: labelWidth,
-          child: Text(label, style: TextStyle(fontSize: 18, fontFamily: 'Poppins')),
+          child: Text(
+            label,
+            style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
+          ),
         ),
         Expanded(
           child: Container(
             height: 40,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              color: Colors.white,
+            ),
             child: TextField(
               controller: controller,
               readOnly: readOnly,
-              keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-              inputFormatters: isNumber ? [FilteringTextInputFormatter.digitsOnly] : [],
+              keyboardType:
+                  isNumber ? TextInputType.number : TextInputType.text,
+              inputFormatters:
+                  isNumber ? [FilteringTextInputFormatter.digitsOnly] : [],
               decoration: InputDecoration(
                 border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                contentPadding: EdgeInsets.symmetric(
+                  vertical: 10,
+                  horizontal: 10,
+                ),
               ),
               style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
             ),
@@ -1824,18 +2153,28 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
     );
   }
 
-  Widget _buildCustomRow({required String label, required double labelWidth, required Widget child}) {
+  Widget _buildCustomRow({
+    required String label,
+    required double labelWidth,
+    required Widget child,
+  }) {
     return Row(
       children: [
         SizedBox(
           width: labelWidth,
-          child: Text(label, style: TextStyle(fontSize: 18, fontFamily: 'Poppins')),
+          child: Text(
+            label,
+            style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
+          ),
         ),
         Expanded(
           child: Container(
             height: 40,
             padding: EdgeInsets.symmetric(horizontal: 10),
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              color: Colors.white,
+            ),
             child: child,
           ),
         ),
@@ -1854,19 +2193,28 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
       children: [
         SizedBox(
           width: labelWidth,
-          child: Text(label, style: TextStyle(fontSize: 18, fontFamily: 'Poppins')),
+          child: Text(
+            label,
+            style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
+          ),
         ),
         Expanded(
           flex: 2,
           child: Container(
             height: 40,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              color: Colors.white,
+            ),
             child: TextField(
               controller: controller,
               readOnly: true,
               decoration: InputDecoration(
                 border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                contentPadding: EdgeInsets.symmetric(
+                  vertical: 10,
+                  horizontal: 10,
+                ),
               ),
               style: TextStyle(fontSize: 18, fontFamily: 'Poppins'),
             ),
@@ -1877,14 +2225,23 @@ class _TransaksiMassageState extends State<TransaksiMassage> {
           flex: 1,
           child: Container(
             height: 40,
-            decoration: BoxDecoration(color: Color(0XFFF6F7C4), borderRadius: BorderRadius.circular(10)),
+            decoration: BoxDecoration(
+              color: Color(0XFFF6F7C4),
+              borderRadius: BorderRadius.circular(10),
+            ),
             child: TextButton(
               onPressed: onPressed,
-              style: TextButton.styleFrom(padding: EdgeInsets.zero, foregroundColor: Colors.black),
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.zero,
+                foregroundColor: Colors.black,
+              ),
               child: FittedBox(
                 child: Padding(
                   padding: const EdgeInsets.all(4.0),
-                  child: Text(buttonText, style: TextStyle(fontSize: 16, fontFamily: 'Poppins')),
+                  child: Text(
+                    buttonText,
+                    style: TextStyle(fontSize: 16, fontFamily: 'Poppins'),
+                  ),
                 ),
               ),
             ),

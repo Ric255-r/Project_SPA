@@ -2,8 +2,6 @@ import 'package:Project_SPA/kamar_terapis/main_kamar_terapis.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:Project_SPA/kamar_terapis/terapis_mgr.dart';
-import 'package:Project_SPA/resepsionis/transaksi_food.dart';
-import 'package:Project_SPA/resepsionis/transaksi_massage.dart';
 import 'package:cherry_toast/cherry_toast.dart';
 
 class CustEndSblmWaktunyaController extends GetxController {

@@ -2,7 +2,7 @@
 import 'package:Project_SPA/function/admin_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 import 'package:intl/intl.dart';
 import 'package:cherry_toast/cherry_toast.dart';
 import 'package:Project_SPA/function/ip_address.dart';
@@ -11,7 +11,7 @@ import 'opname_detail.dart';
 import 'opname_report.dart';
 
 class OpnameHistoryController extends GetxController {
-  final dio = Dio();
+  final dio = DioClient();
 
   final RxList<Map<String, dynamic>> headers = <Map<String, dynamic>>[].obs;
 
@@ -44,7 +44,11 @@ class OpnameHistoryController extends GetxController {
     try {
       final res = await dio.get(
         '$_base/opname/gethistory',
-        queryParameters: {'limit': limit.value, 'offset': offset.value, '_ts': _ts()},
+        queryParameters: {
+          'limit': limit.value,
+          'offset': offset.value,
+          '_ts': _ts(),
+        },
         options: _noCache,
       );
       if (res.data is List) {
@@ -115,7 +119,10 @@ class OpnameHistoryPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFFFE0B2),
       appBar: AppBar(
-        title: const Text('History Stok Opname', style: TextStyle(fontFamily: 'Poppins', fontSize: 24)),
+        title: const Text(
+          'History Stok Opname',
+          style: TextStyle(fontFamily: 'Poppins', fontSize: 24),
+        ),
         backgroundColor: const Color(0xFFFFE0B2),
         actions: [
           IconButton(
@@ -134,7 +141,13 @@ class OpnameHistoryPage extends StatelessWidget {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(12),
-          child: Column(children: [_pagerBar(), const SizedBox(height: 8), Expanded(child: _historyList())]),
+          child: Column(
+            children: [
+              _pagerBar(),
+              const SizedBox(height: 8),
+              Expanded(child: _historyList()),
+            ],
+          ),
         ),
       ),
     );
@@ -189,7 +202,10 @@ class OpnameHistoryPage extends StatelessWidget {
 
             return ListTile(
               leading: CircleAvatar(child: Text('${i + 1}')),
-              title: Text('Opname #$id • $tanggal', style: const TextStyle(fontWeight: FontWeight.w600)),
+              title: Text(
+                'Opname #$id • $tanggal',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
               subtitle: Text(
                 'Baris: $jBaris • Δ Stok: $delta${delta is num ? "" : ""}'
                 '${note.toString().trim().isEmpty ? "" : " • Catatan: $note"}',

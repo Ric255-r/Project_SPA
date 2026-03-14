@@ -3,7 +3,6 @@ import 'package:Project_SPA/resepsionis/transaksi_fasilitas.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:Project_SPA/resepsionis/transaksi_food.dart';
 import 'package:Project_SPA/resepsionis/transaksi_massage.dart';
 
 class JenisTransaksi extends StatefulWidget {

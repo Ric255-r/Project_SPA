@@ -2,24 +2,16 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 
-import 'package:Project_SPA/admin/main_admin.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 import 'package:Project_SPA/function/me.dart';
 import 'package:Project_SPA/function/our_drawer.dart';
 import 'package:Project_SPA/function/token.dart';
-import 'package:Project_SPA/kamar_terapis/main_kamar_terapis.dart';
-import 'package:Project_SPA/kitchen/main_kitchen.dart';
-import 'package:Project_SPA/komisi/main_komisi_pekerja.dart';
-import 'package:Project_SPA/owner/main_owner.dart';
-import 'package:Project_SPA/resepsionis/daftar_member.dart';
 import 'package:Project_SPA/resepsionis/jenis_member.dart';
 // import 'package:Project_SPA/resepsionis/list_transaksi2.dart';
-import 'package:Project_SPA/resepsionis/scannerQR.dart';
 import 'package:Project_SPA/resepsionis/transaksi_food.dart';
-import 'package:Project_SPA/ruang_tunggu/main_rt.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:cherry_toast/cherry_toast.dart';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:Project_SPA/resepsionis/billing_locker.dart';
@@ -28,10 +20,9 @@ import 'package:just_audio/just_audio.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'daftar_room.dart';
-import 'package:Project_SPA/resepsionis/jenis_transaksi.dart';
-import 'package:Project_SPA/main.dart';
 
-class MainResepsionisController extends GetxController with WidgetsBindingObserver {
+class MainResepsionisController extends GetxController
+    with WidgetsBindingObserver {
   WebSocketChannel? _channel;
   Timer? _timerWebSocket;
   Timer? _notifTimer; // macam settimeout, bikin retrigger
@@ -62,8 +53,11 @@ class MainResepsionisController extends GetxController with WidgetsBindingObserv
           channelDescription: 'Notification channel for basic tests',
           defaultColor: Color(0xFF9D50DD),
           ledColor: Colors.white,
-          groupAlertBehavior: GroupAlertBehavior.Children, // Important for stacking
-          importance: NotificationImportance.High, // Ensure high importance untuk event Tap
+          groupAlertBehavior:
+              GroupAlertBehavior.Children, // Important for stacking
+          importance:
+              NotificationImportance
+                  .High, // Ensure high importance untuk event Tap
         ),
       ],
       debug: true, //
@@ -288,7 +282,10 @@ class MainResepsionisController extends GetxController with WidgetsBindingObserv
   void reconnectToWebSocket() {
     _isWebSocketConnected = false; // Update flag on error
     _timerWebSocket?.cancel(); // Cancel any existing reconnection timer
-    _timerWebSocket = Timer(Duration(seconds: 5), () => _connectToWebSocket()); // Attempt to reconnect
+    _timerWebSocket = Timer(
+      Duration(seconds: 5),
+      () => _connectToWebSocket(),
+    ); // Attempt to reconnect
   }
 
   Future<void> _disconnectWebSocket() async {
@@ -302,14 +299,17 @@ class MainResepsionisController extends GetxController with WidgetsBindingObserv
   var jabatan = "".obs;
   RxList<Map<String, dynamic>> _listNamaTerapis = <Map<String, dynamic>>[].obs;
 
-  var dio = Dio();
+  var dio = DioClient();
 
   Future<void> getDataTerapis() async {
     try {
       var response = await dio.get('${myIpAddr()}/absen/dataTerapis');
       _listNamaTerapis.value =
           (response.data as List).map((item) {
-            return {"id_karyawan": item["id_karyawan"], "nama_karyawan": item["nama_karyawan"]};
+            return {
+              "id_karyawan": item["id_karyawan"],
+              "nama_karyawan": item["nama_karyawan"],
+            };
           }).toList();
     } catch (e) {
       log("Error di fn Get Data Terapis $e");
@@ -319,7 +319,9 @@ class MainResepsionisController extends GetxController with WidgetsBindingObserv
   Future<void> clearDataTerapis() async {
     final response = await dio.delete('${myIpAddr()}/absen/delete_absen');
     if (response.statusCode == 200) {
-      CherryToast.success(title: Text('Data berhasil dibersihkan')).show(Get.context!);
+      CherryToast.success(
+        title: Text('Data berhasil dibersihkan'),
+      ).show(Get.context!);
       Get.back();
     }
   }
@@ -377,9 +379,21 @@ class MainResepsionisController extends GetxController with WidgetsBindingObserv
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 SizedBox(height: 15),
-                                Text('Kode Terapis :', style: TextStyle(fontFamily: 'Poppins', fontSize: 18)),
+                                Text(
+                                  'Kode Terapis :',
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 18,
+                                  ),
+                                ),
                                 SizedBox(height: 15),
-                                Text('Nama Terapis :', style: TextStyle(fontFamily: 'Poppins', fontSize: 18)),
+                                Text(
+                                  'Nama Terapis :',
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 18,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -410,9 +424,15 @@ class MainResepsionisController extends GetxController with WidgetsBindingObserv
                                   controller: KodeTerapisController,
                                   decoration: InputDecoration(
                                     border: InputBorder.none,
-                                    contentPadding: EdgeInsets.symmetric(vertical: 13.5, horizontal: 10),
+                                    contentPadding: EdgeInsets.symmetric(
+                                      vertical: 13.5,
+                                      horizontal: 10,
+                                    ),
                                   ),
-                                  style: TextStyle(fontSize: 14, fontFamily: 'Poppins'),
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontFamily: 'Poppins',
+                                  ),
                                 ),
                               ),
                               SizedBox(height: 12),
@@ -429,28 +449,46 @@ class MainResepsionisController extends GetxController with WidgetsBindingObserv
                                     isExpanded: true,
                                     icon: const Icon(Icons.arrow_drop_down),
                                     elevation: 16,
-                                    style: const TextStyle(color: Colors.deepPurple),
+                                    style: const TextStyle(
+                                      color: Colors.deepPurple,
+                                    ),
                                     underline: SizedBox(),
-                                    padding: EdgeInsets.symmetric(horizontal: 10),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                    ),
                                     onChanged: (String? value) {
                                       dropdownNamaTerapis!.value = value!;
                                       // Find the corresponding id_karyawan
 
-                                      var selectedTerapis = _listNamaTerapis.firstWhere(
-                                        (item) => item['nama_karyawan'] == value,
-                                        orElse: () => {"id_karyawan": "", "nama_karyawan": ""},
-                                      );
-                                      KodeTerapisController.text = selectedTerapis['id_karyawan'] ?? "";
+                                      var selectedTerapis = _listNamaTerapis
+                                          .firstWhere(
+                                            (item) =>
+                                                item['nama_karyawan'] == value,
+                                            orElse:
+                                                () => {
+                                                  "id_karyawan": "",
+                                                  "nama_karyawan": "",
+                                                },
+                                          );
+                                      KodeTerapisController.text =
+                                          selectedTerapis['id_karyawan'] ?? "";
                                     },
                                     items:
-                                        _listNamaTerapis.map<DropdownMenuItem<String>>((item) {
+                                        _listNamaTerapis.map<
+                                          DropdownMenuItem<String>
+                                        >((item) {
                                           return DropdownMenuItem<String>(
-                                            value: item['nama_karyawan'], // Use ID as value
+                                            value:
+                                                item['nama_karyawan'], // Use ID as value
                                             child: Align(
                                               alignment: Alignment.centerLeft,
                                               child: Text(
-                                                item['nama_karyawan'].toString(), // Display category name
-                                                style: const TextStyle(fontSize: 18, fontFamily: 'Poppins'),
+                                                item['nama_karyawan']
+                                                    .toString(), // Display category name
+                                                style: const TextStyle(
+                                                  fontSize: 18,
+                                                  fontFamily: 'Poppins',
+                                                ),
                                               ),
                                             ),
                                           );
@@ -473,7 +511,9 @@ class MainResepsionisController extends GetxController with WidgetsBindingObserv
                         height: 50,
                         width: 120,
                         child: TextButton(
-                          style: TextButton.styleFrom(backgroundColor: Colors.green),
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.green,
+                          ),
                           onPressed: () async {
                             final response = await dio.post(
                               '${myIpAddr()}/absen/post_absenterapis',
@@ -482,13 +522,19 @@ class MainResepsionisController extends GetxController with WidgetsBindingObserv
                             if (response.statusCode == 200) {
                               KodeTerapisController.clear();
                               dropdownNamaTerapis.value = null;
-                              CherryToast.success(title: Text('Terapis berhasil diabsen')).show(Get.context!);
+                              CherryToast.success(
+                                title: Text('Terapis berhasil diabsen'),
+                              ).show(Get.context!);
                             }
                           },
 
                           child: Text(
                             'Absen',
-                            style: TextStyle(fontFamily: 'Poppins', fontSize: 18, color: Colors.white),
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 18,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
@@ -497,7 +543,9 @@ class MainResepsionisController extends GetxController with WidgetsBindingObserv
                         height: 50,
                         width: 120,
                         child: TextButton(
-                          style: TextButton.styleFrom(backgroundColor: Colors.green),
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.green,
+                          ),
                           onPressed: () {
                             Get.dialog(
                               AlertDialog(
@@ -510,7 +558,10 @@ class MainResepsionisController extends GetxController with WidgetsBindingObserv
                                     },
                                     child: Text('Cancel'),
                                   ),
-                                  TextButton(onPressed: clearDataTerapis, child: Text('Confirm')),
+                                  TextButton(
+                                    onPressed: clearDataTerapis,
+                                    child: Text('Confirm'),
+                                  ),
                                 ],
                               ),
                               barrierDismissible: false,
@@ -518,7 +569,11 @@ class MainResepsionisController extends GetxController with WidgetsBindingObserv
                           },
                           child: Text(
                             'Clear',
-                            style: TextStyle(fontFamily: 'Poppins', fontSize: 18, color: Colors.white),
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 18,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
@@ -553,7 +608,10 @@ class MainResepsionis extends StatelessWidget {
         // Menggunakan FittedBox di title agar font 60 tidak overflow di layar kecil
         title: FittedBox(
           fit: BoxFit.scaleDown,
-          child: Text('PLATINUM', style: TextStyle(fontSize: 60, fontFamily: 'Poppins')),
+          child: Text(
+            'PLATINUM',
+            style: TextStyle(fontSize: 60, fontFamily: 'Poppins'),
+          ),
         ),
         centerTitle: true,
         backgroundColor: Color(0XFFFFE0B2),
@@ -563,7 +621,9 @@ class MainResepsionis extends StatelessWidget {
         height: double.infinity,
         decoration: BoxDecoration(color: Color(0XFFFFE0B2)),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center, // Ubah ke center agar rapi saat di-scale
+          crossAxisAlignment:
+              CrossAxisAlignment
+                  .center, // Ubah ke center agar rapi saat di-scale
           children: [
             // 1. Ganti Padding Top statis dengan Spacer atau SizedBox relatif
             // Ini akan mengambil 10% dari tinggi layar sebagai jarak atas
@@ -574,7 +634,11 @@ class MainResepsionis extends StatelessWidget {
             Expanded(
               flex: 3, // Porsi lebih besar untuk menu
               child: Padding(
-                padding: const EdgeInsets.only(left: 10, right: 10, top: 30), // Padding aman kiri kanan
+                padding: const EdgeInsets.only(
+                  left: 10,
+                  right: 10,
+                  top: 30,
+                ), // Padding aman kiri kanan
                 child: FittedBox(
                   // KUNCI: BoxFit.scaleDown akan mengecilkan seluruh Row
                   // jika lebar layar lebih kecil dari total lebar tombol.
@@ -589,7 +653,9 @@ class MainResepsionis extends StatelessWidget {
                         text2: 'Locker',
                         onTap: () => Get.to(BillingLocker()),
                       ),
-                      SizedBox(width: 20), // Jarak antar kartu (ganti mainAxisAlignment)
+                      SizedBox(
+                        width: 20,
+                      ), // Jarak antar kartu (ganti mainAxisAlignment)
                       _buildMenuCard(
                         icon: Icons.door_back_door_rounded,
                         text1: 'Daftar',
@@ -623,7 +689,9 @@ class MainResepsionis extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(left: 30, right: 30),
               child: FittedBox(
-                fit: BoxFit.scaleDown, // Ini juga akan mengecil jika layar sempit
+                fit:
+                    BoxFit
+                        .scaleDown, // Ini juga akan mengecil jika layar sempit
                 child: Container(
                   // Kita bungkus Row bawah dengan container lebar agar tata letak terjaga
                   // Lebar diset cukup besar agar Row 'spread' dengan benar saat di-scale
@@ -644,7 +712,10 @@ class MainResepsionis extends StatelessWidget {
                           children: [
                             Padding(padding: EdgeInsets.only(left: 30)),
                             Container(
-                              decoration: BoxDecoration(border: Border.all(), shape: BoxShape.circle),
+                              decoration: BoxDecoration(
+                                border: Border.all(),
+                                shape: BoxShape.circle,
+                              ),
                               width: 80,
                               height: 80,
                               child: CircleAvatar(
@@ -653,7 +724,10 @@ class MainResepsionis extends StatelessWidget {
                                     c.namaKaryawan.value.isNotEmpty
                                         ? c.namaKaryawan.value[0].toUpperCase()
                                         : "?",
-                                    style: TextStyle(fontSize: 50, fontFamily: 'Poppins'),
+                                    style: TextStyle(
+                                      fontSize: 50,
+                                      fontFamily: 'Poppins',
+                                    ),
                                   ),
                                 ),
                               ),
@@ -669,7 +743,8 @@ class MainResepsionis extends StatelessWidget {
                                       padding: EdgeInsets.only(left: 20),
                                       child: Text(
                                         c.namaKaryawan.value,
-                                        overflow: TextOverflow.ellipsis, // Tambah ini
+                                        overflow:
+                                            TextOverflow.ellipsis, // Tambah ini
                                         style: TextStyle(
                                           fontSize: 30,
                                           color: Colors.white,
@@ -715,7 +790,11 @@ class MainResepsionis extends StatelessWidget {
                           child: Text(
                             'Absensi\n Rolling',
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 30, fontFamily: 'Poppins', color: Colors.black),
+                            style: TextStyle(
+                              fontSize: 30,
+                              fontFamily: 'Poppins',
+                              color: Colors.black,
+                            ),
                           ),
                         ),
                       ),
@@ -755,7 +834,11 @@ class MainResepsionis extends StatelessWidget {
             // selama parentnya di-scale down oleh FittedBox utama.
             Icon(icon, size: 180),
             Text(text1, style: TextStyle(fontSize: 20, fontFamily: 'Poppins')),
-            if (text2.isNotEmpty) Text(text2, style: TextStyle(fontSize: 20, fontFamily: 'Poppins')),
+            if (text2.isNotEmpty)
+              Text(
+                text2,
+                style: TextStyle(fontSize: 20, fontFamily: 'Poppins'),
+              ),
           ],
         ),
       ),

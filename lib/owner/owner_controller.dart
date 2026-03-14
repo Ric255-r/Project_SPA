@@ -5,7 +5,7 @@ import 'package:Project_SPA/function/ip_address.dart';
 import 'package:Project_SPA/function/rupiah_formatter.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:cherry_toast/cherry_toast.dart';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -62,7 +62,8 @@ class OwnerPageController extends GetxController {
   // End Data Target Sales Harian
 
   // Var Penjualan Terapis
-  RxList<PenjualanTerapisData> dataPenjualanTerapis = <PenjualanTerapisData>[].obs;
+  RxList<PenjualanTerapisData> dataPenjualanTerapis =
+      <PenjualanTerapisData>[].obs;
   RxBool isLoadingPenjualanTerapis = false.obs;
   RxList<DateTime?> rangeDatePickerPenjualanTerapis = <DateTime?>[].obs;
   // End Penjualan Terapis
@@ -81,7 +82,7 @@ class OwnerPageController extends GetxController {
   Future<void> refreshLineChart({String? startDate, String? endDate}) =>
       _getLineChart(startDate: startDate, endDate: endDate);
 
-  var dio = Dio();
+  var dio = DioClient();
 
   @override
   void onInit() {
@@ -131,11 +132,17 @@ class OwnerPageController extends GetxController {
                       },
                       items:
                           monthNames.entries.map((data) {
-                            return DropdownMenuItem<String>(value: data.key, child: Text(data.value));
+                            return DropdownMenuItem<String>(
+                              value: data.key,
+                              child: Text(data.value),
+                            );
                           }).toList(),
                       decoration: InputDecoration(
                         border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 3,
+                          vertical: 1,
+                        ),
                       ),
                     ),
                   ),
@@ -148,11 +155,17 @@ class OwnerPageController extends GetxController {
                       },
                       items:
                           _tahunTransaksi.map((String data) {
-                            return DropdownMenuItem<String>(value: data, child: Text(data));
+                            return DropdownMenuItem<String>(
+                              value: data,
+                              child: Text(data),
+                            );
                           }).toList(),
                       decoration: InputDecoration(
                         border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 3,
+                          vertical: 1,
+                        ),
                       ),
                     ),
                   ),
@@ -172,11 +185,17 @@ class OwnerPageController extends GetxController {
                       },
                       items:
                           monthNames.entries.map((data) {
-                            return DropdownMenuItem<String>(value: data.key, child: Text(data.value));
+                            return DropdownMenuItem<String>(
+                              value: data.key,
+                              child: Text(data.value),
+                            );
                           }).toList(),
                       decoration: InputDecoration(
                         border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 3,
+                          vertical: 1,
+                        ),
                       ),
                     ),
                   ),
@@ -189,11 +208,17 @@ class OwnerPageController extends GetxController {
                       },
                       items:
                           _tahunTransaksi.map((String data) {
-                            return DropdownMenuItem<String>(value: data, child: Text(data));
+                            return DropdownMenuItem<String>(
+                              value: data,
+                              child: Text(data),
+                            );
                           }).toList(),
                       decoration: InputDecoration(
                         border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 3,
+                          vertical: 1,
+                        ),
                       ),
                     ),
                   ),
@@ -216,7 +241,9 @@ class OwnerPageController extends GetxController {
                           fontFamily: 'Poppins',
                         ),
                       ),
-                      description: Text('Pilih bulan & tahun untuk periode awal dan akhir.'),
+                      description: Text(
+                        'Pilih bulan & tahun untuk periode awal dan akhir.',
+                      ),
                       animationDuration: const Duration(milliseconds: 3000),
                       autoDismiss: true,
                     ).show(Get.context!);
@@ -230,7 +257,9 @@ class OwnerPageController extends GetxController {
                   if (start.year != end.year) {
                     CherryToast.warning(
                       title: const Text('Tidak Valid'),
-                      description: const Text('Tahun awal dan tahun akhir harus sama.'),
+                      description: const Text(
+                        'Tahun awal dan tahun akhir harus sama.',
+                      ),
                     ).show(Get.context!);
                     return;
                   }
@@ -240,12 +269,16 @@ class OwnerPageController extends GetxController {
                     if (selisih < 0) {
                       CherryToast.warning(
                         title: const Text('Periode Bulan Terbalik'),
-                        description: Text(' (sekarang: Selisih $selisih bulan).'),
+                        description: Text(
+                          ' (sekarang: Selisih $selisih bulan).',
+                        ),
                       ).show(Get.context!);
                     } else {
                       CherryToast.warning(
                         title: const Text('Range terlalu panjang'),
-                        description: Text('Maksimal 12 bulan (sekarang: $selisih bulan).'),
+                        description: Text(
+                          'Maksimal 12 bulan (sekarang: $selisih bulan).',
+                        ),
                       ).show(Get.context!);
                     }
                     return; // matikan fungsi sesuai requirement
@@ -257,7 +290,10 @@ class OwnerPageController extends GetxController {
                   final endStr =
                       '${end.year.toString().padLeft(4, '0')}-${end.month.toString().padLeft(2, '0')}';
 
-                  _getLineChart(startDate: startStr, endDate: endStr).then((_) => Get.back());
+                  _getLineChart(
+                    startDate: startStr,
+                    endDate: endStr,
+                  ).then((_) => Get.back());
                 },
                 child: Text("Filter!"),
               ),
@@ -287,11 +323,17 @@ class OwnerPageController extends GetxController {
                       },
                       items:
                           monthNames.entries.map((data) {
-                            return DropdownMenuItem<String>(value: data.key, child: Text(data.value));
+                            return DropdownMenuItem<String>(
+                              value: data.key,
+                              child: Text(data.value),
+                            );
                           }).toList(),
                       decoration: InputDecoration(
                         border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 3,
+                          vertical: 1,
+                        ),
                       ),
                     ),
                   ),
@@ -306,12 +348,20 @@ class OwnerPageController extends GetxController {
                           _startYearTargetOmset.value = value!;
                         },
                         items:
-                            tahunTransaksiTarget.map<DropdownMenuItem<String>>((data) {
-                              return DropdownMenuItem<String>(value: data, child: Text(data));
+                            tahunTransaksiTarget.map<DropdownMenuItem<String>>((
+                              data,
+                            ) {
+                              return DropdownMenuItem<String>(
+                                value: data,
+                                child: Text(data),
+                              );
                             }).toList(),
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 3,
+                            vertical: 1,
+                          ),
                         ),
                       ),
                     ),
@@ -328,11 +378,17 @@ class OwnerPageController extends GetxController {
                           },
                           items:
                               listYear.map((int year) {
-                                return DropdownMenuItem<int>(value: year, child: Text(year.toString()));
+                                return DropdownMenuItem<int>(
+                                  value: year,
+                                  child: Text(year.toString()),
+                                );
                               }).toList(),
                           decoration: InputDecoration(
                             border: OutlineInputBorder(),
-                            contentPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 3,
+                              vertical: 1,
+                            ),
                           ),
                         ),
                       ),
@@ -355,11 +411,17 @@ class OwnerPageController extends GetxController {
                         },
                         items:
                             monthNames.entries.map((data) {
-                              return DropdownMenuItem<String>(value: data.key, child: Text(data.value));
+                              return DropdownMenuItem<String>(
+                                value: data.key,
+                                child: Text(data.value),
+                              );
                             }).toList(),
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 3,
+                            vertical: 1,
+                          ),
                         ),
                       ),
                     ),
@@ -372,11 +434,17 @@ class OwnerPageController extends GetxController {
                         },
                         items:
                             tahunTransaksiTarget.map((String data) {
-                              return DropdownMenuItem<String>(value: data, child: Text(data));
+                              return DropdownMenuItem<String>(
+                                value: data,
+                                child: Text(data),
+                              );
                             }).toList(),
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 3,
+                            vertical: 1,
+                          ),
                         ),
                       ),
                     ),
@@ -399,7 +467,9 @@ class OwnerPageController extends GetxController {
                             fontFamily: 'Poppins',
                           ),
                         ),
-                        description: Text('Pilih bulan & tahun untuk periode awal dan akhir.'),
+                        description: Text(
+                          'Pilih bulan & tahun untuk periode awal dan akhir.',
+                        ),
                         animationDuration: const Duration(milliseconds: 2000),
                         autoDismiss: true,
                       ).show(Get.context!);
@@ -407,8 +477,14 @@ class OwnerPageController extends GetxController {
                     }
 
                     // Build DateTime dari Dropdown
-                    final start = _toYm(_startYearTargetOmset.value!, _startMonthTargetOmset.value!);
-                    final end = _toYm(_endYearTargetOmset.value!, _endMonthTargetOmset.value!);
+                    final start = _toYm(
+                      _startYearTargetOmset.value!,
+                      _startMonthTargetOmset.value!,
+                    );
+                    final end = _toYm(
+                      _endYearTargetOmset.value!,
+                      _endMonthTargetOmset.value!,
+                    );
                     // 1️⃣ Cek tahun harus sama
                     if (start.year != end.year) {
                       CherryToast.warning(
@@ -420,7 +496,9 @@ class OwnerPageController extends GetxController {
                             fontFamily: 'Poppins',
                           ),
                         ),
-                        description: Text('Tahun Awal dan Tahun Akhir Harus Sama.'),
+                        description: Text(
+                          'Tahun Awal dan Tahun Akhir Harus Sama.',
+                        ),
                         animationDuration: const Duration(milliseconds: 2000),
                         autoDismiss: true,
                       ).show(Get.context!);
@@ -439,7 +517,9 @@ class OwnerPageController extends GetxController {
                               fontFamily: 'Poppins',
                             ),
                           ),
-                          description: Text('Periode Bulan Terbalik. (sekarang: Selisih $selisih bulan).'),
+                          description: Text(
+                            'Periode Bulan Terbalik. (sekarang: Selisih $selisih bulan).',
+                          ),
                           animationDuration: const Duration(milliseconds: 2000),
                           autoDismiss: true,
                         ).show(Get.context!);
@@ -486,11 +566,16 @@ class OwnerPageController extends GetxController {
 
                 TextField(
                   keyboardType: TextInputType.number,
-                  inputFormatters: <TextInputFormatter>[RupiahInputFormatter()], //
+                  inputFormatters: <TextInputFormatter>[
+                    RupiahInputFormatter(),
+                  ], //
                   decoration: InputDecoration(
                     border: OutlineInputBorder(),
                     hintText: "Rp. ",
-                    contentPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 3,
+                      vertical: 1,
+                    ),
                   ),
                   onChanged: (value) {
                     final digits = value.replaceAll(RegExp(r'[^0-9]'), '');
@@ -537,7 +622,9 @@ class OwnerPageController extends GetxController {
             // Tentukan ukuran dialog yang TEGAS (tight), responsif ke layar
             final maxDialogWidth = 500.0; // cap untuk tablet/layar lebar
             final dialogWidth = mq.size.width.clamp(0.0, maxDialogWidth);
-            final dialogHeight = (isPortrait ? mq.size.height * 0.7 : mq.size.height * 0.8) - 110;
+            final dialogHeight =
+                (isPortrait ? mq.size.height * 0.7 : mq.size.height * 0.8) -
+                110;
 
             return SizedBox(
               width: dialogWidth,
@@ -552,7 +639,10 @@ class OwnerPageController extends GetxController {
                   children: [
                     const Text(
                       "Petunjuk : Anda bisa memilih lebih dari 1 Tanggal\nMaks 7 Hari",
-                      style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Poppins',
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 10),
@@ -565,7 +655,8 @@ class OwnerPageController extends GetxController {
                           config: CalendarDatePicker2Config(
                             calendarType: CalendarDatePicker2Type.range,
                             selectedDayHighlightColor: Colors.deepPurple,
-                            selectedRangeHighlightColor: Colors.purpleAccent.withOpacity(0.2),
+                            selectedRangeHighlightColor: Colors.purpleAccent
+                                .withOpacity(0.2),
                             firstDate: DateTime(2000),
                             lastDate: DateTime(2100),
                           ),
@@ -574,11 +665,17 @@ class OwnerPageController extends GetxController {
                             if (dates.length >= 2) {
                               final start = dates[0];
                               final end = dates[1];
-                              final diffDays = end.difference(start).inDays.abs();
+                              final diffDays =
+                                  end.difference(start).inDays.abs();
                               // Maks 7 hari (inklusif)
                               if (diffDays > 6) {
-                                final cappedEnd = start.add(const Duration(days: 6));
-                                rangeDatePickerPenjualanTerapis.assignAll([start, cappedEnd]);
+                                final cappedEnd = start.add(
+                                  const Duration(days: 6),
+                                );
+                                rangeDatePickerPenjualanTerapis.assignAll([
+                                  start,
+                                  cappedEnd,
+                                ]);
                                 CherryToast.warning(
                                   title: const Text(
                                     "Perhatian!",
@@ -589,7 +686,9 @@ class OwnerPageController extends GetxController {
                                     ),
                                   ),
                                   description: const Text("Maksimal 7 hari."),
-                                  animationDuration: const Duration(milliseconds: 2000),
+                                  animationDuration: const Duration(
+                                    milliseconds: 2000,
+                                  ),
                                   autoDismiss: true,
                                 ).show(Get.context!);
                                 return;
@@ -597,7 +696,9 @@ class OwnerPageController extends GetxController {
                             }
 
                             rangeDatePickerPenjualanTerapis.assignAll(dates);
-                            log("Isi Range Date $rangeDatePickerPenjualanTerapis");
+                            log(
+                              "Isi Range Date $rangeDatePickerPenjualanTerapis",
+                            );
                           },
                         ),
                       ),
@@ -612,15 +713,20 @@ class OwnerPageController extends GetxController {
         actions: [
           ElevatedButton(
             onPressed: () async {
-              String startDate = rangeDatePickerPenjualanTerapis[0].toString().split(" ")[0];
+              String startDate =
+                  rangeDatePickerPenjualanTerapis[0].toString().split(" ")[0];
               String endDate = "";
               if (rangeDatePickerPenjualanTerapis.length > 1) {
-                endDate = rangeDatePickerPenjualanTerapis[1].toString().split(" ")[0];
+                endDate =
+                    rangeDatePickerPenjualanTerapis[1].toString().split(" ")[0];
               } else {
                 endDate = startDate;
               }
               isSubmittedWithButton = true;
-              await _getPenjualanTerapis(startDate: startDate, endDate: endDate);
+              await _getPenjualanTerapis(
+                startDate: startDate,
+                endDate: endDate,
+              );
 
               Get.back();
             },
@@ -634,12 +740,17 @@ class OwnerPageController extends GetxController {
 
       switch (rangeDatePickerPenjualanTerapis.length) {
         case 1:
-          await _getPenjualanTerapis(startDate: rangeDatePickerPenjualanTerapis[0].toString().split(" ")[0]);
+          await _getPenjualanTerapis(
+            startDate:
+                rangeDatePickerPenjualanTerapis[0].toString().split(" ")[0],
+          );
           break;
         case 2:
           await _getPenjualanTerapis(
-            startDate: rangeDatePickerPenjualanTerapis[0].toString().split(" ")[0],
-            endDate: rangeDatePickerPenjualanTerapis[1].toString().split(" ")[0],
+            startDate:
+                rangeDatePickerPenjualanTerapis[0].toString().split(" ")[0],
+            endDate:
+                rangeDatePickerPenjualanTerapis[1].toString().split(" ")[0],
           );
           break;
         default:
@@ -668,7 +779,9 @@ class OwnerPageController extends GetxController {
             // Tentukan ukuran dialog yang TEGAS (tight), responsif ke layar
             final maxDialogWidth = 500.0; // cap untuk tablet/layar lebar
             final dialogWidth = mq.size.width.clamp(0.0, maxDialogWidth);
-            final dialogHeight = (isPortrait ? mq.size.height * 0.7 : mq.size.height * 0.8) - 110;
+            final dialogHeight =
+                (isPortrait ? mq.size.height * 0.7 : mq.size.height * 0.8) -
+                110;
 
             return SizedBox(
               width: dialogWidth,
@@ -683,7 +796,10 @@ class OwnerPageController extends GetxController {
                   children: [
                     const Text(
                       "Petunjuk : Anda bisa memilih lebih dari 1 Tanggal\nMaks 7 Hari",
-                      style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Poppins',
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 10),
@@ -696,7 +812,8 @@ class OwnerPageController extends GetxController {
                           config: CalendarDatePicker2Config(
                             calendarType: CalendarDatePicker2Type.range,
                             selectedDayHighlightColor: Colors.deepPurple,
-                            selectedRangeHighlightColor: Colors.purpleAccent.withOpacity(0.2),
+                            selectedRangeHighlightColor: Colors.purpleAccent
+                                .withOpacity(0.2),
                             firstDate: DateTime(2000),
                             lastDate: DateTime(2100),
                           ),
@@ -705,11 +822,17 @@ class OwnerPageController extends GetxController {
                             if (dates.length >= 2) {
                               final start = dates[0];
                               final end = dates[1];
-                              final diffDays = end.difference(start).inDays.abs();
+                              final diffDays =
+                                  end.difference(start).inDays.abs();
                               // Maks 7 hari (inklusif)
                               if (diffDays > 6) {
-                                final cappedEnd = start.add(const Duration(days: 6));
-                                rangeDatePickerKomisiTerapis.assignAll([start, cappedEnd]);
+                                final cappedEnd = start.add(
+                                  const Duration(days: 6),
+                                );
+                                rangeDatePickerKomisiTerapis.assignAll([
+                                  start,
+                                  cappedEnd,
+                                ]);
                                 CherryToast.warning(
                                   title: const Text(
                                     "Perhatian!",
@@ -720,7 +843,9 @@ class OwnerPageController extends GetxController {
                                     ),
                                   ),
                                   description: const Text("Maksimal 7 hari."),
-                                  animationDuration: const Duration(milliseconds: 2000),
+                                  animationDuration: const Duration(
+                                    milliseconds: 2000,
+                                  ),
                                   autoDismiss: true,
                                 ).show(Get.context!);
                                 return;
@@ -743,10 +868,12 @@ class OwnerPageController extends GetxController {
         actions: [
           ElevatedButton(
             onPressed: () async {
-              String startDate = rangeDatePickerKomisiTerapis[0].toString().split(" ")[0];
+              String startDate =
+                  rangeDatePickerKomisiTerapis[0].toString().split(" ")[0];
               String endDate = "";
               if (rangeDatePickerKomisiTerapis.length > 1) {
-                endDate = rangeDatePickerKomisiTerapis[1].toString().split(" ")[0];
+                endDate =
+                    rangeDatePickerKomisiTerapis[1].toString().split(" ")[0];
               } else {
                 endDate = startDate;
               }
@@ -765,7 +892,9 @@ class OwnerPageController extends GetxController {
 
       switch (rangeDatePickerKomisiTerapis.length) {
         case 1:
-          await _getKomisiTerapis(startDate: rangeDatePickerKomisiTerapis[0].toString().split(" ")[0]);
+          await _getKomisiTerapis(
+            startDate: rangeDatePickerKomisiTerapis[0].toString().split(" ")[0],
+          );
           break;
         case 2:
           await _getKomisiTerapis(
@@ -786,7 +915,8 @@ class OwnerPageController extends GetxController {
     try {
       String url = '';
       if (startDate != null && endDate != null) {
-        url = "${myIpAddr()}/main_owner/line_chart?start_date=$startDate&end_date=$endDate";
+        url =
+            "${myIpAddr()}/main_owner/line_chart?start_date=$startDate&end_date=$endDate";
       } else {
         url = "${myIpAddr()}/main_owner/line_chart";
       }
@@ -803,10 +933,14 @@ class OwnerPageController extends GetxController {
         // Ini Buat For Line Chart,
         String bulan = (lineChart[i]['bulan'] as String).split("-")[1];
         monthlyData.add(
-          MonthlySales((monthNames[bulan] as String), (lineChart[i]['omset_jual'] as num).toDouble()),
+          MonthlySales(
+            (monthNames[bulan] as String),
+            (lineChart[i]['omset_jual'] as num).toDouble(),
+          ),
         );
         // krn Length datany sama, masukin aje ke for loop ini
-        String bulanTarget = (targetLineChart[i]['periode'] as String).split("-")[1];
+        String bulanTarget =
+            (targetLineChart[i]['periode'] as String).split("-")[1];
         monthlyDataTarget.add(
           MonthlySales(
             (monthNames[bulanTarget] as String),
@@ -830,7 +964,9 @@ class OwnerPageController extends GetxController {
       _paketSales.assignAll(responseData['sum_paket']);
       _produkSales.assignAll(responseData['sum_produk']);
       _paketTerlaris.assignAll(paketTerlaris);
-      _tahunTransaksi.assignAll((responseData['tahun_transaksi'] as List).map((el) => el.toString()));
+      _tahunTransaksi.assignAll(
+        (responseData['tahun_transaksi'] as List).map((el) => el.toString()),
+      );
 
       pieChartData.clear();
       if (paketTerlaris.isNotEmpty) {
@@ -841,13 +977,19 @@ class OwnerPageController extends GetxController {
         );
 
         // Define a fixed color palette for up to 4 items
-        final List<Color> colorPalette = [Colors.blue, Colors.green, Colors.orange, Colors.red];
+        final List<Color> colorPalette = [
+          Colors.blue,
+          Colors.green,
+          Colors.orange,
+          Colors.red,
+        ];
 
         for (var i = 0; i < paketTerlaris.length; i++) {
           // Use modulo to cycle through colors if more than 4 items
           final color = colorPalette[i % colorPalette.length];
 
-          double percentage = (paketTerlaris[i]['jumlah_terjual'] / totalSold) * 100;
+          double percentage =
+              (paketTerlaris[i]['jumlah_terjual'] / totalSold) * 100;
 
           pieChartData.add(
             ChartData(
@@ -866,7 +1008,12 @@ class OwnerPageController extends GetxController {
     }
   }
 
-  Future<void> _getDataTarget({int? startMonth, int? endMonth, int? startYear, int? endYear}) async {
+  Future<void> _getDataTarget({
+    int? startMonth,
+    int? endMonth,
+    int? startYear,
+    int? endYear,
+  }) async {
     try {
       DateTime now = DateTime.now(); // Get the current date and time
       int currentYear = now.year; // Extract the year
@@ -892,7 +1039,9 @@ class OwnerPageController extends GetxController {
       dataOmset.assignAll(responseData['get_omset']);
 
       tahunTransaksiTarget.assignAll(
-        (responseData['tahun_target'] as List).map((el) => el['year'].toString()),
+        (responseData['tahun_target'] as List).map(
+          (el) => el['year'].toString(),
+        ),
       );
     } catch (e) {
       if (e is DioException) {
@@ -903,7 +1052,10 @@ class OwnerPageController extends GetxController {
     }
   }
 
-  Future<void> _getDataTargetHarian({String? startDate, String? endDate}) async {
+  Future<void> _getDataTargetHarian({
+    String? startDate,
+    String? endDate,
+  }) async {
     try {
       isLoadingDataSalesHarian.value = true;
 
@@ -933,7 +1085,11 @@ class OwnerPageController extends GetxController {
           CherryToast.error(
             title: Text(
               "Error!",
-              style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Poppins',
+              ),
             ),
             description: Text(e.response!.data['message']!),
             animationDuration: const Duration(milliseconds: 2500),
@@ -951,7 +1107,10 @@ class OwnerPageController extends GetxController {
     }
   }
 
-  Future<void> _getPenjualanTerapis({String? startDate, String? endDate}) async {
+  Future<void> _getPenjualanTerapis({
+    String? startDate,
+    String? endDate,
+  }) async {
     try {
       isLoadingPenjualanTerapis.value = true;
       var url = '${myIpAddr()}/main_owner/get_graph_penjualan_terapis';
@@ -963,7 +1122,8 @@ class OwnerPageController extends GetxController {
 
       var response = await dio.get(url);
       final dynamic body = response.data;
-      final List<dynamic> items = body is List ? body : (body['data'] ?? <dynamic>[]);
+      final List<dynamic> items =
+          body is List ? body : (body['data'] ?? <dynamic>[]);
 
       dataPenjualanTerapis.assignAll(
         items.map((el) {
@@ -995,7 +1155,8 @@ class OwnerPageController extends GetxController {
 
       var response = await dio.get(url);
       final dynamic body = response.data;
-      final List<dynamic> items = body is List ? body : (body['data'] ?? <dynamic>[]);
+      final List<dynamic> items =
+          body is List ? body : (body['data'] ?? <dynamic>[]);
 
       dataKomisiTerapis.assignAll(
         items.map((el) {
@@ -1030,7 +1191,9 @@ class OwnerPageController extends GetxController {
             // Tentukan ukuran dialog yang TEGAS (tight), responsif ke layar
             final maxDialogWidth = 500.0; // cap untuk tablet/layar lebar
             final dialogWidth = mq.size.width.clamp(0.0, maxDialogWidth);
-            final dialogHeight = (isPortrait ? mq.size.height * 0.7 : mq.size.height * 0.8) - 110;
+            final dialogHeight =
+                (isPortrait ? mq.size.height * 0.7 : mq.size.height * 0.8) -
+                110;
 
             return SizedBox(
               width: dialogWidth,
@@ -1045,7 +1208,10 @@ class OwnerPageController extends GetxController {
                   children: [
                     const Text(
                       "Petunjuk : Anda bisa memilih lebih dari 1 Tanggal\nMaks 7 Hari",
-                      style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Poppins',
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 10),
@@ -1058,7 +1224,8 @@ class OwnerPageController extends GetxController {
                           config: CalendarDatePicker2Config(
                             calendarType: CalendarDatePicker2Type.range,
                             selectedDayHighlightColor: Colors.deepPurple,
-                            selectedRangeHighlightColor: Colors.purpleAccent.withOpacity(0.2),
+                            selectedRangeHighlightColor: Colors.purpleAccent
+                                .withOpacity(0.2),
                             firstDate: DateTime(2000),
                             lastDate: DateTime(2100),
                           ),
@@ -1067,10 +1234,16 @@ class OwnerPageController extends GetxController {
                             if (dates.length >= 2) {
                               final start = dates[0];
                               final end = dates[1];
-                              final diffDays = end.difference(start).inDays.abs();
+                              final diffDays =
+                                  end.difference(start).inDays.abs();
                               if (diffDays > 6) {
-                                final cappedEnd = start.add(const Duration(days: 6));
-                                rangeDatePickerOmset.assignAll([start, cappedEnd]);
+                                final cappedEnd = start.add(
+                                  const Duration(days: 6),
+                                );
+                                rangeDatePickerOmset.assignAll([
+                                  start,
+                                  cappedEnd,
+                                ]);
                                 CherryToast.warning(
                                   title: const Text(
                                     "Perhatian!",
@@ -1081,7 +1254,9 @@ class OwnerPageController extends GetxController {
                                     ),
                                   ),
                                   description: const Text("Maksimal 7 hari."),
-                                  animationDuration: const Duration(milliseconds: 2000),
+                                  animationDuration: const Duration(
+                                    milliseconds: 2000,
+                                  ),
                                   autoDismiss: true,
                                 ).show(Get.context!);
                                 return;
@@ -1105,11 +1280,16 @@ class OwnerPageController extends GetxController {
           ElevatedButton(
             onPressed: () async {
               // refreshData();
-              if (rangeDatePickerOmset.isEmpty || rangeDatePickerOmset[0] == null) {
+              if (rangeDatePickerOmset.isEmpty ||
+                  rangeDatePickerOmset[0] == null) {
                 CherryToast.warning(
                   title: const Text(
                     "Perhatian!",
-                    style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Poppins',
+                    ),
                   ),
                   description: const Text("Pilih tanggal terlebih dahulu."),
                   animationDuration: const Duration(milliseconds: 2000),
@@ -1117,7 +1297,8 @@ class OwnerPageController extends GetxController {
                 ).show(Get.context!);
                 return;
               }
-              String startDate = rangeDatePickerOmset[0].toString().split(" ")[0];
+              String startDate =
+                  rangeDatePickerOmset[0].toString().split(" ")[0];
               String endDate = "";
               if (rangeDatePickerOmset.length > 1) {
                 endDate = rangeDatePickerOmset[1].toString().split(" ")[0];
@@ -1126,7 +1307,10 @@ class OwnerPageController extends GetxController {
               }
 
               submittedWithButton = true;
-              await _getDataTargetHarian(startDate: startDate, endDate: endDate);
+              await _getDataTargetHarian(
+                startDate: startDate,
+                endDate: endDate,
+              );
 
               Get.back();
             },
@@ -1176,7 +1360,11 @@ class OwnerPageController extends GetxController {
         CherryToast.info(
           title: Text(
             "Success!",
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
+            style: TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Poppins',
+            ),
           ),
           description: Text('Data Target Berhasil Disimpan'),
           animationDuration: const Duration(milliseconds: 2000),
@@ -1188,7 +1376,11 @@ class OwnerPageController extends GetxController {
         CherryToast.error(
           title: Text(
             "Error!",
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
+            style: TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Poppins',
+            ),
           ),
           description: Text('gagal storeDataTarget dioErr'),
           animationDuration: const Duration(milliseconds: 2000),
@@ -1202,7 +1394,11 @@ class OwnerPageController extends GetxController {
       CherryToast.error(
         title: Text(
           "Error!",
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Poppins',
+          ),
         ),
         description: Text('gagal storeDataTarget '),
         animationDuration: const Duration(milliseconds: 2000),

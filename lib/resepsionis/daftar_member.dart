@@ -1,17 +1,14 @@
-import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:Project_SPA/function/ip_address.dart';
 import 'package:Project_SPA/function/our_drawer.dart';
-import 'package:Project_SPA/resepsionis/scannerQR.dart';
 import 'package:cherry_toast/cherry_toast.dart';
-import 'package:dio/dio.dart' as dio;
+import 'package:Project_SPA/function/dio_client.dart' as dio;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:path_provider/path_provider.dart';
 
 class DaftarMember extends StatefulWidget {
   const DaftarMember({super.key});
@@ -38,7 +35,7 @@ class _DaftarMemberState extends State<DaftarMember> {
 
   Future<void> _sendDataToServer() async {
     try {
-      var dioInstance = dio.Dio();
+      var dioInstance = dio.DioClient();
 
       // Step 1: Send form data to get id_member (no QR code yet)
       var formData = dio.FormData.fromMap({

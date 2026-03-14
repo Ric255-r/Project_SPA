@@ -2,15 +2,13 @@ import 'dart:async';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:get/get.dart' hide FormData, MultipartFile;
 import 'dart:io'; // For file operations
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 import 'package:Project_SPA/office_boy/image_mgr.dart';
-import 'package:Project_SPA/office_boy/main_ob.dart';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 
 class Lapor extends StatefulWidget {
   final int idLaporan;
@@ -59,7 +57,7 @@ class _LaporState extends State<Lapor> {
     await _uploadKeDb(images);
   }
 
-  var dio = Dio();
+  var dio = DioClient();
   TextEditingController _txtLaporan = TextEditingController();
 
   Future<void> _uploadKeDb(List<File> images) async {
@@ -71,8 +69,10 @@ class _LaporState extends State<Lapor> {
         formData.files.add(
           MapEntry(
             'files', // sesuaikan dengan parameter fastapi
-            await MultipartFile.fromFile(image.path,
-                filename: image.path.split('/').last),
+            await MultipartFile.fromFile(
+              image.path,
+              filename: image.path.split('/').last,
+            ),
           ),
         );
       }
@@ -257,9 +257,7 @@ class _LaporState extends State<Lapor> {
                   fontFamily: 'Poppins',
                 ),
               ),
-              TextField(
-                controller: _txtLaporan,
-              ),
+              TextField(controller: _txtLaporan),
               SizedBox(height: 30),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -294,53 +292,56 @@ class _LaporState extends State<Lapor> {
                   Obx(
                     () => Padding(
                       padding: const EdgeInsets.only(left: 40),
-                      child: _isUploading.isFalse
-                          ? ElevatedButton(
-                              onPressed: () {
-                                // Pindah ke ui sebelumnya.
-                                // atau bs pake  Get.off(() => MainOb()); // Replaces current screen with MainOb
-                                _isUploading.value = true;
+                      child:
+                          _isUploading.isFalse
+                              ? ElevatedButton(
+                                onPressed: () {
+                                  // Pindah ke ui sebelumnya.
+                                  // atau bs pake  Get.off(() => MainOb()); // Replaces current screen with MainOb
+                                  _isUploading.value = true;
 
-                                _fnLaporFile().then((_) {
-                                  Get.back();
-                                });
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white.withOpacity(0.8),
-                                foregroundColor: Colors.black,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                minimumSize: Size(120, 120),
-                              ),
-                              child: Column(
-                                children: [
-                                  Icon(Icons.check, size: 80),
-                                  Text(
-                                    "Lapor",
-                                    style: TextStyle(fontFamily: 'Poppins'),
+                                  _fnLaporFile().then((_) {
+                                    Get.back();
+                                  });
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white.withOpacity(
+                                    0.8,
                                   ),
-                                ],
-                              ),
-                            )
-                          : ElevatedButton(
-                              onPressed: () {},
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white.withOpacity(0.8),
-                                foregroundColor: Colors.black,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                minimumSize: Size(120, 120),
-                              ),
-                              child: Column(
-                                children: [
-                                  Center(
-                                    child: CircularProgressIndicator(),
+                                  foregroundColor: Colors.black,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
-                                ],
+                                  minimumSize: Size(120, 120),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Icon(Icons.check, size: 80),
+                                    Text(
+                                      "Lapor",
+                                      style: TextStyle(fontFamily: 'Poppins'),
+                                    ),
+                                  ],
+                                ),
+                              )
+                              : ElevatedButton(
+                                onPressed: () {},
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white.withOpacity(
+                                    0.8,
+                                  ),
+                                  foregroundColor: Colors.black,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  minimumSize: Size(120, 120),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Center(child: CircularProgressIndicator()),
+                                  ],
+                                ),
                               ),
-                            ),
                     ),
                   ),
                 ],

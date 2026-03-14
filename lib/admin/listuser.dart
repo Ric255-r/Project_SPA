@@ -6,7 +6,7 @@ import 'package:Project_SPA/function/token.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:Project_SPA/function/ip_address.dart';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 import 'package:cherry_toast/cherry_toast.dart';
 
 class ListUser extends StatefulWidget {
@@ -22,7 +22,7 @@ class _ListUserState extends State<ListUser> {
   RxList<dynamic> _ListUserFiltered = [].obs;
   TextEditingController _searchController = TextEditingController();
 
-  var dio = Dio();
+  var dio = DioClient();
   Future<void> _getUser() async {
     await _profileUser();
 
@@ -34,8 +34,12 @@ class _ListUserState extends State<ListUser> {
 
       if (hakAkses.value == "admin") {
         // hak_akses itu id hak akses. owner == 2 maka kita filter yg != 2
-        _listUser.assignAll(responseData.where((el) => el['nama_hakakses'] != "owner").toList());
-        _ListUserFiltered.assignAll(responseData.where((el) => el['nama_hakakses'] != "owner").toList());
+        _listUser.assignAll(
+          responseData.where((el) => el['nama_hakakses'] != "owner").toList(),
+        );
+        _ListUserFiltered.assignAll(
+          responseData.where((el) => el['nama_hakakses'] != "owner").toList(),
+        );
       } else {
         _listUser.assignAll(responseData);
         _ListUserFiltered.assignAll(responseData);
@@ -56,8 +60,10 @@ class _ListUserState extends State<ListUser> {
 
     final filtered =
         _listUser.where((user) {
-          final nama = (user['nama_karyawan'] ?? '').toString().toLowerCase().trim();
-          final id = (user['id_karyawan'] ?? '').toString().toLowerCase().trim();
+          final nama =
+              (user['nama_karyawan'] ?? '').toString().toLowerCase().trim();
+          final id =
+              (user['id_karyawan'] ?? '').toString().toLowerCase().trim();
 
           return nama.contains(keyword) || id.contains(keyword);
         }).toList();
@@ -85,7 +91,9 @@ class _ListUserState extends State<ListUser> {
   Future<void> _getHakAksesExtra(int id, String idKaryawan) async {
     try {
       var response1 = await dio.get('${myIpAddr()}/form_user/hak_akses?id=$id');
-      var response2 = await dio.get('${myIpAddr()}/form_user/hakakses_tambahan?id_karyawan=$idKaryawan');
+      var response2 = await dio.get(
+        '${myIpAddr()}/form_user/hakakses_tambahan?id_karyawan=$idKaryawan',
+      );
 
       List<dynamic> response1Data = response1.data;
       List<dynamic> response2Data = response2.data;
@@ -133,7 +141,14 @@ class _ListUserState extends State<ListUser> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Spacer(),
-                  Text("Edit Data User", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, fontFamily: 'Poppins')),
+                  Text(
+                    "Edit Data User",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
                   Spacer(),
                   IconButton(
                     onPressed: () {
@@ -159,7 +174,10 @@ class _ListUserState extends State<ListUser> {
                       flex: 2,
                       child: Text(
                         "Password",
-                        style: TextStyle(fontSize: 14, height: 1), // Optional: Reduce font size if needed
+                        style: TextStyle(
+                          fontSize: 14,
+                          height: 1,
+                        ), // Optional: Reduce font size if needed
                       ),
                     ),
                     Expanded(
@@ -173,9 +191,15 @@ class _ListUserState extends State<ListUser> {
                             decoration: InputDecoration(
                               hintText: 'Enter your password',
                               suffixIcon: IconButton(
-                                icon: Icon(_obscureOldPasswd.value ? Icons.visibility : Icons.visibility_off, color: Colors.grey),
+                                icon: Icon(
+                                  _obscureOldPasswd.value
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
+                                  color: Colors.grey,
+                                ),
                                 onPressed: () {
-                                  _obscureOldPasswd.value = !_obscureOldPasswd.value;
+                                  _obscureOldPasswd.value =
+                                      !_obscureOldPasswd.value;
                                 },
                               ),
                             ),
@@ -192,7 +216,10 @@ class _ListUserState extends State<ListUser> {
                       flex: 2, // Consistent with first row
                       child: Text(
                         "Input Password Baru",
-                        style: TextStyle(fontSize: 14, height: 1), // Optional: Reduce font size if needed
+                        style: TextStyle(
+                          fontSize: 14,
+                          height: 1,
+                        ), // Optional: Reduce font size if needed
                       ),
                     ),
                     Expanded(
@@ -207,9 +234,15 @@ class _ListUserState extends State<ListUser> {
                               hintText: "Masukkan Password Baru",
                               suffixIcon: IconButton(
                                 onPressed: () {
-                                  _obscureNewPasswd.value = !_obscureNewPasswd.value;
+                                  _obscureNewPasswd.value =
+                                      !_obscureNewPasswd.value;
                                 },
-                                icon: Icon(_obscureNewPasswd.value ? Icons.visibility : Icons.visibility_off, color: Colors.grey),
+                                icon: Icon(
+                                  _obscureNewPasswd.value
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
+                                  color: Colors.grey,
+                                ),
                               ),
                             ),
                           ),
@@ -225,7 +258,10 @@ class _ListUserState extends State<ListUser> {
                       flex: 2, // Consistent with first row
                       child: Text(
                         "Konfirmasi Password Baru",
-                        style: TextStyle(fontSize: 14, height: 1), // Optional: Reduce font size if needed
+                        style: TextStyle(
+                          fontSize: 14,
+                          height: 1,
+                        ), // Optional: Reduce font size if needed
                       ),
                     ),
                     Expanded(
@@ -240,9 +276,15 @@ class _ListUserState extends State<ListUser> {
                               hintText: "Konfirmasi Password Baru",
                               suffixIcon: IconButton(
                                 onPressed: () {
-                                  _obscureConfirmPasswd.value = !_obscureConfirmPasswd.value;
+                                  _obscureConfirmPasswd.value =
+                                      !_obscureConfirmPasswd.value;
                                 },
-                                icon: Icon(_obscureConfirmPasswd.value ? Icons.visibility : Icons.visibility_off, color: Colors.grey),
+                                icon: Icon(
+                                  _obscureConfirmPasswd.value
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
+                                  color: Colors.grey,
+                                ),
                               ),
                             ),
                           ),
@@ -255,14 +297,38 @@ class _ListUserState extends State<ListUser> {
                 Row(
                   children: [
                     Expanded(child: Text("Hak Akses Utama"), flex: 2),
-                    Expanded(child: TextField(readOnly: true, controller: TextEditingController(text: _namaHakAkses.value)), flex: 5),
+                    Expanded(
+                      child: TextField(
+                        readOnly: true,
+                        controller: TextEditingController(
+                          text: _namaHakAkses.value,
+                        ),
+                      ),
+                      flex: 5,
+                    ),
                   ],
                 ),
 
                 Row(
                   children: [
-                    Expanded(flex: 2, child: Text("Hak Akses Tambahan", style: TextStyle(fontSize: 14, height: 1))),
-                    Expanded(flex: 5, child: Obx(() => Column(children: _hakAksesTambahan.isNotEmpty ? _hakAksesTambahanRows() : []))),
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        "Hak Akses Tambahan",
+                        style: TextStyle(fontSize: 14, height: 1),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 5,
+                      child: Obx(
+                        () => Column(
+                          children:
+                              _hakAksesTambahan.isNotEmpty
+                                  ? _hakAksesTambahanRows()
+                                  : [],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
                 SizedBox(height: 15),
@@ -288,19 +354,28 @@ class _ListUserState extends State<ListUser> {
 
   Future<void> _updateData() async {
     try {
-      var data = {"hak_akses": _hakAkses.value, "secondary_hakakses": _selectedHakAksesTambah};
+      var data = {
+        "hak_akses": _hakAkses.value,
+        "secondary_hakakses": _selectedHakAksesTambah,
+      };
 
       // Cek Jika Ga kosong
-      if (_passwdNewController.text != "" && _passwdConfirmController.text != "") {
+      if (_passwdNewController.text != "" &&
+          _passwdConfirmController.text != "") {
         if (_passwdNewController.text == _passwdConfirmController.text) {
           data['new_pass'] = _passwdNewController.text;
         } else {
-          CherryToast.warning(title: Text('Password Baru dan Konfirmasi Tidak Cocok')).show(context);
+          CherryToast.warning(
+            title: Text('Password Baru dan Konfirmasi Tidak Cocok'),
+          ).show(context);
           return;
         }
       }
 
-      var response = await dio.put('${myIpAddr()}/listuser/update_user/${_idKaryawan.value}', data: data);
+      var response = await dio.put(
+        '${myIpAddr()}/listuser/update_user/${_idKaryawan.value}',
+        data: data,
+      );
 
       if (response.statusCode == 200) {
         CherryToast.success(title: Text('Berhasil Update Data')).show(context);
@@ -317,7 +392,9 @@ class _ListUserState extends State<ListUser> {
     try {
       var idKaryawan = _listUser[index]['id_karyawan'];
 
-      var response = await dio.delete('${myIpAddr()}/listuser/delete_user/${idKaryawan}');
+      var response = await dio.delete(
+        '${myIpAddr()}/listuser/delete_user/${idKaryawan}',
+      );
 
       if (response.statusCode == 200) {
         CherryToast.success(title: Text('Berhasil Delete Data')).show(context);
@@ -380,8 +457,14 @@ class _ListUserState extends State<ListUser> {
     const double mobileAdjustmentFactor = 1.25; // UI akan 25% lebih kecil
 
     // 3. Hitung designSize yang efektif berdasarkan tipe perangkat
-    final double effectiveDesignWidth = isMobile ? tabletDesignWidth * mobileAdjustmentFactor : tabletDesignWidth;
-    final double effectiveDesignHeight = isMobile ? tabletDesignHeight * mobileAdjustmentFactor : tabletDesignHeight;
+    final double effectiveDesignWidth =
+        isMobile
+            ? tabletDesignWidth * mobileAdjustmentFactor
+            : tabletDesignWidth;
+    final double effectiveDesignHeight =
+        isMobile
+            ? tabletDesignHeight * mobileAdjustmentFactor
+            : tabletDesignHeight;
     return isMobile
         ? WidgetListUserMobile()
         : Scaffold(
@@ -401,7 +484,10 @@ class _ListUserState extends State<ListUser> {
             title: Center(
               child: Padding(
                 padding: const EdgeInsets.only(right: 50),
-                child: ClipRRect(borderRadius: BorderRadius.circular(50), child: Image.asset('assets/spa.jpg', height: 80, width: 80)),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(50),
+                  child: Image.asset('assets/spa.jpg', height: 80, width: 80),
+                ),
               ),
             ),
           ),
@@ -413,7 +499,14 @@ class _ListUserState extends State<ListUser> {
               child: Column(
                 children: [
                   const SizedBox(height: 20),
-                  Text("List Users", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins', fontSize: 30)),
+                  Text(
+                    "List Users",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Poppins',
+                      fontSize: 30,
+                    ),
+                  ),
                   Align(
                     alignment: Alignment.centerRight,
                     child: Container(
@@ -424,16 +517,24 @@ class _ListUserState extends State<ListUser> {
                         onChanged: (value) {
                           _runSearch();
                         },
-                        decoration: InputDecoration(hintText: "Cari ID atau Nama"),
+                        decoration: InputDecoration(
+                          hintText: "Cari ID atau Nama",
+                        ),
                       ),
                     ),
                   ),
                   Container(
                     margin: const EdgeInsets.only(top: 10),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 20,
+                    ),
                     height: 400,
                     width: Get.width - 120,
-                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), color: Colors.white),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15),
+                      color: Colors.white,
+                    ),
                     child: Column(
                       children: [
                         // Header Row
@@ -441,23 +542,58 @@ class _ListUserState extends State<ListUser> {
                           children: [
                             Expanded(
                               flex: 1,
-                              child: Text("No", textAlign: TextAlign.left, style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
+                              child: Text(
+                                "No",
+                                textAlign: TextAlign.left,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Poppins',
+                                ),
+                              ),
                             ),
                             Expanded(
                               flex: 2,
-                              child: Text("Id Karyawan", textAlign: TextAlign.left, style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
+                              child: Text(
+                                "Id Karyawan",
+                                textAlign: TextAlign.left,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Poppins',
+                                ),
+                              ),
                             ),
                             Expanded(
                               flex: 3,
-                              child: Text("Nama Karyawan", textAlign: TextAlign.left, style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
+                              child: Text(
+                                "Nama Karyawan",
+                                textAlign: TextAlign.left,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Poppins',
+                                ),
+                              ),
                             ),
                             Expanded(
                               flex: 2,
-                              child: Text("Hak Akses", textAlign: TextAlign.left, style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
+                              child: Text(
+                                "Hak Akses",
+                                textAlign: TextAlign.left,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Poppins',
+                                ),
+                              ),
                             ),
                             Expanded(
                               flex: 3,
-                              child: Text("Aksi", textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
+                              child: Text(
+                                "Aksi",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Poppins',
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -480,23 +616,51 @@ class _ListUserState extends State<ListUser> {
                                   final user = _ListUserFiltered[index];
                                   return Row(
                                     children: [
-                                      Expanded(flex: 1, child: Text("${index + 1}", textAlign: TextAlign.left, style: TextStyle(fontFamily: 'Poppins'))),
+                                      Expanded(
+                                        flex: 1,
+                                        child: Text(
+                                          "${index + 1}",
+                                          textAlign: TextAlign.left,
+                                          style: TextStyle(
+                                            fontFamily: 'Poppins',
+                                          ),
+                                        ),
+                                      ),
                                       Expanded(
                                         flex: 2,
-                                        child: Text("${user['id_karyawan']}", textAlign: TextAlign.left, style: TextStyle(fontFamily: 'Poppins')),
+                                        child: Text(
+                                          "${user['id_karyawan']}",
+                                          textAlign: TextAlign.left,
+                                          style: TextStyle(
+                                            fontFamily: 'Poppins',
+                                          ),
+                                        ),
                                       ),
                                       Expanded(
                                         flex: 3,
-                                        child: Text("${user['nama_karyawan'] ?? '-'}", textAlign: TextAlign.left, style: TextStyle(fontFamily: 'Poppins')),
+                                        child: Text(
+                                          "${user['nama_karyawan'] ?? '-'}",
+                                          textAlign: TextAlign.left,
+                                          style: TextStyle(
+                                            fontFamily: 'Poppins',
+                                          ),
+                                        ),
                                       ),
                                       Expanded(
                                         flex: 2,
-                                        child: Text("${user['nama_hakakses']}", textAlign: TextAlign.left, style: TextStyle(fontFamily: 'Poppins')),
+                                        child: Text(
+                                          "${user['nama_hakakses']}",
+                                          textAlign: TextAlign.left,
+                                          style: TextStyle(
+                                            fontFamily: 'Poppins',
+                                          ),
+                                        ),
                                       ),
                                       Expanded(
                                         flex: 3,
                                         child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
                                           children: [
                                             ElevatedButton(
                                               onPressed: () {
@@ -510,7 +674,9 @@ class _ListUserState extends State<ListUser> {
                                                 Get.dialog(
                                                   AlertDialog(
                                                     title: Text('Confirm'),
-                                                    content: Text('Yakin menghapus data?'),
+                                                    content: Text(
+                                                      'Yakin menghapus data?',
+                                                    ),
                                                     actions: [
                                                       TextButton(
                                                         onPressed: () {
@@ -520,9 +686,15 @@ class _ListUserState extends State<ListUser> {
                                                       ),
                                                       TextButton(
                                                         onPressed: () async {
-                                                          await _deleteUser(index);
+                                                          await _deleteUser(
+                                                            index,
+                                                          );
 
-                                                          CherryToast.success(title: Text('Data berhasil dihapus')).show(context);
+                                                          CherryToast.success(
+                                                            title: Text(
+                                                              'Data berhasil dihapus',
+                                                            ),
+                                                          ).show(context);
                                                           Get.back();
                                                         },
                                                         child: Text('Confirm'),
@@ -593,7 +765,13 @@ class _ListUserState extends State<ListUser> {
                       },
                     ),
                     const SizedBox(width: 4),
-                    Text(_hakAksesTambahan[dataIndex]['nama_hakakses'], style: const TextStyle(fontSize: 18, fontFamily: 'Poppins')),
+                    Text(
+                      _hakAksesTambahan[dataIndex]['nama_hakakses'],
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
                   ],
                 ),
               );
@@ -623,7 +801,7 @@ class _WidgetListUserMobileState extends State<WidgetListUserMobile> {
   TextEditingController _searchController = TextEditingController();
   RxString hakAkses = "".obs;
 
-  var dio = Dio();
+  var dio = DioClient();
   Future<void> _getUser() async {
     await _profileUser();
 
@@ -635,8 +813,12 @@ class _WidgetListUserMobileState extends State<WidgetListUserMobile> {
 
       if (hakAkses.value == "admin") {
         // hak_akses itu id hak akses. owner == 2 maka kita filter yg != 2
-        _listUser.assignAll(responseData.where((el) => el['nama_hakakses'] != "owner").toList());
-        _ListUserFiltered.assignAll(responseData.where((el) => el['nama_hakakses'] != "owner").toList());
+        _listUser.assignAll(
+          responseData.where((el) => el['nama_hakakses'] != "owner").toList(),
+        );
+        _ListUserFiltered.assignAll(
+          responseData.where((el) => el['nama_hakakses'] != "owner").toList(),
+        );
       } else {
         _listUser.assignAll(responseData);
         _ListUserFiltered.assignAll(responseData);
@@ -668,8 +850,10 @@ class _WidgetListUserMobileState extends State<WidgetListUserMobile> {
 
     final filtered =
         _listUser.where((user) {
-          final nama = (user['nama_karyawan'] ?? '').toString().toLowerCase().trim();
-          final id = (user['id_karyawan'] ?? '').toString().toLowerCase().trim();
+          final nama =
+              (user['nama_karyawan'] ?? '').toString().toLowerCase().trim();
+          final id =
+              (user['id_karyawan'] ?? '').toString().toLowerCase().trim();
 
           return nama.contains(keyword) || id.contains(keyword);
         }).toList();
@@ -697,7 +881,9 @@ class _WidgetListUserMobileState extends State<WidgetListUserMobile> {
   Future<void> _getHakAksesExtra(int id, String idKaryawan) async {
     try {
       var response1 = await dio.get('${myIpAddr()}/form_user/hak_akses?id=$id');
-      var response2 = await dio.get('${myIpAddr()}/form_user/hakakses_tambahan?id_karyawan=$idKaryawan');
+      var response2 = await dio.get(
+        '${myIpAddr()}/form_user/hakakses_tambahan?id_karyawan=$idKaryawan',
+      );
 
       List<dynamic> response1Data = response1.data;
       List<dynamic> response2Data = response2.data;
@@ -748,7 +934,14 @@ class _WidgetListUserMobileState extends State<WidgetListUserMobile> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Spacer(),
-                        Text("Edit Data User", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, fontFamily: 'Poppins')),
+                        Text(
+                          "Edit Data User",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                            fontFamily: 'Poppins',
+                          ),
+                        ),
                         Spacer(),
                         IconButton(
                           onPressed: () {
@@ -773,11 +966,15 @@ class _WidgetListUserMobileState extends State<WidgetListUserMobile> {
                           flex: 2,
                           child: Text(
                             "Password",
-                            style: TextStyle(fontSize: 14, height: 1), // Optional: Reduce font size if needed
+                            style: TextStyle(
+                              fontSize: 14,
+                              height: 1,
+                            ), // Optional: Reduce font size if needed
                           ),
                         ),
                         Expanded(
-                          flex: 5, // Increased flex to give more space to TextField
+                          flex:
+                              5, // Increased flex to give more space to TextField
                           child: Padding(
                             padding: const EdgeInsets.only(bottom: 10),
                             child: Obx(
@@ -787,9 +984,15 @@ class _WidgetListUserMobileState extends State<WidgetListUserMobile> {
                                 decoration: InputDecoration(
                                   hintText: 'Enter your password',
                                   suffixIcon: IconButton(
-                                    icon: Icon(_obscureOldPasswd.value ? Icons.visibility : Icons.visibility_off, color: Colors.grey),
+                                    icon: Icon(
+                                      _obscureOldPasswd.value
+                                          ? Icons.visibility
+                                          : Icons.visibility_off,
+                                      color: Colors.grey,
+                                    ),
                                     onPressed: () {
-                                      _obscureOldPasswd.value = !_obscureOldPasswd.value;
+                                      _obscureOldPasswd.value =
+                                          !_obscureOldPasswd.value;
                                     },
                                   ),
                                 ),
@@ -806,7 +1009,10 @@ class _WidgetListUserMobileState extends State<WidgetListUserMobile> {
                           flex: 2, // Consistent with first row
                           child: Text(
                             "Input Password Baru",
-                            style: TextStyle(fontSize: 14, height: 1), // Optional: Reduce font size if needed
+                            style: TextStyle(
+                              fontSize: 14,
+                              height: 1,
+                            ), // Optional: Reduce font size if needed
                           ),
                         ),
                         Expanded(
@@ -821,9 +1027,15 @@ class _WidgetListUserMobileState extends State<WidgetListUserMobile> {
                                   hintText: "Masukkan Password Baru",
                                   suffixIcon: IconButton(
                                     onPressed: () {
-                                      _obscureNewPasswd.value = !_obscureNewPasswd.value;
+                                      _obscureNewPasswd.value =
+                                          !_obscureNewPasswd.value;
                                     },
-                                    icon: Icon(_obscureNewPasswd.value ? Icons.visibility : Icons.visibility_off, color: Colors.grey),
+                                    icon: Icon(
+                                      _obscureNewPasswd.value
+                                          ? Icons.visibility
+                                          : Icons.visibility_off,
+                                      color: Colors.grey,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -839,7 +1051,10 @@ class _WidgetListUserMobileState extends State<WidgetListUserMobile> {
                           flex: 2, // Consistent with first row
                           child: Text(
                             "Konfirmasi Password Baru",
-                            style: TextStyle(fontSize: 14, height: 1), // Optional: Reduce font size if needed
+                            style: TextStyle(
+                              fontSize: 14,
+                              height: 1,
+                            ), // Optional: Reduce font size if needed
                           ),
                         ),
                         Expanded(
@@ -854,9 +1069,15 @@ class _WidgetListUserMobileState extends State<WidgetListUserMobile> {
                                   hintText: "Konfirmasi Password Baru",
                                   suffixIcon: IconButton(
                                     onPressed: () {
-                                      _obscureConfirmPasswd.value = !_obscureConfirmPasswd.value;
+                                      _obscureConfirmPasswd.value =
+                                          !_obscureConfirmPasswd.value;
                                     },
-                                    icon: Icon(_obscureConfirmPasswd.value ? Icons.visibility : Icons.visibility_off, color: Colors.grey),
+                                    icon: Icon(
+                                      _obscureConfirmPasswd.value
+                                          ? Icons.visibility
+                                          : Icons.visibility_off,
+                                      color: Colors.grey,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -869,14 +1090,38 @@ class _WidgetListUserMobileState extends State<WidgetListUserMobile> {
                     Row(
                       children: [
                         Expanded(child: Text("Hak Akses Utama"), flex: 2),
-                        Expanded(child: TextField(readOnly: true, controller: TextEditingController(text: _namaHakAkses.value)), flex: 5),
+                        Expanded(
+                          child: TextField(
+                            readOnly: true,
+                            controller: TextEditingController(
+                              text: _namaHakAkses.value,
+                            ),
+                          ),
+                          flex: 5,
+                        ),
                       ],
                     ),
 
                     Row(
                       children: [
-                        Expanded(flex: 2, child: Text("Hak Akses Tambahan", style: TextStyle(fontSize: 14, height: 1))),
-                        Expanded(flex: 5, child: Obx(() => Column(children: _hakAksesTambahan.isNotEmpty ? _hakAksesTambahanRows() : []))),
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            "Hak Akses Tambahan",
+                            style: TextStyle(fontSize: 14, height: 1),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 5,
+                          child: Obx(
+                            () => Column(
+                              children:
+                                  _hakAksesTambahan.isNotEmpty
+                                      ? _hakAksesTambahanRows()
+                                      : [],
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                     SizedBox(height: 15),
@@ -904,19 +1149,28 @@ class _WidgetListUserMobileState extends State<WidgetListUserMobile> {
 
   Future<void> _updateData() async {
     try {
-      var data = {"hak_akses": _hakAkses.value, "secondary_hakakses": _selectedHakAksesTambah};
+      var data = {
+        "hak_akses": _hakAkses.value,
+        "secondary_hakakses": _selectedHakAksesTambah,
+      };
 
       // Cek Jika Ga kosong
-      if (_passwdNewController.text != "" && _passwdConfirmController.text != "") {
+      if (_passwdNewController.text != "" &&
+          _passwdConfirmController.text != "") {
         if (_passwdNewController.text == _passwdConfirmController.text) {
           data['new_pass'] = _passwdNewController.text;
         } else {
-          CherryToast.warning(title: Text('Password Baru dan Konfirmasi Tidak Cocok')).show(context);
+          CherryToast.warning(
+            title: Text('Password Baru dan Konfirmasi Tidak Cocok'),
+          ).show(context);
           return;
         }
       }
 
-      var response = await dio.put('${myIpAddr()}/listuser/update_user/${_idKaryawan.value}', data: data);
+      var response = await dio.put(
+        '${myIpAddr()}/listuser/update_user/${_idKaryawan.value}',
+        data: data,
+      );
 
       if (response.statusCode == 200) {
         CherryToast.success(title: Text('Berhasil Update Data')).show(context);
@@ -933,7 +1187,9 @@ class _WidgetListUserMobileState extends State<WidgetListUserMobile> {
     try {
       var idKaryawan = _listUser[index]['id_karyawan'];
 
-      var response = await dio.delete('${myIpAddr()}/listuser/delete_user/${idKaryawan}');
+      var response = await dio.delete(
+        '${myIpAddr()}/listuser/delete_user/${idKaryawan}',
+      );
 
       if (response.statusCode == 200) {
         CherryToast.success(title: Text('Berhasil Delete Data')).show(context);
@@ -984,7 +1240,10 @@ class _WidgetListUserMobileState extends State<WidgetListUserMobile> {
         title: Center(
           child: Padding(
             padding: const EdgeInsets.only(right: 50),
-            child: ClipRRect(borderRadius: BorderRadius.circular(50), child: Image.asset('assets/spa.jpg', height: 80, width: 80)),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(50),
+              child: Image.asset('assets/spa.jpg', height: 80, width: 80),
+            ),
           ),
         ),
       ),
@@ -996,7 +1255,14 @@ class _WidgetListUserMobileState extends State<WidgetListUserMobile> {
           child: Column(
             children: [
               const SizedBox(height: 20),
-              Text("List Users", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins', fontSize: 30)),
+              Text(
+                "List Users",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Poppins',
+                  fontSize: 30,
+                ),
+              ),
               Align(
                 alignment: Alignment.centerRight,
                 child: Container(
@@ -1013,31 +1279,75 @@ class _WidgetListUserMobileState extends State<WidgetListUserMobile> {
               ),
               Container(
                 margin: const EdgeInsets.only(top: 10),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 20,
+                ),
                 height: 260,
                 width: Get.width - 120,
-                decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), color: Colors.white),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                  color: Colors.white,
+                ),
                 child: Column(
                   children: [
                     // Header Row
                     Row(
                       children: [
-                        Expanded(flex: 1, child: Text("No", textAlign: TextAlign.left, style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'))),
+                        Expanded(
+                          flex: 1,
+                          child: Text(
+                            "No",
+                            textAlign: TextAlign.left,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Poppins',
+                            ),
+                          ),
+                        ),
                         Expanded(
                           flex: 2,
-                          child: Text("Id Karyawan", textAlign: TextAlign.left, style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
+                          child: Text(
+                            "Id Karyawan",
+                            textAlign: TextAlign.left,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Poppins',
+                            ),
+                          ),
                         ),
                         Expanded(
                           flex: 3,
-                          child: Text("Nama Karyawan", textAlign: TextAlign.left, style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
+                          child: Text(
+                            "Nama Karyawan",
+                            textAlign: TextAlign.left,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Poppins',
+                            ),
+                          ),
                         ),
                         Expanded(
                           flex: 2,
-                          child: Text("Hak Akses", textAlign: TextAlign.left, style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
+                          child: Text(
+                            "Hak Akses",
+                            textAlign: TextAlign.left,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Poppins',
+                            ),
+                          ),
                         ),
                         Expanded(
                           flex: 3,
-                          child: Text("Aksi", textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
+                          child: Text(
+                            "Aksi",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Poppins',
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -1060,20 +1370,43 @@ class _WidgetListUserMobileState extends State<WidgetListUserMobile> {
                               final user = _ListUserFiltered[index];
                               return Row(
                                 children: [
-                                  Expanded(flex: 1, child: Text("${index + 1}", textAlign: TextAlign.left, style: TextStyle(fontFamily: 'Poppins'))),
-                                  Expanded(flex: 2, child: Text("${user['id_karyawan']}", textAlign: TextAlign.left, style: TextStyle(fontFamily: 'Poppins'))),
                                   Expanded(
-                                    flex: 3,
-                                    child: Text("${user['nama_karyawan'] ?? '-'}", textAlign: TextAlign.left, style: TextStyle(fontFamily: 'Poppins')),
+                                    flex: 1,
+                                    child: Text(
+                                      "${index + 1}",
+                                      textAlign: TextAlign.left,
+                                      style: TextStyle(fontFamily: 'Poppins'),
+                                    ),
                                   ),
                                   Expanded(
                                     flex: 2,
-                                    child: Text("${user['nama_hakakses']}", textAlign: TextAlign.left, style: TextStyle(fontFamily: 'Poppins')),
+                                    child: Text(
+                                      "${user['id_karyawan']}",
+                                      textAlign: TextAlign.left,
+                                      style: TextStyle(fontFamily: 'Poppins'),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 3,
+                                    child: Text(
+                                      "${user['nama_karyawan'] ?? '-'}",
+                                      textAlign: TextAlign.left,
+                                      style: TextStyle(fontFamily: 'Poppins'),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 2,
+                                    child: Text(
+                                      "${user['nama_hakakses']}",
+                                      textAlign: TextAlign.left,
+                                      style: TextStyle(fontFamily: 'Poppins'),
+                                    ),
                                   ),
                                   Expanded(
                                     flex: 3,
                                     child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         ElevatedButton(
                                           onPressed: () {
@@ -1087,7 +1420,9 @@ class _WidgetListUserMobileState extends State<WidgetListUserMobile> {
                                             Get.dialog(
                                               AlertDialog(
                                                 title: Text('Confirm'),
-                                                content: Text('Yakin menghapus data?'),
+                                                content: Text(
+                                                  'Yakin menghapus data?',
+                                                ),
                                                 actions: [
                                                   TextButton(
                                                     onPressed: () {
@@ -1099,7 +1434,11 @@ class _WidgetListUserMobileState extends State<WidgetListUserMobile> {
                                                     onPressed: () async {
                                                       await _deleteUser(index);
 
-                                                      CherryToast.success(title: Text('Data berhasil dihapus')).show(context);
+                                                      CherryToast.success(
+                                                        title: Text(
+                                                          'Data berhasil dihapus',
+                                                        ),
+                                                      ).show(context);
                                                       Get.back();
                                                     },
                                                     child: Text('Confirm'),
@@ -1169,7 +1508,13 @@ class _WidgetListUserMobileState extends State<WidgetListUserMobile> {
                       },
                     ),
                     const SizedBox(width: 4),
-                    Text(_hakAksesTambahan[dataIndex]['nama_hakakses'], style: const TextStyle(fontSize: 18, fontFamily: 'Poppins')),
+                    Text(
+                      _hakAksesTambahan[dataIndex]['nama_hakakses'],
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
                   ],
                 ),
               );

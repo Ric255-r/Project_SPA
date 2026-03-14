@@ -1,23 +1,21 @@
 import 'dart:async';
 import 'dart:developer';
-import 'dart:io';
 import 'package:Project_SPA/owner/download_splash.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 import 'package:intl/intl.dart';
 import 'package:cherry_toast/cherry_toast.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 // NOTE: pastikan kamu sudah punya widget ini seperti di template komisi:
 // import 'package:Project_SPA/widgets/download_splash.dart'; // contoh
 // class DownloadSplash extends StatelessWidget { ... }
 
 class OpnameReportController extends GetxController {
-  final dio = Dio();
+  final dio = DioClient();
 
   final dateStart = Rxn<DateTime>();
   final dateEnd = Rxn<DateTime>();
@@ -37,7 +35,8 @@ class OpnameReportController extends GetxController {
     },
   );
 
-  String fmtDate(DateTime? d) => d == null ? '-' : DateFormat('dd/MM/yyyy').format(d);
+  String fmtDate(DateTime? d) =>
+      d == null ? '-' : DateFormat('dd/MM/yyyy').format(d);
   String _yyyymmdd(DateTime d) => DateFormat('yyyy-MM-dd').format(d);
 
   Future<void> pickStart(BuildContext ctx) async {
@@ -68,7 +67,9 @@ class OpnameReportController extends GetxController {
       if (ctx != null) {
         CherryToast.warning(
           title: const Text('Validasi'),
-          description: const Text('Pilih tanggal mulai & akhir terlebih dahulu.'),
+          description: const Text(
+            'Pilih tanggal mulai & akhir terlebih dahulu.',
+          ),
         ).show(ctx);
       }
       return;
@@ -77,7 +78,9 @@ class OpnameReportController extends GetxController {
       if (ctx != null) {
         CherryToast.warning(
           title: const Text('Validasi'),
-          description: const Text('Tanggal mulai tidak boleh setelah tanggal akhir.'),
+          description: const Text(
+            'Tanggal mulai tidak boleh setelah tanggal akhir.',
+          ),
         ).show(ctx);
       }
       return;
@@ -94,8 +97,22 @@ class OpnameReportController extends GetxController {
       );
       final List all = (res.data is List) ? res.data : [];
 
-      final start = DateTime(dateStart.value!.year, dateStart.value!.month, dateStart.value!.day, 0, 0, 0);
-      final end = DateTime(dateEnd.value!.year, dateEnd.value!.month, dateEnd.value!.day, 23, 59, 59);
+      final start = DateTime(
+        dateStart.value!.year,
+        dateStart.value!.month,
+        dateStart.value!.day,
+        0,
+        0,
+        0,
+      );
+      final end = DateTime(
+        dateEnd.value!.year,
+        dateEnd.value!.month,
+        dateEnd.value!.day,
+        23,
+        59,
+        59,
+      );
 
       final filteredIds = <int>[];
       for (final e in all) {
@@ -129,7 +146,14 @@ class OpnameReportController extends GetxController {
           final key = '$nama|$satuan|$sumber';
           agg.putIfAbsent(
             key,
-            () => {'nama': nama, 'satuan': satuan, 'sumber': sumber, 'plus': 0, 'minus': 0, 'net': 0},
+            () => {
+              'nama': nama,
+              'satuan': satuan,
+              'sumber': sumber,
+              'plus': 0,
+              'minus': 0,
+              'net': 0,
+            },
           );
 
           if (perubahan >= 0) {
@@ -141,7 +165,10 @@ class OpnameReportController extends GetxController {
         }
       }
 
-      final out = agg.values.toList()..sort((a, b) => a['nama'].toString().compareTo(b['nama'].toString()));
+      final out =
+          agg.values.toList()..sort(
+            (a, b) => a['nama'].toString().compareTo(b['nama'].toString()),
+          );
       rows.assignAll(out);
 
       if (ctx != null) {
@@ -218,14 +245,21 @@ class OpnameReportPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFFFFDE7),
       appBar: AppBar(
-        title: const Text('Laporan Stok Opname', style: TextStyle(fontFamily: 'Poppins')),
+        title: const Text(
+          'Laporan Stok Opname',
+          style: TextStyle(fontFamily: 'Poppins'),
+        ),
         backgroundColor: const Color(0xFFFFE0B2),
       ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Column(
-            children: [_filterBar(context), const SizedBox(height: 12), Expanded(child: _reportTable())],
+            children: [
+              _filterBar(context),
+              const SizedBox(height: 12),
+              Expanded(child: _reportTable()),
+            ],
           ),
         ),
       ),
@@ -274,8 +308,13 @@ class OpnameReportPage extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF6D4C41),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 14,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
@@ -290,7 +329,9 @@ class OpnameReportPage extends StatelessWidget {
                           if (ds == null || de == null) {
                             CherryToast.warning(
                               title: const Text('Validasi'),
-                              description: const Text('Pilih tanggal mulai & akhir terlebih dahulu.'),
+                              description: const Text(
+                                'Pilih tanggal mulai & akhir terlebih dahulu.',
+                              ),
                             ).show(Get.context!);
                             return;
                           }
@@ -308,8 +349,13 @@ class OpnameReportPage extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF2E7D32),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 14,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               ),
             ],
@@ -325,7 +371,9 @@ class OpnameReportPage extends StatelessWidget {
         return const Center(child: CircularProgressIndicator());
       }
       if (c.rows.isEmpty) {
-        return const Center(child: Text('Belum ada data. Pilih periode lalu tekan Generate.'));
+        return const Center(
+          child: Text('Belum ada data. Pilih periode lalu tekan Generate.'),
+        );
       }
 
       final data = c.rows;

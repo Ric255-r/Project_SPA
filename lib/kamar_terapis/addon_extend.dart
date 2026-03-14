@@ -2,9 +2,8 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 import 'package:Project_SPA/function/ip_address.dart';
-import 'package:Project_SPA/function/token.dart';
 import 'package:Project_SPA/kamar_terapis/terapis_bekerja.dart';
 import 'package:Project_SPA/kamar_terapis/terapis_mgr.dart';
 
@@ -18,7 +17,7 @@ class ExtendAddOnController extends GetxController {
 
   ScrollController _scrollController = ScrollController();
 
-  var dio = Dio();
+  var dio = DioClient();
 
   RxList<Map<String, dynamic>> _listPaketExtend = <Map<String, dynamic>>[].obs;
 
@@ -189,7 +188,9 @@ class ExtendAddOnController extends GetxController {
 
   Future<void> _checkMemberPromos(String id_member) async {
     try {
-      var response = await dio.get('${myIpAddr()}/history/historymember/$id_member');
+      var response = await dio.get(
+        '${myIpAddr()}/history/historymember/$id_member',
+      );
       final now = DateTime.now();
 
       _activePromos.assignAll(
@@ -246,7 +247,10 @@ class ExtendAddOn extends StatelessWidget {
   // Constructor Stless
   ExtendAddOn({super.key, required this.idDetailTransaksi}) {
     // Get.put(ExtendAddOnController(idDetailTransaksi: idDetailTransaksi));
-    Get.lazyPut<ExtendAddOnController>(() => ExtendAddOnController(idDetailTransaksi: idDetailTransaksi), fenix: false);
+    Get.lazyPut<ExtendAddOnController>(
+      () => ExtendAddOnController(idDetailTransaksi: idDetailTransaksi),
+      fenix: false,
+    );
   }
   int displayPrice = 0;
   int displayPrice2 = 0;
@@ -258,7 +262,16 @@ class ExtendAddOn extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Center(child: Text("Add On (+)", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 40, fontFamily: 'Poppins'))),
+        title: Center(
+          child: Text(
+            "Add On (+)",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 40,
+              fontFamily: 'Poppins',
+            ),
+          ),
+        ),
         backgroundColor: Color(0XFFFFE0B2),
       ),
       body: PopScope(
@@ -279,7 +292,14 @@ class ExtendAddOn extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(height: 20),
-                Text("Pilih Paket Yang Ingin DI Extend", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, fontFamily: 'Poppins')),
+                Text(
+                  "Pilih Paket Yang Ingin DI Extend",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    fontFamily: 'Poppins',
+                  ),
+                ),
                 SizedBox(height: 30),
                 Container(
                   height: 300,
@@ -291,35 +311,49 @@ class ExtendAddOn extends StatelessWidget {
                       child: Obx(
                         () => GridView.builder(
                           controller: c._scrollController,
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3, // 3 item 1 row
-                            crossAxisSpacing: 50, // space horizontal tiap item
-                            mainAxisSpacing: 20, // space vertical tiap item
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 3, // 3 item 1 row
+                                crossAxisSpacing:
+                                    50, // space horizontal tiap item
+                                mainAxisSpacing: 20, // space vertical tiap item
 
-                            childAspectRatio: 25 / 14,
-                          ),
+                                childAspectRatio: 25 / 14,
+                              ),
                           itemCount: c._listPaketExtend.length,
                           itemBuilder: (context, index) {
                             final item = c._listPaketExtend[index];
                             RxBool _isTapped = false.obs;
-                            displayPrice = int.parse(item['harga_extend'].toString());
+                            displayPrice = int.parse(
+                              item['harga_extend'].toString(),
+                            );
 
                             return GestureDetector(
                               behavior: HitTestBehavior.opaque,
                               onTapDown: (_) async {
                                 _isTapped.value = true;
 
-                                displayPrice = int.parse(item['harga_extend'].toString());
-                                displayDurasi = int.parse(item['durasi_extend'].toString());
+                                displayPrice = int.parse(
+                                  item['harga_extend'].toString(),
+                                );
+                                displayDurasi = int.parse(
+                                  item['durasi_extend'].toString(),
+                                );
 
                                 log('price : $displayPrice');
                                 log('durasi : $displayDurasi');
                               },
                               onTapUp: (_) async {
-                                await Future.delayed(const Duration(milliseconds: 100));
+                                await Future.delayed(
+                                  const Duration(milliseconds: 100),
+                                );
                                 _isTapped.value = false;
 
-                                final harga = int.tryParse(item['harga_extend'].toString()) ?? 0;
+                                final harga =
+                                    int.tryParse(
+                                      item['harga_extend'].toString(),
+                                    ) ??
+                                    0;
                                 final durasi = item['durasi_extend'] ?? 0;
 
                                 // Clear any previous selections
@@ -328,7 +362,8 @@ class ExtendAddOn extends StatelessWidget {
                                 // Add only the selected item
                                 c._selectedListPaket.add({
                                   'id_paket': item['id_paket_extend'],
-                                  'nama_paket_extend': item['nama_paket_extend'],
+                                  'nama_paket_extend':
+                                      item['nama_paket_extend'],
                                   'qty': 1,
                                   'durasi_extend': durasi,
                                   'hrg_item': harga,
@@ -338,10 +373,13 @@ class ExtendAddOn extends StatelessWidget {
                                 // Optionally set default timer/qty
                                 if (c._extendQty.value == 0) {
                                   c._extendQty.value = 1;
-                                  c._txtTimer.text = c._extendQty.value.toString();
+                                  c._txtTimer.text =
+                                      c._extendQty.value.toString();
                                 }
 
-                                log("Isi selectedPaket ${c._selectedListPaket}");
+                                log(
+                                  "Isi selectedPaket ${c._selectedListPaket}",
+                                );
                               },
 
                               onTapCancel: () {
@@ -351,17 +389,50 @@ class ExtendAddOn extends StatelessWidget {
                                 () => Transform.scale(
                                   scale: _isTapped.isTrue ? 0.82 : 1.0,
                                   child: Container(
-                                    decoration: BoxDecoration(color: const Color.fromARGB(255, 64, 97, 55), borderRadius: BorderRadius.circular(20)),
+                                    decoration: BoxDecoration(
+                                      color: const Color.fromARGB(
+                                        255,
+                                        64,
+                                        97,
+                                        55,
+                                      ),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
                                     child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
-                                        Icon(item['type'] == "paket" ? Icons.spa : Icons.shopping_bag, size: 50, color: Colors.white),
-                                        Text(item['nama_paket_extend'], style: const TextStyle(color: Colors.white, fontSize: 16, fontFamily: 'Poppins')),
-                                        Text("Rp. $displayPrice", style: const TextStyle(color: Colors.white, fontSize: 16, fontFamily: 'Poppins')),
+                                        Icon(
+                                          item['type'] == "paket"
+                                              ? Icons.spa
+                                              : Icons.shopping_bag,
+                                          size: 50,
+                                          color: Colors.white,
+                                        ),
+                                        Text(
+                                          item['nama_paket_extend'],
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                            fontFamily: 'Poppins',
+                                          ),
+                                        ),
+                                        Text(
+                                          "Rp. $displayPrice",
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                            fontFamily: 'Poppins',
+                                          ),
+                                        ),
                                         if (item['durasi_extend'] != null)
                                           Text(
                                             "${item['durasi_extend']} Menit",
-                                            style: const TextStyle(color: Colors.white, fontSize: 14, fontFamily: 'Poppins'),
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 14,
+                                              fontFamily: 'Poppins',
+                                            ),
                                           ),
                                       ],
                                     ),
@@ -377,7 +448,14 @@ class ExtendAddOn extends StatelessWidget {
                 ),
 
                 SizedBox(height: 20),
-                Text("List Pesanan: ", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, fontFamily: 'Poppins')),
+                Text(
+                  "List Pesanan: ",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    fontFamily: 'Poppins',
+                  ),
+                ),
                 Container(
                   height: 200,
                   key: c._detailHarga,
@@ -385,7 +463,8 @@ class ExtendAddOn extends StatelessWidget {
                     child: Obx(() {
                       var totalPaket = 0;
                       for (var i = 0; i < c._selectedListPaket.length; i++) {
-                        totalPaket += c._selectedListPaket[i]['harga_total'] as int;
+                        totalPaket +=
+                            c._selectedListPaket[i]['harga_total'] as int;
                         c._selectedListPaket[i]['harga_extend'];
                       }
 
@@ -395,32 +474,65 @@ class ExtendAddOn extends StatelessWidget {
                             for (var item in c._selectedListPaket)
                               Builder(
                                 builder: (context) {
-                                  final promoExists = c._activePromos.any((promo) => promo['nama_promo'] == item['nama_paket_extend']);
+                                  final promoExists = c._activePromos.any(
+                                    (promo) =>
+                                        promo['nama_promo'] ==
+                                        item['nama_paket_extend'],
+                                  );
                                   if (promoExists) {
-                                    displayPrice2 = 0; // Set display price to 0 if promo applies
+                                    displayPrice2 =
+                                        0; // Set display price to 0 if promo applies
                                   } else {
-                                    displayPrice2 = int.parse(item['hrg_item'].toString());
+                                    displayPrice2 = int.parse(
+                                      item['hrg_item'].toString(),
+                                    );
                                   }
                                   return Row(
                                     children: [
-                                      Expanded(child: Text("${item['nama_paket_extend']}", style: TextStyle(fontFamily: 'Poppins'))),
+                                      Expanded(
+                                        child: Text(
+                                          "${item['nama_paket_extend']}",
+                                          style: TextStyle(
+                                            fontFamily: 'Poppins',
+                                          ),
+                                        ),
+                                      ),
                                       Expanded(
                                         child: Text(
                                           "${item['qty']} x ${item['durasi_extend']} Menit",
                                           textAlign: TextAlign.center,
-                                          style: TextStyle(fontFamily: 'Poppins'),
+                                          style: TextStyle(
+                                            fontFamily: 'Poppins',
+                                          ),
                                         ),
                                       ),
                                       Expanded(
                                         child: Row(
                                           children: [
-                                            Expanded(child: Text("Rp. $displayPrice2", textAlign: TextAlign.right, style: TextStyle(fontFamily: 'Poppins'))),
+                                            Expanded(
+                                              child: Text(
+                                                "Rp. $displayPrice2",
+                                                textAlign: TextAlign.right,
+                                                style: TextStyle(
+                                                  fontFamily: 'Poppins',
+                                                ),
+                                              ),
+                                            ),
                                             Expanded(
                                               child: TextButton(
                                                 onPressed: () {
-                                                  c.removeSelection("paket", item['id_paket']);
+                                                  c.removeSelection(
+                                                    "paket",
+                                                    item['id_paket'],
+                                                  );
                                                 },
-                                                child: Text("X", textAlign: TextAlign.right, style: TextStyle(fontFamily: 'Poppins')),
+                                                child: Text(
+                                                  "X",
+                                                  textAlign: TextAlign.right,
+                                                  style: TextStyle(
+                                                    fontFamily: 'Poppins',
+                                                  ),
+                                                ),
                                               ),
                                             ),
                                           ],
@@ -438,11 +550,23 @@ class ExtendAddOn extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               Expanded(child: Text("")),
-                              Expanded(child: Text("Total Add On: ", textAlign: TextAlign.right, style: TextStyle(fontFamily: 'Poppins'))),
+                              Expanded(
+                                child: Text(
+                                  "Total Add On: ",
+                                  textAlign: TextAlign.right,
+                                  style: TextStyle(fontFamily: 'Poppins'),
+                                ),
+                              ),
                               Expanded(
                                 child: Row(
                                   children: [
-                                    Expanded(child: Text("Rp. ${totalPaket}", textAlign: TextAlign.right, style: TextStyle(fontFamily: 'Poppins'))),
+                                    Expanded(
+                                      child: Text(
+                                        "Rp. ${totalPaket}",
+                                        textAlign: TextAlign.right,
+                                        style: TextStyle(fontFamily: 'Poppins'),
+                                      ),
+                                    ),
                                     Expanded(child: Text("")),
                                   ],
                                 ),
@@ -452,11 +576,20 @@ class ExtendAddOn extends StatelessWidget {
                           Align(
                             alignment: Alignment.centerRight,
                             child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(backgroundColor: Colors.greenAccent, minimumSize: Size(100, 40)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.greenAccent,
+                                minimumSize: Size(100, 40),
+                              ),
                               onPressed: () async {
                                 await c._storeAddOn();
                               },
-                              child: Text("Proses", style: TextStyle(color: Colors.black, fontFamily: 'Poppins')),
+                              child: Text(
+                                "Proses",
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontFamily: 'Poppins',
+                                ),
+                              ),
                             ),
                           ),
                         ],

@@ -1,31 +1,19 @@
 // ignore_for_file: sort_child_properties_last, curly_braces_in_flow_control_structures
 
 import 'dart:async';
-import 'dart:math' hide log;
 import 'package:Project_SPA/owner/download_splash.dart';
-import 'package:Project_SPA/resepsionis/detail_food_n_beverages.dart';
-import 'package:Project_SPA/ruang_tunggu/main_rt.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
-import 'package:dartx/dartx_io.dart';
 import 'package:flutter/material.dart';
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'dart:io'; // For file operations
-import 'package:image_picker/image_picker.dart';
+// For file operations
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 import 'package:Project_SPA/function/our_drawer.dart';
-import 'package:Project_SPA/office_boy/image_mgr.dart';
-import 'package:Project_SPA/office_boy/main_ob.dart';
-import 'package:fl_chart/fl_chart.dart';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 import 'dart:developer';
 import 'package:intl/intl.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:dio/dio.dart';
 import 'package:cherry_toast/cherry_toast.dart';
 
 class laporanpilihanterapis extends StatefulWidget {
@@ -35,7 +23,8 @@ class laporanpilihanterapis extends StatefulWidget {
   State<laporanpilihanterapis> createState() => _laporanpilihanterapisState();
 }
 
-class _laporanpilihanterapisState extends State<laporanpilihanterapis> with SingleTickerProviderStateMixin {
+class _laporanpilihanterapisState extends State<laporanpilihanterapis>
+    with SingleTickerProviderStateMixin {
   RxString selectedvalue = DateTime.now().month.toString().obs;
   RxString selectedyearvalue = DateTime.now().year.toString().obs;
   RxList<Map<String, dynamic>> datakomisi = <Map<String, dynamic>>[].obs;
@@ -56,7 +45,7 @@ class _laporanpilihanterapisState extends State<laporanpilihanterapis> with Sing
   RxInt totaltahunan = 0.obs;
   int sum = 0;
 
-  var dio = Dio();
+  var dio = DioClient();
 
   String? selectedagencybulanan;
   String? selectedagencytahunan;
@@ -82,7 +71,10 @@ class _laporanpilihanterapisState extends State<laporanpilihanterapis> with Sing
 
       final List<Map<String, dynamic>> data =
           (response.data as List).map((item) {
-            return {"id_karyawan": item["id_karyawan"].toString(), "nama_karyawan": item["nama_karyawan"]};
+            return {
+              "id_karyawan": item["id_karyawan"].toString(),
+              "nama_karyawan": item["nama_karyawan"],
+            };
           }).toList();
 
       _listNamaTerapis.assignAll([
@@ -100,14 +92,22 @@ class _laporanpilihanterapisState extends State<laporanpilihanterapis> with Sing
       Get.dialog(const DownloadSplash(), barrierDismissible: false);
       final filepath;
       final dir = await getDownloadsDirectory();
-      filepath = '${dir!.path}/data laporan kerja terapis tanggal $startdate - $enddate.pdf';
+      filepath =
+          '${dir!.path}/data laporan kerja terapis tanggal $startdate - $enddate.pdf';
 
       String url = '${myIpAddr()}/main_owner/export_excel_laporankerjaterapis';
       var response = await dio.download(
         url,
         filepath,
-        queryParameters: {'start_date': startdate, 'end_date': enddate, 'pilihan_terapis': id_terapis},
-        options: Options(responseType: ResponseType.bytes, headers: {'Accept': 'application/pdf'}),
+        queryParameters: {
+          'start_date': startdate,
+          'end_date': enddate,
+          'pilihan_terapis': id_terapis,
+        },
+        options: Options(
+          responseType: ResponseType.bytes,
+          headers: {'Accept': 'application/pdf'},
+        ),
       );
 
       Get.back();
@@ -147,9 +147,13 @@ class _laporanpilihanterapisState extends State<laporanpilihanterapis> with Sing
 
     // 3. Hitung designSize yang efektif berdasarkan tipe perangkat
     final double effectiveDesignWidth =
-        isMobile ? tabletDesignWidth * mobileAdjustmentFactor : tabletDesignWidth;
+        isMobile
+            ? tabletDesignWidth * mobileAdjustmentFactor
+            : tabletDesignWidth;
     final double effectiveDesignHeight =
-        isMobile ? tabletDesignHeight * mobileAdjustmentFactor : tabletDesignHeight;
+        isMobile
+            ? tabletDesignHeight * mobileAdjustmentFactor
+            : tabletDesignHeight;
 
     return ScreenUtilInit(
       designSize: Size(effectiveDesignWidth, effectiveDesignHeight),
@@ -191,46 +195,76 @@ class _laporanpilihanterapisState extends State<laporanpilihanterapis> with Sing
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
                             ),
                             onPressed: () async {
                               final results = await showDialog(
                                 context: context,
                                 builder: (context) {
-                                  List<DateTime?> tempdate = List.from(_rangedatepickervalue);
+                                  List<DateTime?> tempdate = List.from(
+                                    _rangedatepickervalue,
+                                  );
                                   return Dialog(
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(15),
+                                    ),
                                     child: SingleChildScrollView(
                                       child: Padding(
-                                        padding: EdgeInsets.symmetric(vertical: 16.w, horizontal: 16.w),
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: 16.w,
+                                          horizontal: 16.w,
+                                        ),
                                         child: Column(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            const Text('Silahkan pilih rentang tanggal'),
+                                            const Text(
+                                              'Silahkan pilih rentang tanggal',
+                                            ),
                                             SizedBox(height: 15.w),
                                             CalendarDatePicker2(
                                               config: CalendarDatePicker2Config(
-                                                calendarType: CalendarDatePicker2Type.range,
-                                                selectedDayHighlightColor: Colors.deepPurple,
-                                                dayTextStyle: TextStyle(fontSize: 15.w),
+                                                calendarType:
+                                                    CalendarDatePicker2Type
+                                                        .range,
+                                                selectedDayHighlightColor:
+                                                    Colors.deepPurple,
+                                                dayTextStyle: TextStyle(
+                                                  fontSize: 15.w,
+                                                ),
                                               ),
                                               value: tempdate,
                                               onValueChanged: (dates) {
-                                                tempdate = dates.map((d) => _getdateonly(d)).toList();
+                                                tempdate =
+                                                    dates
+                                                        .map(
+                                                          (d) =>
+                                                              _getdateonly(d),
+                                                        )
+                                                        .toList();
                                               },
                                             ),
                                             SizedBox(height: 15.w),
                                             Row(
-                                              mainAxisAlignment: MainAxisAlignment.end,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.end,
                                               children: [
                                                 TextButton(
                                                   child: const Text('Cancel'),
-                                                  onPressed: () => Navigator.of(context).pop(),
+                                                  onPressed:
+                                                      () =>
+                                                          Navigator.of(
+                                                            context,
+                                                          ).pop(),
                                                 ),
                                                 const SizedBox(width: 8),
                                                 TextButton(
                                                   child: const Text('OK'),
-                                                  onPressed: () => Navigator.of(context).pop(tempdate),
+                                                  onPressed:
+                                                      () => Navigator.of(
+                                                        context,
+                                                      ).pop(tempdate),
                                                 ),
                                               ],
                                             ),
@@ -244,21 +278,37 @@ class _laporanpilihanterapisState extends State<laporanpilihanterapis> with Sing
                                 if (results != null) {
                                   final List<DateTime?> cleanedResults =
                                       (results as List)
-                                          .map((date) => _getdateonly(date) as DateTime?)
+                                          .map(
+                                            (date) =>
+                                                _getdateonly(date) as DateTime?,
+                                          )
                                           .toList();
 
-                                  _rangedatepickervalue.assignAll(cleanedResults);
+                                  _rangedatepickervalue.assignAll(
+                                    cleanedResults,
+                                  );
 
                                   startdate =
-                                      _rangedatepickervalue[0]?.toIso8601String().split('T').first ?? '';
+                                      _rangedatepickervalue[0]
+                                          ?.toIso8601String()
+                                          .split('T')
+                                          .first ??
+                                      '';
                                   enddate =
                                       _rangedatepickervalue.length > 1
-                                          ? _rangedatepickervalue[1]?.toIso8601String().split('T').first ?? ''
+                                          ? _rangedatepickervalue[1]
+                                                  ?.toIso8601String()
+                                                  .split('T')
+                                                  .first ??
+                                              ''
                                           : startdate;
                                 }
                               });
                             },
-                            child: Text('Pilih Tanggal', style: TextStyle(fontSize: 15.w)),
+                            child: Text(
+                              'Pilih Tanggal',
+                              style: TextStyle(fontSize: 15.w),
+                            ),
                           ),
                           SizedBox(width: 20),
                           Obx(
@@ -314,15 +364,24 @@ class _laporanpilihanterapisState extends State<laporanpilihanterapis> with Sing
                             height: 35.w,
                             child: ElevatedButton(
                               onPressed: () async {
-                                await exportlaporankerjaterapis(startdate, enddate, selectedidterapis.value);
+                                await exportlaporankerjaterapis(
+                                  startdate,
+                                  enddate,
+                                  selectedidterapis.value,
+                                );
                               },
                               child: Text(
                                 'Cetak Laporan',
-                                style: TextStyle(fontSize: 15.w, color: Colors.black),
+                                style: TextStyle(
+                                  fontSize: 15.w,
+                                  color: Colors.black,
+                                ),
                               ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Color(0xFFFCEFCB),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
                               ),
                             ),
                           ),

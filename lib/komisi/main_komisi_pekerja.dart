@@ -3,13 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter/services.dart';
 import 'package:Project_SPA/function/ip_address.dart';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 import 'dart:developer';
 import 'package:Project_SPA/function/me.dart';
 import 'package:Project_SPA/function/token.dart';
-import 'package:get_storage/get_storage.dart';
 import 'package:intl/intl.dart';
-import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 
 class PageKomisiPekerja extends StatefulWidget {
   const PageKomisiPekerja({super.key});
@@ -32,9 +30,10 @@ class _PageKomisiPekerjaState extends State<PageKomisiPekerja> {
   RxList<Map<String, dynamic>> listdatakomisi = <Map<String, dynamic>>[].obs;
   RxList<Map<String, dynamic>> isidetailpaket = <Map<String, dynamic>>[].obs;
   RxList<Map<String, dynamic>> isidetailproduk = <Map<String, dynamic>>[].obs;
-  RxList<Map<String, dynamic>> listdatakomisibulanan = <Map<String, dynamic>>[].obs;
+  RxList<Map<String, dynamic>> listdatakomisibulanan =
+      <Map<String, dynamic>>[].obs;
 
-  var dio = Dio();
+  var dio = DioClient();
   var idkaryawan = '';
   var namakaryawan = '';
   var jabatan = '';
@@ -43,7 +42,11 @@ class _PageKomisiPekerjaState extends State<PageKomisiPekerja> {
   String hurufpertamanama = '';
   String dateonly = '';
   String formatrupiah(num amount) {
-    final formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+    final formatter = NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    );
     return formatter.format(amount);
   }
 
@@ -132,11 +135,18 @@ class _PageKomisiPekerjaState extends State<PageKomisiPekerja> {
     try {
       var response = await dio.get(
         '${myIpAddr()}/cekkomisi/listkomisimonthly',
-        data: {"id_user": idkaryawan, "year": int.parse(selectedyearvalue.value)},
+        data: {
+          "id_user": idkaryawan,
+          "year": int.parse(selectedyearvalue.value),
+        },
       );
       List<Map<String, dynamic>> fetcheddata =
           (response.data as List).map((item) {
-            return {"month": item['month'], "year": item['year'], "total_komisi": item['total_komisi']};
+            return {
+              "month": item['month'],
+              "year": item['year'],
+              "total_komisi": item['total_komisi'],
+            };
           }).toList();
       setState(() {
         log('list data bulanan : ${fetcheddata.toString()}');
@@ -241,9 +251,21 @@ class _PageKomisiPekerjaState extends State<PageKomisiPekerja> {
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(child: Container(child: Text('DETAIL KOMISI', style: TextStyle(fontSize: 40)))),
+                Center(
+                  child: Container(
+                    child: Text(
+                      'DETAIL KOMISI',
+                      style: TextStyle(fontSize: 40),
+                    ),
+                  ),
+                ),
                 SizedBox(height: 20),
-                Container(child: Text('Detail Komisi Paket', style: TextStyle(fontSize: 20))),
+                Container(
+                  child: Text(
+                    'Detail Komisi Paket',
+                    style: TextStyle(fontSize: 20),
+                  ),
+                ),
                 SizedBox(height: 20),
                 Row(
                   children: [
@@ -282,9 +304,15 @@ class _PageKomisiPekerjaState extends State<PageKomisiPekerja> {
                       }
                     }
                     if (tipekomisi == 0) {
-                      nominalkomisi = komisijabatan / 100 * item['harga_total'] * item['qty'];
+                      nominalkomisi =
+                          komisijabatan /
+                          100 *
+                          item['harga_total'] *
+                          item['qty'];
                     } else {
-                      nominalkomisi = (komisijabatan as int).toDouble() * (item['qty'] as int).toDouble();
+                      nominalkomisi =
+                          (komisijabatan as int).toDouble() *
+                          (item['qty'] as int).toDouble();
                     }
                     return Column(
                       children: [
@@ -301,12 +329,18 @@ class _PageKomisiPekerjaState extends State<PageKomisiPekerja> {
                             ),
                             Container(
                               width: 20,
-                              child: Text(item['qty'].toString(), style: TextStyle(fontSize: 16)),
+                              child: Text(
+                                item['qty'].toString(),
+                                style: TextStyle(fontSize: 16),
+                              ),
                             ),
                             SizedBox(width: 25),
                             Container(
                               width: 110,
-                              child: Text(item['harga_total'].toString(), style: TextStyle(fontSize: 16)),
+                              child: Text(
+                                item['harga_total'].toString(),
+                                style: TextStyle(fontSize: 16),
+                              ),
                             ),
                             SizedBox(width: 20),
                             Container(
@@ -320,14 +354,19 @@ class _PageKomisiPekerjaState extends State<PageKomisiPekerja> {
                             Container(
                               width: 120,
                               child: Text(
-                                tipekomisi == 0 ? '${komisijabatan.toString()} %' : komisijabatan.toString(),
+                                tipekomisi == 0
+                                    ? '${komisijabatan.toString()} %'
+                                    : komisijabatan.toString(),
                                 style: TextStyle(fontSize: 16),
                               ),
                             ),
                             SizedBox(width: 10),
                             Container(
                               width: 150,
-                              child: Text(nominalkomisi.toInt().toString(), style: TextStyle(fontSize: 16)),
+                              child: Text(
+                                nominalkomisi.toInt().toString(),
+                                style: TextStyle(fontSize: 16),
+                              ),
                             ),
                           ],
                         ),
@@ -339,7 +378,12 @@ class _PageKomisiPekerjaState extends State<PageKomisiPekerja> {
 
                 SizedBox(height: 20),
                 isidetailproduk.isNotEmpty
-                    ? Container(child: Text('Detail Komisi Produk', style: TextStyle(fontSize: 20)))
+                    ? Container(
+                      child: Text(
+                        'Detail Komisi Produk',
+                        style: TextStyle(fontSize: 20),
+                      ),
+                    )
                     : SizedBox.shrink(),
                 SizedBox(height: 20),
                 isidetailproduk.isNotEmpty
@@ -381,9 +425,15 @@ class _PageKomisiPekerjaState extends State<PageKomisiPekerja> {
                       }
                     }
                     if (tipekomisi == 0) {
-                      nominalkomisi = komisijabatan / 100 * item['harga_total'] * item['qty'];
+                      nominalkomisi =
+                          komisijabatan /
+                          100 *
+                          item['harga_total'] *
+                          item['qty'];
                     } else {
-                      nominalkomisi = (komisijabatan as int).toDouble() * (item['qty'] as int).toDouble();
+                      nominalkomisi =
+                          (komisijabatan as int).toDouble() *
+                          (item['qty'] as int).toDouble();
                     }
                     return Column(
                       children: [
@@ -400,12 +450,18 @@ class _PageKomisiPekerjaState extends State<PageKomisiPekerja> {
                             ),
                             Container(
                               width: 20,
-                              child: Text(item['qty'].toString(), style: TextStyle(fontSize: 16)),
+                              child: Text(
+                                item['qty'].toString(),
+                                style: TextStyle(fontSize: 16),
+                              ),
                             ),
                             SizedBox(width: 25),
                             Container(
                               width: 110,
-                              child: Text(item['harga_total'].toString(), style: TextStyle(fontSize: 16)),
+                              child: Text(
+                                item['harga_total'].toString(),
+                                style: TextStyle(fontSize: 16),
+                              ),
                             ),
                             SizedBox(width: 20),
                             Container(
@@ -419,14 +475,19 @@ class _PageKomisiPekerjaState extends State<PageKomisiPekerja> {
                             Container(
                               width: 120,
                               child: Text(
-                                tipekomisi == 0 ? '${komisijabatan.toString()} %' : komisijabatan.toString(),
+                                tipekomisi == 0
+                                    ? '${komisijabatan.toString()} %'
+                                    : komisijabatan.toString(),
                                 style: TextStyle(fontSize: 16),
                               ),
                             ),
                             SizedBox(width: 10),
                             Container(
                               width: 150,
-                              child: Text(nominalkomisi.toInt().toString(), style: TextStyle(fontSize: 16)),
+                              child: Text(
+                                nominalkomisi.toInt().toString(),
+                                style: TextStyle(fontSize: 16),
+                              ),
                             ),
                           ],
                         ),
@@ -486,7 +547,10 @@ class _PageKomisiPekerjaState extends State<PageKomisiPekerja> {
                                     height: 70,
                                     width: 70,
                                     child: CircleAvatar(
-                                      child: Text(hurufpertamanama, style: TextStyle(fontSize: 40)),
+                                      child: Text(
+                                        hurufpertamanama,
+                                        style: TextStyle(fontSize: 40),
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -494,7 +558,8 @@ class _PageKomisiPekerjaState extends State<PageKomisiPekerja> {
                                   child: Padding(
                                     padding: const EdgeInsets.only(left: 20),
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           namakaryawan,
@@ -538,7 +603,10 @@ class _PageKomisiPekerjaState extends State<PageKomisiPekerja> {
                             activeTab.value == 0
                                 ? Container(
                                   margin: EdgeInsets.only(left: 30),
-                                  child: Text('Bulan : ', style: TextStyle(fontSize: 25)),
+                                  child: Text(
+                                    'Bulan : ',
+                                    style: TextStyle(fontSize: 25),
+                                  ),
                                 )
                                 : SizedBox.shrink(),
                             activeTab.value == 0
@@ -549,12 +617,22 @@ class _PageKomisiPekerjaState extends State<PageKomisiPekerja> {
                                     child: DropdownButtonFormField<String>(
                                       decoration: InputDecoration(
                                         enabledBorder: OutlineInputBorder(
-                                          borderSide: BorderSide(color: Colors.blue, width: 2),
-                                          borderRadius: BorderRadius.circular(10),
+                                          borderSide: BorderSide(
+                                            color: Colors.blue,
+                                            width: 2,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
                                         ),
                                         focusedBorder: OutlineInputBorder(
-                                          borderSide: BorderSide(color: Colors.red, width: 2),
-                                          borderRadius: BorderRadius.circular(10),
+                                          borderSide: BorderSide(
+                                            color: Colors.red,
+                                            width: 2,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
                                         ),
                                         filled: true,
                                         fillColor: Colors.grey[200],
@@ -613,7 +691,10 @@ class _PageKomisiPekerjaState extends State<PageKomisiPekerja> {
                                 : SizedBox.shrink(),
                             Container(
                               margin: EdgeInsets.only(left: 30),
-                              child: Text('Tahun : ', style: TextStyle(fontSize: 25)),
+                              child: Text(
+                                'Tahun : ',
+                                style: TextStyle(fontSize: 25),
+                              ),
                             ),
                             Obx(
                               () => Container(
@@ -622,11 +703,17 @@ class _PageKomisiPekerjaState extends State<PageKomisiPekerja> {
                                 child: DropdownButtonFormField<String>(
                                   decoration: InputDecoration(
                                     enabledBorder: OutlineInputBorder(
-                                      borderSide: BorderSide(color: Colors.blue, width: 2),
+                                      borderSide: BorderSide(
+                                        color: Colors.blue,
+                                        width: 2,
+                                      ),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     focusedBorder: OutlineInputBorder(
-                                      borderSide: BorderSide(color: Colors.red, width: 2),
+                                      borderSide: BorderSide(
+                                        color: Colors.red,
+                                        width: 2,
+                                      ),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     filled: true,
@@ -662,11 +749,19 @@ class _PageKomisiPekerjaState extends State<PageKomisiPekerja> {
                                   refreshdatalistkomisi();
                                 },
                                 // ignore: sort_child_properties_last
-                                child: Text('Cek', style: TextStyle(fontSize: 25, color: Colors.black)),
+                                child: Text(
+                                  'Cek',
+                                  style: TextStyle(
+                                    fontSize: 25,
+                                    color: Colors.black,
+                                  ),
+                                ),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Color(0xFFFCEFCB),
 
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
                                 ),
                               ),
                             ),
@@ -697,7 +792,9 @@ class _PageKomisiPekerjaState extends State<PageKomisiPekerja> {
                                   child: TabBar(
                                     onTap: (index) {
                                       activeTab.value = index;
-                                      print("Tab Aktif Skrg ${activeTab.value}");
+                                      print(
+                                        "Tab Aktif Skrg ${activeTab.value}",
+                                      );
                                     },
                                     indicator: BoxDecoration(
                                       color: Colors.blue,
@@ -709,25 +806,37 @@ class _PageKomisiPekerjaState extends State<PageKomisiPekerja> {
                                     indicatorSize: TabBarIndicatorSize.tab,
                                     labelColor: Colors.black,
                                     unselectedLabelColor: Colors.black38,
-                                    labelStyle: TextStyle(fontWeight: FontWeight.bold),
-                                    tabs: const [Tab(text: "Daily"), Tab(text: "Monthly")],
+                                    labelStyle: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    tabs: const [
+                                      Tab(text: "Daily"),
+                                      Tab(text: "Monthly"),
+                                    ],
                                   ),
                                 ),
                               ),
                               Container(
                                 height: 300,
                                 width: Get.width - 70,
-                                decoration: BoxDecoration(color: Colors.grey[200]),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[200],
+                                ),
                                 child: TabBarView(
                                   children: [
                                     // Konten 1
                                     Obx(
                                       () => Container(
                                         width: Get.width,
-                                        padding: const EdgeInsets.only(left: 10),
+                                        padding: const EdgeInsets.only(
+                                          left: 10,
+                                        ),
                                         child:
                                             isloadingkomisiharian.value == true
-                                                ? Center(child: CircularProgressIndicator())
+                                                ? Center(
+                                                  child:
+                                                      CircularProgressIndicator(),
+                                                )
                                                 : listdatakomisi.isEmpty
                                                 ? Center(
                                                   child: Text(
@@ -736,56 +845,93 @@ class _PageKomisiPekerjaState extends State<PageKomisiPekerja> {
                                                 )
                                                 : Scrollbar(
                                                   thumbVisibility: true,
-                                                  controller: _scrollControllerTab0,
+                                                  controller:
+                                                      _scrollControllerTab0,
                                                   child: ListView.builder(
-                                                    controller: _scrollControllerTab0,
-                                                    itemCount: listdatakomisi.length,
-                                                    itemBuilder: (context, index) {
-                                                      var item = listdatakomisi[index];
-                                                      DateTime tanggalkerja = item['created_at'];
-                                                      String formattanggalkerja =
+                                                    controller:
+                                                        _scrollControllerTab0,
+                                                    itemCount:
+                                                        listdatakomisi.length,
+                                                    itemBuilder: (
+                                                      context,
+                                                      index,
+                                                    ) {
+                                                      var item =
+                                                          listdatakomisi[index];
+                                                      DateTime tanggalkerja =
+                                                          item['created_at'];
+                                                      String
+                                                      formattanggalkerja =
                                                           "${tanggalkerja.year}-${tanggalkerja.month}-${tanggalkerja.day} / ${tanggalkerja.hour}:${tanggalkerja.minute.toString().padLeft(2, '0')}";
                                                       return Padding(
-                                                        padding: const EdgeInsets.only(right: 10),
+                                                        padding:
+                                                            const EdgeInsets.only(
+                                                              right: 10,
+                                                            ),
                                                         child: Column(
                                                           children: [
                                                             Row(
-                                                              mainAxisAlignment: MainAxisAlignment.start,
+                                                              mainAxisAlignment:
+                                                                  MainAxisAlignment
+                                                                      .start,
                                                               children: [
                                                                 Expanded(
                                                                   child: Text(
-                                                                    formattanggalkerja.toString(),
+                                                                    formattanggalkerja
+                                                                        .toString(),
                                                                     style: TextStyle(
-                                                                      fontSize: 20,
-                                                                      fontFamily: 'Poppins',
+                                                                      fontSize:
+                                                                          20,
+                                                                      fontFamily:
+                                                                          'Poppins',
                                                                     ),
                                                                   ),
                                                                 ),
                                                                 Container(
-                                                                  margin: EdgeInsets.only(right: 0),
+                                                                  margin:
+                                                                      EdgeInsets.only(
+                                                                        right:
+                                                                            0,
+                                                                      ),
                                                                   child: Text(
-                                                                    formatrupiah(item['nominal_komisi']),
-                                                                    textAlign: TextAlign.left,
+                                                                    formatrupiah(
+                                                                      item['nominal_komisi'],
+                                                                    ),
+                                                                    textAlign:
+                                                                        TextAlign
+                                                                            .left,
                                                                     style: TextStyle(
-                                                                      fontFamily: 'Poppins',
-                                                                      fontSize: 20,
+                                                                      fontFamily:
+                                                                          'Poppins',
+                                                                      fontSize:
+                                                                          20,
                                                                     ),
                                                                   ),
                                                                 ),
                                                                 Expanded(
                                                                   child: Container(
-                                                                    alignment: Alignment.centerRight,
+                                                                    alignment:
+                                                                        Alignment
+                                                                            .centerRight,
                                                                     child: ElevatedButton(
                                                                       onPressed: () {
-                                                                        getdetailpaket(item['id']).then((_) {
-                                                                          getdetailproduk(item['id']).then((
+                                                                        getdetailpaket(
+                                                                          item['id'],
+                                                                        ).then((
+                                                                          _,
+                                                                        ) {
+                                                                          getdetailproduk(
+                                                                            item['id'],
+                                                                          ).then((
                                                                             _,
                                                                           ) {
                                                                             dialogdetail();
                                                                           });
                                                                         });
                                                                       },
-                                                                      child: Text('Detail Paket'),
+                                                                      child: Text(
+                                                                        'Detail Paket',
+                                                                      ),
                                                                     ),
                                                                   ),
                                                                 ),
@@ -804,10 +950,15 @@ class _PageKomisiPekerjaState extends State<PageKomisiPekerja> {
                                     Obx(
                                       () => Container(
                                         width: Get.width,
-                                        padding: const EdgeInsets.only(left: 10),
+                                        padding: const EdgeInsets.only(
+                                          left: 10,
+                                        ),
                                         child:
                                             isloadingkomisibulanan.value == true
-                                                ? Center(child: CircularProgressIndicator())
+                                                ? Center(
+                                                  child:
+                                                      CircularProgressIndicator(),
+                                                )
                                                 : listdatakomisibulanan.isEmpty
                                                 ? Center(
                                                   child: Text(
@@ -816,35 +967,56 @@ class _PageKomisiPekerjaState extends State<PageKomisiPekerja> {
                                                 )
                                                 : Scrollbar(
                                                   thumbVisibility: true,
-                                                  controller: _scrollControllerTab2,
+                                                  controller:
+                                                      _scrollControllerTab2,
                                                   child: ListView.builder(
-                                                    controller: _scrollControllerTab2,
-                                                    itemCount: listdatakomisibulanan.length,
-                                                    itemBuilder: (context, index) {
-                                                      var item = listdatakomisibulanan[index];
+                                                    controller:
+                                                        _scrollControllerTab2,
+                                                    itemCount:
+                                                        listdatakomisibulanan
+                                                            .length,
+                                                    itemBuilder: (
+                                                      context,
+                                                      index,
+                                                    ) {
+                                                      var item =
+                                                          listdatakomisibulanan[index];
                                                       return Padding(
-                                                        padding: const EdgeInsets.only(right: 10),
+                                                        padding:
+                                                            const EdgeInsets.only(
+                                                              right: 10,
+                                                            ),
                                                         child: Column(
                                                           children: [
                                                             Row(
-                                                              mainAxisAlignment: MainAxisAlignment.end,
+                                                              mainAxisAlignment:
+                                                                  MainAxisAlignment
+                                                                      .end,
                                                               children: [
                                                                 Expanded(
                                                                   child: Text(
                                                                     "${item['month']} - ${item['year']}",
                                                                     style: TextStyle(
-                                                                      fontSize: 20,
-                                                                      fontFamily: 'Poppins',
+                                                                      fontSize:
+                                                                          20,
+                                                                      fontFamily:
+                                                                          'Poppins',
                                                                     ),
                                                                   ),
                                                                 ),
                                                                 Expanded(
                                                                   child: Text(
-                                                                    formatrupiah(item['total_komisi']),
-                                                                    textAlign: TextAlign.right,
+                                                                    formatrupiah(
+                                                                      item['total_komisi'],
+                                                                    ),
+                                                                    textAlign:
+                                                                        TextAlign
+                                                                            .right,
                                                                     style: TextStyle(
-                                                                      fontFamily: 'Poppins',
-                                                                      fontSize: 20,
+                                                                      fontFamily:
+                                                                          'Poppins',
+                                                                      fontSize:
+                                                                          20,
                                                                     ),
                                                                   ),
                                                                 ),
@@ -878,31 +1050,49 @@ class _PageKomisiPekerjaState extends State<PageKomisiPekerja> {
                                       activeTab.value == 0
                                           ? Obx(
                                             () => Row(
-                                              mainAxisAlignment: MainAxisAlignment.end,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.end,
                                               children: [
                                                 Text(
                                                   "Total Komisi Daily",
-                                                  style: TextStyle(fontFamily: 'Poppins', fontSize: 20),
+                                                  style: TextStyle(
+                                                    fontFamily: 'Poppins',
+                                                    fontSize: 20,
+                                                  ),
                                                 ),
                                                 SizedBox(width: 30),
                                                 Text(
-                                                  formatrupiah(totalkomisi.value),
-                                                  style: TextStyle(fontFamily: 'Poppins', fontSize: 20),
+                                                  formatrupiah(
+                                                    totalkomisi.value,
+                                                  ),
+                                                  style: TextStyle(
+                                                    fontFamily: 'Poppins',
+                                                    fontSize: 20,
+                                                  ),
                                                 ),
                                               ],
                                             ),
                                           )
                                           : Row(
-                                            mainAxisAlignment: MainAxisAlignment.end,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.end,
                                             children: [
                                               Text(
                                                 "Total Komisi Monthly",
-                                                style: TextStyle(fontFamily: 'Poppins', fontSize: 20),
+                                                style: TextStyle(
+                                                  fontFamily: 'Poppins',
+                                                  fontSize: 20,
+                                                ),
                                               ),
                                               SizedBox(width: 30),
                                               Text(
-                                                formatrupiah(totalkomisibulanan.value),
-                                                style: TextStyle(fontFamily: 'Poppins', fontSize: 20),
+                                                formatrupiah(
+                                                  totalkomisibulanan.value,
+                                                ),
+                                                style: TextStyle(
+                                                  fontFamily: 'Poppins',
+                                                  fontSize: 20,
+                                                ),
                                               ),
                                             ],
                                           ),

@@ -3,15 +3,12 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:get/get.dart';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 import 'package:intl/intl.dart';
 import 'package:Project_SPA/function/ip_address.dart';
-import 'package:Project_SPA/function/token.dart';
 import 'package:Project_SPA/kamar_terapis/terapis_bekerja.dart';
 import 'package:Project_SPA/kamar_terapis/terapis_mgr.dart';
-import 'package:Project_SPA/resepsionis/main_resepsionis.dart';
 import 'package:cherry_toast/cherry_toast.dart';
-import 'package:Project_SPA/resepsionis/store_locker.dart';
 import 'package:get_storage/get_storage.dart';
 
 class AddonPaketProdukController extends GetxController {
@@ -94,7 +91,7 @@ class AddonPaketProdukController extends GetxController {
     super.onClose();
   }
 
-  var dio = Dio();
+  var dio = DioClient();
 
   RxInt _noLoker = RxInt(-1);
   Future<void> _getLatestTrans() async {
@@ -580,7 +577,7 @@ class _MassageItemGridState extends State<MassageItemGrid> {
   ScrollController _scrollController = ScrollController();
   RxList<Map<String, dynamic>> items = <Map<String, dynamic>>[].obs;
 
-  var dio = Dio();
+  var dio = DioClient();
 
   final formatCurrency = NumberFormat.currency(
     locale: "id_ID",

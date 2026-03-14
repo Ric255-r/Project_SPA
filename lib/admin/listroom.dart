@@ -1,27 +1,13 @@
 import 'dart:async';
 import 'dart:developer';
-import 'package:Project_SPA/admin/laporan_ob.dart';
-import 'package:Project_SPA/admin/listpaket.dart';
-import 'package:Project_SPA/admin/listpekerja.dart';
-import 'package:Project_SPA/admin/listpromo.dart';
-import 'package:Project_SPA/admin/listuser.dart';
-import 'package:Project_SPA/admin/regis_locker.dart';
-import 'package:Project_SPA/admin/regis_paket.dart';
 import 'package:Project_SPA/admin/regis_pekerja.dart';
-import 'package:Project_SPA/admin/regis_promo.dart';
-import 'package:Project_SPA/admin/regis_room.dart';
-import 'package:Project_SPA/admin/regis_users.dart';
 import 'package:Project_SPA/function/admin_drawer.dart';
 import 'package:Project_SPA/function/ip_address.dart';
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:cherry_toast/cherry_toast.dart';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 import 'package:get/get.dart';
-import 'package:Project_SPA/main.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class ListRoom extends StatefulWidget {
   const ListRoom({super.key});
@@ -36,7 +22,7 @@ class _ListRoomState extends State<ListRoom> {
   @override
   void initState() {
     super.initState();
-    dio = Dio();
+    dio = DioClient();
     futureData = fetchData();
     futureData.then((data) {
       setState(() {
@@ -368,7 +354,7 @@ class _ListRoomState extends State<ListRoom> {
                                             data: {
                                               "nama_ruangan":
                                                   nmRuangController.text,
-                                              "lantai": 
+                                              "lantai":
                                                   int.tryParse(
                                                     lantaiController.text,
                                                   ) ??
@@ -797,7 +783,7 @@ class _WidgetListRoomMobileState extends State<WidgetListRoomMobile> {
   @override
   void initState() {
     super.initState();
-    dio = Dio();
+    dio = DioClient();
     futureData = fetchData();
     futureData.then((data) {
       setState(() {

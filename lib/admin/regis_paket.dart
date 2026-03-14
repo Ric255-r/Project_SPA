@@ -1,26 +1,11 @@
 import 'dart:developer';
 
-import 'package:Project_SPA/admin/laporan_ob.dart';
-import 'package:Project_SPA/admin/listpaket.dart';
-import 'package:Project_SPA/admin/listpekerja.dart';
-import 'package:Project_SPA/admin/listpromo.dart';
-import 'package:Project_SPA/admin/listroom.dart';
-import 'package:Project_SPA/admin/listuser.dart';
-import 'package:Project_SPA/admin/regis_locker.dart';
-import 'package:Project_SPA/admin/regis_pekerja.dart';
-import 'package:Project_SPA/admin/regis_promo.dart';
-import 'package:Project_SPA/admin/regis_room.dart';
-import 'package:Project_SPA/admin/regis_users.dart';
 import 'package:Project_SPA/function/admin_drawer.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:Project_SPA/resepsionis/billing_locker.dart';
-import 'package:Project_SPA/resepsionis/jenis_transaksi.dart';
-import 'package:Project_SPA/main.dart';
-import 'package:get_storage/get_storage.dart';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 import 'dart:async';
 import 'package:cherry_toast/cherry_toast.dart';
 
@@ -104,7 +89,7 @@ class _RegisPaketState extends State<RegisPaket> {
   Color _Fourthbuttoncolor = Colors.white;
   Color _Fifthbuttoncolor = Colors.white;
 
-  var dio = Dio();
+  var dio = DioClient();
 
   int? _selectedRadio;
   int? _selectedRadioGro;

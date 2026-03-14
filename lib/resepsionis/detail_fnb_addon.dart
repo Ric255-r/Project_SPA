@@ -5,7 +5,7 @@ import 'package:Project_SPA/resepsionis/store_locker.dart';
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:get/get.dart';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 import 'package:Project_SPA/function/ip_address.dart';
 import 'package:Project_SPA/function/token.dart';
 import 'package:get_storage/get_storage.dart';
@@ -538,7 +538,7 @@ class _DetailFnbAddonState extends State<DetailFnbAddon> {
     });
   }
 
-  var dio = Dio();
+  var dio = DioClient();
 
   Future<void> _storeTrans() async {
     try {
@@ -547,7 +547,6 @@ class _DetailFnbAddonState extends State<DetailFnbAddon> {
 
       var response = await dio.post(
         '${myIpAddr()}/fnb/store_addon',
-        options: Options(headers: {"Authorization": "Bearer " + token!}),
         data: data,
       );
       log("Isi data jual $dataJual");
@@ -866,7 +865,7 @@ class IsiFoodNBeverages extends StatefulWidget {
 
 class _IsiFoodNBeveragesState extends State<IsiFoodNBeverages> {
   ScrollController _scrollController = ScrollController();
-  var dio = Dio();
+  var dio = DioClient();
 
   List<Map<String, dynamic>> dataMenu = [];
 
@@ -874,10 +873,7 @@ class _IsiFoodNBeveragesState extends State<IsiFoodNBeverages> {
     try {
       var token = await getTokenSharedPref();
 
-      var response = await dio.get(
-        '${myIpAddr()}/fnb/menu',
-        options: Options(headers: {"Authorization": "Bearer " + token!}),
-      );
+      var response = await dio.get('${myIpAddr()}/fnb/menu');
 
       setState(() {
         dataMenu =

@@ -2,18 +2,15 @@ import 'dart:async';
 
 import 'package:Project_SPA/kamar_terapis/main_kamar_terapis.dart';
 import 'package:flutter/material.dart';
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:get/get.dart';
 import 'dart:io'; // For file operations
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:Project_SPA/admin/regis_promo.dart';
 import 'package:Project_SPA/function/ip_address.dart';
-import 'package:Project_SPA/function/me.dart';
 import 'package:Project_SPA/office_boy/image_mgr.dart';
 import 'package:Project_SPA/office_boy/laporan.dart';
 import 'dart:developer';
-import 'package:dio/dio.dart';
+import 'package:Project_SPA/function/dio_client.dart';
 
 class MainOb extends StatefulWidget {
   final String idOb;
@@ -120,7 +117,7 @@ class _MainObState extends State<MainOb> {
     });
   }
 
-  var dio = Dio();
+  var dio = DioClient();
 
   Future<void> _storeWaktu(String startTime) async {
     try {
@@ -227,7 +224,7 @@ class _MainObState extends State<MainOb> {
             "id_karyawan": widget.idOb,
             "jam_mulai": hourOnly.value,
             "jam_selesai": jamSelesai.value,
-            "status": status
+            "status": status,
           },
         );
 
@@ -523,41 +520,58 @@ class _MainObState extends State<MainOb> {
                                 padding: const EdgeInsets.only(left: 40),
                                 child: ElevatedButton(
                                   onPressed: () async {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text('Pilih Status Kamar', style: TextStyle(fontFamily: 'Poppins')),
-        content: Text(
-          'Apakah Anda ingin mengatur status kamar menjadi Aktif atau Maintenance?',
-          style: TextStyle(fontFamily: 'Poppins'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(); // Close dialog
-              setPekerjaDone(status: 'aktif'); // Call with "aktif"
-            },
-            child: Text('Aktif'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(); // Close dialog
-              setPekerjaDone(status: 'maintenance'); // Call with "maintenance"
-            },
-            child: Text('Maintenance'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(); // Cancel
-            },
-            child: Text('Batal'),
-          ),
-        ],
-      );
-    },
-  );
-},
+                                    showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          title: Text(
+                                            'Pilih Status Kamar',
+                                            style: TextStyle(
+                                              fontFamily: 'Poppins',
+                                            ),
+                                          ),
+                                          content: Text(
+                                            'Apakah Anda ingin mengatur status kamar menjadi Aktif atau Maintenance?',
+                                            style: TextStyle(
+                                              fontFamily: 'Poppins',
+                                            ),
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () {
+                                                Navigator.of(
+                                                  context,
+                                                ).pop(); // Close dialog
+                                                setPekerjaDone(
+                                                  status: 'aktif',
+                                                ); // Call with "aktif"
+                                              },
+                                              child: Text('Aktif'),
+                                            ),
+                                            TextButton(
+                                              onPressed: () {
+                                                Navigator.of(
+                                                  context,
+                                                ).pop(); // Close dialog
+                                                setPekerjaDone(
+                                                  status: 'maintenance',
+                                                ); // Call with "maintenance"
+                                              },
+                                              child: Text('Maintenance'),
+                                            ),
+                                            TextButton(
+                                              onPressed: () {
+                                                Navigator.of(
+                                                  context,
+                                                ).pop(); // Cancel
+                                              },
+                                              child: Text('Batal'),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+                                  },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.white.withOpacity(
                                       0.8,

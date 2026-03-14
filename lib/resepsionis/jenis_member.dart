@@ -1,13 +1,9 @@
 import 'package:Project_SPA/function/our_drawer.dart';
 import 'package:Project_SPA/resepsionis/daftar_member.dart';
 import 'package:Project_SPA/resepsionis/history_member.dart';
-import 'package:Project_SPA/resepsionis/transaksi_fasilitas.dart';
 import 'package:Project_SPA/resepsionis/transaksi_member.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:Project_SPA/resepsionis/transaksi_food.dart';
-import 'package:Project_SPA/resepsionis/transaksi_massage.dart';
 
 class JenisMember extends StatefulWidget {
   const JenisMember({super.key});
