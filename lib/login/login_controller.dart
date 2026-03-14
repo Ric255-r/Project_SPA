@@ -45,6 +45,7 @@ class LoginController extends GetxController {
       final resp = await dio.post(
         '${myIpAddr()}/login',
         data: {'id_karyawan': userC.text, 'passwd': passC.text},
+        options: Options(extra: {skipAuthExtraKey: true}),
       );
 
       final Map<String, dynamic> responseData = resp.data;
