@@ -1,6 +1,7 @@
 // ignore_for_file: unnecessary_import, prefer_interpolation_to_compose_strings
 
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
@@ -693,7 +694,7 @@ class _IsiOwnerPageState extends State<IsiOwnerPage> {
                             if (list.isEmpty) return const Text('Tidak ada data');
 
                             return SizedBox(
-                              height: c.dataOmset.length > 1 ? 170 : 90,
+                              height: c.dataOmset.length > 1 ? 170 : 140,
                               child: Scrollbar(
                                 controller: _scrollControllerTarget,
                                 thumbVisibility: true,
@@ -701,13 +702,40 @@ class _IsiOwnerPageState extends State<IsiOwnerPage> {
                                 radius: Radius.circular(10),
                                 child: ListView.builder(
                                   controller: _scrollControllerTarget,
-                                  itemCount: c.dataTargetOmset.length,
+                                  itemCount: math.min(
+                                    c.dataTargetOmset.length,
+                                    math.min(c.dataOmset.length, c.dataOmsetBerjalan.length),
+                                  ),
                                   itemBuilder: (context, index) {
                                     var item = c.dataTargetOmset[index];
                                     var itemOmset = c.dataOmset[index];
-
+                                    var itemOmsetBerjalan = c.dataOmsetBerjalan[index];
                                     double persentase = (itemOmset['omset'] / item['target_omset']) * 100;
 
+                                    DateTime now = DateTime.now();
+                                    int totalHari = DateTime(item['year'], item['month_number'] + 1, 0).day;
+
+                                    int hariBerjalan = 0;
+
+                                    if (item['month_number'] == now.month && item['year'] == now.year) {
+                                      hariBerjalan = now.day;
+                                    } else if (item['month_number'] < now.month && item['year'] == now.year) {
+                                      hariBerjalan = totalHari;
+                                    }
+
+                                    double targetBulanan = double.tryParse("${item['target_omset']}") ?? 0.0;
+
+                                    double targetHarianKumulatif =
+                                        totalHari == 0 ? 0 : (targetBulanan / totalHari) * hariBerjalan;
+
+                                    // 🔥 PAKAI OMSET BERJALAN DI SINI
+                                    double omsetBerjalan =
+                                        double.tryParse("${itemOmsetBerjalan['omset_berjalan']}") ?? 0.0;
+
+                                    double persentaseHarian =
+                                        targetHarianKumulatif == 0
+                                            ? 0
+                                            : (omsetBerjalan / targetHarianKumulatif) * 100;
                                     return Container(
                                       padding: const EdgeInsets.only(right: 10),
                                       child: Column(
@@ -765,11 +793,66 @@ class _IsiOwnerPageState extends State<IsiOwnerPage> {
                                                 persentase.isInfinite
                                                     ? "-"
                                                     : "${persentase.toStringAsFixed(2)}%",
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w600,
+                                                  color:
+                                                      persentase.isInfinite
+                                                          ? Colors.black
+                                                          : persentase >= 100
+                                                          ? Colors.green
+                                                          : Colors.red,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          SizedBox(height: 10),
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(
+                                                'Target Harian s/d tanggal ${hariBerjalan}',
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: Colors.black,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              Text(
+                                                formatRupiah(targetHarianKumulatif),
                                                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                                               ),
                                             ],
                                           ),
 
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(
+                                                'Persentase Target Harian',
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: Colors.black,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              Text(
+                                                targetHarianKumulatif == 0
+                                                    ? "-"
+                                                    : "${persentaseHarian.toStringAsFixed(2)}%",
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w600,
+                                                  color:
+                                                      persentaseHarian.isInfinite
+                                                          ? Colors.black
+                                                          : persentaseHarian >= 100
+                                                          ? Colors.green
+                                                          : Colors.red,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                           SizedBox(height: 10),
                                           const Divider(),
                                         ],

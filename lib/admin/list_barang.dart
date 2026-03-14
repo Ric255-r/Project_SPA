@@ -155,7 +155,7 @@ class ListBarang extends StatelessWidget {
             onPressed: () => Get.to(() => StokOpnamePage()),
             child: const Text(
               'Stok Opname',
-              style: TextStyle(fontFamily: 'Poppins', fontSize: 30),
+              style: TextStyle(fontFamily: 'Poppins', fontSize: 30, color: Colors.red),
             ),
           ),
           const SizedBox(width: 8),
@@ -262,34 +262,30 @@ class ListBarang extends StatelessWidget {
         title: const Text('Tambah Barang'),
         content: SizedBox(
           width: 420,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: c.namaC,
-                decoration: const InputDecoration(
-                  labelText: "Nama Barang",
-                  border: OutlineInputBorder(),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: c.namaC,
+                  decoration: const InputDecoration(labelText: "Nama Barang", border: OutlineInputBorder()),
                 ),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: c.stokC,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: "Stok",
-                  border: OutlineInputBorder(),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: c.stokC,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: "Stok", border: OutlineInputBorder()),
                 ),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: c.satuanC,
-                decoration: const InputDecoration(
-                  labelText: "Satuan (kg, batang, dus, ...)",
-                  border: OutlineInputBorder(),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: c.satuanC,
+                  decoration: const InputDecoration(
+                    labelText: "Satuan (kg, batang, dus, ...)",
+                    border: OutlineInputBorder(),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
         actions: [
