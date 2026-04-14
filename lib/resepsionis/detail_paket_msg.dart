@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_final_fields, use_super_parameters, curly_braces_in_flow_control_structures, unused_element, use_build_context_synchronously, unused_local_variable, avoid_print, prefer_const_constructors, prefer_const_literals_to_create_immutables, non_constant_identifier_names, deprecated_member_use
+// ignore_for_file: prefer_final_fields, use_super_parameters, curly_braces_in_flow_control_structures,  avoid_print, prefer_const_constructors, prefer_const_literals_to_create_immutables, non_constant_identifier_names, deprecated_member_use
 
 import 'dart:async';
 import 'dart:developer';
@@ -11,7 +11,6 @@ import 'package:Project_SPA/function/dio_client.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:Project_SPA/function/ip_address.dart';
-import 'package:Project_SPA/function/token.dart';
 import 'package:Project_SPA/resepsionis/main_resepsionis.dart';
 import 'package:cherry_toast/cherry_toast.dart';
 import 'package:just_audio/just_audio.dart';
@@ -363,7 +362,6 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
         ),
       );
       var rincian = getHargaAfterDisc();
-      var token = await getTokenSharedPref();
       var data = {
         "id_transaksi": widget.idTrans,
         "total_harga": rincian['sblm_disc'],
@@ -572,6 +570,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
   }
 
   @Deprecated('Gunakan _isHappyHourSelectionRequired() untuk cek apakah perlu tampilkan reminder')
+  // ignore: unused_element
   Future<bool> _showHappyHourReminder() async {
     final completer = Completer<bool>();
 
@@ -2161,7 +2160,7 @@ class _MassageItemGridState extends State<MassageItemGrid> {
                                 CherryToast.error(
                                   title: Text('Error'),
                                   description: Text('melebihi pemakaian'),
-                                ).show(context);
+                                ).show(Get.context!);
                               }
                             } else {
                               for (var produk in dataproduk.where(
@@ -2193,7 +2192,7 @@ class _MassageItemGridState extends State<MassageItemGrid> {
                                   CherryToast.error(
                                     title: Text('Error'),
                                     description: Text('Stok sudah kosong'),
-                                  ).show(context);
+                                  ).show(Get.context!);
                                 } else if (retrieveindex != null) {
                                   if (itemTapCounts[retrieveindex]! >
                                       sisastok) {
@@ -2202,7 +2201,7 @@ class _MassageItemGridState extends State<MassageItemGrid> {
                                       description: Text(
                                         'Penggunaan item melebihi stok',
                                       ),
-                                    ).show(context);
+                                    ).show(Get.context!);
                                   } else {
                                     widget.onAddItem({
                                       "id_paket_msg": item['id_paket_msg'],
