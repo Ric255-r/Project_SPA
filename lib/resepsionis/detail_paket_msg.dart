@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_final_fields, use_super_parameters
+// ignore_for_file: prefer_final_fields, use_super_parameters, curly_braces_in_flow_control_structures, unused_element, use_build_context_synchronously, unused_local_variable, avoid_print, prefer_const_constructors, prefer_const_literals_to_create_immutables, non_constant_identifier_names, deprecated_member_use
 
 import 'dart:async';
 import 'dart:developer';
@@ -326,6 +326,14 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                 };
               }).toList();
         }
+
+        Map<String, dynamic> defaultOption = {
+          "kode_promo": "no_disc",
+          "nama_promo": "Tanpa Diskon",
+          "disc": 0,
+        };
+
+        _listHappyHour.insert(0, defaultOption);
       });
     } catch (e) {
       log("Error di fn Get Data Terapis $e");
@@ -563,6 +571,7 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
     return _listHappyHour.isNotEmpty && dropdownHappyHour.value == null;
   }
 
+  @Deprecated('Gunakan _isHappyHourSelectionRequired() untuk cek apakah perlu tampilkan reminder')
   Future<bool> _showHappyHourReminder() async {
     final completer = Completer<bool>();
 
@@ -1654,12 +1663,17 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                     child: ElevatedButton(
                                       onPressed: () async {
                                         if (_isHappyHourSelectionRequired()) {
-                                          bool isConfirmed =
-                                              await _showHappyHourReminder();
+                                          Get.defaultDialog(
+                                            title: 'Promo Happy Hour',
+                                            middleText: 'Silakan pilih promo Happy Hour terlebih dahulu.',
+                                            textConfirm: 'OK!',
+                                            barrierDismissible: false,
+                                            onConfirm: () {
+                                              Get.back();
+                                            },
+                                          );
 
-                                          if (!isConfirmed) {
-                                            return;
-                                          }
+                                          return;
                                         }
 
                                         _showDialogConfirmPayment(Get.context!);
@@ -1678,12 +1692,17 @@ class _DetailPaketMassageState extends State<DetailPaketMassage> {
                                     child: ElevatedButton(
                                       onPressed: () async {
                                         if (_isHappyHourSelectionRequired()) {
-                                          bool isConfirmed =
-                                              await _showHappyHourReminder();
+                                          Get.defaultDialog(
+                                            title: 'Promo Happy Hour',
+                                            middleText: 'Silakan pilih promo Happy Hour terlebih dahulu.',
+                                            textConfirm: 'OK!',
+                                            barrierDismissible: false,
+                                            onConfirm: () {
+                                              Get.back();
+                                            },
+                                          );
 
-                                          if (!isConfirmed) {
-                                            return;
-                                          }
+                                          return;
                                         }
 
                                         _storeTrans().then((_) {
